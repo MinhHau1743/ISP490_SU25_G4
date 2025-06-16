@@ -160,13 +160,8 @@
                                     <label for="phuongXa">Phường/Xã</label>
                                     <input type="text" id="phuongXa" name="phuongXa" value="${profile.ward}" disabled>
                                 </div>
-                                
-                                <div class="form-row">
-                                    <div class="form-group full-width">
-                                        <label for="mxh">Mạng xã hội (Link)</label>
-                                        <input type="url" id="mxh" name="mxh" value="${profile.socialMediaLink}" disabled>
-                                    </div>
-                                </div>
+
+
                             </div>
                         </div>
 
