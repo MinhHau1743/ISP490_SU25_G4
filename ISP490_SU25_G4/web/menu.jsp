@@ -18,9 +18,10 @@
 
     <nav class="sidebar-nav">
         <ul>
-            <li><a href="${pageContext.request.contextPath}/dashboardAdmin.jsp" class="${currentPage == 'dashboardAdmin' ? 'active' : ''}"><i data-feather="grid"></i><span>Tổng quan</span></a></li>
+            <li><a href="${pageContext.request.contextPath}/jsp/admin/dashboardAdmin.jsp" class="${currentPage == 'dashboardAdmin' ? 'active' : ''}"><i data-feather="grid"></i><span>Tổng quan</span></a></li>
 
-            <li><a href="${pageContext.request.contextPath}/customer.jsp" class="${currentPage == 'customer' ? 'active' : ''}"><i data-feather="users"></i><span>Khách hàng</span></a></li>
+            <li><a href="${pageContext.request.contextPath}/jsp/sales/listCustomer.jsp" class="${currentPage == 'listCustomer' ? 'active' : ''}"><i data-feather="users"></i><span>Khách hàng</span></a></li>
+            <li><a href="${pageContext.request.contextPath}/jsp/chiefOfStaff/listContract.jsp" class="${currentPage == 'listContract' ? 'active' : ''}"><i data-feather="file-text"></i><span>Hợp đồng</span></a></li>
 
             <%-- Mục "Hàng hóa" (dropdown) 
             <c:set var="isProductSection" value="${currentPage == 'viewProducts' || currentPage == 'addProducts'}" />
@@ -31,24 +32,26 @@
                     <li><a href="${pageContext.request.contextPath}/addProducts.jsp" class="${currentPage == 'addProducts' ? 'active' : ''}">Thêm Hàng hóa</a></li>
                 </ul>
             </li>--%>
-            <li><a href="${pageContext.request.contextPath}/listProduct.jsp" class="${currentPage == 'listProduct' ? 'active' : ''}"><i data-feather="box"></i><span>Hàng hóa</span></a></li>
+            <li><a href="${pageContext.request.contextPath}/jsp/technicalSupport/listProduct.jsp" class="${currentPage == 'listProduct' ? 'active' : ''}"><i data-feather="box"></i><span>Hàng hóa</span></a></li>
 
 
             <c:set var="isTransactionSection" value="${currentPage == 'listTransaction' || currentPage == 'addTransaction'}" />
             <li class="nav-item-dropdown ${isTransactionSection ? 'open' : ''}">
                 <a href="#" class="${isTransactionSection ? 'active' : ''}"><i data-feather="repeat"></i><span>Hóa đơn bảo trì</span><i data-feather="chevron-down" class="dropdown-icon"></i></a>
                 <ul class="sub-menu">
-                    <li><a href="${pageContext.request.contextPath}/listTransaction.jsp" class="${currentPage == 'listTransaction' ? 'active' : ''}">Lịch sử</a></li>
-                    <li><a href="${pageContext.request.contextPath}/addTransaction.jsp" class="${currentPage == 'addTransaction' ? 'active' : ''}">Tạo phiếu</a></li>
+                    <li><a href="${pageContext.request.contextPath}/jsp/customerSupport/listTransaction.jsp" class="${currentPage == 'listTransaction' ? 'active' : ''}">Lịch sử</a></li>
+                    <li><a href="${pageContext.request.contextPath}/jsp/customerSupport/addTransaction.jsp" class="${currentPage == 'addTransaction' ? 'active' : ''}">Tạo phiếu</a></li>
                 </ul>
             </li>
             <c:set var="isEmployeeSection" value="${currentPage == 'listEmployeeCustomer' || currentPage == 'listEmployeeTechnical' || currentPage == 'listEmployeeAdmin'}" />
             <li class="nav-item-dropdown ${isEmployeeSection ? 'open active' : ''}">
                 <a href="#" class="${isEmployeeSection ? 'active' : ''}"><i data-feather="briefcase"></i><span>Nhân viên</span><i data-feather="chevron-down" class="dropdown-icon"></i></a>
                 <ul class="sub-menu">
-                    <li><a href="${pageContext.request.contextPath}/listEmployeeCustomer.jsp" class="${currentPage == 'listEmployeeCustomer' ? 'active' : ''}">Chăm sóc khách hàng</a></li>
-                    <li><a href="${pageContext.request.contextPath}/listEmployeeTechnical.jsp" class="${currentPage == 'listEmployeeTechnical' ? 'active' : ''}">Kỹ thuật</a></li>
-                    <li><a href="${pageContext.request.contextPath}/listEmployeeAdmin.jsp" class="${currentPage == 'listEmployeeAdmin' ? 'active' : ''}">Admin</a></li>
+                    <li><a href="${pageContext.request.contextPath}/jsp/admin/listEmployeeCustomer.jsp" class="${currentPage == 'listEmployeeCustomer' ? 'active' : ''}">Chăm sóc khách hàng</a></li>
+                    <li><a href="${pageContext.request.contextPath}/jsp/admin/listEmployeeTechnical.jsp" class="${currentPage == 'listEmployeeTechnical' ? 'active' : ''}">Kỹ thuật</a></li>
+                    <li><a href="${pageContext.request.contextPath}/jsp/admin/listEmployeeSales.jsp" class="${currentPage == 'listEmployeeSales' ? 'active' : ''}">Bộ phận kinh doanh</a></li>
+
+                    <li><a href="${pageContext.request.contextPath}/jsp/admin/listEmployeeOffice.jsp" class="${currentPage == 'listEmployeeOffice' ? 'active' : ''}">Bộ phận văn phòng</a></li>
                 </ul>
             </li>
 

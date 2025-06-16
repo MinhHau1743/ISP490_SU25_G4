@@ -19,6 +19,7 @@
             <div class="right">
                 <form class="form-box" action="LoginController" method="post">
                     <img src="image/logo.png" alt="Logo" width="220" style="display:block; margin:0 auto 0px;">
+                    <div class="company-name" style="color:red; text-align:center; margin-top: 10px; margin-bottom: 20px;">DONG PHAT JOINT STOCK COMPANY</div>
                     <div class="input-group">
                         <input type="email" name="email" placeholder="Email" required>
                     </div>

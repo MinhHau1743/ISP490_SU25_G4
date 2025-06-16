@@ -161,12 +161,7 @@
                                         <input type="text" id="ward" name="ward" value="${user.ward}">
                                     </div>
                                 </div>
-                                <div class="form-row">
-                                    <div class="form-group full-width">
-                                        <label for="socialMediaLink">Mạng xã hội (Link)</label>
-                                        <input type="url" id="socialMediaLink" name="socialMediaLink" value="${user.socialMediaLink}">
-                                    </div>
-                                </div>
+                                
                             </div>
                         </div>
 
