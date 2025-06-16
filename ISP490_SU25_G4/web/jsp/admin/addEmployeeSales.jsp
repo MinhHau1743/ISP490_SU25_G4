@@ -1,6 +1,6 @@
 <%-- 
-    Document   : addEmployee
-    Created on : Jun 7, 2025, 9:04:47 PM
+    Document   : addEmployeeSales
+    Created on : Jun 16, 2025, 9:46:14 PM
     Author     : NGUYEN MINH
 --%>
 
@@ -12,21 +12,22 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Thêm nhân viên</title>
+        <title>Thêm nhân viên kinh doanh</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <script src="https://unpkg.com/feather-icons"></script>
-        <link rel="stylesheet" href="css/style.css">
-        <link rel="stylesheet" href="css/header.css">
-        <link rel="stylesheet" href="css/menu.css">
-        <link rel="stylesheet" href="css/pagination.css">
-        <link rel="stylesheet" href="css/dataTable.css">     
-        <link rel="stylesheet" href="css/addEmployee.css">
+        <link rel="stylesheet" href="../../css/style.css">
+        <link rel="stylesheet" href="../../css/header.css">
+        <link rel="stylesheet" href="../../css/menu.css">
+        <link rel="stylesheet" href="../../css/pagination.css">
+        <link rel="stylesheet" href="../../css/profile.css">
+        <link rel="stylesheet" href="../../css/dataTable.css">     
+        <link rel="stylesheet" href="../../css/addEmployee.css">
     </head>
     <body>
         <div class="app-container">
-            <jsp:include page="menu.jsp"/>
+            <jsp:include page="../../menu.jsp"/>
             <main class="main-content">
                 <header class="main-top-bar">
                     <div class="page-title">Thêm nhân viên</div>
@@ -72,11 +73,11 @@
                                     <div class="form-card-grid">
                                         <div class="form-group">
                                             <label for="position">Phòng làm việc</label>
-                                            <select id="position" name="position"><option>-- Chọn phòng --</option></select>
+                                            <select id="position" name="position"><option>Bộ phận kinh doanh</option></select>
                                         </div> 
                                         <div class="form-group">
                                             <label for="position">Chức vụ</label>
-                                            <select id="position" name="position"><option>-- Chọn chức vụ --</option></select>
+                                            <select id="position" name="position"><option>Quản lý</option></select>
                                         </div>                                                                                
                                     </div>
                                     <div class="form-group full-width" style="margin-top: 20px;">
@@ -136,7 +137,7 @@
                     </section>
 
                     <footer class="page-actions-footer">
-                        <a href="listEmployee" class="btn btn-secondary" role="button">Hủy</a>
+                        <a href="../admin/listEmployeeSales.jsp" class="btn btn-secondary" role="button">Hủy</a>
                         <button type="submit" class="btn btn-primary">Lưu nhân viên</button>
                     </footer>
                 </form>
@@ -158,6 +159,6 @@
                 }
             });
         </script>
-        <script src="js/mainMenu.js"></script>
+        <script src="../../js/mainMenu.js"></script>
     </body>
 </html>
