@@ -15,18 +15,23 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Danh sách Hàng hóa</title>
-
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.slim.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Be+Vietnam+Pro:wght@600&display=swap" rel="stylesheet">
         <script src="https://unpkg.com/feather-icons"></script>
-        <link rel="stylesheet" href="../../css/style.css">
-        <link rel="stylesheet" href="../../css/header.css">
-        <link rel="stylesheet" href="../../css/mainMenu.css">
-        <link rel="stylesheet" href="../../css/listProduct.css">
-        <link rel="stylesheet" href="../../css/pagination.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/listProduct.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pagination.css">
+
     </head>
     <body>
+
         <div class="app-container">
             <jsp:include page="../../mainMenu.jsp"/>
             <main class="main-content">
@@ -46,7 +51,7 @@
                                 <div class="search-box">
                                     <i data-feather="search" class="feather-search"></i>
                                     <%-- Giữ lại giá trị tìm kiếm cũ --%>
-                                    <input type="text" name="searchQuery" placeholder="Tìm kiếm tên, mã SP..." value="${param.searchQuery}">
+                                    <input type="text" name="searchQuery" id="searchProducts" placeholder="Tìm kiếm tên, mã SP..." value="${param.searchQuery}">
                                 </div>
                                 <button type="button" class="filter-button" id="filterBtn"><i data-feather="filter"></i><span>Bộ lọc</span></button>
                                 <div class="toolbar-actions">
@@ -108,56 +113,56 @@
                             </c:if>
 
                             <%-- LẶP QUA DANH SÁCH SẢN PHẨM VÀ HIỂN THỊ --%>
-                            <c:forEach var="p" items="${productList}">
-                                <div class="product-card">
-                                    <div class="card-image">
-                                        <a href="productDetail?id=${p.id}">
-                                            <%-- Sử dụng imageUrl từ đối tượng sản phẩm, nếu không có thì dùng ảnh mặc định --%>
-                                            <img src="${not empty p.imageUrl ? p.imageUrl : 'https://placehold.co/400x300/E0E0E0/757575?text=No+Image'}" alt="${p.name}">
-                                        </a>
-                                    </div>
-                                    <div class="card-content">
-                                        <div class="card-header">
-                                            <a href="productDetail?id=${p.id}" class="product-name-link">
-                                                <span class="product-name-header">${p.name}</span>
-                                            </a>
-                                            <%-- Logic hiển thị trạng thái sản phẩm --%>
-                                            <c:choose>
-                                                <c:when test="${p.status == 'IN_STOCK'}">
-                                                    <span class="status-pill status-instock">Còn hàng</span>
-                                                </c:when>
-                                                <c:when test="${p.status == 'LOW_STOCK'}">
-                                                    <span class="status-pill status-lowstock">Sắp hết hàng</span>
-                                                </c:when>
-                                                <c:when test="${p.status == 'OUT_OF_STOCK'}">
-                                                    <span class="status-pill status-outofstock">Hết hàng</span>
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <span class="status-pill">${p.status}</span>
-                                                </c:otherwise>
-                                            </c:choose>
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="card-info-row"><i data-feather="tag"></i><span class="info-value">Mã: ${p.productCode}</span></div>
-                                            <div class="card-info-row"><i data-feather="layers"></i><span class="info-value">Danh mục: ${p.categoryName}</span></div>
-                                            <div class="card-info-row"><i data-feather="package"></i><span class="info-value">Xuất xứ: ${p.originName}</span></div>
-                                        </div>
-                                        <div class="card-footer">
-                                            <div class="product-price-footer">
-                                                <i data-feather="dollar-sign"></i>
-                                                <span><fmt:formatNumber value="${p.price}" type="currency" currencyCode="VND"/></span>
-                                            </div>
-                                            <div class="action-buttons">
-                                                <a href="../technicalSupport/viewProductDetail.jsp" title="Xem"><i data-feather="eye"></i></a>
-                                                <a href="../technicalSupport/editProductDetail.jsp" title="Sửa"><i data-feather="edit-2"></i></a>
-                                                <a href="#" class="delete-trigger-btn" data-id="${p.id}" data-name="${p.name}" title="Xóa"><i data-feather="trash-2"></i></a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </c:forEach>
-                            <%-- Kết thúc vòng lặp --%>
+                            <div id="productList">
+                                <c:forEach var="p" items="${productList}">
+                                    <div class="product-card">
+                                        <div class="card-image">
 
+                                        </div>
+                                        <div class="card-content">
+                                            <div class="card-header">
+                                                <a href="productDetail?id=${p.id}" class="product-name-link">
+                                                    <span class="product-name-header">${p.name}</span>
+                                                </a>
+
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="card-info-row"><i data-feather="tag"></i><span class="info-value">Mã: ${p.productCode}</span></div>
+                                                <div class="card-info-row"><i data-feather="layers"></i><span class="info-value">Danh mục: ${p.categoryId}</span></div>
+                                                <div class="card-info-row"><i data-feather="package"></i><span class="info-value">Xuất xứ: ${p.origin}</span></div>
+                                                <div class="card-info-row"><i data-feather="align-left"></i><span class="info-value">Mô tả: ${p.description}</span></div>
+                                                <div class="card-info-row"><i data-feather="calendar"></i><span class="info-value">Ngày tạo: ${p.createdAt}</span></div>
+                                                <div class="card-info-row"><i data-feather="refresh-cw"></i><span class="info-value">Cập nhật: ${p.updatedAt}</span></div>
+                                                <div class="card-info-row"><i data-feather="shield"></i>
+                                                    <span class="info-value">Đã xóa: 
+                                                        <c:choose>
+                                                            <c:when test="${p.isDeleted}">Có</c:when>
+                                                            <c:otherwise>Không</c:otherwise>
+                                                        </c:choose>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="card-footer">
+                                                <div class="product-price-footer">
+                                                    <span><fmt:formatNumber value="${p.price}" type="currency" currencyCode="VND"/></span>
+                                                </div>
+                                                <div class="action-buttons">
+                                                    <a href="../technicalSupport/viewProductDetail.jsp?id=${p.id}" title="Xem"><i data-feather="eye"></i></a>
+                                                    <a href="../technicalSupport/editProductDetail.jsp?id=${p.id}" title="Sửa"><i data-feather="edit-2"></i></a>
+                                                    <a href="#" class="delete-trigger-btn" data-id="${p.id}" data-name="${p.name}" title="Xóa"><i data-feather="trash-2"></i></a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                </c:forEach>
+                                <%-- Kết thúc vòng lặp --%>
+                                <p id="noResultMsg" style="display:none; grid-column: 1 / -1; text-align: center; color: var(--text-secondary);">
+                                    Không tìm thấy sản phẩm nào phù hợp.
+                                </p>
+
+                            </div>
                         </div>
 
                         <jsp:include page="../../pagination.jsp"/>
@@ -175,7 +180,7 @@
             </div>
         </div>
 
-        <script src="../../js/listProduct.js"></script>
-        <script src="../../js/mainMenu.js"></script>
+        <script src="${pageContext.request.contextPath}/js/listProduct.js"></script>
+        <script src=".${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>

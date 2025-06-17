@@ -4,22 +4,26 @@
  */
 package vn.edu.fpt.dao;
 
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+
 /**
  *
  * @author PC
  */
 public class DBContext {
-      protected Connection connection;
 
-   public DBContext() {
+    protected Connection connection;
+
+     public DBContext() {
+        // Tự động khởi tạo connection khi tạo object DBContext/ProductDAO
+        getConnection();
     }
-   
+
+
     public Connection getConnection() {
-      try {
+        try {
             // Edit URL, username, password to authenticate with your MySQL Server
             String url = "jdbc:mysql://localhost:3306/datn";
             String userName = "root";
@@ -32,6 +36,7 @@ public class DBContext {
         }
         return connection;
     }
+
     public static void main(String[] args) {
         try {
             DBContext dbContext = new DBContext();

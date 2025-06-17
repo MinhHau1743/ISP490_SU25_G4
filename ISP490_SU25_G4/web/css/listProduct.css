@@ -6,6 +6,9 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     Created on : Jun 12, 2025, 10:16:00 PM
     Author     : minhnhn
 */
+#productList {
+    display: contents;
+}
 :root {
     --primary-color: #298E94;
     --primary-bg-light: #F1FEFF;

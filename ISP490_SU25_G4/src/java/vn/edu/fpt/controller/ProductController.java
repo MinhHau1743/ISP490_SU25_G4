@@ -1,0 +1,117 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
+ */
+package vn.edu.fpt.controller;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.util.List;
+import vn.edu.fpt.dao.ProductDAO;
+import vn.edu.fpt.model.Product;
+
+/**
+ *
+ * @author phamh
+ */
+@WebServlet(name = "ProductController", urlPatterns = {"/ProductController"})
+public class ProductController extends HttpServlet {
+
+    /**
+     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
+     * methods.
+     *
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType("text/html;charset=UTF-8");
+
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+    /**
+     * Handles the HTTP <code>GET</code> method.
+     *
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String service = request.getParameter("service");
+        ProductDAO products = new ProductDAO();
+        if (service == null) {
+            service = "products";
+        }
+        if (service.equals("products")) {
+            int page = 1;
+            int pageSize = 10; // số sản phẩm trên 1 trang, tuỳ bạn thiết lập
+            String pageRaw = request.getParameter("page");
+            String sizeRaw = request.getParameter("size");
+            if (pageRaw != null) {
+                page = Integer.parseInt(pageRaw);
+            }
+            if (sizeRaw != null) {
+                pageSize = Integer.parseInt(sizeRaw);
+            }
+            int totalProducts = products.countAllProducts();
+            int totalPages = (int) Math.ceil((double) totalProducts / pageSize);
+            if (request.getParameter("page") != null) {
+                page = Integer.parseInt(request.getParameter("page"));
+            }
+            if (request.getParameter("size") != null) {
+                pageSize = Integer.parseInt(request.getParameter("size"));
+            }
+            List<Product> listProducts = products.viewAllProduct(page, pageSize);
+            request.setAttribute("productList", listProducts);
+            request.setAttribute("totalPages", totalPages);
+            request.setAttribute("currentPage", page);
+            request.setAttribute("totalPages", totalPages);
+            request.setAttribute("pageSize", pageSize);
+            // Kiểm tra và truyền thông báo nếu có
+            String notification = (String) request.getAttribute("Notification");
+            if (notification != null && !notification.isEmpty()) {
+                request.setAttribute("Notification", notification);
+            }
+
+            // Chuyển hướng tới trang JSP
+            request.getRequestDispatcher("jsp/technicalSupport/listProduct.jsp").forward(request, response);
+        }
+    }
+
+    /**
+     * Handles the HTTP <code>POST</code> method.
+     *
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        processRequest(request, response);
+    }
+
+    /**
+     * Returns a short description of the servlet.
+     *
+     * @return a String containing servlet description
+     */
+    @Override
+    public String getServletInfo() {
+        return "Short description";
+    }// </editor-fold>
+
+}
