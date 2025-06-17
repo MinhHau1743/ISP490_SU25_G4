@@ -13,6 +13,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.time.LocalDateTime;
+import java.util.Random;
+import vn.edu.fpt.common.EmailUtil;
 
 /**
  *
@@ -59,7 +61,46 @@ public class VerifyOTPController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        String action = request.getParameter("action");
+
+        // Chỉ thực hiện khi người dùng thực sự muốn gửi lại mã
+        if ("resend".equals(action)) {
+            HttpSession session = request.getSession();
+            String email = (String) session.getAttribute("email");
+
+            // Đảm bảo email vẫn tồn tại trong session
+            if (email != null && !email.isEmpty()) {
+                try {
+                    // === LOGIC TẠO VÀ GỬI LẠI OTP (Lấy từ code của bạn) ===
+                    // 1. Tạo mã OTP mới
+                    String newOtp = String.valueOf(new Random().nextInt(900000) + 100000);
+
+                    // 2. Gửi mã mới qua email
+                    EmailUtil.sendOTP(email, newOtp);
+
+                    // 3. Cập nhật lại OTP và thời gian hết hạn trong session
+                    session.setAttribute("otp", newOtp);
+                    session.setAttribute("otpExpiresAt", LocalDateTime.now().plusMinutes(5));
+
+                    // 4. Gửi thông báo tới người dùng
+                    request.setAttribute("message", "Một mã OTP mới đã được gửi đến email của bạn!");
+
+                } catch (Exception e) {
+                    // Xử lý nếu có lỗi trong quá trình gửi email
+                    e.printStackTrace();
+                    request.setAttribute("error", "Không thể gửi lại mã OTP. Vui lòng thử lại sau.");
+                }
+            } else {
+                // Trường hợp session hết hạn hoặc không có email
+                request.setAttribute("error", "Phiên làm việc đã hết hạn. Vui lòng thực hiện lại từ đầu.");
+                // Chuyển về trang đăng ký vì đó là nơi bắt đầu luồng
+                response.sendRedirect("register.jsp");
+                return; // Dừng xử lý để tránh forward ở cuối
+            }
+        }
+
+        // Luôn chuyển người dùng đến trang xác minh OTP
+        request.getRequestDispatcher("verifyOTP.jsp").forward(request, response);
     }
 
     /**

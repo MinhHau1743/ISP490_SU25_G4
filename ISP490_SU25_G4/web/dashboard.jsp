@@ -46,7 +46,9 @@
         </div>
 
         <script>
-            feather.replace();
+            document.addEventListener('DOMContentLoaded', function() {
+                feather.replace();
+            });
         </script>
 
         <script src="js/mainMenu.js"></script>

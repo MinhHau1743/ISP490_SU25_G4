@@ -30,8 +30,9 @@
             <form action="VerifyResetOTPController" method="post">
                 <label class="input-label" for="verificationCode">Nhập mã xác minh gồm 6 số</label>
                 <input type="text" id="verificationCode" name="verificationCode" placeholder="Mã xác minh" required maxlength="6" pattern="\d{6}" title="Vui lòng nhập đúng 6 chữ số" />
+                <%-- Dòng code mới --%>
                 <c:if test="${not empty error}">
-                    <p style="color:red">${error}</p>
+                    <p class="error-message">${error}</p>
                 </c:if>
                 <button type="submit" class="verify-btn">Xác minh</button>
 

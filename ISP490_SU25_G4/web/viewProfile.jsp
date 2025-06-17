@@ -43,123 +43,134 @@
                         <div class="profile-card">
                             <div class="card-body-split">
                                 <div class="avatar-section">                                   
-                                    <img src="https://placehold.co/170x170" alt="Ảnh đại diện" id="avatarPreview">
-                                    <input type="file" id="avatarUpload" hidden accept="image/*">
-                                    <button type="button" class="btn btn-secondary" id="btnChooseAvatar">Chọn ảnh</button>
+                                    <img src="${profile.avatarUrl}" alt="Ảnh đại diện" id="avatarPreview">
+
                                 </div>
                                 <div class="info-section">
                                     <h2>Thông tin khởi tạo</h2>
                                     <div class="form-row">
                                         <div class="form-group">
                                             <label for="maNhanVien">Mã nhân viên</label>
-                                            <span class="form-data">${nhanVien.maNhanVien}</span> 
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="tenNhanVien">Tên nhân viên</label>
-                                            <input type="text" id="tenNhanVien" name="tenNhanVien" value="${nhanVien.tenNhanVien}" disabled>
+                                            <span class="form-data">${profile.employeeCode}</span> 
                                         </div>
                                     </div>
                                     <div class="form-row">
                                         <div class="form-group">
-                                            <label for="soDienThoai">Số điện thoại</label>
-                                            <input type="tel" id="soDienThoai" name="soDienThoai" value="${nhanVien.soDienThoai}" disabled>
+                                            <label for="lastName">Họ</label>
+                                            <input type="text" id="lastName" name="lastName" value="${profile.lastName}" disabled>
                                         </div>
                                     </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="middleName">Tên đệm</label>
+                                            <input type="text" id="middleName" name="middleName" value="${profile.middleName}" disabled>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="firstName">Tên</label>
+                                            <input type="text" id="firstName" name="firstName" value="${profile.firstName}" disabled>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="soDienThoai">Số điện thoại</label>
+                                        <input type="tel" id="soDienThoai" name="soDienThoai" value="${profile.phoneNumber}" disabled>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                </div>
 
-                        <div class="profile-card">
-                            <div class="card-body">
-                                <h2>Thông tin công việc</h2>
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="phongLamViec">Phòng làm việc</label>
-                                        <select id="phongLamViec" name="phongLamViec" disabled>
-                                            <option value="cskh" selected>CSKH</option>
-                                            <option value="ketoan">Kế toán</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="chucVu">Chức vụ</label>
-                                        <select id="chucVu" name="chucVu" disabled>
-                                            <option value="thukho" selected>Thủ kho</option>
-                                            <option value="nhanvien">Nhân viên</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="form-group full-width">
-                                    <label for="ghiChu">Ghi chú</label>
-                                    <textarea id="ghiChu" name="ghiChu" rows="3" disabled>${nhanVien.ghiChu}</textarea>
-                                </div>
+                <div class="profile-card">
+                    <div class="card-body">
+                        <h2>Thông tin công việc</h2>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="phongLamViec">Phòng làm việc</label>
+                                <input type="text" id="phongLamViec" name="phongLamViec" value="${profile.department}" disabled>
                             </div>
-                        </div>
+                            <div class="form-group">
+                                <label for="chucVu">Chức vụ</label>
+                                <input type="text" id="chucVu" name="chucVu" value="${profile.position}" disabled>
+                            </div>
 
-                        <div class="profile-card">
-                            <div class="card-body">
-                                <h2>Thông tin cá nhân</h2>
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="cmnd">Số CMND/CCCD</label>
-                                        <input type="text" id="cmnd" name="cmnd" value="${nhanVien.cmnd}" disabled>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="ngaySinh">Ngày sinh</label>
-                                        <input type="date" id="ngaySinh" name="ngaySinh" value="${nhanVien.ngaySinh}" disabled>
-                                    </div>
+                            <div class="form-group full-width">
+                                <label for="ghiChu">Ghi chú</label>
+                                <textarea id="ghiChu" name="ghiChu" rows="3" disabled>${profile.notes}</textarea>
+                            </div>
+
+
+                        </div>
+                    </div>
+
+
+                    <div class="profile-card">
+                        <div class="card-body">
+                            <h2>Thông tin cá nhân</h2>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="cmnd">Số CMND/CCCD</label>
+                                    <input type="text" id="cmnd" name="cmnd" value="${profile.identityCardNumber}" disabled>
                                 </div>
                                 <div class="form-group">
-                                    <label>Giới tính</label>
-                                    <div class="radio-group">
-                                        <label><input type="radio" name="gioiTinh" value="nam" ${nhanVien.gioiTinh == 'nam' ? 'checked' : ''} disabled> Nam</label>
-                                        <label><input type="radio" name="gioiTinh" value="nu" ${nhanVien.gioiTinh == 'nu' ? 'checked' : ''} disabled> Nữ</label>
-                                    </div>
+                                    <label for="ngaySinh">Ngày sinh</label>
+                                    <input type="date" id="ngaySinh" name="ngaySinh" value="${profile.dateOfBirth}" disabled>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Giới tính</label>
+                                <div class="radio-group">
+                                    <label><input type="radio" name="gioiTinh" value="nam" ${profile.gender == 'nam' ? 'checked' : ''} disabled> Nam</label>
+                                    <label><input type="radio" name="gioiTinh" value="nu" ${profile.gender == 'nu' ? 'checked' : ''} disabled> Nữ</label>
+                                    <label><input type="radio" name="gioiTinh" value="khac" ${profile.gender == 'khac' ? 'checked' : ''} disabled> Khác</label>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="profile-card">
-                            <div class="card-body">
-                                <h2>Thông tin liên hệ</h2>
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="diaChi">Địa chỉ</label>
-                                        <input type="text" id="diaChi" name="diaChi" value="${nhanVien.diaChi}" disabled>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="email">Email</label>
-                                        <input type="email" id="email" name="email" value="${nhanVien.email}" disabled>
-                                    </div>
+                    <div class="profile-card">
+                        <div class="card-body">
+                            <h2>Thông tin liên hệ</h2>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="diaChi">Địa chỉ</label>
+                                    <input type="text" id="diaChi" name="diaChi" value="${profile.address}" disabled>
                                 </div>
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="tinhThanh">Tỉnh/Thành phố</label>
-                                        <input type="text" id="tinhThanh" name="tinhThanh" value="${nhanVien.tinhThanh}" disabled>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="quanHuyen">Quận/Huyện</label>
-                                        <input type="text" id="quanHuyen" name="quanHuyen" value="${nhanVien.quanHuyen}" disabled>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="phuongXa">Phường/Xã</label>
-                                        <input type="text" id="phuongXa" name="phuongXa" value="${nhanVien.phuongXa}" disabled>
-                                    </div>
+                                <div class="form-group">
+                                    <label for="email">Email</label>
+                                    <input type="email" id="email" name="email" value="${profile.email}" disabled>
                                 </div>
-                                <div class="form-row">
-                                    <div class="form-group full-width">
-                                        <label for="mxh">Mạng xã hội (Link)</label>
-                                        <input type="url" id="mxh" name="mxh" value="${nhanVien.mxh}" disabled>
-                                    </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="tinhThanh">Tỉnh/Thành phố</label>
+                                    <input type="text" id="tinhThanh" name="tinhThanh" value="${profile.city}" disabled>
                                 </div>
+                                <div class="form-group">
+                                    <label for="quanHuyen">Quận/Huyện</label>
+                                    <input type="text" id="quanHuyen" name="quanHuyen" value="${profile.district}" disabled>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="phuongXa">Phường/Xã</label>
+                                    <input type="text" id="phuongXa" name="phuongXa" value="${profile.ward}" disabled>
+                                </div>
+
+
                             </div>
                         </div>
 
                         <div class="form-actions">
                             <button type="button" class="btn btn-secondary" id="btnClose">Đóng</button>
-                            <a href="editProfile.jsp?id=${nhanVien.maNhanVien}" class="btn btn-primary" role="button">Sửa thông tin</a>
+                            <a href="editProfile?id=${profile.id}" class="btn btn-primary" role="button">Sửa thông tin</a>
                         </div>
-                    </form>
-                </div>           
+                        </form>
+                    </div>           
 
             </main>
         </div>

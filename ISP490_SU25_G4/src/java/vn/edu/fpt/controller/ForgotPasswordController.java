@@ -15,7 +15,7 @@ import jakarta.servlet.http.HttpSession;
 import java.time.LocalDateTime;
 import java.util.Random;
 import vn.edu.fpt.dao.UserDAO;
-import vn.edu.fpt.util.EmailUtil;
+import vn.edu.fpt.common.EmailUtil;
 
 /**
  *

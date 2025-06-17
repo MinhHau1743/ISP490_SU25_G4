@@ -59,7 +59,8 @@ public class CreatePasswordController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        // Khi người dùng vào trang bằng phương thức GET, chỉ cần hiển thị trang password.jsp
+        request.getRequestDispatcher("password.jsp").forward(request, response);
     }
 
     /**
@@ -79,36 +80,59 @@ public class CreatePasswordController extends HttpServlet {
 
         HttpSession session = request.getSession();
         String email = (String) session.getAttribute("email");
+        String lastName = (String) session.getAttribute("lastName");
+        String middleName = (String) session.getAttribute("middleName");
+        String firstName = (String) session.getAttribute("firstName");
 
         if (email == null) {
+            // Nếu không có thông tin trong session, chuyển về trang đăng ký
             response.sendRedirect("register.jsp");
             return;
         }
 
+        // --- KIỂM TRA DỮ LIỆU ---
         if (!password.equals(confirm)) {
-            request.setAttribute("error", "Mật khẩu không khớp!");
+            request.setAttribute("error", "Mật khẩu không khớp! Vui lòng nhập lại.");
             request.getRequestDispatcher("password.jsp").forward(request, response);
             return;
         }
 
         if (!isValidPassword(password)) {
-            request.setAttribute("error", "Mật khẩu không đủ mạnh!");
+            request.setAttribute("error", "Mật khẩu không đủ mạnh! (Tối thiểu 8 ký tự, có chữ hoa, thường và số).");
             request.getRequestDispatcher("password.jsp").forward(request, response);
             return;
         }
 
-        dao.createUser(email, password);
+        // --- XỬ LÝ KHI THÀNH CÔNG ---
+        try {
+            // 1. Tạo người dùng trong cơ sở dữ liệu
+            dao.createUser(lastName, middleName, firstName, email, password);
 
-        // Xóa email khỏi session sau khi tạo tài khoản
-        session.removeAttribute("email");
+            // 2. Xóa các thuộc tính không cần thiết khỏi session
+            session.removeAttribute("email");
+            session.removeAttribute("lastName");
+            session.removeAttribute("middleName");
+            session.removeAttribute("firstName");
 
-        // Chuyển về trang đăng nhập
-        response.sendRedirect("login.jsp");
+            // 3. Đặt thuộc tính "success" để gửi thông báo về cho JSP
+            request.setAttribute("success", "Cập nhật mật khẩu thành công!");
+
+            // 4. Forward về lại trang password.jsp để hiển thị thông báo
+            request.getRequestDispatcher("password.jsp").forward(request, response);
+
+        } catch (Exception e) {
+            // Bắt các lỗi có thể xảy ra khi tương tác với database
+            e.printStackTrace(); // In lỗi ra console để debug
+            request.setAttribute("error", "Đã có lỗi xảy ra ở máy chủ. Vui lòng thử lại.");
+            request.getRequestDispatcher("password.jsp").forward(request, response);
+        }
     }
 
     private boolean isValidPassword(String password) {
-        return password.length() >= 8
-                && password.matches(".*[A-Z].*")
+        if (password == null || password.length() < 8) {
+            return false;
+        }
+        return password.matches(".*[A-Z].*")
                 && password.matches(".*[a-z].*")
                 && password.matches(".*[0-9].*");
     }

@@ -1,0 +1,295 @@
+
+:root {
+    --primary-color: #298E94;
+    --primary-bg-light: #F1FEFF;
+    --border-color: #B2D6D9;
+    --text-primary: #4D4D4D;
+    --text-secondary: #666666;
+    --text-tertiary: #A4A4A4;
+    --text-white: #FFFFFF;
+    --bg-white: #FFFFFF;
+    --bg-gray: #F2F2F2;
+    --error-color: #EB3B31;
+
+    --status-completed-bg: #EAF7E8;
+    --status-completed-text: #3E8635;
+    --status-processing-bg: #FEF5E5;
+    --status-processing-text: #F2994A;
+    --status-pending-bg: #FDEEEE;
+    --status-pending-text: #EB5757;
+}
+
+
+/* ============================================= */
+/* 2. Bố cục chính và Header (Page Layout & Header) */
+/* ============================================= */
+.main-content {
+    width: 100%;
+    height: 100vh;
+    overflow-y: auto;
+    background-color: var(--bg-gray);
+}
+.page-header {
+    background: var(--bg-white);
+    padding: 16px 24px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.page-header .title-section .title {
+    color: var(--text-primary);
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+.page-header .title-section .breadcrumb {
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+.page-header .title-section .breadcrumb span {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+.notification-btn {
+    position: relative;
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+}
+.notification-btn .feather {
+    color: var(--text-secondary);
+    width: 20px;
+    height: 20px;
+}
+.notification-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 10px;
+    height: 10px;
+    background-color: var(--error-color);
+    border-radius: 50%;
+    border: 2px solid var(--bg-white);
+}
+
+
+.page-content {
+    padding: 24px;
+}
+.content-card {
+    background: var(--bg-white);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+
+/* ============================================= */
+/* 3. Thanh công cụ và Bộ lọc (Toolbar & Filters) */
+/* ============================================= */
+.table-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.filter-group label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+.search-box input,
+.filter-group select {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background-color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    height: 38px;
+    box-sizing: border-box;
+    width: 220px;
+}
+.search-box {
+    position: relative;
+}
+.search-box .feather-search {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-tertiary);
+    width: 18px;
+    height: 18px;
+}
+.search-box input {
+    padding-left: 40px;
+}
+.table-toolbar .btn {
+    height: 38px;
+}
+.toolbar-actions {
+    margin-left: auto;
+}
+
+
+/* =================================================== */
+/* 4. Giao diện Thẻ mới (Card View Layout)            */
+/* =================================================== */
+
+.transaction-grid {
+    display: grid;
+    /* Hiển thị 4 cột trên màn hình lớn, tự động điều chỉnh cho màn hình nhỏ hơn */
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px; /* Khoảng cách giữa các thẻ */
+}
+
+.transaction-card {
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.transaction-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+}
+
+/* Phần đầu của thẻ: Mã GD và Trạng thái */
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+}
+.card-header .transaction-code {
+    font-weight: 600;
+    color: var(--primary-color);
+    font-size: 16px;
+}
+
+/* Thân thẻ: Các thông tin chi tiết */
+.card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex-grow: 1; /* Giúp đẩy footer xuống dưới */
+}
+
+.card-info-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+.card-info-row .feather {
+    width: 16px;
+    height: 16px;
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+}
+.card-info-row .info-value {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* Chân thẻ: Tính phí và các nút hành động */
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    margin-top: auto; /* Đảm bảo footer luôn ở dưới cùng */
+}
+
+.billing-status .feather {
+    width: 18px;
+    height: 18px;
+}
+.billing-status .icon-billable {
+    color: var(--status-completed-text);
+}
+.billing-status .icon-non-billable {
+    color: var(--text-tertiary);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+.action-buttons a {
+    display: flex;
+    padding: 4px;
+    border-radius: 4px;
+}
+.action-buttons a:hover {
+    background-color: var(--bg-gray);
+}
+.action-buttons .feather {
+    width: 18px;
+    height: 18px;
+}
+.action-buttons .icon-view {
+    color: var(--primary-color);
+}
+.action-buttons .icon-edit {
+    color: var(--status-processing-text);
+}
+.action-buttons .icon-delete {
+    color: var(--error-color);
+}
+
+/* Trạng thái */
+.status-pill {
+    padding: 4px 10px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+}
+.status-completed {
+    background-color: var(--status-completed-bg);
+    color: var(--status-completed-text);
+}
+.status-processing {
+    background-color: var(--status-processing-bg);
+    color: var(--status-processing-text);
+}
+.status-pending {
+    background-color: var(--status-pending-bg);
+    color: var(--status-pending-text);
+}
+.transaction-code-link {
+    text-decoration: none; /* Bỏ gạch chân mặc định của thẻ a */
+    color: inherit; /* Kế thừa màu từ class .transaction-code */
+    transition: color 0.2s ease;
+}
+.transaction-code-link:hover .transaction-code {
+    color: var(--primary-color, #298E94); /* Đổi màu khi di chuột qua */
+    text-decoration: underline;
+}

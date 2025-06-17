@@ -27,8 +27,9 @@
 
                     <form action="VerifyOTPController" method="post">
                         <input type="text" name="otp" placeholder="Mã xác minh" required>
+                        <%-- Dòng code mới --%>
                         <c:if test="${not empty error}">
-                            <p style="color:red">${error}</p>
+                            <p class="error-message">${error}</p>
                         </c:if>
                         <button type="submit">Xác minh</button>
                     </form>
@@ -40,7 +41,7 @@
                 </div>
 
                 <div class="resend">
-                    Bạn chưa nhận được mã? <a href="ResendOTPServlet">Gửi lại</a>
+                    Bạn chưa nhận được mã? <a href="VerifyOTPController?action=resend">Gửi lại</a>
                 </div>
 
                 <div class="footer">

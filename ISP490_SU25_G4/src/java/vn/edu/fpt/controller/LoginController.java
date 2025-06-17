@@ -82,7 +82,7 @@ public class LoginController extends HttpServlet {
         HttpSession session = request.getSession();
         if (u != null) {
             session.setAttribute("user", u);
-            response.sendRedirect("homepage.jsp");
+            response.sendRedirect("dashboard.jsp");
         } else {
             request.setAttribute("error", "Email hoặc mật khẩu không đúng!");
             request.getRequestDispatcher("login.jsp").forward(request, response);

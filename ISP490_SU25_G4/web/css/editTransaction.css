@@ -1,0 +1,196 @@
+/*
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
+*/
+/* 
+    Created on : Jun 12, 2025, 4:31:28 PM
+    Author     : NGUYEN MINH
+*/
+:root {
+    --primary-color: #298E94;
+    --primary-bg-light: #F1FEFF;
+    --border-color: #e2e8f0;
+    --border-color-focus: #298E94;
+    --text-primary: #1a202c;
+    --text-secondary: #4a5568;
+    --text-tertiary: #a0aec0;
+    --bg-white: #FFFFFF;
+    --bg-gray-light: #f7fafc;
+}
+
+.page-content {
+    padding: 24px;
+}
+
+.detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+.detail-header .back-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+}
+.detail-header .back-link:hover {
+    color: var(--primary-color);
+}
+
+.detail-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+}
+.main-column, .sidebar-column {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+.detail-card {
+    background: var(--bg-white);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+}
+.detail-card .card-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 16px 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* ============================================= */
+/* 3. Định dạng Form (Form Styling)              */
+/* ============================================= */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 16px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1; /* Chiếm toàn bộ chiều rộng grid */
+}
+
+.form-group label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+/* Định dạng chung cho các ô input, select, textarea */
+.form-control {
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    color: var(--text-primary);
+    background-color: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 10px 12px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--border-color-focus);
+    box-shadow: 0 0 0 3px rgba(41, 142, 148, 0.15);
+}
+
+textarea.form-control {
+    min-height: 120px;
+    resize: vertical;
+}
+.device-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+}
+.device-table th, .device-table td {
+    text-align: left;
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+.device-table thead {
+    background-color: var(--bg-gray-light);
+}
+.device-table td textarea {
+    width: 100%;
+    min-height: 50px;
+    resize: vertical;
+}
+
+/* == BẮT ĐẦU CSS MỚI CHO SIDEBAR FORM == */
+.sidebar-form .detail-card {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Khoảng cách giữa các hàng */
+}
+.sidebar-form .card-title {
+    padding: 0 8px 12px 8px;
+}
+.sidebar-form-row {
+    display: grid;
+    grid-template-columns: 140px 1fr; /* Cố định chiều rộng của label */
+    align-items: center;
+    gap: 16px;
+}
+.sidebar-form-row label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin: 0;
+}
+.sidebar-form-row .form-control {
+    width: 100%;
+    font-weight: 500;
+}
+.sidebar-form-row .radio-group {
+    display: flex;
+    gap: 16px;
+}
+.sidebar-form-row .radio-group label {
+    font-weight: 500;
+}
+
+/* CSS cho màu sắc của Select Box */
+select.status-completed {
+    background-color: var(--status-completed-bg, #EAF7E8);
+    color: var(--status-completed-text, #3E8635);
+}
+select.status-processing {
+    background-color: var(--status-processing-bg, #FEF5E5);
+    color: var(--status-processing-text, #F2994A);
+}
+select.status-pending {
+    background-color: var(--status-pending-bg, #FDEEEE);
+    color: var(--status-pending-text, #EB5757);
+}
+select.status-cancelled {
+    background-color: #f0f0f0;
+    color: #757575;
+}
+
+select.priority-urgent {
+    background-color: var(--priority-urgent-bg, #fdeeee);
+    color: var(--priority-urgent-text, #eb5757);
+}
+select.priority-high {
+    background-color: var(--priority-high-bg, #fef5e5);
+    color: var(--priority-high-text, #f2994a);
+}
+

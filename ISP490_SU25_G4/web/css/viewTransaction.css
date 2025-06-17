@@ -1,0 +1,226 @@
+/*
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
+*/
+/* 
+    Created on : Jun 11, 2025, 11:26:36 PM
+    Author     : NGUYEN MINH
+*/
+:root {
+    --primary-color: #298E94;
+    --primary-bg-light: #F1FEFF;
+    --border-color: #e2e8f0;
+    --text-primary: #1a202c;
+    --text-secondary: #4a5568;
+    --text-tertiary: #a0aec0;
+    --bg-white: #FFFFFF;
+    --bg-gray-light: #f7fafc;
+    --error-color: #EB3B31;
+
+    --status-completed-bg: #EAF7E8;
+    --status-completed-text: #3E8635;
+    --status-processing-bg: #FEF5E5;
+    --status-processing-text: #F2994A;
+    --status-pending-bg: #FDEEEE;
+    --status-pending-text: #EB5757;
+
+    --priority-urgent-bg: #fdeeee;
+    --priority-urgent-text: #eb5757;
+    --priority-high-bg: #fef5e5;
+    --priority-high-text: #f2994a;
+}
+
+.page-content {
+    padding: 24px;
+}
+
+.detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+.detail-header .back-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+}
+.detail-header .back-link:hover {
+    color: var(--primary-color);
+}
+
+.detail-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+}
+
+.main-column, .sidebar-column {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.detail-card {
+    background: var(--bg-white);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+}
+.detail-card .card-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 16px;
+}
+
+/* == BỐ CỤC CHO KHUNG THÔNG TIN CHÍNH (BÊN TRÁI) == */
+.main-column .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 16px;
+}
+.main-column .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.main-column .info-item .label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+.main-column .info-item .value {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+    background-color: var(--bg-gray-light);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 10px 12px;
+    min-height: 40px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    line-height: 1.5;
+}
+.main-column .info-item.full-width {
+    grid-column: 1 / -1;
+}
+.main-column .info-item.full-width .value {
+    min-height: 100px;
+    align-items: flex-start;
+}
+
+/* == BẮT ĐẦU CSS ĐÃ SỬA LẠI CHO KHUNG BÊN PHẢI == */
+.sidebar-column .detail-card {
+    padding: 16px;
+}
+.sidebar-column .card-title {
+    padding: 0 8px 12px 8px; /* Giảm padding cho tiêu đề */
+}
+.sidebar-column .info-item {
+    display: flex;
+    flex-direction: row;        /* Label và value trên cùng một hàng */
+    justify-content: space-between; /* Đẩy 2 thành phần về 2 phía */
+    align-items: center;        /* Căn giữa theo chiều dọc */
+    padding: 12px 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+.sidebar-column .info-item:last-child {
+    border-bottom: none; /* Bỏ đường kẻ cho mục cuối cùng */
+}
+.sidebar-column .info-item .label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+.sidebar-column .info-item .value {
+    font-size: 14px;
+    font-weight: 600; /* Làm đậm giá trị */
+    color: var(--text-primary);
+    text-align: right;
+}
+/* == KẾT THÚC CSS MỚI == */
+
+.status-pill, .priority-pill {
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-block;
+}
+.status-completed {
+    background-color: var(--status-completed-bg);
+    color: var(--status-completed-text);
+}
+.status-processing {
+    background-color: var(--status-processing-bg);
+    color: var(--status-processing-text);
+}
+.status-pending {
+    background-color: var(--status-pending-bg);
+    color: var(--status-pending-text);
+}
+.priority-urgent {
+    background-color: var(--priority-urgent-bg);
+    color: var(--priority-urgent-text);
+}
+.priority-high {
+    background-color: var(--priority-high-bg);
+    color: var(--priority-high-text);
+}
+
+.device-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.device-table th, .device-table td {
+    text-align: left;
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+.device-table thead {
+    background-color: var(--bg-gray-light);
+}
+
+.history-list {
+    list-style: none;
+    padding: 0;
+}
+.history-item {
+    position: relative;
+    padding-left: 24px;
+    padding-bottom: 16px;
+    border-left: 2px solid var(--border-color);
+}
+.history-item:before {
+    content: '';
+    position: absolute;
+    left: -7px;
+    top: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--bg-white);
+    border: 2px solid var(--primary-color);
+}
+.history-item:last-child {
+    border-left: 2px solid transparent;
+}
+.history-time {
+    font-size: 12px;
+    color: var(--text-tertiary);
+}
+.history-action {
+    font-size: 14px;
+}
+.history-action strong {
+    font-weight: 600;
+}

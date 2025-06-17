@@ -58,8 +58,8 @@ public class ResetPasswordController extends HttpServlet {
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        processRequest(request, response);
+            throws ServletException, IOException {     
+        request.getRequestDispatcher("resetPassword.jsp").forward(request, response);
     }
 
     /**
@@ -93,16 +93,31 @@ public class ResetPasswordController extends HttpServlet {
 
         if (!isValidPassword(newPassword)) {
             request.setAttribute("error", "Mật khẩu không đủ mạnh!");
-            request.getRequestDispatcher("password.jsp").forward(request, response);
+            request.getRequestDispatcher("resetPassword.jsp").forward(request, response);
             return;
         }
+     
+        
+        // --- XỬ LÝ KHI THÀNH CÔNG ---
+        try {
+            // 1. Tạo người dùng trong cơ sở dữ liệu
+            dao.updatePassword(email, newPassword);
 
-        dao.updatePassword(email, newPassword);
+            // 2. Xóa các thuộc tính không cần thiết khỏi session
+            session.removeAttribute("email");
 
-        // Sau khi đổi xong, xóa session
-        session.removeAttribute("email");
+            // 3. Đặt thuộc tính "success" để gửi thông báo về cho JSP
+            request.setAttribute("success", "Cập nhật mật khẩu thành công!");
 
-        response.sendRedirect("login.jsp");
+            // 4. Forward về lại trang password.jsp để hiển thị thông báo
+            request.getRequestDispatcher("resetPassword.jsp").forward(request, response);
+
+        } catch (Exception e) {
+            // Bắt các lỗi có thể xảy ra khi tương tác với database
+            e.printStackTrace(); // In lỗi ra console để debug
+            request.setAttribute("error", "Đã có lỗi xảy ra ở máy chủ. Vui lòng thử lại.");
+            request.getRequestDispatcher("resetPassword.jsp").forward(request, response);
+        }
     }
 
     private boolean isValidPassword(String password) {

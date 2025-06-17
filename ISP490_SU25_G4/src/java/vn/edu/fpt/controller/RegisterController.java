@@ -15,7 +15,7 @@ import jakarta.servlet.http.HttpSession;
 import java.time.LocalDateTime;
 import java.util.Random;
 import vn.edu.fpt.dao.UserDAO;
-import vn.edu.fpt.util.EmailUtil;
+import vn.edu.fpt.common.EmailUtil;
 
 /**
  *
@@ -78,6 +78,20 @@ public class RegisterController extends HttpServlet {
             throws ServletException, IOException {
         UserDAO dao = new UserDAO();
         String email = request.getParameter("email");
+
+        // Lấy giá trị của checkbox "terms"
+        String terms = request.getParameter("terms");
+
+        // === VALIDATE CHECKBOX ===
+        // Nếu checkbox không được tick, tham số 'terms' sẽ là null.
+        if (terms == null) {
+            request.setAttribute("error", "Bạn phải đồng ý với điều khoản dịch vụ để đăng ký.");
+            // Giữ lại email người dùng đã nhập để họ không cần nhập lại
+            request.setAttribute("email", email);
+            request.getRequestDispatcher("register.jsp").forward(request, response);
+            return; // Dừng xử lý
+        }
+
         if (dao.emailExists(email)) {
             request.setAttribute("error", "Email đã được đăng kí");
             request.getRequestDispatcher("register.jsp").forward(request, response);

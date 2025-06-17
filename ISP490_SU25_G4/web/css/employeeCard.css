@@ -1,0 +1,118 @@
+:root {
+    --primary-color: #298E94;
+    --red-color: #D32F2F;
+    --red-bg-light: #FFEBEE;
+    --border-color: #e2e8f0;
+    --text-primary: #1a202c;
+    --text-secondary: #4a5568;
+    --text-tertiary: #a0aec0;
+    --bg-white: #FFFFFF;
+    --bg-gray-light: #f7fafc;
+}
+
+.employee-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+}
+
+.employee-card {
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-top: 4px solid #1e88e5;
+}
+
+.employee-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
+
+.employee-card.manager {
+    border-top-color: var(--red-color);
+}
+
+.card-main-info {
+    text-align: center;
+    border-bottom: 1px dashed var(--border-color);
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+}
+.card-main-info .employee-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+.card-main-info .employee-code {
+    font-size: 13px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+}
+
+.card-secondary-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex-grow: 1;
+}
+.info-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+}
+.info-row .feather {
+    width: 16px;
+    height: 16px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+.info-row .info-label {
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.position-badge {
+    padding: 4px 10px;
+    border-radius: 16px;
+    font-weight: 500;
+    font-size: 12px;
+}
+.position-badge.staff {
+    background-color: #E3F2FD;
+    color: #1E88E5;
+}
+.position-badge.manager {
+    background-color: var(--red-bg-light);
+    color: var(--red-color);
+}
+
+.card-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-top: 16px;
+    margin-top: auto;
+}
+.card-actions a {
+    display: flex;
+    padding: 6px;
+    border-radius: 50%;
+    color: var(--text-secondary);
+    transition: background-color 0.2s, color 0.2s;
+}
+.card-actions a:hover {
+    background-color: var(--bg-gray-light);
+    color: var(--primary-color);
+}
+.card-actions a .feather {
+    width: 18px;
+    height: 18px;
+}
+

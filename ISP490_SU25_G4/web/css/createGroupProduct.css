@@ -1,0 +1,126 @@
+/*
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
+*/
+/* 
+    Created on : Jun 12, 2025, 6:32:54 PM
+    Author     : NGUYEN MINH
+*/
+.form-container {
+    background-color: #fff;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    max-width: none;
+    margin: 0;
+}
+
+.form-header h2 {
+    font-family: 'SVN-Gilroy', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #4D4D4D;
+    margin: 0;
+    padding-bottom: 24px;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    font-family: 'SVN-Gilroy', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: black;
+    display: block;
+    margin-bottom: 15px;
+}
+
+.form-group input[type="text"],
+.form-group textarea {
+    width: 100%;
+    border: none;
+    padding: 8px 0;
+    font-family: 'SVN-Gilroy', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #666666;
+    background-color: transparent;
+}
+
+.form-group input[type="text"]:focus,
+.form-group textarea:focus {
+    outline: none;
+}
+
+
+.form-group.inline-group {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    border-bottom: 1px solid #B2D6D9;
+    padding-bottom: 10px;
+}
+
+.form-group.inline-group label {
+    margin-bottom: 0;
+    flex-shrink: 0;
+    width: 180px;
+    font-size: 16px;
+}
+
+.form-group.inline-group input {
+    border: none;
+    padding: 0;
+    font-size: 16px;
+}
+.form-group.inline-group textarea {
+    border: none;
+    padding: 0;
+}
+
+.form-group.inline-group:focus-within {
+    border-bottom-color: #298E94;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 30px;
+}
+
+.btn {
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    font-size: 12px;
+    font-family: 'SVN-Gilroy', sans-serif;
+    font-weight: 500;
+    line-height: 15.38px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-cancel {
+    background: #F1FEFF;
+    color: #4D4D4D;
+    border: 1px solid #B2D6D9;
+    padding: 10px 20px;
+}
+
+.btn-cancel:hover {
+    background: #e0faff;
+}
+
+.btn-submit {
+    background: #298E94;
+    color: white;
+    padding: 10px 30px;
+}
+
+.btn-submit:hover {
+    background: #1f6a6e;
+}

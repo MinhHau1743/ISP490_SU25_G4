@@ -1,0 +1,150 @@
+/*
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
+*/
+/* 
+    Created on : Jun 7, 2025, 9:22:14 PM
+    Author     : NGUYEN MINH
+*/
+
+.add-employee-page {
+    display: flex; 
+    gap: 24px;
+    align-items: flex-start;
+}
+
+
+.avatar-panel {
+    flex: 0 0 200px; 
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: sticky; 
+    top: 24px;
+}
+
+.avatar-upload-box {
+    width: 200px;
+    height: 200px;
+    background-color: #f8f9fa;
+    border: 2px dashed #e2e8f0;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    overflow: hidden;
+    transition: background-color 0.3s;
+}
+.avatar-upload-box:hover {
+    background-color: #f1f5f9;
+}
+.avatar-upload-box .feather {
+    width: 48px;
+    height: 48px;
+    color: #cbd5e0;
+}
+.avatar-upload-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.form-panel {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.form-card {
+    background-color: white;
+    padding: 24px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.form-card-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1A202C;
+    margin: 0 0 24px 0;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.form-card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; 
+    gap: 20px 30px;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-weight: 500;
+    color: #4A5568;
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    height: 44px;
+    padding: 0 12px;
+    border: 1px solid #CBD5E0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+}
+
+.form-group input[disabled] {
+    background-color: #f1f5f9;
+    color: #64748b;
+    cursor: not-allowed;
+    border-color: #e2e8f0;
+}
+
+.form-group textarea {
+    height: auto;
+    padding: 10px 12px;
+    resize: vertical;
+    min-height: 80px;
+}
+
+.radio-group {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    height: 44px;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.page-actions-footer {
+    padding: 16px 32px;
+    background-color: rgba(255, 255, 255, 0.85); 
+    backdrop-filter: blur(8px); /* Hiệu ứng blur */
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    position: sticky;
+    bottom: 0;
+    /* Căn chỉnh lại để nằm trong main-content */
+    margin: 24px -32px -24px -32px;
+}
