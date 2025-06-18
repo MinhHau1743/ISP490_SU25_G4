@@ -7,11 +7,17 @@ package vn.edu.fpt.controller;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
+import java.io.File;
+import java.nio.file.Paths;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import vn.edu.fpt.dao.ProductDAO;
 import vn.edu.fpt.model.Product;
 import vn.edu.fpt.model.ProductCategory;
@@ -21,6 +27,7 @@ import vn.edu.fpt.model.ProductCategory;
  * @author phamh
  */
 @WebServlet(name = "ProductController", urlPatterns = {"/ProductController"})
+@MultipartConfig
 public class ProductController extends HttpServlet {
 
     /**
@@ -57,7 +64,9 @@ public class ProductController extends HttpServlet {
         }
         if (service.equals("products")) {
             int page = 1;
-            int pageSize = 10; // số sản phẩm trên 1 trang, tuỳ bạn thiết lập
+            int pageSize = 10;
+
+            // Lấy thông tin phân trang từ request
             String pageRaw = request.getParameter("page");
             String sizeRaw = request.getParameter("size");
             if (pageRaw != null) {
@@ -66,28 +75,50 @@ public class ProductController extends HttpServlet {
             if (sizeRaw != null) {
                 pageSize = Integer.parseInt(sizeRaw);
             }
+
+            // Tính tổng số trang
             int totalProducts = products.countAllProducts();
             int totalPages = (int) Math.ceil((double) totalProducts / pageSize);
-            if (request.getParameter("page") != null) {
-                page = Integer.parseInt(request.getParameter("page"));
-            }
-            if (request.getParameter("size") != null) {
-                pageSize = Integer.parseInt(request.getParameter("size"));
-            }
+
+            // Lấy danh sách sản phẩm theo trang
             List<Product> listProducts = products.viewAllProduct(page, pageSize);
-            request.setAttribute("productList", listProducts);
+
+            // Tạo map để lưu sản phẩm và ảnh tương ứng
+            Map<Product, String> productImageMap = new LinkedHashMap<>();
+
+            String imageDir = "D:/New folder/ISP490_SU25_G4/web/image";
+            String[] extensions = {"jpg", "jpeg", "png", "webp"};
+
+            for (Product p : listProducts) {
+                String foundFile = "default.jpg"; // mặc định
+
+                for (String ext : extensions) {
+                    String fileName = p.getId() + "_product." + ext;
+                    File file = new File(imageDir, fileName);
+                    if (file.exists()) {
+                        foundFile = fileName;
+                        break;
+                    }
+                }
+
+                productImageMap.put(p, foundFile); // map sản phẩm với ảnh
+            }
+
+            // Gửi dữ liệu sang JSP
+            request.setAttribute("productImageMap", productImageMap);
             request.setAttribute("totalPages", totalPages);
             request.setAttribute("currentPage", page);
             request.setAttribute("pageSize", pageSize);
-            // Kiểm tra và truyền thông báo nếu có
+
+            // Gửi thông báo nếu có
             String notification = (String) request.getAttribute("Notification");
             if (notification != null && !notification.isEmpty()) {
                 request.setAttribute("Notification", notification);
             }
 
-            // Chuyển hướng tới trang JSP
             request.getRequestDispatcher("jsp/technicalSupport/listProduct.jsp").forward(request, response);
         }
+
         if (service.equals("getProductById")) {
             String idRaw = request.getParameter("id");
             if (idRaw == null) {
@@ -134,6 +165,21 @@ public class ProductController extends HttpServlet {
             String createdAt = request.getParameter("createdAt");
             String updatedAt = request.getParameter("updatedAt");
 
+            // Đường dẫn thư mục chứa ảnh
+            String uploadDir = "D:/New folder/ISP490_SU25_G4/web/image";
+            File uploadPath = new File(uploadDir);
+            if (!uploadPath.exists()) {
+                uploadPath.mkdirs();
+            }
+
+            // Upload ảnh nếu có
+            Part filePart = request.getPart("image");
+            if (filePart != null && filePart.getSize() > 0) {
+                String fileName = id + "_" + Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+                filePart.write(uploadDir + File.separator + fileName);
+            }
+
+            // Tạo đối tượng sản phẩm
             Product p = new Product();
             p.setId(id);
             p.setName(name);
@@ -148,15 +194,35 @@ public class ProductController extends HttpServlet {
 
             ProductDAO dao = new ProductDAO();
             boolean success = dao.editProduct(p);
+
+            // Sau khi cập nhật, kiểm tra xem có file ảnh nào tồn tại không (jpg, png, ...)
+            String[] extensions = {"jpg", "jpeg", "png", "webp"};
+            String foundFile = null;
+            for (String ext : extensions) {
+                String fileName = id + "_product." + ext;
+                File file = new File(uploadDir, fileName);
+                if (file.exists()) {
+                    foundFile = fileName;
+                    break;
+                }
+            }
+
+            // Gán tên ảnh cho JSP nếu có
+            if (foundFile != null) {
+                request.setAttribute("imageFileName", foundFile);
+            } else {
+                request.setAttribute("imageFileName", "default.jpg");
+            }
+
             if (success) {
-                response.sendRedirect("ProductController?service=editProduct&id=" + id);
+                response.sendRedirect("ProductController?service=viewProductDetail&id=" + id);
             } else {
                 request.setAttribute("product", p);
                 request.setAttribute("editError", "Cập nhật thất bại!");
                 request.getRequestDispatcher("jsp/technicalSupport/viewProductDetail.jsp").forward(request, response);
             }
-            request.getRequestDispatcher("jsp/technicalSupport/viewProductDetail.jsp").forward(request, response);
         }
+
     }
 
     /**
@@ -170,7 +236,7 @@ public class ProductController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        doGet(request, response);
     }
 
     /**

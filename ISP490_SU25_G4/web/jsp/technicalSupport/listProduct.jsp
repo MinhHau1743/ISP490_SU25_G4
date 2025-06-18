@@ -90,7 +90,6 @@
                                         <label for="category-filter">Nhóm hàng</label>
                                         <select id="category-filter" name="categoryId">
                                             <option value="">Tất cả</option>
-                                            <%-- Giả sử bạn có một list tên là 'categoryList' được truyền từ servlet --%>
                                             <c:forEach var="category" items="${categoryList}">
                                                 <option value="${category.id}" ${param.categoryId == category.id ? 'selected' : ''}>${category.name}</option>
                                             </c:forEach>
@@ -114,21 +113,25 @@
 
                             <%-- LẶP QUA DANH SÁCH SẢN PHẨM VÀ HIỂN THỊ --%>
                             <div id="productList">
-                                <c:forEach var="p" items="${productList}">
+                                <c:forEach var="entry" items="${productImageMap}">
+                                    <c:set var="p" value="${entry.key}" />
+                                    <c:set var="imageFileName" value="${entry.value}" />
+
                                     <div class="product-card">
                                         <div class="card-image">
-
+                                            <img id="myImg" src="${pageContext.request.contextPath}/image/${imageFileName}"
+                                                 alt="Ảnh sản phẩm"
+                                                 style="width: 100%; height: auto;"
+                                                 onerror="this.src='${pageContext.request.contextPath}/image/na.jpg'" />
                                         </div>
+
                                         <div class="card-content">
                                             <div class="card-header">
-                                                
-                                                    <span class="product-name-header">${p.name}</span>
-                                           
-
+                                                <span class="product-name-header">${p.name}</span>
                                             </div>
                                             <div class="card-body">
                                                 <div class="card-info-row"><i data-feather="tag"></i><span class="info-value">Mã: ${p.productCode}</span></div>
-                                                <div class="card-info-row"><i data-feather="layers"></i><span class="info-value">Danh mục: ${p.getCategoryName()    }</span></div>
+                                                <div class="card-info-row"><i data-feather="layers"></i><span class="info-value">Danh mục: ${p.getCategoryName()}</span></div>
                                                 <div class="card-info-row"><i data-feather="package"></i><span class="info-value">Xuất xứ: ${p.origin}</span></div>
                                                 <div class="card-info-row"><i data-feather="align-left"></i><span class="info-value">Mô tả: ${p.description}</span></div>
                                                 <div class="card-info-row"><i data-feather="calendar"></i><span class="info-value">Ngày tạo: ${p.createdAt}</span></div>
@@ -142,6 +145,7 @@
                                                     </span>
                                                 </div>
                                             </div>
+
                                             <div class="card-footer">
                                                 <div class="product-price-footer">
                                                     <span><fmt:formatNumber value="${p.price}" type="currency" currencyCode="VND"/></span>
@@ -154,15 +158,17 @@
                                             </div>
                                         </div>
                                     </div>
-
-
                                 </c:forEach>
-                                <%-- Kết thúc vòng lặp --%>
+                                <div id="myModal" class="modal">
+                                    <span class="close">&times;</span>
+                                    <img class="modal-content" id="img01">
+                                    <div id="caption"></div>
+                                </div>
                                 <p id="noResultMsg" style="display:none; grid-column: 1 / -1; text-align: center; color: var(--text-secondary);">
                                     Không tìm thấy sản phẩm nào phù hợp.
                                 </p>
-
                             </div>
+
                         </div>
 
                         <jsp:include page="../../pagination.jsp"/>
