@@ -25,7 +25,7 @@ public class DBContext {
     public Connection getConnection() {
         try {
             // Edit URL, username, password to authenticate with your MySQL Server
-            String url = "jdbc:mysql://localhost:3306/datn";
+            String url = "jdbc:mysql://localhost:3306/isp490_su25_gr4";
             String userName = "root";
             String password = "1234";
 
