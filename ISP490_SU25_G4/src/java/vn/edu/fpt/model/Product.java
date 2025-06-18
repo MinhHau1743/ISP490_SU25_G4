@@ -3,20 +3,11 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package vn.edu.fpt.model;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
 /**
  *
  * @author PC
  */
-@ToString
-@Builder
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
+
 public class Product {
     private int id;
     private String name;
@@ -25,6 +16,7 @@ public class Product {
     private double price;
     private String description;
     private int categoryId;
+    private String CategoryName;
     private boolean isDeleted;
     private String createdAt;
     private String updatedAt;
@@ -32,7 +24,7 @@ public class Product {
     public Product() {
     }
 
-    public Product(int id, String name, String productCode, String origin, double price, String description, int categoryId, boolean isDeleted, String createdAt, String updatedAt) {
+    public Product(int id, String name, String productCode, String origin, double price, String description, int categoryId, String CategoryName, boolean isDeleted, String createdAt, String updatedAt) {
         this.id = id;
         this.name = name;
         this.productCode = productCode;
@@ -40,10 +32,13 @@ public class Product {
         this.price = price;
         this.description = description;
         this.categoryId = categoryId;
+        this.CategoryName = CategoryName;
         this.isDeleted = isDeleted;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
+
+
 
     public int getId() {
         return id;
@@ -85,6 +80,14 @@ public class Product {
         this.price = price;
     }
 
+    public String getCategoryName() {
+        return CategoryName;
+    }
+
+    public void setCategoryName(String CategoryName) {
+        this.CategoryName = CategoryName;
+    }
+    
     public String getDescription() {
         return description;
     }
@@ -123,6 +126,11 @@ public class Product {
 
     public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    @Override
+    public String toString() {
+        return "Product{" + "id=" + id + ", name=" + name + ", productCode=" + productCode + ", origin=" + origin + ", price=" + price + ", description=" + description + ", categoryId=" + categoryId + ", CategoryName=" + CategoryName + ", isDeleted=" + isDeleted + ", createdAt=" + createdAt + ", updatedAt=" + updatedAt + '}';
     }
     
 }

@@ -22,10 +22,10 @@
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <script src="https://unpkg.com/feather-icons"></script>
 
-        <link rel="stylesheet" href="../../css/style.css">
-        <link rel="stylesheet" href="../../css/header.css">
-        <link rel="stylesheet" href="../../css/mainMenu.css">
-        <link rel="stylesheet" href="../../css/editProductDetail.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/editProductDetail.css">
     </head>
     <body>
         <div class="app-container">
@@ -55,25 +55,20 @@
                                         <div class="form-section">
                                             <h2 class="form-section-title">Hình ảnh sản phẩm</h2>
                                             <div class="image-list">
-                                                <c:forEach var="imgUrl" items="${product.images}">
-                                                    <div class="image-item">
-                                                        <img src="${imgUrl}" alt="Product Image">
-                                                        <button type="button" class="delete-img-btn" title="Xóa ảnh"><i data-feather="trash-2"></i></button>
-                                                    </div>
-                                                </c:forEach>
+
                                             </div>
                                             <label for="imageUpload" class="upload-box" style="margin-top: 16px;">
                                                 <i data-feather="upload-cloud"></i>
                                                 <p>Tải lên ảnh mới</p>
                                             </label>
                                             <input type="file" id="imageUpload" name="newImages" multiple>
-                                            <small style="color: var(--text-tertiary); font-size: 12px; margin-top: 8px;">Logic xóa và tải ảnh mới cần được xử lý ở backend.</small>
+
                                         </div>
 
                                         <div class="form-section">
                                             <h2 class="form-section-title">Mô tả chi tiết</h2>
                                             <div class="form-group full-width">
-                                                <textarea name="longDescription" class="form-control" rows="10">${product.longDescription}</textarea>
+                                                <textarea name="longDescription" class="form-control" rows="10">${product.description}</textarea>
                                             </div>
                                         </div>
                                     </div>
@@ -81,52 +76,54 @@
                                     <div class="form-column">
                                         <div class="form-section">
                                             <h2 class="form-section-title">Thông tin chung</h2>
+
                                             <div class="form-group full-width">
                                                 <label class="form-label" for="productName">Tên sản phẩm</label>
                                                 <input type="text" id="productName" name="name" class="form-control" value="${product.name}" required>
                                             </div>
+
                                             <div class="form-group full-width">
-                                                <label class="form-label" for="shortDescription">Mô tả ngắn</label>
-                                                <textarea id="shortDescription" name="shortDescription" class="form-control" rows="3">${product.shortDescription}</textarea>
+                                                <label class="form-label" for="description">Mô tả</label>
+                                                <textarea id="description" name="description" class="form-control" rows="3">${product.description}</textarea>
                                             </div>
+
                                             <div class="form-grid">
                                                 <div class="form-group">
                                                     <label class="form-label" for="productCode">Mã sản phẩm</label>
                                                     <input type="text" id="productCode" name="productCode" class="form-control" value="${product.productCode}">
                                                 </div>
+
                                                 <div class="form-group">
                                                     <label class="form-label" for="price">Giá bán (VNĐ)</label>
                                                     <input type="number" id="price" name="price" class="form-control" value="${product.price}">
                                                 </div>
-                                                <div class="form-group">
-                                                    <label class="form-label" for="stockQuantity">Số lượng tồn kho</label>
-                                                    <input type="number" id="stockQuantity" name="stockQuantity" class="form-control" value="${product.stockQuantity}">
-                                                </div>
-                                                <div class="form-group">
-                                                    <label class="form-label" for="status">Trạng thái</label>
-                                                    <select id="status" name="status" class="form-control">
-                                                        <option value="IN_STOCK" ${product.status == 'IN_STOCK' ? 'selected' : ''}>Còn hàng</option>
-                                                        <option value="OUT_OF_STOCK" ${product.status == 'OUT_OF_STOCK' ? 'selected' : ''}>Hết hàng</option>
-                                                    </select>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label class="form-label" for="category">Danh mục</label>
-                                                    <select id="category" name="categoryId" class="form-control">
-                                                        <c:forEach var="cat" items="${categoryList}">
-                                                            <option value="${cat.id}" ${product.categoryId == cat.id ? 'selected' : ''}>${cat.name}</option>
-                                                        </c:forEach>
-                                                    </select>
-                                                </div>
+
                                                 <div class="form-group">
                                                     <label class="form-label" for="origin">Xuất xứ</label>
-                                                    <select id="origin" name="originId" class="form-control">
-                                                        <c:forEach var="ori" items="${originList}">
-                                                            <option value="${ori.id}" ${product.originId == ori.id ? 'selected' : ''}>${ori.name}</option>
-                                                        </c:forEach>
-                                                    </select>
+                                                    <input type="text" id="origin" name="origin" class="form-control" value="${product.origin}">
+                                                </div>
+
+                                                <select id="categoryId" name="categoryId" class="form-control" required>
+                                                    <c:forEach var="c" items="${categories}">
+                                                        <option value="${c.id}" <c:if test="${product.categoryId == c.id}">selected</c:if>>
+                                                            ${c.name}
+                                                        </option>
+                                                    </c:forEach>
+                                                </select>
+
+
+                                                <div class="form-group">
+                                                    <label class="form-label" for="createdAt">Ngày tạo</label>
+                                                    <input type="text" id="createdAt" name="createdAt" class="form-control" value="${product.createdAt}" readonly>
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <label class="form-label" for="updatedAt">Ngày cập nhật</label>
+                                                    <input type="text" id="updatedAt" name="updatedAt" class="form-control" value="${product.updatedAt}" readonly>
                                                 </div>
                                             </div>
                                         </div>
+
 
                                         <div class="form-section">
                                             <h2 class="form-section-title">Thông số kỹ thuật</h2>
@@ -135,13 +132,7 @@
                                                     <tr><th>Tên thông số</th><th>Giá trị</th><th></th></tr>
                                                 </thead>
                                                 <tbody id="specs-tbody">
-                                                    <c:forEach var="spec" items="${product.specifications}">
-                                                        <tr>
-                                                            <td><input type="text" name="spec_key" class="form-control" value="${spec.key}"></td>
-                                                            <td><input type="text" name="spec_value" class="form-control" value="${spec.value}"></td>
-                                                            <td><button type="button" class="btn-delete-spec" title="Xóa thông số"><i data-feather="x-circle"></i></button></td>
-                                                        </tr>
-                                                    </c:forEach>
+
                                                 </tbody>
                                             </table>
                                             <button type="button" id="add-spec-btn" class="btn-add-spec">
@@ -161,7 +152,7 @@
             </main>
         </div>
 
-        <script src="../../js/editProductDetail.js"></script>
-        <script src="../../js/mainMenu.js"></script>
+        <script src="${pageContext.request.contextPath}/js/editProductDetail.js"></script>
+        <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>

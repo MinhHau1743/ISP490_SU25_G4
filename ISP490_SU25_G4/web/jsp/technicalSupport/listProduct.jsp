@@ -46,7 +46,7 @@
                 <div class="page-content">
                     <div class="content-card">
                         <%-- Form tìm kiếm và lọc --%>
-                        <form action="product" method="get">
+                        <form action="productController" method="get">
                             <div class="table-toolbar">
                                 <div class="search-box">
                                     <i data-feather="search" class="feather-search"></i>
@@ -121,14 +121,14 @@
                                         </div>
                                         <div class="card-content">
                                             <div class="card-header">
-                                                <a href="productDetail?id=${p.id}" class="product-name-link">
+                                                
                                                     <span class="product-name-header">${p.name}</span>
-                                                </a>
+                                           
 
                                             </div>
                                             <div class="card-body">
                                                 <div class="card-info-row"><i data-feather="tag"></i><span class="info-value">Mã: ${p.productCode}</span></div>
-                                                <div class="card-info-row"><i data-feather="layers"></i><span class="info-value">Danh mục: ${p.categoryId}</span></div>
+                                                <div class="card-info-row"><i data-feather="layers"></i><span class="info-value">Danh mục: ${p.getCategoryName()    }</span></div>
                                                 <div class="card-info-row"><i data-feather="package"></i><span class="info-value">Xuất xứ: ${p.origin}</span></div>
                                                 <div class="card-info-row"><i data-feather="align-left"></i><span class="info-value">Mô tả: ${p.description}</span></div>
                                                 <div class="card-info-row"><i data-feather="calendar"></i><span class="info-value">Ngày tạo: ${p.createdAt}</span></div>
@@ -147,8 +147,8 @@
                                                     <span><fmt:formatNumber value="${p.price}" type="currency" currencyCode="VND"/></span>
                                                 </div>
                                                 <div class="action-buttons">
-                                                    <a href="../technicalSupport/viewProductDetail.jsp?id=${p.id}" title="Xem"><i data-feather="eye"></i></a>
-                                                    <a href="../technicalSupport/editProductDetail.jsp?id=${p.id}" title="Sửa"><i data-feather="edit-2"></i></a>
+                                                    <a href="ProductController?service=getProductById&id=${p.id}" title="Xem"><i data-feather="eye"></i></a>
+                                                    <a href="ProductController?service=getProductToEdit&id=${p.id}" title="Sửa"><i data-feather="edit-2"></i></a>
                                                     <a href="#" class="delete-trigger-btn" data-id="${p.id}" data-name="${p.name}" title="Xóa"><i data-feather="trash-2"></i></a>
                                                 </div>
                                             </div>
@@ -181,6 +181,6 @@
         </div>
 
         <script src="${pageContext.request.contextPath}/js/listProduct.js"></script>
-        <script src=".${pageContext.request.contextPath}/js/mainMenu.js"></script>
+        <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>

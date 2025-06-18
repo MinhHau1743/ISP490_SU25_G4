@@ -14,6 +14,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 import vn.edu.fpt.dao.ProductDAO;
 import vn.edu.fpt.model.Product;
+import vn.edu.fpt.model.ProductCategory;
 
 /**
  *
@@ -77,7 +78,6 @@ public class ProductController extends HttpServlet {
             request.setAttribute("productList", listProducts);
             request.setAttribute("totalPages", totalPages);
             request.setAttribute("currentPage", page);
-            request.setAttribute("totalPages", totalPages);
             request.setAttribute("pageSize", pageSize);
             // Kiểm tra và truyền thông báo nếu có
             String notification = (String) request.getAttribute("Notification");
@@ -87,6 +87,75 @@ public class ProductController extends HttpServlet {
 
             // Chuyển hướng tới trang JSP
             request.getRequestDispatcher("jsp/technicalSupport/listProduct.jsp").forward(request, response);
+        }
+        if (service.equals("getProductById")) {
+            String idRaw = request.getParameter("id");
+            if (idRaw == null) {
+                response.sendRedirect("ProductController");
+                return;
+            }
+            int id = Integer.parseInt(idRaw);
+            ProductDAO dao = new ProductDAO();
+            Product p = dao.getProductById(id);
+            if (p == null) {
+                response.sendRedirect("ProductController");
+                return;
+            }
+            request.setAttribute("product", p);
+            request.getRequestDispatcher("jsp/technicalSupport/viewProductDetail.jsp").forward(request, response);
+        }
+        if (service.equals("getProductToEdit")) {
+            String idRaw = request.getParameter("id");
+            if (idRaw == null) {
+                response.sendRedirect("ProductController");
+                return;
+            }
+            int id = Integer.parseInt(idRaw);
+            ProductDAO dao = new ProductDAO();
+            Product p = dao.getProductById(id);
+            List<ProductCategory> categoryList = dao.getAllCategories();
+            request.setAttribute("categories", categoryList);
+            if (p == null) {
+                response.sendRedirect("ProductController");
+                return;
+            }
+            request.setAttribute("product", p);
+            request.getRequestDispatcher("jsp/technicalSupport/editProductDetail.jsp").forward(request, response);
+        }
+        if (service.equals("editProduct")) {
+            int id = Integer.parseInt(request.getParameter("id"));
+            String name = request.getParameter("name");
+            String productCode = request.getParameter("productCode");
+            String origin = request.getParameter("origin");
+            double price = Double.parseDouble(request.getParameter("price"));
+            String description = request.getParameter("description");
+            int categoryId = Integer.parseInt(request.getParameter("categoryId"));
+            boolean isDeleted = Boolean.parseBoolean(request.getParameter("isDeleted"));
+            String createdAt = request.getParameter("createdAt");
+            String updatedAt = request.getParameter("updatedAt");
+
+            Product p = new Product();
+            p.setId(id);
+            p.setName(name);
+            p.setProductCode(productCode);
+            p.setOrigin(origin);
+            p.setPrice(price);
+            p.setDescription(description);
+            p.setCategoryId(categoryId);
+            p.setIsDeleted(isDeleted);
+            p.setCreatedAt(createdAt);
+            p.setUpdatedAt(updatedAt);
+
+            ProductDAO dao = new ProductDAO();
+            boolean success = dao.editProduct(p);
+            if (success) {
+                response.sendRedirect("ProductController?service=editProduct&id=" + id);
+            } else {
+                request.setAttribute("product", p);
+                request.setAttribute("editError", "Cập nhật thất bại!");
+                request.getRequestDispatcher("jsp/technicalSupport/viewProductDetail.jsp").forward(request, response);
+            }
+            request.getRequestDispatcher("jsp/technicalSupport/viewProductDetail.jsp").forward(request, response);
         }
     }
 

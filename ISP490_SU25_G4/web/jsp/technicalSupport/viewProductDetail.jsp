@@ -23,10 +23,10 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <script src="https://unpkg.com/feather-icons"></script>
-        <link rel="stylesheet" href="../../css/style.css">
-        <link rel="stylesheet" href="../../css/header.css">
-        <link rel="stylesheet" href="../../css/mainMenu.css">
-        <link rel="stylesheet" href="../../css/viewProductDetail.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/viewProductDetail.css">
     </head>
     <body>
         <div class="app-container">
@@ -35,7 +35,7 @@
                 <div class="page-content">
                     <div class="content-card">
                         <div class="detail-header">
-                            <a href="listProduct.jsp" class="back-link"> <%-- Sửa link thành /product servlet --%>
+                            <a href="ProductController" class="back-link"> <%-- Sửa link thành /product servlet --%>
                                 <i data-feather="arrow-left"></i>
                                 <span>Quay lại danh sách</span>
                             </a>
@@ -46,31 +46,20 @@
                                 <div class="product-gallery">
                                     <div class="main-image">
                                         <%-- Hiển thị ảnh đầu tiên trong danh sách làm ảnh chính --%>
-                                        <img id="mainProductImage" src="${product.images[0]}" alt="Main image of ${product.name}">
+                                        <img id="mainProductImage" src="" alt="Main image of ${product.name}">
                                     </div>
                                     <div class="thumbnail-list">
                                         <%-- Lặp qua danh sách ảnh để hiển thị thumbnail --%>
-                                        <c:forEach var="imgUrl" items="${product.images}" varStatus="loop">
-                                            <div class="thumbnail-item ${loop.first ? 'active' : ''}" data-large-src="${imgUrl}">
-                                                <img src="${imgUrl}" alt="Thumbnail ${loop.count} for ${product.name}">
+                                        <c:forEach var="imgUrl" items="" varStatus="loop">
+                                            <div class="thumbnail-item" data-large-src="">
+                                                <img src="" alt="Thumbnail  for ${product.name}">
                                             </div>
                                         </c:forEach>
                                     </div>
                                 </div>
 
                                 <div class="product-info">
-                                    <div class="product-info-header">
-                                        <h1 class="product-title">${product.name}</h1>
-                                        <%-- Logic hiển thị trạng thái --%>
-                                        <c:choose>
-                                            <c:when test="${product.status == 'IN_STOCK'}">
-                                                <div class="status-badge instock">Còn hàng</div>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <div class="status-badge outofstock">Hết hàng</div>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </div>
+
 
                                     <%-- Định dạng giá tiền --%>
                                     <div class="price-section">
@@ -79,14 +68,14 @@
 
                                     <div class="info-snippets">
                                         <div class="snippet"><span class="snippet-label">Mã sản phẩm</span><span class="snippet-value">${product.productCode}</span></div>
-                                        <div class="snippet"><span class="snippet-label">Danh mục</span><span class="snippet-value">${product.categoryName}</span></div>
-                                        <div class="snippet"><span class="snippet-label">Thương hiệu</span><span class="snippet-value">${product.brandName}</span></div>
-                                        <div class="snippet"><span class="snippet-label">Xuất xứ</span><span class="snippet-value">${product.originName}</span></div>
-                                        <div class="snippet"><span class="snippet-label">Bảo hành</span><span class="snippet-value">${product.warrantyInfo}</span></div>
-                                        <div class="snippet"><span class="snippet-label">Tồn kho</span><span class="snippet-value">${product.stockQuantity}</span></div>
+                                        <div class="snippet"><span class="snippet-label">Danh mục</span><span class="snippet-value">${product.categoryId}</span></div>
+                                        <div class="snippet"><span class="snippet-label">Thương hiệu</span><span class="snippet-value">${product.origin}</span></div>
+                                        <div class="snippet"><span class="snippet-label">Xuất xứ</span><span class="snippet-value">${product.description}</span></div>
+                                        <div class="snippet"><span class="snippet-label">Bảo hành</span><span class="snippet-value">${product.createdAt}</span></div>
+                                        <div class="snippet"><span class="snippet-label">Tồn kho</span><span class="snippet-value">${product.updatedAt}</span></div>
                                     </div>
 
-                                    <p class="product-description">${product.shortDescription}</p>
+                        
 
                                     <div class="view-actions">
                                         <%-- Link sửa sản phẩm với ID động --%>
@@ -101,18 +90,12 @@
                                     </nav>
                                     <div id="description" class="tab-content active">
                                         <%-- Dùng c:out để hiển thị nội dung HTML từ database --%>
-                                        <c:out value="${product.longDescription}" escapeXml="false" />
+                                        <c:out value="${product.description}" escapeXml="false" />
                                     </div>
                                     <div id="specs" class="tab-content">
                                         <table class="specs-table">
                                             <tbody>
-                                                <%-- Lặp qua Map thông số kỹ thuật --%>
-                                                <c:forEach var="spec" items="${product.specifications}">
-                                                    <tr>
-                                                        <td>${spec.key}</td>
-                                                        <td>${spec.value}</td>
-                                                    </tr>
-                                                </c:forEach>
+         
                                             </tbody>
                                         </table>
                                     </div>
@@ -135,7 +118,7 @@
         </div>
 
 
-        <script src="../../js/viewProductDetail.js"></script>
-        <script src="../../js/mainMenu.js"></script>
+        <script src="${pageContext.request.contextPath}/js/viewProductDetail.js"></script>
+        <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>
