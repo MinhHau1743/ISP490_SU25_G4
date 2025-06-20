@@ -1,0 +1,326 @@
+/*
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
+*/
+/* 
+    Created on : Jun 20, 2025, 11:03:44 AM
+    Author     : NGUYEN MINH
+*/
+:root {
+    --primary-color: #298E94;
+    --primary-bg-light: #F1FEFF;
+    --border-color: #e2e8f0;
+    --border-color-focus: #298E94;
+    --text-primary: #1a202c;
+    --text-secondary: #4a5568;
+    --text-tertiary: #a0aec0;
+    --bg-white: #FFFFFF;
+    --bg-gray-light: #f7fafc;
+}
+
+.page-content {
+    padding: 24px;
+}
+
+.detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+.detail-header .back-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+}
+.detail-header .back-link:hover {
+    color: var(--primary-color);
+}
+
+.detail-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+}
+.main-column, .sidebar-column {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+.detail-card {
+    background: var(--bg-white);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+}
+.detail-card .card-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 16px 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* ============================================= */
+/* 3. Định dạng Form (Form Styling)              */
+/* ============================================= */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 16px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1; /* Chiếm toàn bộ chiều rộng grid */
+}
+
+.form-group label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+/* Định dạng chung cho các ô input, select, textarea */
+.form-control {
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    color: var(--text-primary);
+    background-color: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 10px 12px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--border-color-focus);
+    box-shadow: 0 0 0 3px rgba(41, 142, 148, 0.15);
+}
+
+textarea.form-control {
+    min-height: 120px;
+    resize: vertical;
+}
+.device-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+}
+.device-table th, .device-table td {
+    text-align: left;
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+.device-table thead {
+    background-color: var(--bg-gray-light);
+}
+.device-table td textarea {
+    width: 100%;
+    min-height: 50px;
+    resize: vertical;
+}
+
+/* == BẮT ĐẦU CSS MỚI CHO SIDEBAR FORM == */
+.sidebar-form .detail-card {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Khoảng cách giữa các hàng */
+}
+.sidebar-form .card-title {
+    padding: 0 8px 12px 8px;
+}
+.sidebar-form-row {
+    display: grid;
+    grid-template-columns: 140px 1fr; /* Cố định chiều rộng của label */
+    align-items: center;
+    gap: 16px;
+}
+.sidebar-form-row label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin: 0;
+}
+.sidebar-form-row .form-control {
+    width: 100%;
+    font-weight: 500;
+}
+.sidebar-form-row .radio-group {
+    display: flex;
+    gap: 16px;
+}
+.sidebar-form-row .radio-group label {
+    font-weight: 500;
+}
+
+/* CSS cho màu sắc của Select Box */
+select.status-completed {
+    background-color: var(--status-completed-bg, #EAF7E8);
+    color: var(--status-completed-text, #3E8635);
+}
+select.status-processing {
+    background-color: var(--status-processing-bg, #FEF5E5);
+    color: var(--status-processing-text, #F2994A);
+}
+select.status-pending {
+    background-color: var(--status-pending-bg, #FDEEEE);
+    color: var(--status-pending-text, #EB5757);
+}
+select.status-cancelled {
+    background-color: #f0f0f0;
+    color: #757575;
+}
+
+select.priority-urgent {
+    background-color: var(--priority-urgent-bg, #fdeeee);
+    color: var(--priority-urgent-text, #eb5757);
+}
+select.priority-high {
+    background-color: var(--priority-high-bg, #fef5e5);
+    color: var(--priority-high-text, #f2994a);
+}
+.device-table-edit {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+}
+.device-table-edit th, .device-table-edit td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+.device-table-edit th {
+    background-color: #f7fafc;
+    font-weight: 600;
+    font-size: 13px;
+}
+.device-table-edit td {
+    font-size: 14px;
+    vertical-align: top;
+}
+.device-table-edit .form-control-table {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    resize: vertical;
+    min-height: 40px;
+    font-size: 14px;
+}
+.device-table-actions {
+    margin-top: 16px;
+    text-align: right;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+.modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+.modal-content {
+    background: white;
+    padding: 30px 40px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    transform: scale(0.9);
+    transition: transform 0.3s;
+}
+.modal-overlay.show .modal-content {
+    transform: scale(1);
+}
+.modal-content .success-icon {
+    width: 60px;
+    height: 60px;
+    color: #28a745;
+    margin-bottom: 15px;
+}
+.modal-content .success-message {
+    font-size: 18px;
+    font-weight: 500;
+    color: #333;
+    margin: 0;
+}
+.progress-bar-container {
+    width: 100%;
+    height: 8px;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    margin-top: 20px;
+    overflow: hidden;
+}
+.progress-bar-fill {
+    width: 0%;
+    height: 100%;
+    background-color: #28a745;
+    border-radius: 4px;
+}
+.modal-overlay.show .progress-bar-fill {
+    animation: fill-progress 2s linear forwards;
+}
+@keyframes fill-progress {
+    from {
+        width: 0%;
+    }
+    to {
+        width: 100%;
+    }
+}
+
+/* == CSS MỚI CHO SIDEBAR == */
+.sidebar-form .card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 14px; /* Khoảng cách giữa các hàng */
+}
+.sidebar-form-row {
+    display: grid;
+    grid-template-columns: 120px 1fr; /* Cố định chiều rộng của label */
+    align-items: center;
+    gap: 12px;
+}
+.sidebar-form-row label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #4b5563;
+    text-align: left;
+}
+.radio-group {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+.radio-group label {
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}

@@ -3,9 +3,79 @@ Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to c
 Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
 */
 /* 
-    Created on : Jun 17, 2025, 12:12:40 PM
+    Created on : Jun 19, 2025, 8:36:08 PM
     Author     : NGUYEN MINH
 */
+
+.form-control {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: #ffffff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color, #298E94);
+    box-shadow: 0 0 0 3px rgba(41, 142, 148, 0.1);
+}
+.form-control[readonly] {
+    background-color: #f3f4f6;
+    cursor: not-allowed;
+}
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.form-group label {
+    font-size: 14px;
+    color: #374151;
+    font-weight: 500;
+}
+
+/* CSS cho bảng hợp đồng */
+.contract-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.contract-table th, .contract-table td {
+    padding: 12px 20px;
+    text-align: left;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 14px;
+    vertical-align: middle;
+}
+.contract-table thead th {
+    background-color: #f9fafb;
+    font-weight: 600;
+    color: #4b5563;
+    font-size: 13px;
+}
+.contract-table tbody tr:last-child td {
+    border-bottom: none;
+}
+.contract-table .contract-code {
+    font-weight: 600;
+    color: var(--primary-color, #298E94);
+}
+.contract-table .status-pill {
+    padding: 4px 10px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+}
+.status-active {
+    background-color: #dcfce7;
+    color: #166534;
+}
+.status-expired {
+    background-color: #e5e7eb;
+    color: #4b5563;
+}
 .page-content {
     padding: 24px;
     background-color: #f9fafb;
@@ -225,4 +295,3 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     background-color: #e5e7eb;
     color: #4b5563;
 }
-
