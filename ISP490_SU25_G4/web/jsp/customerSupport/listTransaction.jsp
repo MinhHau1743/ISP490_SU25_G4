@@ -68,7 +68,7 @@
                             </div>
                             <button type="submit" class="btn btn-secondary"><i data-feather="search"></i>Tìm kiếm</button>
                             <div class="toolbar-actions">
-                                <a href="addTransaction.jsp" class="btn btn-primary"><i data-feather="plus"></i>Tạo Phiếu</a>
+                                <a href="createTicket.jsp" class="btn btn-primary"><i data-feather="plus"></i>Tạo Phiếu</a>
                             </div>
                         </form>
 
