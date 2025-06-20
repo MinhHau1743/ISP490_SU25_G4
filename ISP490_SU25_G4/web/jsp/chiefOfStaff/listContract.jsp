@@ -139,8 +139,8 @@
                                                 </c:choose>
                                             </td>
                                             <td class="table-actions">
-                                                <a href="contract?action=view&id=${contract.id}" title="Xem"><i data-feather="eye"></i></a>
-                                                <a href="contract?action=edit&id=${contract.id}" title="Sửa"><i data-feather="edit-2"></i></a>
+                                                <a href="viewContractDetail.jsp" title="Xem"><i data-feather="eye"></i></a>
+                                                <a href="editContractDetail.jsp" title="Sửa"><i data-feather="edit-2"></i></a>
                                                 <a href="#" onclick="confirmDelete('${contract.id}', '${contract.contractCode}')" title="Xóa"><i data-feather="trash-2"></i></a>
                                             </td>
                                         </tr>
