@@ -85,35 +85,33 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
-// Lấy phần tử modal (hộp hiển thị ảnh lớn khi click)
+// Lấy modal, ảnh lớn và caption
 var modal = document.getElementById("myModal");
-
-// Lấy ảnh thu nhỏ mà người dùng sẽ click vào
-var img = document.getElementById("myImg");
-
-// Lấy phần tử ảnh bên trong modal (sẽ hiển thị ảnh phóng to)
 var modalImg = document.getElementById("img01");
-
-// Lấy phần tử chú thích (caption) để hiển thị mô tả ảnh
 var captionText = document.getElementById("caption");
 
-// Khi người dùng click vào ảnh thu nhỏ
-img.onclick = function () {
-    // Hiển thị modal (popup)
-    modal.style.display = "block";
+// Sửa thành: Chọn tất cả ảnh bằng CLASS
+var thumbnails = document.querySelectorAll(".modal-img");
 
-    // Gán ảnh lớn trong modal bằng ảnh thu nhỏ đã click
-    modalImg.src = this.src;
+// Gắn sự kiện cho từng ảnh
+thumbnails.forEach(function (img) {
+    img.addEventListener("click", function () {
+        modal.style.display = "block";
+        modalImg.src = this.src; // Hiển thị ảnh click
+        captionText.innerHTML = this.alt;
+    });
+});
 
-    // Gán phần chú thích bằng nội dung 'alt' của ảnh thu nhỏ
-    captionText.innerHTML = this.alt;
-}
-
-// Lấy phần tử dấu "×" dùng để đóng modal
+// Đóng modal
 var span = document.getElementsByClassName("close")[0];
-
-// Khi người dùng click vào nút đóng (dấu "×")
 span.onclick = function () {
-    // Ẩn modal đi
     modal.style.display = "none";
-}
+};
+
+// (Optional) Đóng khi click ngoài ảnh
+modal.addEventListener("click", function (e) {
+    if (e.target === modal) {
+        modal.style.display = "none";
+    }
+});
+
