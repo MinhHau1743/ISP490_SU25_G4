@@ -31,4 +31,14 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
-
+document.getElementById('imageUpload').addEventListener('change', function (event) {
+    const file = event.target.files[0];
+    if (file) {
+        // Tạo URL tạm thời cho ảnh vừa chọn
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            document.getElementById('productImagePreview').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});

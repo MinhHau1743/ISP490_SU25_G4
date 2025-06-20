@@ -107,9 +107,7 @@
                         <div class="product-grid">
 
                             <%-- KIỂM TRA NẾU KHÔNG CÓ SẢN PHẨM --%>
-                            <c:if test="${empty productList}">
-                                <p style="grid-column: 1 / -1; text-align: center; color: var(--text-secondary);">Không tìm thấy sản phẩm nào phù hợp.</p>
-                            </c:if>
+
 
                             <%-- LẶP QUA DANH SÁCH SẢN PHẨM VÀ HIỂN THỊ --%>
                             <div id="productList">
@@ -119,11 +117,15 @@
 
                                     <div class="product-card">
                                         <div class="card-image">
-                                            <img id="myImg" src="${pageContext.request.contextPath}/image/${imageFileName}"
-                                                 alt="Ảnh sản phẩm"
-                                                 style="width: 100%; height: auto;"
-                                                 onerror="this.src='${pageContext.request.contextPath}/image/na.jpg'" />
+                                            <img 
+                                                class="modal-img" 
+                                                src="${pageContext.request.contextPath}/image/${imageFileName}"
+                                                alt="Ảnh sản phẩm"
+                                                style="width: 100%; height: auto;"
+                                                onerror="this.src='${pageContext.request.contextPath}/image/na.jpg'" 
+                                                />
                                         </div>
+
 
                                         <div class="card-content">
                                             <div class="card-header">
@@ -131,7 +133,7 @@
                                             </div>
                                             <div class="card-body">
                                                 <div class="card-info-row"><i data-feather="tag"></i><span class="info-value">Mã: ${p.productCode}</span></div>
-                                                <div class="card-info-row"><i data-feather="layers"></i><span class="info-value">Danh mục: ${p.getCategoryName()}</span></div>
+                                                <div class="card-info-row"><i data-feather="layers"></i><span class="info-value">Danh mục: ${p.categoryId}</span></div>
                                                 <div class="card-info-row"><i data-feather="package"></i><span class="info-value">Xuất xứ: ${p.origin}</span></div>
                                                 <div class="card-info-row"><i data-feather="align-left"></i><span class="info-value">Mô tả: ${p.description}</span></div>
                                                 <div class="card-info-row"><i data-feather="calendar"></i><span class="info-value">Ngày tạo: ${p.createdAt}</span></div>
@@ -152,7 +154,7 @@
                                                 </div>
                                                 <div class="action-buttons">
                                                     <a href="ProductController?service=getProductById&id=${p.id}" title="Xem"><i data-feather="eye"></i></a>
-                                                    <a href="ProductController?service=getProductToEdit&id=${p.id}" title="Sửa"><i data-feather="edit-2"></i></a>
+                                                    <a href="ProductController?service=getProductToEdit&id=${p.id}&image=${imageFileName}" title="Sửa"><i data-feather="edit-2"></i></a>
                                                     <a href="#" class="delete-trigger-btn" data-id="${p.id}" data-name="${p.name}" title="Xóa"><i data-feather="trash-2"></i></a>
                                                 </div>
                                             </div>
