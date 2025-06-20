@@ -35,9 +35,9 @@
                 <c:if test="${not empty customer}">
                     <div class="page-content">
                         <div class="detail-header">
-                            <a href="customer" class="back-link"><i data-feather="arrow-left"></i><span>Quay lại danh sách</span></a>
+                            <a href="listCustomer.jsp" class="back-link"><i data-feather="arrow-left"></i><span>Quay lại danh sách</span></a>
                             <div class="action-buttons" style="display: flex; gap: 8px;">
-                                <a href="editCustomer?id=${customer.id}" class="btn btn-secondary"><i data-feather="edit-2"></i>Sửa</a>
+                                <a href="editCustomerDetail.jsp" class="btn btn-secondary"><i data-feather="edit-2"></i>Sửa</a>
                                 <a href="#" class="btn btn-danger delete-trigger-btn" data-id="${customer.id}" data-name="${customer.name}"><i data-feather="trash-2"></i>Xóa</a>
                             </div>
                         </div>
