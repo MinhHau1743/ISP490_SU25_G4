@@ -1,0 +1,444 @@
+/*
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
+*/
+/* 
+    Created on : Jun 20, 2025, 10:49:03 AM
+    Author     : NGUYEN MINH
+*/
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.form-group label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+}
+.form-control, .form-control[readonly] {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: #ffffff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color, #298E94);
+    box-shadow: 0 0 0 3px rgba(41, 142, 148, 0.1);
+}
+.form-control[readonly] {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    cursor: default;
+}
+textarea.form-control {
+    height: auto;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+/* CSS CHO BẢNG HÀNG HÓA */
+.item-list-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+}
+.item-list-table th, .item-list-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 14px;
+    vertical-align: middle;
+}
+.item-list-table thead th {
+    background-color: #f9fafb;
+    font-weight: 600;
+    color: #4b5563;
+    font-size: 13px;
+}
+.item-list-table td .form-control {
+    height: 38px;
+    text-align: right;
+}
+.item-list-table td.product-name-cell {
+    font-weight: 500;
+    color: #1f2937;
+}
+.item-list-table .delete-item-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #9ca3af;
+    padding: 0;
+    line-height: 0;
+}
+.item-list-table .delete-item-btn:hover {
+    color: #ef4444;
+}
+.item-list-table tfoot td {
+    font-weight: 600;
+}
+.item-list-table tfoot tr:last-child td {
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+}
+.item-list-table tfoot .grand-total {
+    font-size: 16px;
+    color: var(--primary-color, #0d9488);
+}
+
+.add-item-btn {
+    background-color: #f3f4f6;
+    border: 1px dashed #d1d5db;
+    color: #4b5563;
+    width: 100%;
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+    margin-top: 16px;
+}
+.add-item-btn:hover {
+    background-color: #e5e7eb;
+    border-color: #9ca3af;
+}
+.add-item-btn .feather {
+    width: 16px;
+    height: 16px;
+    vertical-align: -3px;
+    margin-right: 4px;
+}
+
+/* CSS cho Modal tìm kiếm sản phẩm */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    width: 90%;
+    max-width: 600px;
+    overflow: hidden;
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
+.modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+}
+.close-modal-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    line-height: 0;
+    color: #9ca3af;
+}
+#productList {
+    max-height: 400px;
+    overflow-y: auto;
+    text-align: left;
+}
+.product-search-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid #f3f4f6;
+    cursor: pointer;
+}
+.product-search-item:hover {
+    background-color: #f9fafb;
+}
+.product-search-item:last-child {
+    border-bottom: none;
+}
+.product-search-info .name {
+    font-weight: 600;
+}
+.product-search-info .code {
+    font-size: 12px;
+    color: #6b7280;
+}
+.product-search-price {
+    font-weight: 500;
+}
+
+/* CSS MỚI CHO LƯỚI NGÀY THÁNG */
+.date-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 1rem;
+}
+.form-group.date-sign label {
+    color: #2563eb;
+}
+.form-group.date-sign .form-control {
+    border-color: #2563eb;
+}
+
+.form-group.date-effective label {
+    color: #16a34a;
+}
+.form-group.date-effective .form-control {
+    border-color: #16a34a;
+}
+
+.form-group.date-expiry label {
+    color: #ef4444;
+}
+.form-group.date-expiry .form-control {
+    border-color: #ef4444;
+}
+
+@media (max-width: 768px) {
+    .date-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.page-content {
+    padding: 24px;
+    background-color: #f9fafb;
+}
+
+.detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    color: #4b5563;
+    transition: color 0.2s;
+}
+.back-link:hover {
+    color: var(--primary-color, #298E94);
+}
+
+.detail-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr; /* Tỷ lệ 2:1 cho cột chính và cột phụ */
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.main-column, .sidebar-column {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* --- Thẻ chung --- */
+.detail-card {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.card-title {
+    font-size: 18px;
+    font-weight: 600;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f3f4f6;
+    margin: 0;
+}
+
+.card-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* --- Thẻ Header Profile --- */
+.profile-header-card .card-body {
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+}
+
+.customer-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.customer-main-info .name {
+    font-size: 22px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 4px 0;
+}
+
+.customer-main-info .code {
+    font-size: 14px;
+    color: #6b7280;
+    background-color: #f3f4f6;
+    padding: 2px 8px;
+    border-radius: 6px;
+    display: inline-block;
+}
+
+/* --- Các mục thông tin --- */
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 2 cột thông tin */
+    gap: 20px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-item .label {
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.info-item .label .feather {
+    width: 14px;
+    height: 14px;
+}
+
+.info-item .value {
+    font-size: 15px;
+    font-weight: 500;
+    color: #1f2937;
+    word-break: break-word;
+}
+.info-item .value a {
+    color: var(--primary-color, #298E94);
+    text-decoration: none;
+}
+.info-item .value a:hover {
+    text-decoration: underline;
+}
+
+
+/* --- Lịch sử giao dịch --- */
+.transaction-history-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.transaction-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    border-bottom: 1px solid #f3f4f6;
+}
+.transaction-item:last-child {
+    border-bottom: none;
+}
+
+.transaction-info .code {
+    font-weight: 600;
+    color: #1f2937;
+    text-decoration: none;
+}
+.transaction-info .code:hover {
+    color: var(--primary-color, #298E94);
+}
+.transaction-info .type {
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: 2px;
+}
+
+/* Các pill trạng thái */
+.status-pill {
+    padding: 4px 10px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+}
+.status-completed {
+    background-color: #dcfce7;
+    color: #166534;
+}
+.status-processing {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+.contract-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.contract-table th, .contract-table td {
+    padding: 12px 20px;
+    text-align: left;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 14px;
+    vertical-align: middle;
+}
+.contract-table thead th {
+    background-color: #f9fafb;
+    font-weight: 600;
+    color: #4b5563;
+    font-size: 13px;
+}
+.contract-table tbody tr:last-child td {
+    border-bottom: none;
+}
+.contract-table .contract-code {
+    font-weight: 600;
+    color: var(--primary-color, #298E94);
+}
+.contract-table .status-pill {
+    padding: 4px 10px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+}
+.status-active {
+    background-color: #dcfce7;
+    color: #166534;
+}
+.status-expired {
+    background-color: #e5e7eb;
+    color: #4b5563;
+}
+
+
