@@ -1,58 +1,61 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package vn.edu.fpt.dao;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-/**
- *
- * @author PC
- */
 public class DBContext {
 
-    protected Connection connection;
+    // Các thông số kết nối CSDL
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/datn";
+    private static final String DB_USER_NAME = "root";
+    private static final String DB_PASSWORD = "1234";
 
-     public DBContext() {
-        // Tự động khởi tạo connection khi tạo object DBContext/ProductDAO
-        getConnection();
-    }
-
-
-    public Connection getConnection() {
+    /**
+     * Phương thức static để lấy một kết nối mới tới CSDL.
+     * @return Một đối tượng Connection, hoặc null nếu có lỗi.
+     */
+    public static Connection getConnection() {
         try {
-            // Edit URL, username, password to authenticate with your MySQL Server
-            String url = "jdbc:mysql://localhost:3306/datn";
-            String userName = "root";
-            String password = "123456";
-
+            // Nạp driver của MySQL
             Class.forName("com.mysql.cj.jdbc.Driver");
-            connection = DriverManager.getConnection(url, userName, password);
+            // Trả về một kết nối mới
+            return DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD);
         } catch (ClassNotFoundException | SQLException ex) {
-            System.out.println(ex);
+            System.err.println("--- LOI KET NOI CSDL ---");
+            ex.printStackTrace(); // In ra lỗi chi tiết để gỡ rối
+            return null;
         }
-        return connection;
     }
 
+    /**
+     * HÀM MAIN ĐỂ KIỂM TRA KẾT NỐI.
+     * Bạn có thể chạy trực tiếp file này để kiểm tra.
+     */
     public static void main(String[] args) {
-        try {
-            DBContext dbContext = new DBContext();
-            Connection connection = dbContext.getConnection();
+        System.out.println("Dang thuc hien kiem tra ket noi den MySQL...");
+        
+        // Cố gắng lấy một kết nối
+        Connection conn = DBContext.getConnection();
 
-            if (connection != null) {
-                System.out.println("Connected to MySQL database!");
-                // Thực hiện các thao tác cần thiết với database ở đây
-
-//                // Đóng kết nối sau khi sử dụng
-                connection.close();
-            } else {
-                System.out.println("Failed to connect to MySQL database!");
+        // Kiểm tra kết quả
+        if (conn != null) {
+            System.out.println("===> KET NOI THANH CONG! <===");
+            System.out.println("Thong tin ket noi: " + conn.toString());
+            try {
+                // Luôn đóng kết nối sau khi kiểm tra xong
+                conn.close();
+                System.out.println("Da dong ket noi.");
+            } catch (SQLException e) {
+                System.err.println("Loi khi dong ket noi: " + e.getMessage());
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } else {
+            System.err.println("===> KET NOI THAT BAI! <===");
+            System.err.println("Vui long kiem tra lai cac thong tin sau:");
+            System.err.println("1. MySQL Server da duoc khoi dong chua?");
+            System.err.println("2. Ten CSDL (database name) trong DB_URL co dung la 'datn' khong?");
+            System.err.println("3. Username va password co chinh xac khong?");
+            System.err.println("4. Thu vien MySQL Connector/J da duoc them vao du an chua?");
         }
     }
 }

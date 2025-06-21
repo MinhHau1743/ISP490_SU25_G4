@@ -35,9 +35,6 @@
                     <div class="register-link">
                         <a href="forgotPassword.jsp">Quên mật khẩu</a>
                     </div>
-                    <div class="register-link">
-                        Bạn chưa có tài khoản? <a href="register.jsp">Đăng ký</a>
-                    </div>
                 </form>
                 <div class="footer">
                     © 2025 DPCRM from ISP490_SU25_GR4
