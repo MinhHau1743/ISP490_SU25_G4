@@ -34,39 +34,39 @@ public class ViewProfileController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-         // --- BẮT ĐẦU ĐOẠN CODE KIỂM TRA SESSION ---
-    HttpSession session = request.getSession();
-
-    // THÊM DÒNG NÀY VÀO
-    System.out.println("\n1. === TRONG ViewProfileController (doGet) ===");
-    System.out.println("User trong session là: " + session.getAttribute("user"));
-        // 1. Lấy user đang đăng nhập từ session
-//        HttpSession session = request.getSession();
-        User loggedInUser = (User) session.getAttribute("user"); // Giả sử khi đăng nhập bạn đã lưu user vào session với key là "account"
-
-        // 2. Kiểm tra xem người dùng đã đăng nhập chưa
-        if (loggedInUser == null) {
-            // Nếu chưa, chuyển hướng về trang đăng nhập
-            response.sendRedirect("login.jsp");
-            return; // Dừng việc thực thi tiếp theo
-    }
-
-        // 3. Gọi DAO để lấy thông tin chi tiết nhất của user từ DB
-        UserDAO userDAO = new UserDAO();
-        User userProfile = userDAO.getUserById(loggedInUser.getId());
-   
-        // 4. Gửi đối tượng user (userProfile) sang cho trang JSP
-        if (userProfile != null) {
-            // Đặt đối tượng vào request attribute với tên là "profile"
-            request.setAttribute("profile", userProfile);
-            
-            // 5. Chuyển tiếp (forward) yêu cầu đến trang viewProfile.jsp để hiển thị
-            request.getRequestDispatcher("viewProfile.jsp").forward(request, response);
-        } else {
-            // Xử lý trường hợp hiếm gặp: user có trong session nhưng không có trong DB
-            response.setContentType("text/html;charset=UTF-8");
-            response.getWriter().println("<h1>Lỗi: Không tìm thấy thông tin người dùng.</h1>");
-        }
+//         // --- BẮT ĐẦU ĐOẠN CODE KIỂM TRA SESSION ---
+//    HttpSession session = request.getSession();
+//
+//    // THÊM DÒNG NÀY VÀO
+//    System.out.println("\n1. === TRONG ViewProfileController (doGet) ===");
+//    System.out.println("User trong session là: " + session.getAttribute("user"));
+//        // 1. Lấy user đang đăng nhập từ session
+////        HttpSession session = request.getSession();
+//        User loggedInUser = (User) session.getAttribute("user"); // Giả sử khi đăng nhập bạn đã lưu user vào session với key là "account"
+//
+//        // 2. Kiểm tra xem người dùng đã đăng nhập chưa
+//        if (loggedInUser == null) {
+//            // Nếu chưa, chuyển hướng về trang đăng nhập
+//            response.sendRedirect("login.jsp");
+//            return; // Dừng việc thực thi tiếp theo
+//    }
+//
+//        // 3. Gọi DAO để lấy thông tin chi tiết nhất của user từ DB
+//        UserDAO userDAO = new UserDAO();
+//        User userProfile = userDAO.getUserById(loggedInUser.getId());
+//   
+//        // 4. Gửi đối tượng user (userProfile) sang cho trang JSP
+//        if (userProfile != null) {
+//            // Đặt đối tượng vào request attribute với tên là "profile"
+//            request.setAttribute("profile", userProfile);
+//            
+//            // 5. Chuyển tiếp (forward) yêu cầu đến trang viewProfile.jsp để hiển thị
+//            request.getRequestDispatcher("viewProfile.jsp").forward(request, response);
+//        } else {
+//            // Xử lý trường hợp hiếm gặp: user có trong session nhưng không có trong DB
+//            response.setContentType("text/html;charset=UTF-8");
+//            response.getWriter().println("<h1>Lỗi: Không tìm thấy thông tin người dùng.</h1>");
+//        }
     }
 
    

@@ -10,7 +10,8 @@ import vn.edu.fpt.model.Product;
 import java.sql.ResultSet;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-
+import vn.edu.fpt.model.ProductCategory;
+import java.sql.Connection;
 
 /**
  *
@@ -25,8 +26,9 @@ public class ProductDAO extends DBContext {
                 + "LEFT JOIN ProductCategories pc ON p.category_id = pc.id "
                 + "LIMIT ? OFFSET ?";
 
-        try {
-            PreparedStatement st = connection.prepareStatement(query);
+        try (Connection conn = DBContext.getConnection(); // Bước 1: Lấy connection mới ở đây
+                 PreparedStatement st = conn.prepareStatement(query)) {
+
             st.setInt(1, pageSize);
             st.setInt(2, (indexPage - 1) * pageSize);
 
@@ -67,8 +69,8 @@ public class ProductDAO extends DBContext {
                 + "updated_at = ? "
                 + "WHERE id = ?";
 
-        try {
-            PreparedStatement st = connection.prepareStatement(query);
+        try (Connection conn = DBContext.getConnection(); // Bước 1: Lấy connection mới ở đây
+                 PreparedStatement st = conn.prepareStatement(query)) {
             st.setString(1, p.getName());
             st.setString(2, p.getProductCode());
             st.setString(3, p.getOrigin());
@@ -91,8 +93,8 @@ public class ProductDAO extends DBContext {
 
     public int countAllProducts() {
         String query = "SELECT COUNT(*) FROM Products";
-        try {
-            PreparedStatement st = connection.prepareStatement(query);
+        try (Connection conn = DBContext.getConnection(); // Bước 1: Lấy connection mới ở đây
+                 PreparedStatement st = conn.prepareStatement(query)) {
             ResultSet rs = st.executeQuery();
             if (rs.next()) {
                 return rs.getInt(1);
@@ -105,8 +107,9 @@ public class ProductDAO extends DBContext {
 
     public Product getProductById(int id) {
         String query = "SELECT * FROM Products WHERE id = ?";
-        try {
-            PreparedStatement st = connection.prepareStatement(query);
+        try (Connection conn = DBContext.getConnection(); // Bước 1: Lấy connection mới ở đây
+                 PreparedStatement st = conn.prepareStatement(query)) {
+
             st.setInt(1, id);
             ResultSet rs = st.executeQuery();
             if (rs.next()) {
@@ -129,70 +132,36 @@ public class ProductDAO extends DBContext {
         return null;
     }
 
-    public boolean insertProduct(Product p) {
-        String sql = "INSERT INTO Products "
-                + "(name, category_id, product_code, origin, price, description, is_deleted, created_at, updated_at) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try {
-            PreparedStatement st = connection.prepareStatement(sql);
-            st.setString(1, p.getName());
-            st.setInt(2, p.getCategoryId());
-            st.setString(3, p.getProductCode());
-            st.setString(4, p.getOrigin());
-            st.setDouble(5, p.getPrice());
-            st.setString(6, p.getDescription());
-            st.setBoolean(7, p.isIsDeleted());
-            st.setString(8, p.getCreatedAt());
-            st.setString(9, p.getUpdatedAt());
+    public List<ProductCategory> getAllCategories() {
+        List<ProductCategory> categories = new ArrayList<>();
 
-            int rows = st.executeUpdate();
-            return rows > 0;
+        // 1. Khai báo câu lệnh SQL vào biến 'sql'
+        String sql = "SELECT id, name FROM ProductCategories";
 
+        // 2. Sửa lại khối try-with-resources
+        try (Connection conn = DBContext.getConnection(); PreparedStatement st = conn.prepareStatement(sql); // <-- SỬA LỖI Ở ĐÂY: Dùng biến 'sql'
+                 ResultSet rs = st.executeQuery()) {                 // <-- TỐI ƯU: Đưa ResultSet vào đây
+
+            // Vòng lặp while để đọc dữ liệu
+            while (rs.next()) {
+                ProductCategory cat = new ProductCategory();
+                cat.setId(rs.getInt("id"));
+                cat.setName(rs.getString("name"));
+                categories.add(cat);
+            }
         } catch (SQLException e) {
-            System.out.println("Lỗi khi thêm sản phẩm: " + e.getMessage());
-            return false;
+            e.printStackTrace();
         }
-    }
 
-    public boolean checkProductCodeExists(String code) {
-    String sql = "SELECT COUNT(*) FROM Products WHERE product_code = ?";
-    try (PreparedStatement st = connection.prepareStatement(sql)) {
-        st.setString(1, code);
-        ResultSet rs = st.executeQuery();
-        if (rs.next()) {
-            return rs.getInt(1) > 0;
-        }
-    } catch (SQLException e) {
-        e.printStackTrace();
+        // Trả về danh sách đã có dữ liệu hoặc danh sách rỗng nếu có lỗi
+        return categories;
     }
-    return false;
-}
 
     public static void main(String[] args) {
         ProductDAO productDAO = new ProductDAO();
-
-        // Tạo đối tượng Product mẫu
-        Product p = new Product();
-        p.setName("Sản phẩm test");
-        p.setCategoryId(1);
-        p.setProductCode("SP_TEST_001");
-        p.setOrigin("Việt Nam");
-        p.setPrice(123456.78);
-        p.setDescription("Đây là sản phẩm test insert");
-        p.setIsDeleted(false);
-        p.setCreatedAt("2024-06-21 12:00:00");
-        p.setUpdatedAt("2024-06-21 12:00:00");
-        // Nếu có trường image: p.setImage("test_image.jpg");
-
-        boolean result = productDAO.insertProduct(p);
-        if (result) {
-            System.out.println("Thêm sản phẩm thành công!");
-        } else {
-            System.out.println("Thêm sản phẩm thất bại!");
-        }
         List<Product> pro = productDAO.viewAllProduct(1, 10);
-        for (Product pros : pro) {
-            System.out.println(pros);
+        for (Product p : pro) {
+            System.out.println(p);
         }
     }
 }
