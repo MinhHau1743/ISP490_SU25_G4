@@ -45,11 +45,13 @@
                             <div class="form-main-layout">
                                 <div class="product-image-section">
                                     <label for="productImageUpload" class="image-placeholder" id="imagePreview">
-                                        <i data-feather="image" style="width: 48px; height: 48px;"></i>
+                                        <i id="imageIcon" data-feather="image" style="width: 48px; height: 48px;"></i>
+                                        <img id="productImagePreview" style="display: none; width: 100%; height: 100%; object-fit: contain;" />
                                     </label>
                                     <input type="file" name="productImage" id="productImageUpload" class="visually-hidden" accept="image/*">
                                     <label for="productImageUpload" class="btn-upload">Chọn ảnh</label>
                                 </div>
+
 
                                 <div class="product-details-section">
                                     <fieldset class="form-fieldset">
