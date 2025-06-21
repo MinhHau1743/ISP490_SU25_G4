@@ -48,7 +48,7 @@
                                         <i id="imageIcon" data-feather="image" style="width: 48px; height: 48px;"></i>
                                         <img id="productImagePreview" style="display: none; width: 100%; height: 100%; object-fit: contain;" />
                                     </label>
-                                    <input type="file" name="productImage" id="productImageUpload" class="visually-hidden" accept="image/*">
+                                    <input type="file" name="image" id="productImageUpload" class="visually-hidden" accept="image/*">
                                     <label for="productImageUpload" class="btn-upload">Chọn ảnh</label>
                                 </div>
 

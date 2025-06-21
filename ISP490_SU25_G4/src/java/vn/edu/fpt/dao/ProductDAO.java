@@ -1,17 +1,17 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+* Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+* Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package vn.edu.fpt.dao;
 
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 import vn.edu.fpt.model.Product;
 import java.sql.ResultSet;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import vn.edu.fpt.model.ProductCategory;
-import java.sql.Connection;
+import static vn.edu.fpt.dao.DBContext.getConnection;
 
 /**
  *
@@ -19,19 +19,18 @@ import java.sql.Connection;
  */
 public class ProductDAO extends DBContext {
 
+    Connection conn = getConnection();
+
     public List<Product> viewAllProduct(int indexPage, int pageSize) {
         List<Product> products = new ArrayList<>();
         // Sửa câu truy vấn SQL để JOIN với ProductCategories
         String query = "SELECT pc.name AS category_name,p.*  FROM Products p "
                 + "LEFT JOIN ProductCategories pc ON p.category_id = pc.id "
                 + "LIMIT ? OFFSET ?";
-
-        try (Connection conn = DBContext.getConnection(); // Bước 1: Lấy connection mới ở đây
-                 PreparedStatement st = conn.prepareStatement(query)) {
-
+        try {
+            PreparedStatement st = conn.prepareStatement(query);
             st.setInt(1, pageSize);
             st.setInt(2, (indexPage - 1) * pageSize);
-
             ResultSet rs = st.executeQuery();
             while (rs.next()) {
                 Product p = new Product();
@@ -45,14 +44,11 @@ public class ProductDAO extends DBContext {
                 p.setIsDeleted(rs.getBoolean("is_deleted"));
                 p.setCreatedAt(rs.getString("created_at"));
                 p.setUpdatedAt(rs.getString("updated_at"));
-
                 products.add(p);
             }
-
         } catch (SQLException e) {
             System.out.println("Lỗi khi truy vấn dữ liệu: " + e.getMessage());
         }
-
         return products;
     }
 
@@ -68,9 +64,8 @@ public class ProductDAO extends DBContext {
                 + "created_at = ?, "
                 + "updated_at = ? "
                 + "WHERE id = ?";
-
-        try (Connection conn = DBContext.getConnection(); // Bước 1: Lấy connection mới ở đây
-                 PreparedStatement st = conn.prepareStatement(query)) {
+        try {
+            PreparedStatement st = conn.prepareStatement(query);
             st.setString(1, p.getName());
             st.setString(2, p.getProductCode());
             st.setString(3, p.getOrigin());
@@ -81,10 +76,8 @@ public class ProductDAO extends DBContext {
             st.setString(8, p.getCreatedAt());
             st.setString(9, p.getUpdatedAt());
             st.setInt(10, p.getId());
-
             int rows = st.executeUpdate();
             return rows > 0; // Trả về true nếu update thành công
-
         } catch (SQLException e) {
             System.out.println("Lỗi khi cập nhật dữ liệu: " + e.getMessage());
             return false;
@@ -93,8 +86,8 @@ public class ProductDAO extends DBContext {
 
     public int countAllProducts() {
         String query = "SELECT COUNT(*) FROM Products";
-        try (Connection conn = DBContext.getConnection(); // Bước 1: Lấy connection mới ở đây
-                 PreparedStatement st = conn.prepareStatement(query)) {
+        try {
+            PreparedStatement st = conn.prepareStatement(query);
             ResultSet rs = st.executeQuery();
             if (rs.next()) {
                 return rs.getInt(1);
@@ -107,9 +100,8 @@ public class ProductDAO extends DBContext {
 
     public Product getProductById(int id) {
         String query = "SELECT * FROM Products WHERE id = ?";
-        try (Connection conn = DBContext.getConnection(); // Bước 1: Lấy connection mới ở đây
-                 PreparedStatement st = conn.prepareStatement(query)) {
-
+        try {
+            PreparedStatement st = conn.prepareStatement(query);
             st.setInt(1, id);
             ResultSet rs = st.executeQuery();
             if (rs.next()) {
@@ -132,36 +124,79 @@ public class ProductDAO extends DBContext {
         return null;
     }
 
-    public List<ProductCategory> getAllCategories() {
-        List<ProductCategory> categories = new ArrayList<>();
+    public int insertProduct(Product p) {
+        String sql = "INSERT INTO Products "
+                + "(name, category_id, product_code, origin, price, description, is_deleted, created_at, updated_at) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try {
+            // Sửa ở đây: thêm Statement.RETURN_GENERATED_KEYS
+            PreparedStatement st = conn.prepareStatement(sql);
+            st.setString(1, p.getName());
+            st.setInt(2, p.getCategoryId());
+            st.setString(3, p.getProductCode());
+            st.setString(4, p.getOrigin());
+            st.setDouble(5, p.getPrice());
+            st.setString(6, p.getDescription());
+            st.setBoolean(7, p.isIsDeleted());
+            st.setString(8, p.getCreatedAt());
+            st.setString(9, p.getUpdatedAt());
 
-        // 1. Khai báo câu lệnh SQL vào biến 'sql'
-        String sql = "SELECT id, name FROM ProductCategories";
+            int rows = st.executeUpdate();
+            if (rows == 0) {
+                throw new SQLException("Creating product failed, no rows affected.");
+            }
 
-        // 2. Sửa lại khối try-with-resources
-        try (Connection conn = DBContext.getConnection(); PreparedStatement st = conn.prepareStatement(sql); // <-- SỬA LỖI Ở ĐÂY: Dùng biến 'sql'
-                 ResultSet rs = st.executeQuery()) {                 // <-- TỐI ƯU: Đưa ResultSet vào đây
+            try (ResultSet generatedKeys = st.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    return generatedKeys.getInt(1);
+                } else {
+                    throw new SQLException("Creating product failed, no ID obtained.");
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Lỗi khi truy vấn dữ liệu: " + e.getMessage());
+        }
+        // Trả về -1 nếu thất bại
+        return -1;
+    }
 
-            // Vòng lặp while để đọc dữ liệu
-            while (rs.next()) {
-                ProductCategory cat = new ProductCategory();
-                cat.setId(rs.getInt("id"));
-                cat.setName(rs.getString("name"));
-                categories.add(cat);
+    public boolean checkProductCodeExists(String code) {
+        String sql = "SELECT COUNT(*) FROM Products WHERE product_code = ?";
+        try (PreparedStatement st = conn.prepareStatement(sql)) {
+            st.setString(1, code);
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
-        // Trả về danh sách đã có dữ liệu hoặc danh sách rỗng nếu có lỗi
-        return categories;
+        return false;
     }
 
     public static void main(String[] args) {
         ProductDAO productDAO = new ProductDAO();
+        // Tạo đối tượng Product mẫu
+        Product p = new Product();
+        p.setName("Sản phẩm test");
+        p.setCategoryId(1);
+        p.setProductCode("SP_TEST_001");
+        p.setOrigin("Việt Nam");
+        p.setPrice(123456.78);
+        p.setDescription("Đây là sản phẩm test insert");
+        p.setIsDeleted(false);
+        p.setCreatedAt("2024-06-21 12:00:00");
+        p.setUpdatedAt("2024-06-21 12:00:00");
+        // Nếu có trường image: p.setImage("test_image.jpg");
+        int result = productDAO.insertProduct(p);
+        if (result >1) {
+            System.out.println("Thêm sản phẩm thành công!");
+        } else {
+            System.out.println("Thêm sản phẩm thất bại!");
+        }
         List<Product> pro = productDAO.viewAllProduct(1, 10);
-        for (Product p : pro) {
-            System.out.println(p);
+        for (Product pros : pro) {
+            System.out.println(pros);
         }
     }
 }
