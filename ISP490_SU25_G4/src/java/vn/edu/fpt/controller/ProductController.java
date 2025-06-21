@@ -206,30 +206,6 @@ public class ProductController extends HttpServlet {
                     productCode = generateRandomProductCode(dao);
                 }
 
-                // Thư mục chứa ảnh
-                String uploadDir = "D:/New folder/ISP490_SU25_G4/web/image";
-                File uploadPath = new File(uploadDir);
-                if (!uploadPath.exists()) {
-                    uploadPath.mkdirs();
-                }
-
-                // Xử lý ảnh
-                String imageFileName = null;
-                Part filePart = request.getPart("image");
-                if (filePart != null && filePart.getSize() > 0) {
-                    String submittedFileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
-                    String extension = "";
-                    int dotIndex = submittedFileName.lastIndexOf('.');
-                    if (dotIndex >= 0) {
-                        extension = submittedFileName.substring(dotIndex).toLowerCase();
-                    }
-                    long ts = System.currentTimeMillis();
-                    imageFileName = "product_" + ts + extension;
-                    filePart.write(uploadDir + File.separator + imageFileName);
-                } else {
-                    imageFileName = "default.jpg";
-                }
-
                 // Tạo đối tượng sản phẩm (ID tự tăng)
                 Product p = new Product();
                 p.setName(name);
@@ -241,22 +217,45 @@ public class ProductController extends HttpServlet {
                 p.setIsDeleted(false);
                 p.setCreatedAt(createdAt);
                 p.setUpdatedAt(null);
-                boolean success = dao.insertProduct(p);
 
-                if (success) {
-                    request.setAttribute("redirectUrl", "ProductController");
-                    request.getRequestDispatcher("editLoading.jsp").forward(request, response);
-                } else {
-                    request.setAttribute("product", p);
-                    request.setAttribute("editError", "Tạo sản phẩm thất bại!");
-                    request.getRequestDispatcher("ProductController").forward(request, response);
+                // B1: Insert và lấy ID mới
+                int newId = dao.insertProduct(p);
+
+                // B2: Xử lý ảnh
+                String uploadDir = "D:/New folder/ISP490_SU25_G4/web/image";
+                File uploadPath = new File(uploadDir);
+                if (!uploadPath.exists()) {
+                    uploadPath.mkdirs();
                 }
+
+                Part filePart = request.getPart("image");
+                if (filePart != null && filePart.getSize() > 0) {
+                    String submittedFileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+                    String extension = "";
+                    int dotIndex = submittedFileName.lastIndexOf('.');
+                    if (dotIndex >= 0) {
+                        extension = submittedFileName.substring(dotIndex).toLowerCase();
+                    }
+                    String imageFileName = newId+"_product"+ extension;
+                    filePart.write(uploadDir + File.separator + imageFileName);
+                    // Không update vào DB, chỉ lưu file
+                } else {
+                    // Không có ảnh thì có thể copy file default.jpg sang product_{newId}.jpg hoặc bỏ qua bước này
+                    // Ví dụ:
+                    // Files.copy(Paths.get(uploadDir + File.separator + "default.jpg"), Paths.get(uploadDir + File.separator + "product_" + newId + ".jpg"));
+                }
+
+                // Chuyển trang hoặc show thông báo
+                request.setAttribute("redirectUrl", "ProductController");
+                request.getRequestDispatcher("editLoading.jsp").forward(request, response);
+
             } catch (Exception e) {
                 e.printStackTrace();
                 request.setAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
                 request.getRequestDispatcher("error.jsp").forward(request, response);
             }
         }
+
         if (service.equals("getProductToEdit")) {
             String idRaw = request.getParameter("id");
             if (idRaw == null) {
