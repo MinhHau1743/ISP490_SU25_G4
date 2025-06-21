@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import vn.edu.fpt.model.ProductCategory;
+import java.sql.Connection;
 
 /**
  *
@@ -25,8 +26,9 @@ public class ProductDAO extends DBContext {
                 + "LEFT JOIN ProductCategories pc ON p.category_id = pc.id "
                 + "LIMIT ? OFFSET ?";
 
-        try {
-            PreparedStatement st = connection.prepareStatement(query);
+        try (Connection conn = DBContext.getConnection(); // Bước 1: Lấy connection mới ở đây
+                 PreparedStatement st = conn.prepareStatement(query)) {
+
             st.setInt(1, pageSize);
             st.setInt(2, (indexPage - 1) * pageSize);
 
@@ -67,8 +69,8 @@ public class ProductDAO extends DBContext {
                 + "updated_at = ? "
                 + "WHERE id = ?";
 
-        try {
-            PreparedStatement st = connection.prepareStatement(query);
+        try (Connection conn = DBContext.getConnection(); // Bước 1: Lấy connection mới ở đây
+                 PreparedStatement st = conn.prepareStatement(query)) {
             st.setString(1, p.getName());
             st.setString(2, p.getProductCode());
             st.setString(3, p.getOrigin());
@@ -91,8 +93,8 @@ public class ProductDAO extends DBContext {
 
     public int countAllProducts() {
         String query = "SELECT COUNT(*) FROM Products";
-        try {
-            PreparedStatement st = connection.prepareStatement(query);
+        try (Connection conn = DBContext.getConnection(); // Bước 1: Lấy connection mới ở đây
+                 PreparedStatement st = conn.prepareStatement(query)) {
             ResultSet rs = st.executeQuery();
             if (rs.next()) {
                 return rs.getInt(1);
@@ -105,8 +107,9 @@ public class ProductDAO extends DBContext {
 
     public Product getProductById(int id) {
         String query = "SELECT * FROM Products WHERE id = ?";
-        try {
-            PreparedStatement st = connection.prepareStatement(query);
+        try (Connection conn = DBContext.getConnection(); // Bước 1: Lấy connection mới ở đây
+                 PreparedStatement st = conn.prepareStatement(query)) {
+
             st.setInt(1, id);
             ResultSet rs = st.executeQuery();
             if (rs.next()) {
@@ -132,11 +135,14 @@ public class ProductDAO extends DBContext {
     public List<ProductCategory> getAllCategories() {
         List<ProductCategory> categories = new ArrayList<>();
 
+        // 1. Khai báo câu lệnh SQL vào biến 'sql'
         String sql = "SELECT id, name FROM ProductCategories";
 
-        try {
-            PreparedStatement st = connection.prepareStatement(sql);
-            ResultSet rs = st.executeQuery();
+        // 2. Sửa lại khối try-with-resources
+        try (Connection conn = DBContext.getConnection(); PreparedStatement st = conn.prepareStatement(sql); // <-- SỬA LỖI Ở ĐÂY: Dùng biến 'sql'
+                 ResultSet rs = st.executeQuery()) {                 // <-- TỐI ƯU: Đưa ResultSet vào đây
+
+            // Vòng lặp while để đọc dữ liệu
             while (rs.next()) {
                 ProductCategory cat = new ProductCategory();
                 cat.setId(rs.getInt("id"));
@@ -146,6 +152,8 @@ public class ProductDAO extends DBContext {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
+        // Trả về danh sách đã có dữ liệu hoặc danh sách rỗng nếu có lỗi
         return categories;
     }
 

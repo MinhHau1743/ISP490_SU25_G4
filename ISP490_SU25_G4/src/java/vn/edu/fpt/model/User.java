@@ -6,55 +6,44 @@ package vn.edu.fpt.model;
 
 import java.sql.Timestamp;
 import java.time.LocalDate;
-import java.io.Serializable;
+
 /**
  *
  * @author ducanh
  */
-public class User implements Serializable {
-   private int id;
-    private String email;
-    private String passwordHash;
+public class User {
 
-    // Các thuộc tính tên đã được tách ra
+    // Các trường tương ứng với bảng Users
+    private int id;
+    private String email;
     private String lastName;
     private String middleName;
     private String firstName;
-
-    // Thuộc tính công việc
-    private String role;
-    private String status;
-    private String employeeCode;
-    private String position;
-    private String department;
-
-    // Thuộc tính hồ sơ cá nhân
-    private String phoneNumber;
-    private String notes;
     private String avatarUrl;
-    private String identityCardNumber;
-    private LocalDate dateOfBirth; // Đổi sang LocalDate
+    private String employeeCode;
+    private String phoneNumber;
+    private LocalDate dateOfBirth;
     private String gender;
-
-    // Thuộc tính địa chỉ đã được tách ra
-    private String address;
-    private String ward;
-    private String district;
-    private String city;
-
-    private String socialMediaLink;
-    private boolean isDeleted; // Dùng kiểu boolean cho is_deleted
-
-    // Dấu thời gian
+    private String identityCardNumber;
+    private String notes;
+    private String status;
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
-    // Constructor mặc định
+    // Các trường lấy từ các bảng được JOIN
+    private String roleName;
+    private String positionName;
+    private String departmentName;
+    private String streetAddress;
+    private String wardName;
+    private String districtName;
+    private String provinceName;
+
+    // Constructors
     public User() {
     }
 
-    // --- Bắt đầu phần Getters và Setters ---
-
+    // Getters and Setters for all fields
     public int getId() {
         return id;
     }
@@ -69,14 +58,6 @@ public class User implements Serializable {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
     }
 
     public String getLastName() {
@@ -103,20 +84,12 @@ public class User implements Serializable {
         this.firstName = firstName;
     }
 
-    public String getRole() {
-        return role;
+    public String getAvatarUrl() {
+        return avatarUrl;
     }
 
-    public void setRole(String role) {
-        this.role = role;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
     }
 
     public String getEmployeeCode() {
@@ -127,52 +100,12 @@ public class User implements Serializable {
         this.employeeCode = employeeCode;
     }
 
-    public String getPosition() {
-        return position;
-    }
-
-    public void setPosition(String position) {
-        this.position = position;
-    }
-
-    public String getDepartment() {
-        return department;
-    }
-
-    public void setDepartment(String department) {
-        this.department = department;
-    }
-
     public String getPhoneNumber() {
         return phoneNumber;
     }
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
-    }
-
-    public String getNotes() {
-        return notes;
-    }
-
-    public void setNotes(String notes) {
-        this.notes = notes;
-    }
-
-    public String getAvatarUrl() {
-        return avatarUrl;
-    }
-
-    public void setAvatarUrl(String avatarUrl) {
-        this.avatarUrl = avatarUrl;
-    }
-
-    public String getIdentityCardNumber() {
-        return identityCardNumber;
-    }
-
-    public void setIdentityCardNumber(String identityCardNumber) {
-        this.identityCardNumber = identityCardNumber;
     }
 
     public LocalDate getDateOfBirth() {
@@ -191,52 +124,28 @@ public class User implements Serializable {
         this.gender = gender;
     }
 
-    public String getAddress() {
-        return address;
+    public String getIdentityCardNumber() {
+        return identityCardNumber;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
+    public void setIdentityCardNumber(String identityCardNumber) {
+        this.identityCardNumber = identityCardNumber;
     }
 
-    public String getWard() {
-        return ward;
+    public String getNotes() {
+        return notes;
     }
 
-    public void setWard(String ward) {
-        this.ward = ward;
+    public void setNotes(String notes) {
+        this.notes = notes;
     }
 
-    public String getDistrict() {
-        return district;
+    public String getStatus() {
+        return status;
     }
 
-    public void setDistrict(String district) {
-        this.district = district;
-    }
-
-    public String getCity() {
-        return city;
-    }
-
-    public void setCity(String city) {
-        this.city = city;
-    }
-
-    public String getSocialMediaLink() {
-        return socialMediaLink;
-    }
-
-    public void setSocialMediaLink(String socialMediaLink) {
-        this.socialMediaLink = socialMediaLink;
-    }
-
-    public boolean isIsDeleted() {
-        return isDeleted;
-    }
-
-    public void setIsDeleted(boolean isDeleted) {
-        this.isDeleted = isDeleted;
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public Timestamp getCreatedAt() {
@@ -255,16 +164,66 @@ public class User implements Serializable {
         this.updatedAt = updatedAt;
     }
 
-    // Hàm toString đã được cập nhật để hiển thị thông tin hữu ích hơn
-    @Override
-    public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", email='" + email + '\'' +
-                ", lastName='" + lastName + '\'' +
-                ", firstName='" + firstName + '\'' +
-                ", role='" + role + '\'' +
-                ", status='" + status + '\'' +
-                '}';
+    public String getRoleName() {
+        return roleName;
+    }
+
+    public void setRoleName(String roleName) {
+        this.roleName = roleName;
+    }
+
+    public String getPositionName() {
+        return positionName;
+    }
+
+    public void setPositionName(String positionName) {
+        this.positionName = positionName;
+    }
+
+    public String getDepartmentName() {
+        return departmentName;
+    }
+
+    public void setDepartmentName(String departmentName) {
+        this.departmentName = departmentName;
+    }
+
+    public String getStreetAddress() {
+        return streetAddress;
+    }
+
+    public void setStreetAddress(String streetAddress) {
+        this.streetAddress = streetAddress;
+    }
+
+    public String getWardName() {
+        return wardName;
+    }
+
+    public void setWardName(String wardName) {
+        this.wardName = wardName;
+    }
+
+    public String getDistrictName() {
+        return districtName;
+    }
+
+    public void setDistrictName(String districtName) {
+        this.districtName = districtName;
+    }
+
+    public String getProvinceName() {
+        return provinceName;
+    }
+
+    public void setProvinceName(String provinceName) {
+        this.provinceName = provinceName;
+    }
+
+    // Helper method để lấy tên đầy đủ
+    public String getFullName() {
+        return (lastName != null ? lastName : "") + " "
+                + (middleName != null ? middleName : "") + " "
+                + (firstName != null ? firstName : "");
     }
 }

@@ -60,7 +60,8 @@ public class LoginController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        // Chuyển hướng yêu cầu GET đến trang login để tránh lỗi
+        response.sendRedirect("login.jsp");
     }
 
     /**
@@ -78,14 +79,17 @@ public class LoginController extends HttpServlet {
         String password = request.getParameter("password");
 
         UserDAO dao = new UserDAO();
-        User u = dao.login(email, password);
-        HttpSession session = request.getSession();
-        if (u != null) {
-            session.setAttribute("user", u);
-            response.sendRedirect("dashboard.jsp");
+        User user = dao.login(email, password);
+
+        if (user != null) {
+            // Đăng nhập thành công
+            HttpSession session = request.getSession(); // Tạo session mới nếu chưa có
+            session.setAttribute("user", user); // Lưu đối tượng User vào session
+            response.sendRedirect("dashboard.jsp"); // Chuyển hướng đến trang dashboard
         } else {
+            // Đăng nhập thất bại
             request.setAttribute("error", "Email hoặc mật khẩu không đúng!");
-            request.getRequestDispatcher("login.jsp").forward(request, response);
+            request.getRequestDispatcher("login.jsp").forward(request, response); // Quay lại trang login
         }
     }
 
