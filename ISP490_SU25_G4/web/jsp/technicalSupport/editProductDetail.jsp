@@ -51,41 +51,36 @@
                             </div>
 
                             <c:if test="${not empty product}">
-                                <div class="product-edit-container">
-                                    <div class="image-column">
-                                        <div class="form-section">
-                                            <h2 class="form-section-title">Hình ảnh sản phẩm</h2>
-
-                                            <div class="image-list" style="display: flex; gap: 24px; align-items: center; flex-wrap: wrap;">
-                                                <!-- Ảnh đang có -->
-                                                <img id="productImagePreview"
-                                                     src="${pageContext.request.contextPath}/image/${imageFileName}"
-                                                     alt="Ảnh sản phẩm"
-                                                     style="width: 260px; height: auto; border: 1px solid #ccc; border-radius: 8px;"
-                                                     onerror="this.src='${pageContext.request.contextPath}/image/na.jpg'" />
-
-                                                <!-- Ô tải ảnh -->
-                                                <label for="imageUpload" class="upload-box" style="cursor: pointer; width: 160px; height: 160px; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 2px dashed #ccc; border-radius: 8px;">
-                                                    <i data-feather="upload-cloud" style="width: 32px; height: 32px;"></i>
-                                                    <p style="margin: 8px 0 0;">Tải lên ảnh mới</p>
-                                                </label>
-                                                <input type="file" id="imageUpload" name="image" style="display: none;">
-                                            </div>
-
-                                        </div>
-                                    </div>
-
-                                    <div class="form-section">
-                                        <h2 class="form-section-title">Mô tả chi tiết</h2>
-                                        <div class="form-group full-width">
-                                            <textarea name="longDescription" class="form-control" rows="10">${product.description}</textarea>
-                                        </div>
-                                    </div>
-                                </div>
-                                <input type="hidden" name="oldImage" value="${imageFileName}">
-
-
                                 <div class="form-column">
+                                    <div class="product-edit-container">
+                                        <div class="image-column">
+                                            <div class="form-section">
+                                                <h2 class="form-section-title">Hình ảnh sản phẩm</h2>
+
+                                                <div class="image-list" style="display: flex; gap: 24px; align-items: center; flex-wrap: wrap;">
+                                                    <!-- Ảnh đang có -->
+                                                    <img id="productImagePreview"
+                                                         src="${pageContext.request.contextPath}/image/${imageFileName}"
+                                                         alt="Ảnh sản phẩm"
+                                                         style="width: 260px; height: auto; border: 1px solid #ccc; border-radius: 8px;"
+                                                         onerror="this.src='${pageContext.request.contextPath}/image/na.jpg'" />
+
+                                                    <!-- Ô tải ảnh -->
+                                                    <label for="imageUpload" class="upload-box" style="cursor: pointer; width: 160px; height: 160px; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 2px dashed #ccc; border-radius: 8px;">
+                                                        <i data-feather="upload-cloud" style="width: 32px; height: 32px;"></i>
+                                                        <p style="margin: 8px 0 0;">Tải lên ảnh mới</p>
+                                                    </label>
+                                                    <input type="file" id="imageUpload" name="image" style="display: none;">
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <input type="hidden" name="oldImage" value="${imageFileName}">
+
+
+
                                     <div class="form-section">
                                         <h2 class="form-section-title">Thông tin chung</h2>
 
@@ -107,31 +102,37 @@
 
                                             <div class="form-group">
                                                 <label class="form-label" for="price">Giá bán (VNĐ)</label>
-                                                <input type="number" id="price" name="price" class="form-control" value="${product.price}">
+                                                <input type="text" id="price" name="price" class="form-control"
+                                                       value="<fmt:formatNumber value='${product.price}' type='number' groupingUsed='true' />" 
+                                                       inputmode="numeric" maxlength="20" required>
                                             </div>
+
 
                                             <div class="form-group">
                                                 <label class="form-label" for="origin">Xuất xứ</label>
                                                 <input type="text" id="origin" name="origin" class="form-control" value="${product.origin}">
                                             </div>
-
-                                            <select id="categoryId" name="categoryId" class="form-control" required>
-                                                <c:forEach var="c" items="${categories}">
-                                                    <option value="${c.id}" <c:if test="${product.categoryId == c.id}">selected</c:if>>
-                                                        ${c.name}
-                                                    </option>
-                                                </c:forEach>
-                                            </select>
-
-
+                                            <div class="form-group">
+                                                <label class="form-label" for="categoryId">Danh mục</label>
+                                                <select id="categoryId" name="categoryId" class="form-control" required>
+                                                    <c:forEach var="c" items="${categories}">
+                                                        <option value="${c.id}" <c:if test="${product.categoryId == c.id}">selected</c:if>>
+                                                            ${c.name}
+                                                        </option>
+                                                    </c:forEach>
+                                                </select>
+                                            </div>
                                             <div class="form-group">
                                                 <label class="form-label" for="createdAt">Ngày tạo</label>
-                                                <input type="text" id="createdAt" name="createdAt" class="form-control" value="${product.createdAt}" readonly>
+                                                <input type="datetime-local" id="createdAt" name="createdAt" class="form-control"
+                                                       value="${product.createdAt}" readonly>
                                             </div>
 
+                                            <!-- Ngày cập nhật -->
                                             <div class="form-group">
                                                 <label class="form-label" for="updatedAt">Ngày cập nhật</label>
-                                                <input type="text" id="updatedAt" name="updatedAt" class="form-control" value="${product.updatedAt}" readonly>
+                                                <input type="datetime-local" id="updatedAt" name="updatedAt" class="form-control"
+                                                       value="${product.updatedAt}" readonly>
                                             </div>
                                         </div>
                                     </div>
