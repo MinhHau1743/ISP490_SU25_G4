@@ -6,6 +6,7 @@
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <c:set var="currentPage" value="listProduct" />
 <!DOCTYPE html>
 <html lang="vi">
@@ -20,10 +21,10 @@
 
         <script src="https://unpkg.com/feather-icons"></script>
 
-        <link rel="stylesheet" href="../../css/style.css">        
-        <link rel="stylesheet" href="../../css/header.css">
-        <link rel="stylesheet" href="../../css/mainMenu.css">
-        <link rel="stylesheet" href="../../css/createProduct.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">        
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/createProduct.css">
     </head>
     <body>
         <div class="app-container">
@@ -39,7 +40,8 @@
 
                 <section class="content-body">
                     <div class="form-container">
-                        <form action="createProduct" method="POST" class="product-form" enctype="multipart/form-data">
+                        <form action="ProductController" method="POST" class="product-form" enctype="multipart/form-data">
+                            <input type="hidden" name="service" value="createProduct">
                             <div class="form-main-layout">
                                 <div class="product-image-section">
                                     <label for="productImageUpload" class="image-placeholder" id="imagePreview">
@@ -53,15 +55,60 @@
                                     <fieldset class="form-fieldset">
                                         <legend>Thông tin sản phẩm</legend>
                                         <div class="details-grid">
-                                            <div class="form-group"><label for="productCode">Mã hàng</label><input type="text" id="productCode" name="productCode" placeholder="Tự động tạo hoặc nhập"></div>
-                                            <div class="form-group"><label for="productBrand">Hãng sản xuất</label><input type="text" id="productBrand" name="productBrand" placeholder="VD: Apple, Samsung"></div>
-                                            <div class="form-group"><label for="productGroup">Nhóm hàng</label><input type="text" id="productGroup" name="productGroup" placeholder="VD: Điện tử, Thời trang"></div>
-                                            <div class="form-group"><label for="productOrigin">Nước sản xuất</label><input type="text" id="productOrigin" name="productOrigin" placeholder="VD: Việt Nam, Mỹ"></div>
-                                            <div class="form-group full-width"><label for="productPacking">Quy cách đóng gói</label><input type="text" id="productPacking" name="productPacking" placeholder="VD: Hộp 1 sản phẩm"></div>
-                                            <div class="form-group full-width"><label for="productDescription">Mô tả</label><textarea id="productDescription" name="productDescription" placeholder="Nhập mô tả chi tiết cho sản phẩm..."></textarea></div>
+
+                                            <!-- Tên sản phẩm -->
+                                            <div class="form-group full-width">
+                                                <label class="form-label" for="productName">Tên sản phẩm</label>
+                                                <input type="text" id="productName" name="name" class="form-control"
+                                                       value="${product.name}" required>
+                                            </div>
+
+                                            <!-- Mã sản phẩm -->
+                                            <div class="form-group">
+                                                <label class="form-label" for="productCode">Mã sản phẩm</label>
+                                                <input type="text" id="productCode" name="productCode" class="form-control"
+                                                       value="${product.productCode}" placeholder="Tự động tạo hoặc nhập">
+                                            </div>
+
+                                            <!-- Giá bán -->
+                                            <div class="form-group">
+                                                <label class="form-label" for="price">Giá bán (VNĐ)</label>
+                                                <input type="text" id="price" name="price" class="form-control"
+                                                       value="<fmt:formatNumber value='${product.price}' type='number' groupingUsed='true' />"
+                                                       inputmode="numeric" maxlength="15" required>
+                                            </div>
+
+                                            <!-- Hãng sản xuất -->
+                                            <div class="form-group">
+                                                <label class="form-label" for="origin">Xuất xứ</label>
+                                                <input type="text" id="origin" name="origin" class="form-control"
+                                                       value="${product.brand}" >
+                                            </div>
+
+                                            <!-- Danh mục -->
+                                            <div class="form-group">
+                                                <label class="form-label" for="categoryId">Danh mục</label>
+                                                <select id="categoryId" name="categoryId" class="form-control" required>
+                                                    <c:forEach var="c" items="${categories}">
+                                                        <option value="${c.id}" <c:if test="${product.categoryId == c.id}">selected</c:if>>
+                                                            ${c.name}
+                                                        </option>
+                                                    </c:forEach>
+                                                </select>
+                                            </div>
+
+
+                                            <!-- Mô tả -->
+                                            <div class="form-group full-width">
+                                                <label class="form-label" for="description">Mô tả</label>
+                                                <textarea id="description" name="description" class="form-control" rows="4"
+                                                          placeholder="Nhập mô tả chi tiết cho sản phẩm...">${product.description}</textarea>
+                                            </div>
+
                                         </div>
                                     </fieldset>
                                 </div>
+
                             </div>
 
                             <div class="form-main-layout">
@@ -90,8 +137,8 @@
         <script>
             feather.replace();
         </script>
-        <script src="../../js/createProduct.js"></script>
+        <script src="${pageContext.request.contextPath}/js/createProduct.js"></script>
 
-        <script src="../../js/mainMenu.js"></script>
+        <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>

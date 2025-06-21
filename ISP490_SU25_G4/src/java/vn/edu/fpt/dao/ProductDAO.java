@@ -10,7 +10,7 @@ import vn.edu.fpt.model.Product;
 import java.sql.ResultSet;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import vn.edu.fpt.model.ProductCategory;
+
 
 /**
  *
@@ -129,31 +129,58 @@ public class ProductDAO extends DBContext {
         return null;
     }
 
-    public List<ProductCategory> getAllCategories() {
-        List<ProductCategory> categories = new ArrayList<>();
-
-        String sql = "SELECT id, name FROM ProductCategories";
-
+    public boolean insertProduct(Product p) {
+        String sql = "INSERT INTO Products "
+                + "(name, category_id, product_code, origin, price, description, is_deleted, created_at, updated_at) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
-            ResultSet rs = st.executeQuery();
-            while (rs.next()) {
-                ProductCategory cat = new ProductCategory();
-                cat.setId(rs.getInt("id"));
-                cat.setName(rs.getString("name"));
-                categories.add(cat);
-            }
+            st.setString(1, p.getName());
+            st.setInt(2, p.getCategoryId());
+            st.setString(3, p.getProductCode());
+            st.setString(4, p.getOrigin());
+            st.setDouble(5, p.getPrice());
+            st.setString(6, p.getDescription());
+            st.setBoolean(7, p.isIsDeleted());
+            st.setString(8, p.getCreatedAt());
+            st.setString(9, p.getUpdatedAt());
+
+            int rows = st.executeUpdate();
+            return rows > 0;
+
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.out.println("Lỗi khi thêm sản phẩm: " + e.getMessage());
+            return false;
         }
-        return categories;
     }
+
+    
 
     public static void main(String[] args) {
         ProductDAO productDAO = new ProductDAO();
+
+        // Tạo đối tượng Product mẫu
+        Product p = new Product();
+        p.setName("Sản phẩm test");
+        p.setCategoryId(1);
+        p.setProductCode("SP_TEST_001");
+        p.setOrigin("Việt Nam");
+        p.setPrice(123456.78);
+        p.setDescription("Đây là sản phẩm test insert");
+        p.setIsDeleted(false);
+        p.setCreatedAt("2024-06-21 12:00:00");
+        p.setUpdatedAt("2024-06-21 12:00:00");
+        // Nếu có trường image: p.setImage("test_image.jpg");
+
+        boolean result = productDAO.insertProduct(p);
+        if (result) {
+            System.out.println("Thêm sản phẩm thành công!");
+        } else {
+            System.out.println("Thêm sản phẩm thất bại!");
+        }
         List<Product> pro = productDAO.viewAllProduct(1, 10);
-        for (Product p : pro) {
-            System.out.println(p);
+        for (Product pros : pro) {
+            System.out.println(pros);
         }
     }
 }

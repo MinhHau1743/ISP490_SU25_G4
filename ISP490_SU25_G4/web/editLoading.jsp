@@ -8,7 +8,7 @@
         // Chuyển hướng bằng JavaScript để đảm bảo hoạt động tốt hơn
         setTimeout(function() {
             window.location.href = "${redirectUrl}";
-        }, 5000); // 5 giây
+        }, 3000); // 3 giây
     </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500&display=swap');
