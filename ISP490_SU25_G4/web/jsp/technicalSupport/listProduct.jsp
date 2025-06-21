@@ -55,7 +55,7 @@
                                 </div>
                                 <button type="button" class="filter-button" id="filterBtn"><i data-feather="filter"></i><span>Bộ lọc</span></button>
                                 <div class="toolbar-actions">
-                                    <a href="../technicalSupport/createProduct.jsp" class="btn btn-primary">
+                                    <a href="ProductController?service=getProductById" class="btn btn-primary">
                                         <i data-feather="plus"></i>
                                         <span>Thêm Sản phẩm</span>
                                     </a>
@@ -133,19 +133,11 @@
                                             </div>
                                             <div class="card-body">
                                                 <div class="card-info-row"><i data-feather="tag"></i><span class="info-value">Mã: ${p.productCode}</span></div>
-                                                <div class="card-info-row"><i data-feather="layers"></i><span class="info-value">Danh mục: ${p.categoryId}</span></div>
+                                                <div class="card-info-row"><i data-feather="layers"></i><span class="info-value">Danh mục: ${categoryMap[p.categoryId]}</span></div>
                                                 <div class="card-info-row"><i data-feather="package"></i><span class="info-value">Xuất xứ: ${p.origin}</span></div>
                                                 <div class="card-info-row"><i data-feather="align-left"></i><span class="info-value">Mô tả: ${p.description}</span></div>
                                                 <div class="card-info-row"><i data-feather="calendar"></i><span class="info-value">Ngày tạo: ${p.createdAt}</span></div>
                                                 <div class="card-info-row"><i data-feather="refresh-cw"></i><span class="info-value">Cập nhật: ${p.updatedAt}</span></div>
-                                                <div class="card-info-row"><i data-feather="shield"></i>
-                                                    <span class="info-value">Đã xóa: 
-                                                        <c:choose>
-                                                            <c:when test="${p.isDeleted}">Có</c:when>
-                                                            <c:otherwise>Không</c:otherwise>
-                                                        </c:choose>
-                                                    </span>
-                                                </div>
                                             </div>
 
                                             <div class="card-footer">
