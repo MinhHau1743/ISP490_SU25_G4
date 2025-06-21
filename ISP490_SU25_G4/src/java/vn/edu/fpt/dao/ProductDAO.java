@@ -154,7 +154,19 @@ public class ProductDAO extends DBContext {
         }
     }
 
-    
+    public boolean checkProductCodeExists(String code) {
+    String sql = "SELECT COUNT(*) FROM Products WHERE product_code = ?";
+    try (PreparedStatement st = connection.prepareStatement(sql)) {
+        st.setString(1, code);
+        ResultSet rs = st.executeQuery();
+        if (rs.next()) {
+            return rs.getInt(1) > 0;
+        }
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+    return false;
+}
 
     public static void main(String[] args) {
         ProductDAO productDAO = new ProductDAO();

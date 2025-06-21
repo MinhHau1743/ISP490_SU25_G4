@@ -97,7 +97,7 @@
                                         <div class="form-grid">
                                             <div class="form-group">
                                                 <label class="form-label" for="productCode">Mã sản phẩm</label>
-                                                <input type="text" id="productCode" name="productCode" class="form-control" value="${product.productCode}">
+                                                <input type="text" id="productCode" class="form-control" value="${product.productCode}" readonly>
                                             </div>
 
                                             <div class="form-group">

@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import vn.edu.fpt.dao.ProductDAO;
 import vn.edu.fpt.dao.ProductCategoriesDAO;
 import vn.edu.fpt.model.Product;
@@ -180,18 +181,30 @@ public class ProductController extends HttpServlet {
 
         if (service.equals("createProduct")) {
             try {
-                // Lấy thông tin sản phẩm từ request
                 String name = request.getParameter("name");
                 String productCode = request.getParameter("productCode");
                 String origin = request.getParameter("origin");
-                String priceRaw = request.getParameter("price").replace(".", "");
-                double price = Double.parseDouble(priceRaw);
+                String priceRaw = request.getParameter("price");
                 String description = request.getParameter("description");
                 int categoryId = Integer.parseInt(request.getParameter("categoryId"));
 
-                // Lấy thời gian hiện tại để làm createdAt
+                // Chuẩn hóa giá
+                if (priceRaw != null) {
+                    priceRaw = priceRaw.replace(",", "").replace(".", "");
+                }
+                double price = Double.parseDouble(priceRaw);
+
+                // Thời gian tạo
                 DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                 String createdAt = LocalDateTime.now().format(dtf);
+
+                // Tạo DAO
+                ProductDAO dao = new ProductDAO();
+
+                // Nếu không nhập productCode, tự sinh code không trùng
+                if (productCode == null || productCode.trim().isEmpty()) {
+                    productCode = generateRandomProductCode(dao);
+                }
 
                 // Thư mục chứa ảnh
                 String uploadDir = "D:/New folder/ISP490_SU25_G4/web/image";
@@ -204,24 +217,20 @@ public class ProductController extends HttpServlet {
                 String imageFileName = null;
                 Part filePart = request.getPart("image");
                 if (filePart != null && filePart.getSize() > 0) {
-                    // Lấy extension của file
                     String submittedFileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
                     String extension = "";
                     int dotIndex = submittedFileName.lastIndexOf('.');
                     if (dotIndex >= 0) {
                         extension = submittedFileName.substring(dotIndex).toLowerCase();
                     }
-
-                    // Tạo tên file ảnh duy nhất (sử dụng thời gian để tránh cache)
                     long ts = System.currentTimeMillis();
                     imageFileName = "product_" + ts + extension;
                     filePart.write(uploadDir + File.separator + imageFileName);
                 } else {
-                    // Nếu không upload ảnh thì dùng ảnh mặc định
                     imageFileName = "default.jpg";
                 }
 
-                // Tạo đối tượng sản phẩm (giả sử ID tự tăng ở DB, không cần nhập từ request)
+                // Tạo đối tượng sản phẩm (ID tự tăng)
                 Product p = new Product();
                 p.setName(name);
                 p.setProductCode(productCode);
@@ -231,15 +240,10 @@ public class ProductController extends HttpServlet {
                 p.setCategoryId(categoryId);
                 p.setIsDeleted(false);
                 p.setCreatedAt(createdAt);
-                p.setUpdatedAt(null); // hoặc set luôn createdAt nếu muốn
-
-                // Thêm sản phẩm vào DB
-                ProductDAO dao = new ProductDAO();
+                p.setUpdatedAt(null);
                 boolean success = dao.insertProduct(p);
 
-                // Điều hướng sau khi thêm
                 if (success) {
-                    // Nếu muốn có hiệu ứng loading: (có thể thêm cache-busting nếu cần)
                     request.setAttribute("redirectUrl", "ProductController");
                     request.getRequestDispatcher("editLoading.jsp").forward(request, response);
                 } else {
@@ -253,7 +257,6 @@ public class ProductController extends HttpServlet {
                 request.getRequestDispatcher("error.jsp").forward(request, response);
             }
         }
-
         if (service.equals("getProductToEdit")) {
             String idRaw = request.getParameter("id");
             if (idRaw == null) {
@@ -312,7 +315,6 @@ public class ProductController extends HttpServlet {
             try {
                 int id = Integer.parseInt(request.getParameter("id"));
                 String name = request.getParameter("name");
-                String productCode = request.getParameter("productCode");
                 String origin = request.getParameter("origin");
                 String priceRaw = request.getParameter("price");
 // Loại cả dấu phẩy và dấu chấm (nếu dùng kiểu VN)
@@ -384,8 +386,11 @@ public class ProductController extends HttpServlet {
                     imageFileName = "default.jpg";
                 }
                 DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-                // Tạo đối tượng sản phẩm
+                //Check product_code ở backend
+                Product old = products.getProductById(id);
+                String productCode = old.getProductCode();
                 Product p = new Product();
+// Tạo đối tượng sản phẩm
                 p.setId(id);
                 p.setName(name);
                 p.setProductCode(productCode);
@@ -442,6 +447,16 @@ public class ProductController extends HttpServlet {
             }
         }
 
+    }
+
+    public String generateRandomProductCode(ProductDAO dao) {
+        String code;
+        Random random = new Random();
+        do {
+            int num = 100000 + random.nextInt(900000); // Tạo số ngẫu nhiên 6 chữ số
+            code = "SP" + num;
+        } while (dao.checkProductCodeExists(code));
+        return code;
     }
 
     /**
