@@ -1,7 +1,7 @@
 <%--
     Document   : createCustomer
     Created on : Jun 18, 2025
-    Author     : NGUYEN MINH
+    Author     : anhndhe172050
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
@@ -123,8 +123,11 @@
                                     <div class="info-grid">
                                         <div class="form-group"><label for="phone">Số điện thoại (*)</label><input type="tel" id="phone" name="phone" class="form-control" placeholder="VD: 0987654321" required></div>
                                         <div class="form-group"><label for="email">Email</label><input type="email" id="email" name="email" class="form-control" placeholder="VD: example@email.com"></div>
-                                        <div class="form-group"><label for="website">Website</label><input type="url" id="website" name="website" class="form-control" placeholder="VD: https://example.com"></div>
+                                        <div class="form-group"><label for="taxCode">Mã số thuế</label><input type="text" id="taxCode" name="taxCode" class="form-control" placeholder="Nhập mã số thuế"></div>
+                                        <div class="form-group"><label for="bankNumber">Số tài khoản ngân hàng</label><input type="text" id="bankNumber" name="bankNumber" class="form-control" placeholder="Nhập số tài khoản ngân hàng"></div>
                                     </div>
+                                    
+                                    <hr style="margin: 1.5rem 0;">
 
                                     <div class="info-grid" style="margin-top: 1rem; grid-template-columns: repeat(3, 1fr);">
                                         <div class="form-group">
@@ -237,18 +240,18 @@
 
                     if (provinceId) {
                         fetch('${BASE_URL}/getDistricts?provinceId=' + provinceId)
-                            .then(response => response.json())
-                            .then(data => {
-                                districtSelect.innerHTML = '<option value="" disabled selected>-- Chọn Quận/Huyện --</option>';
-                                data.forEach(function (district) {
-                                    const option = document.createElement('option');
-                                    option.value = district.id;
-                                    option.textContent = district.name;
-                                    districtSelect.appendChild(option);
-                                });
-                                districtSelect.disabled = false;
-                            })
-                            .catch(error => console.error('Error fetching districts:', error));
+                                .then(response => response.json())
+                                .then(data => {
+                                    districtSelect.innerHTML = '<option value="" disabled selected>-- Chọn Quận/Huyện --</option>';
+                                    data.forEach(function (district) {
+                                        const option = document.createElement('option');
+                                        option.value = district.id;
+                                        option.textContent = district.name;
+                                        districtSelect.appendChild(option);
+                                    });
+                                    districtSelect.disabled = false;
+                                })
+                                .catch(error => console.error('Error fetching districts:', error));
                     }
                 });
 
@@ -259,18 +262,18 @@
 
                     if (districtId) {
                         fetch('${BASE_URL}/getWards?districtId=' + districtId)
-                            .then(response => response.json())
-                            .then(data => {
-                                wardSelect.innerHTML = '<option value="" disabled selected>-- Chọn Phường/Xã --</option>';
-                                data.forEach(function (ward) {
-                                    const option = document.createElement('option');
-                                    option.value = ward.id;
-                                    option.textContent = ward.name;
-                                    wardSelect.appendChild(option);
-                                });
-                                wardSelect.disabled = false;
-                            })
-                            .catch(error => console.error('Error fetching wards:', error));
+                                .then(response => response.json())
+                                .then(data => {
+                                    wardSelect.innerHTML = '<option value="" disabled selected>-- Chọn Phường/Xã --</option>';
+                                    data.forEach(function (ward) {
+                                        const option = document.createElement('option');
+                                        option.value = ward.id;
+                                        option.textContent = ward.name;
+                                        wardSelect.appendChild(option);
+                                    });
+                                    wardSelect.disabled = false;
+                                })
+                                .catch(error => console.error('Error fetching wards:', error));
                     }
                 });
 
@@ -286,13 +289,14 @@
                     setTimeout(() => {
                         successOverlay.classList.add('show');
                     }, 10);
-                    
+
                     // Set a timeout to redirect after 3 seconds
-                    setTimeout(function() {
+                    setTimeout(function () {
                         window.location.href = redirectUrl;
                     }, 3000); // 3000 milliseconds = 3 seconds
                 }
             });
         </script>
+        <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>

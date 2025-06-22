@@ -79,4 +79,14 @@ public class EnterpriseAssignmentDAO {
         }
         return assignedUsers;
     }
+
+    public boolean updateMainAssignment(Connection conn, int enterpriseId, int newUserId) throws SQLException {
+        // Cập nhật người phụ trách chính (account_manager)
+        String sql = "UPDATE EnterpriseAssignments SET user_id = ? WHERE enterprise_id = ? AND assignment_type = 'account_manager'";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, newUserId);
+            ps.setInt(2, enterpriseId);
+            return ps.executeUpdate() > 0;
+        }
+    }
 }
