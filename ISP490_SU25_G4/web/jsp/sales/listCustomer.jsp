@@ -1,7 +1,7 @@
 <%--
     Document   : listCustomer
     Created on : Jun 17, 2025
-    Author     : NGUYEN MINH
+    Author     : anhndhe172050 
     Description: Displays a Kanban board of all customers, categorized by type, with a collapsible menu.
 --%>
 
@@ -181,6 +181,7 @@
                 }
             });
         </script>
+        <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
         
     </body>
 </html>
