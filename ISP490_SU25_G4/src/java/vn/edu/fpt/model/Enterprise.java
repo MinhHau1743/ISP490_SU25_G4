@@ -5,32 +5,48 @@
 package vn.edu.fpt.model;
 
 import java.security.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  * @author ducanh
  */
 public class Enterprise {
-     
+
     private int id;
     private String enterpriseCode;
     private String name;
     private String taxCode;
     private String fax;
     private String bankNumber;
-    
-    
+
     private int industryId;
     private int customerTypeId;
     private int areaId;
     private int addressId;
     private String avatarUrl;
-    
+
     private boolean isDeleted;
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
+    // Fields from joined tables for easy display
+    private String fullAddress; // From Addresses table
+    private String primaryContactPhone; // From EnterpriseContacts table
+    private String customerTypeName; // From CustomerTypes table
+    private List<User> assignedUsers; // List of assigned employees from Users table
+
+    // === THÊM TRƯỜNG MỚI VÀO ĐÂY ===
+    private String primaryContactEmail;
+
+// === THIS FIELD WAS MISSING ===
+    private List<EnterpriseContact> contacts;
+
     public Enterprise() {
+        // Initialize lists to prevent NullPointerExceptions
+        this.assignedUsers = new ArrayList<>();
+        this.contacts = new ArrayList<>();
     }
 
     public Enterprise(int id, String enterpriseCode, String name, String taxCode, String fax, String bankNumber, int industryId, int customerTypeId, int areaId, int addressId, String avatarUrl, boolean isDeleted, Timestamp createdAt, Timestamp updatedAt) {
@@ -48,6 +64,22 @@ public class Enterprise {
         this.isDeleted = isDeleted;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+
+    public String getPrimaryContactEmail() {
+        return primaryContactEmail;
+    }
+
+    public void setPrimaryContactEmail(String primaryContactEmail) {
+        this.primaryContactEmail = primaryContactEmail;
+    }
+
+    public List<EnterpriseContact> getContacts() {
+        return contacts;
+    }
+
+    public void setContacts(List<EnterpriseContact> contacts) {
+        this.contacts = contacts;
     }
 
     public int getId() {
@@ -114,6 +146,38 @@ public class Enterprise {
         this.customerTypeId = customerTypeId;
     }
 
+    public String getFullAddress() {
+        return fullAddress;
+    }
+
+    public void setFullAddress(String fullAddress) {
+        this.fullAddress = fullAddress;
+    }
+
+    public String getPrimaryContactPhone() {
+        return primaryContactPhone;
+    }
+
+    public void setPrimaryContactPhone(String primaryContactPhone) {
+        this.primaryContactPhone = primaryContactPhone;
+    }
+
+    public String getCustomerTypeName() {
+        return customerTypeName;
+    }
+
+    public void setCustomerTypeName(String customerTypeName) {
+        this.customerTypeName = customerTypeName;
+    }
+
+    public List<User> getAssignedUsers() {
+        return assignedUsers;
+    }
+
+    public void setAssignedUsers(List<User> assignedUsers) {
+        this.assignedUsers = assignedUsers;
+    }
+
     public int getAreaId() {
         return areaId;
     }
@@ -167,6 +231,4 @@ public class Enterprise {
         return "Enterprise{" + "id=" + id + ", enterpriseCode=" + enterpriseCode + ", name=" + name + ", taxCode=" + taxCode + ", fax=" + fax + ", bankNumber=" + bankNumber + ", industryId=" + industryId + ", customerTypeId=" + customerTypeId + ", areaId=" + areaId + ", addressId=" + addressId + ", avatarUrl=" + avatarUrl + ", isDeleted=" + isDeleted + ", createdAt=" + createdAt + ", updatedAt=" + updatedAt + '}';
     }
 
-    
-    
 }

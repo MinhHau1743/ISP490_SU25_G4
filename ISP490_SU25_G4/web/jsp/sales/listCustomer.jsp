@@ -1,13 +1,15 @@
-<%-- 
+<%--
     Document   : listCustomer
-    Created on : Jun 17, 2025, 11:14:37 AM
-    Author     : NGUYEN MINH
+    Created on : Jun 17, 2025
+    Author     : anhndhe172050 
+    Description: Displays a Kanban board of all customers, categorized by type, with a collapsible menu.
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <c:set var="currentPage" value="listCustomer" />
+<c:set var="BASE_URL" value="${pageContext.request.contextPath}" />
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -16,18 +18,67 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Quản lý Khách hàng</title>
 
+        <%-- Google Fonts and Feather Icons --%>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <script src="https://unpkg.com/feather-icons"></script>
 
-        <link rel="stylesheet" href="../../css/style.css">
-        <link rel="stylesheet" href="../../css/mainMenu.css">
-        <link rel="stylesheet" href="../../css/listCustomer.css">
+        <%-- Stylesheets --%>
+        <link rel="stylesheet" href="${BASE_URL}/css/style.css">
+        <link rel="stylesheet" href="${BASE_URL}/css/mainMenu.css">
+        <link rel="stylesheet" href="${BASE_URL}/css/listCustomer.css">
+
+        <%-- === CSS MỚI CHO BỐ CỤC VÀ MENU THU GỌN === --%>
+        <style>
+            /* Căn giữa các cột Kanban */
+            .customer-board-container {
+                display: flex;
+                justify-content: center; /* This will center the .customer-board */
+                width: 100%;
+            }
+
+            .customer-board {
+                display: inline-flex; /* Make the board only as wide as its columns */
+                gap: 16px;
+            }
+            
+            /* CSS cho menu khi được thu gọn */
+            /* Giả sử thanh menu của bạn có class là .main-menu */
+            .app-container.menu-collapsed .main-menu {
+                width: 80px; /* Chiều rộng của menu khi thu gọn */
+            }
+            .app-container.menu-collapsed .main-menu .nav-link span,
+            .app-container.menu-collapsed .main-menu .menu-header,
+            .app-container.menu-collapsed .main-menu .user-profile .user-name,
+            .app-container.menu-collapsed .main-menu .user-profile .user-role {
+                display: none; /* Ẩn chữ đi, chỉ giữ lại icon */
+            }
+            .app-container.menu-collapsed .main-menu .nav-link {
+                justify-content: center;
+            }
+             .app-container.menu-collapsed .main-menu #menu-toggle-btn i {
+                transform: rotate(180deg); /* Xoay icon mũi tên */
+            }
+
+            .app-container.menu-collapsed .main-content {
+                margin-left: 80px; /* Điều chỉnh lề của nội dung chính */
+            }
+            
+            /* Thêm hiệu ứng chuyển động mượt mà */
+            .main-menu, .main-content, .main-menu #menu-toggle-btn i {
+                transition: all 0.3s ease-in-out;
+            }
+        </style>
+
     </head>
     <body>
-        <div class="app-container">
-            <jsp:include page="../../mainMenu.jsp"/>
+        <div class="app-container"> <%-- Thêm class 'menu-collapsed' ở đây nếu muốn mặc định thu gọn --%>
+            
+            <%-- Include the main menu component --%>
+            <%-- Giả sử trong file mainMenu.jsp có nút <button id="menu-toggle-btn"><<</button> --%>
+            <jsp:include page="/mainMenu.jsp"/>
+
             <main class="main-content">
                 <header class="page-header">
                     <div class="title-section">
@@ -39,110 +90,46 @@
                 </header>
 
                 <div class="page-content">
+                    <c:if test="${not empty errorMessage}">
+                        <div class="error-message" style="background-color: #ffebee; color: #c62828; padding: 16px; margin-bottom: 16px; border-radius: 8px; border: 1px solid #c62828;">
+                            <strong>Lỗi:</strong> ${errorMessage}
+                        </div>
+                    </c:if>
+
                     <div class="content-card">
-                        <form class="table-toolbar">
+                        <div class="table-toolbar">
                             <div class="search-box">
                                 <i data-feather="search" class="feather-search"></i>
                                 <input type="text" placeholder="Tìm kiếm khách hàng...">
                             </div>
                             <div class="toolbar-actions">
-                                <a href="createCustomer.jsp" class="btn btn-primary"><i data-feather="plus"></i>Thêm Khách hàng</a>
+                                <a href="${BASE_URL}/createCustomer" class="btn btn-primary"><i data-feather="plus"></i>Thêm Khách hàng</a>
                             </div>
-                        </form>
+                        </div>
                     </div>
 
                     <div class="customer-board-container">
                         <div class="customer-board">
 
-                            <%-- Cột 1: Khách hàng VIP --%>
-                            <div class="kanban-column vip">
-                                <div class="kanban-column-header">
-                                    <span class="status-dot"></span>
-                                    <h2 class="column-title">Khách hàng VIP</h2>
-                                    <span class="column-count">${customerColumns['vip'].size()}</span>
-                                </div>
-                                <div class="kanban-cards">
-                                    <c:forEach var="customer" items="${customerColumns['vip']}">
-                                        <div class="customer-kanban-card">
-                                            <h3 class="card-title">${customer.name}</h3>
-                                            <div class="card-info-row"><i data-feather="phone"></i><span>${customer.phone}</span></div>
-                                            <div class="card-info-row"><i data-feather="map-pin"></i><span>${customer.address}</span></div>
-                                            <div class="card-footer">
-                                                <div class="card-assignees">
-                                                    <c:forEach var="assignee" items="${customer.assignees}">
-                                                        <img src="${assignee.avatarUrl}" title="${assignee.fullName}">
-                                                    </c:forEach>
-                                                </div>
-                                                <div class="card-actions">
-                                                    <a href="viewCustomer?id=${customer.id}" title="Xem chi tiết"><i data-feather="eye"></i></a>
-                                                    <a href="editCustomer?id=${customer.id}" title="Sửa thông tin"><i data-feather="edit-2"></i></a>
-                                                    <a href="#" class="delete-trigger-btn" data-id="${customer.id}" data-name="${customer.name}" title="Xóa"><i data-feather="trash-2"></i></a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </c:forEach>
-                                </div>
-                            </div>
+                            <%-- Column 1: VIP Customers --%>
+                            <jsp:include page="kanbanColumn.jsp">
+                                <jsp:param name="columnKey" value="vip"/>
+                                <jsp:param name="columnTitle" value="Khách hàng VIP"/>
+                            </jsp:include>
 
-                            <%-- Cột 2: Khách hàng Thân thiết --%>
-                            <div class="kanban-column loyal">
-                                <div class="kanban-column-header">
-                                    <span class="status-dot"></span>
-                                    <h2 class="column-title">Khách hàng Thân thiết</h2>
-                                    <span class="column-count">${customerColumns['loyal'].size()}</span>
-                                </div>
-                                <div class="kanban-cards">
-                                    <c:forEach var="customer" items="${customerColumns['loyal']}">
-                                        <div class="customer-kanban-card">
-                                            <h3 class="card-title">${customer.name}</h3>
-                                            <div class="card-info-row"><i data-feather="phone"></i><span>${customer.phone}</span></div>
-                                            <div class="card-info-row"><i data-feather="map-pin"></i><span>${customer.address}</span></div>
-                                            <div class="card-footer">
-                                                <div class="card-assignees">
-                                                    <c:forEach var="assignee" items="${customer.assignees}">
-                                                        <img src="${assignee.avatarUrl}" title="${assignee.fullName}">
-                                                    </c:forEach>
-                                                </div>
-                                                <div class="card-actions">
-                                                    <a href="viewCustomer?id=${customer.id}" title="Xem chi tiết"><i data-feather="eye"></i></a>
-                                                    <a href="editCustomer?id=${customer.id}" title="Sửa thông tin"><i data-feather="edit-2"></i></a>
-                                                    <a href="#" class="delete-trigger-btn" data-id="${customer.id}" data-name="${customer.name}" title="Xóa"><i data-feather="trash-2"></i></a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </c:forEach>
-                                </div>
-                            </div>
-
-                            <%-- Cột 3: Khách hàng Tiềm năng --%>
-                            <div class="kanban-column potential">
-                                <div class="kanban-column-header">
-                                    <span class="status-dot"></span>
-                                    <h2 class="column-title">Khách hàng Tiềm năng</h2>
-                                    <span class="column-count">${customerColumns['potential'].size()}</span>
-                                </div>
-                                <div class="kanban-cards">
-                                    <c:forEach var="customer" items="${customerColumns['potential']}">
-                                        <div class="customer-kanban-card">
-                                            <h3 class="card-title">${customer.name}</h3>
-                                            <div class="card-info-row"><i data-feather="phone"></i><span>${customer.phone}</span></div>
-                                            <div class="card-info-row"><i data-feather="map-pin"></i><span>${customer.address}</span></div>
-                                            <div class="card-footer">
-                                                <div class="card-assignees">
-                                                    <c:forEach var="assignee" items="${customer.assignees}">
-                                                        <img src="${assignee.avatarUrl}" title="${assignee.fullName}">
-                                                    </c:forEach>
-                                                </div>
-                                                <div class="card-actions">
-                                                    <a href="viewCustomer?id=${customer.id}" title="Xem chi tiết"><i data-feather="eye"></i></a>
-                                                    <a href="editCustomer?id=${customer.id}" title="Sửa thông tin"><i data-feather="edit-2"></i></a>
-                                                    <a href="#" class="delete-trigger-btn" data-id="${customer.id}" data-name="${customer.name}" title="Xóa"><i data-feather="trash-2"></i></a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </c:forEach>
-                                </div>
-                            </div>
+                            <%-- Column 2: Loyal Customers --%>
+                            <jsp:include page="kanbanColumn.jsp">
+                                <jsp:param name="columnKey" value="loyal"/>
+                                <jsp:param name="columnTitle" value="Khách hàng Thân thiết"/>
+                            </jsp:include>
+                            
+                            <%-- Column 3: Potential Customers --%>
+                            <jsp:include page="kanbanColumn.jsp">
+                                <jsp:param name="columnKey" value="potential"/>
+                                <jsp:param name="columnTitle" value="Khách hàng Tiềm năng"/>
+                            </jsp:include>
+                            
+                            <%-- ĐÃ XÓA CỘT KHÁCH HÀNG KHÁC --%>
 
                         </div>
                     </div>
@@ -150,8 +137,8 @@
             </main>
         </div>
 
-        <%-- Modal xác nhận xóa --%>
-        <div id="deleteConfirmModal" class="modal-overlay">
+        <%-- Modal for delete confirmation --%>
+        <div id="deleteConfirmModal" class="modal-overlay" style="display:none;">
             <div class="modal-content">
                 <div class="modal-header">
                     <h3 class="modal-title">Xác nhận Xóa Khách hàng</h3>
@@ -168,7 +155,33 @@
             </div>
         </div>
 
-        <script src="../../js/listCustomer.js"></script>
-        <script src="../../js/mainMenu.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Render tất cả các icon Feather
+                feather.replace();
+
+                // --- LOGIC MỚI CHO MENU THU GỌN ---
+                const appContainer = document.querySelector('.app-container');
+                // Nút này cần được đặt trong file mainMenu.jsp của bạn
+                const menuToggleButton = document.getElementById('menu-toggle-btn'); 
+
+                if (menuToggleButton) {
+                    // Xử lý sự kiện click vào nút thu/mở menu
+                    menuToggleButton.addEventListener('click', function() {
+                        appContainer.classList.toggle('menu-collapsed');
+                        // Lưu trạng thái vào localStorage để ghi nhớ lựa chọn của người dùng
+                        const isCollapsed = appContainer.classList.contains('menu-collapsed');
+                        localStorage.setItem('menuCollapsed', isCollapsed);
+                    });
+                }
+                
+                // Kiểm tra trạng thái đã lưu khi tải trang
+                if (localStorage.getItem('menuCollapsed') === 'true') {
+                    appContainer.classList.add('menu-collapsed');
+                }
+            });
+        </script>
+        <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
+        
     </body>
 </html>
