@@ -2,27 +2,33 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/JavaScript.js to edit this template
  */
-$(document).ready(function () {
-    var typingTimer;
-    var doneTypingInterval = 500; // 0.5 giây
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.number-format').forEach(function (input) {
+        // Format value khi load trang
+        if (input.value && !isNaN(input.value.replace(/[^0-9]/g, ''))) {
+            let raw = input.value.replace(/[^0-9]/g, '');
+            input.value = Number(raw).toLocaleString('vi-VN');
+        }
 
-    $("#searchProducts").on("keyup", function () {
-        clearTimeout(typingTimer);
-        typingTimer = setTimeout(function () {
-            var value = $("#searchProducts").val().toLowerCase();
-            $("#productList .product-card").filter(function () {
-                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-            });
-
-            // Kiểm tra số card còn hiển thị
-            if ($("#productList .product-card:visible").length === 0) {
-                $("#noResultMsg").show();
-            } else {
-                $("#noResultMsg").hide();
+        // Format realtime khi nhập
+        input.addEventListener('input', function (e) {
+            let raw = input.value.replace(/[^0-9]/g, '');
+            if (raw === '') {
+                input.value = '';
+                return;
             }
-        }, doneTypingInterval);
+            input.value = Number(raw).toLocaleString('vi-VN');
+            input.setSelectionRange(input.value.length, input.value.length);
+        });
+
+        // Khi submit, bỏ dấu phẩy
+        input.form && input.form.addEventListener('submit', function () {
+            input.value = input.value.replace(/[^0-9]/g, '');
+        });
     });
 });
+
+
 
 document.addEventListener('DOMContentLoaded', function () {
     feather.replace();
@@ -60,10 +66,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const closeBtn = deleteModal.querySelector('.close-modal-btn');
         const deleteTriggerButtons = document.querySelectorAll('.delete-trigger-btn');
 
-        const openDeleteModal = (id, name) => {
+        const openDeleteModal = (id, name, image) => {
             deleteMessage.innerHTML = `Bạn có chắc chắn muốn xóa sản phẩm '<strong>${name}</strong>'?`;
             // Cập nhật link xóa trong servlet của bạn
-            confirmDeleteBtn.href = `product?action=delete&id=${id}`;
+            confirmDeleteBtn.href = `ProductController?service=deleteProduct&id=${id}&image=${image}`;
             deleteModal.classList.add('show');
             feather.replace(); // Phải gọi lại để render icon X và alert-triangle trong modal
         };
@@ -73,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function () {
         deleteTriggerButtons.forEach(button => {
             button.addEventListener('click', function (event) {
                 event.preventDefault();
-                openDeleteModal(this.getAttribute('data-id'), this.getAttribute('data-name'));
+                openDeleteModal(this.getAttribute('data-id'), this.getAttribute('data-name'), this.getAttribute('data-image'));
             });
         });
 

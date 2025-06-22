@@ -32,7 +32,7 @@
                     <li><a href="${pageContext.request.contextPath}/addProducts.jsp" class="${currentPage == 'addProducts' ? 'active' : ''}">Thêm Hàng hóa</a></li>
                 </ul>
             </li>--%>
-            <li><a href="${pageContext.request.contextPath}/jsp/technicalSupport/listProduct.jsp" class="${currentPage == 'listProduct' ? 'active' : ''}"><i data-feather="box"></i><span>Hàng hóa</span></a></li>
+            <li><a href="${pageContext.request.contextPath}/ProductController" class="${currentPage == 'listProduct' ? 'active' : ''}"><i data-feather="box"></i><span>Hàng hóa</span></a></li>
 
 
             <c:set var="isTransactionSection" value="${currentPage == 'listTransaction' || currentPage == 'addTransaction'}" />

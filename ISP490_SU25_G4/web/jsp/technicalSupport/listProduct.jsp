@@ -46,12 +46,12 @@
                 <div class="page-content">
                     <div class="content-card">
                         <%-- Form tìm kiếm và lọc --%>
-                        <form action="productController" method="get">
+                        <form action="ProductController" method="get">
                             <div class="table-toolbar">
                                 <div class="search-box">
                                     <i data-feather="search" class="feather-search"></i>
                                     <%-- Giữ lại giá trị tìm kiếm cũ --%>
-                                    <input type="text" name="searchQuery" id="searchProducts" placeholder="Tìm kiếm tên, mã SP..." value="${param.searchQuery}">
+                                    <input type="text" name="keyword" placeholder="Tìm kiếm tên, mã SP..." value="${param.keyword}">
                                 </div>
                                 <button type="button" class="filter-button" id="filterBtn"><i data-feather="filter"></i><span>Bộ lọc</span></button>
                                 <div class="toolbar-actions">
@@ -72,9 +72,11 @@
                                     <div class="filter-group">
                                         <label>Khoảng giá (VNĐ)</label>
                                         <div class="price-inputs">
-                                            <%-- Giữ lại giá trị khoảng giá cũ --%>
-                                            <input type="number" name="minPrice" placeholder="Từ" value="${param.minPrice}"><span>-</span><input type="number" name="maxPrice" placeholder="Đến" value="${param.maxPrice}">
+                                            <input type="text" class="number-format" name="minPrice" placeholder="Từ" value="${param.minPrice}">
+                                            <span>-</span>
+                                            <input type="text" class="number-format" name="maxPrice" placeholder="Đến" value="${param.maxPrice}">
                                         </div>
+
                                     </div>
                                     <div class="filter-group">
                                         <label for="origin-filter">Xuất xứ</label>
@@ -147,7 +149,7 @@
                                                 <div class="action-buttons">
                                                     <a href="ProductController?service=getProductById&id=${p.id}" title="Xem"><i data-feather="eye"></i></a>
                                                     <a href="ProductController?service=getProductToEdit&id=${p.id}&image=${imageFileName}" title="Sửa"><i data-feather="edit-2"></i></a>
-                                                    <a href="#" class="delete-trigger-btn" data-id="${p.id}" data-name="${p.name}" title="Xóa"><i data-feather="trash-2"></i></a>
+                                                    <a href="#" class="delete-trigger-btn" data-id="${p.id}" data-name="${p.name}" data-image="${imageFileName}"title="Xóa"><i data-feather="trash-2"></i></a>
                                                 </div>
                                             </div>
                                         </div>
@@ -158,10 +160,12 @@
                                     <img class="modal-content" id="img01">
                                     <div id="caption"></div>
                                 </div>
-                                <p id="noResultMsg" style="display:none; grid-column: 1 / -1; text-align: center; color: var(--text-secondary);">
-                                    Không tìm thấy sản phẩm nào phù hợp.
-                                </p>
-                            </div>
+                                <c:if test="${empty productImageMap}">
+                                    <p id="noResultMsg" style="grid-column: 1 / -1; text-align: center; color: var(--text-secondary); margin-top:24px;">
+                                        Không tìm thấy sản phẩm nào phù hợp.
+                                    </p>
+                                </c:if>
+ j            </div>
 
                         </div>
 

@@ -46,7 +46,7 @@
                                 <div class="product-gallery">
                                     <div class="main-image">
                                         <%-- Hiển thị ảnh đầu tiên trong danh sách làm ảnh chính --%>
-                                        <img id="mainProductImage" src="" alt="Main image of ${product.name}">
+                                        <img id="mainProductImage" src="${pageContext.request.contextPath}/image/${imageFileName}" alt="Main image of ${product.name}">
                                     </div>
                                     <div class="thumbnail-list">
                                         <%-- Lặp qua danh sách ảnh để hiển thị thumbnail --%>
@@ -79,7 +79,7 @@
 
                                     <div class="view-actions">
                                         <%-- Link sửa sản phẩm với ID động --%>
-                                        <a href="editProductDetail.jsp" class="btn btn-primary"><i data-feather="edit"></i> Sửa thông tin</a>
+                                        <a href="ProductController?service=getProductToEdit&id=${product.id}&image=${imageFileName}" class="btn btn-primary"><i data-feather="edit"></i> Sửa thông tin</a>
                                     </div>
                                 </div>
 

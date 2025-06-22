@@ -4,6 +4,7 @@
  */
 package vn.edu.fpt.dao;
 
+import java.sql.Statement;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,36 +22,6 @@ public class ProductDAO extends DBContext {
 
     Connection conn = getConnection();
 
-    public List<Product> viewAllProduct(int indexPage, int pageSize) {
-        List<Product> products = new ArrayList<>();
-        // Sửa câu truy vấn SQL để JOIN với ProductCategories
-        String query = "SELECT pc.name AS category_name,p.*  FROM Products p "
-                + "LEFT JOIN ProductCategories pc ON p.category_id = pc.id "
-                + "LIMIT ? OFFSET ?";
-        try {
-            PreparedStatement st = conn.prepareStatement(query);
-            st.setInt(1, pageSize);
-            st.setInt(2, (indexPage - 1) * pageSize);
-            ResultSet rs = st.executeQuery();
-            while (rs.next()) {
-                Product p = new Product();
-                p.setId(rs.getInt("id"));
-                p.setName(rs.getString("name"));
-                p.setCategoryId(rs.getInt("category_id"));
-                p.setProductCode(rs.getString("product_code"));
-                p.setOrigin(rs.getString("origin"));
-                p.setPrice(rs.getDouble("price"));
-                p.setDescription(rs.getString("description"));
-                p.setIsDeleted(rs.getBoolean("is_deleted"));
-                p.setCreatedAt(rs.getString("created_at"));
-                p.setUpdatedAt(rs.getString("updated_at"));
-                products.add(p);
-            }
-        } catch (SQLException e) {
-            System.out.println("Lỗi khi truy vấn dữ liệu: " + e.getMessage());
-        }
-        return products;
-    }
 
     public boolean editProduct(Product p) {
         String query = "UPDATE Products SET "
@@ -82,20 +53,6 @@ public class ProductDAO extends DBContext {
             System.out.println("Lỗi khi cập nhật dữ liệu: " + e.getMessage());
             return false;
         }
-    }
-
-    public int countAllProducts() {
-        String query = "SELECT COUNT(*) FROM Products";
-        try {
-            PreparedStatement st = conn.prepareStatement(query);
-            ResultSet rs = st.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            System.out.println("Lỗi khi đếm sản phẩm: " + e.getMessage());
-        }
-        return 0;
     }
 
     public Product getProductById(int id) {
@@ -130,7 +87,7 @@ public class ProductDAO extends DBContext {
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try {
             // Sửa ở đây: thêm Statement.RETURN_GENERATED_KEYS
-            PreparedStatement st = conn.prepareStatement(sql);
+            PreparedStatement st = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
             st.setString(1, p.getName());
             st.setInt(2, p.getCategoryId());
             st.setString(3, p.getProductCode());
@@ -160,6 +117,160 @@ public class ProductDAO extends DBContext {
         return -1;
     }
 
+    public List<Product> searchProducts(String keyword, Double minPrice, Double maxPrice, String origin, Integer categoryId) {
+        List<Product> products = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT * FROM Products WHERE is_deleted = 0");
+        List<Object> params = new ArrayList<>();
+
+        // Xây dựng SQL động
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND name LIKE ?");
+            params.add("%" + keyword + "%");
+        }
+        if (minPrice != null) {
+            sql.append(" AND price >= ?");
+            params.add(minPrice);
+        }
+        if (maxPrice != null) {
+            sql.append(" AND price <= ?");
+            params.add(maxPrice);
+        }
+        if (origin != null && !origin.trim().isEmpty()) {
+            sql.append(" AND origin = ?");
+            params.add(origin);
+        }
+        if (categoryId != null) {
+            sql.append(" AND category_id = ?");
+            params.add(categoryId);
+        }
+
+        try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            // Gán các tham số vào PreparedStatement
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                Product p = new Product();
+                p.setId(rs.getInt("id"));
+                p.setName(rs.getString("name"));
+                p.setCategoryId(rs.getInt("category_id"));
+                p.setProductCode(rs.getString("product_code"));
+                p.setOrigin(rs.getString("origin"));
+                p.setPrice(rs.getDouble("price"));
+                p.setDescription(rs.getString("description"));
+                p.setIsDeleted(rs.getBoolean("is_deleted"));
+                p.setCreatedAt(rs.getString("created_at"));
+                p.setUpdatedAt(rs.getString("updated_at"));
+
+                products.add(p);
+            }
+        } catch (SQLException e) {
+            System.out.println("Lỗi khi tìm kiếm sản phẩm: " + e.getMessage());
+        }
+        return products;
+    }
+
+    public int countProductsWithFilter(String keyword, Double minPrice, Double maxPrice, String origin, Integer categoryId) {
+        int count = 0;
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM Products WHERE is_deleted = 0");
+        List<Object> params = new ArrayList<>();
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND name LIKE ?");
+            params.add("%" + keyword + "%");
+        }
+        if (minPrice != null) {
+            sql.append(" AND price >= ?");
+            params.add(minPrice);
+        }
+        if (maxPrice != null) {
+            sql.append(" AND price <= ?");
+            params.add(maxPrice);
+        }
+        if (origin != null && !origin.trim().isEmpty()) {
+            sql.append(" AND origin = ?");
+            params.add(origin);
+        }
+        if (categoryId != null) {
+            sql.append(" AND category_id = ?");
+            params.add(categoryId);
+        }
+
+        try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                count = rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.out.println("Lỗi khi đếm sản phẩm: " + e.getMessage());
+        }
+        return count;
+    }
+
+    public List<Product> getProductsWithFilter(String keyword, Double minPrice, Double maxPrice, String origin, Integer categoryId, int page, int pageSize) {
+        List<Product> products = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT * FROM Products WHERE is_deleted = 0");
+        List<Object> params = new ArrayList<>();
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND name LIKE ?");
+            params.add("%" + keyword + "%");
+        }
+        if (minPrice != null) {
+            sql.append(" AND price >= ?");
+            params.add(minPrice);
+        }
+        if (maxPrice != null) {
+            sql.append(" AND price <= ?");
+            params.add(maxPrice);
+        }
+        if (origin != null && !origin.trim().isEmpty()) {
+            sql.append(" AND origin = ?");
+            params.add(origin);
+        }
+        if (categoryId != null) {
+            sql.append(" AND category_id = ?");
+            params.add(categoryId);
+        }
+
+        sql.append(" ORDER BY id DESC"); // hoặc sửa lại theo ý bạn
+
+        // Phân trang
+        int offset = (page - 1) * pageSize;
+        sql.append(" LIMIT ? OFFSET ?");
+        params.add(pageSize);
+        params.add(offset);
+
+        try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Product p = new Product();
+                p.setId(rs.getInt("id"));
+                p.setName(rs.getString("name"));
+                p.setCategoryId(rs.getInt("category_id"));
+                p.setProductCode(rs.getString("product_code"));
+                p.setOrigin(rs.getString("origin"));
+                p.setPrice(rs.getDouble("price"));
+                p.setDescription(rs.getString("description"));
+                p.setIsDeleted(rs.getBoolean("is_deleted"));
+                p.setCreatedAt(rs.getString("created_at"));
+                p.setUpdatedAt(rs.getString("updated_at"));
+                products.add(p);
+            }
+        } catch (SQLException e) {
+            System.out.println("Lỗi khi lấy sản phẩm phân trang: " + e.getMessage());
+        }
+        return products;
+    }
+
     public boolean checkProductCodeExists(String code) {
         String sql = "SELECT COUNT(*) FROM Products WHERE product_code = ?";
         try (PreparedStatement st = conn.prepareStatement(sql)) {
@@ -172,6 +283,33 @@ public class ProductDAO extends DBContext {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public void deleteProduct(int id) {
+        String disableFKChecks = "SET FOREIGN_KEY_CHECKS = 0;";
+        String deleteProduct = "DELETE FROM Products WHERE id = ?";
+        String enableFKChecks = "SET FOREIGN_KEY_CHECKS = 1;";
+
+        try {
+            // Disable foreign key checks
+            try (Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate(disableFKChecks);
+            }
+
+            // Delete the product
+            try (PreparedStatement st = conn.prepareStatement(deleteProduct)) {
+                st.setInt(1, id);
+                st.executeUpdate();
+            }
+
+            // Enable foreign key checks
+            try (Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate(enableFKChecks);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) {
@@ -189,14 +327,11 @@ public class ProductDAO extends DBContext {
         p.setUpdatedAt("2024-06-21 12:00:00");
         // Nếu có trường image: p.setImage("test_image.jpg");
         int result = productDAO.insertProduct(p);
-        if (result >1) {
+        if (result > 1) {
             System.out.println("Thêm sản phẩm thành công!");
         } else {
             System.out.println("Thêm sản phẩm thất bại!");
         }
-        List<Product> pro = productDAO.viewAllProduct(1, 10);
-        for (Product pros : pro) {
-            System.out.println(pros);
-        }
+
     }
 }

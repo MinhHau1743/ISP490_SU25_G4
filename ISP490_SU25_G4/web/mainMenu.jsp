@@ -27,7 +27,7 @@
                     <li><a href="${pageContext.request.contextPath}/addProducts.jsp" class="${currentPage == 'addProducts' ? 'active' : ''}">Xem tồn kho</a></li>
                 </ul>
             </li>--%>
-            <li><a href="${pageContext.request.contextPath}/jsp/technicalSupport/listProduct.jsp" class="${currentPage == 'listProduct' ? 'active' : ''}"><i data-feather="box"></i><span>Hàng hóa</span></a></li>
+            <li><a href="${pageContext.request.contextPath}/ProductController" class="${currentPage == 'listProduct' ? 'active' : ''}"><i data-feather="box"></i><span>Hàng hóa</span></a></li>
 
 
             <%-- Mục "Hóa đơn" (dropdown) --%>

@@ -72,7 +72,6 @@ public class ProductController extends HttpServlet {
             int page = 1;
             int pageSize = 10;
 
-            // Lấy thông tin phân trang từ request
             String pageRaw = request.getParameter("page");
             String sizeRaw = request.getParameter("size");
             if (pageRaw != null) {
@@ -82,31 +81,49 @@ public class ProductController extends HttpServlet {
                 pageSize = Integer.parseInt(sizeRaw);
             }
 
-            // Lấy tổng số sản phẩm để tính tổng số trang
-            int totalProducts = products.countAllProducts();
+            // --- Lấy filter từ request ---
+            String keyword = request.getParameter("keyword");
+            String minPriceStr = request.getParameter("minPrice");
+            String maxPriceStr = request.getParameter("maxPrice");
+            String origin = request.getParameter("origin");
+            String categoryIdStr = request.getParameter("categoryId");
+
+            Double minPrice = null, maxPrice = null;
+            Integer categoryId = null;
+            if (minPriceStr != null && !minPriceStr.isEmpty()) {
+                minPrice = Double.parseDouble(minPriceStr);
+            }
+            if (maxPriceStr != null && !maxPriceStr.isEmpty()) {
+                maxPrice = Double.parseDouble(maxPriceStr);
+            }
+            if (categoryIdStr != null && !categoryIdStr.isEmpty()) {
+                categoryId = Integer.parseInt(categoryIdStr);
+            }
+            if (origin != null && origin.trim().isEmpty()) {
+                origin = null;
+            }
+
+            // --- Đếm tổng sản phẩm và tổng trang theo filter ---
+            int totalProducts = products.countProductsWithFilter(keyword, minPrice, maxPrice, origin, categoryId);
             int totalPages = (int) Math.ceil((double) totalProducts / pageSize);
 
-            // Lấy danh sách sản phẩm theo trang
-            List<Product> listProducts = products.viewAllProduct(page, pageSize);
+            // --- Lấy danh sách sản phẩm theo filter và phân trang ---
+            List<Product> listProducts = products.getProductsWithFilter(keyword, minPrice, maxPrice, origin, categoryId, page, pageSize);
 
-            // Lấy toàn bộ danh mục, tạo Map categoryId -> categoryName
+            // --- Lấy toàn bộ danh mục, map categoryId -> name ---
             List<ProductCategory> categories = productCategories.getAllCategories();
             Map<Integer, String> categoryMap = new HashMap<>();
             for (ProductCategory c : categories) {
                 categoryMap.put(c.getId(), c.getName());
             }
 
-            // Tạo map để lưu sản phẩm và ảnh tương ứng
+            // --- Map sản phẩm với ảnh ---
             Map<Product, String> productImageMap = new LinkedHashMap<>();
-
             String imageDir = getServletContext().getRealPath("/image");
             String[] extensions = {"jpg", "jpeg", "png", "webp"};
-
             for (Product p : listProducts) {
                 String foundFile = "default.jpg";
                 long lastModified = 0;
-
-                // Tìm tất cả file dạng id_product*.ext
                 File dir = new File(imageDir);
                 File[] files = dir.listFiles((d, name) -> {
                     for (String ext : extensions) {
@@ -118,29 +135,31 @@ public class ProductController extends HttpServlet {
                 });
 
                 if (files != null && files.length > 0) {
-                    // Lấy file mới nhất (theo lastModified)
                     for (File file : files) {
                         if (file.lastModified() > lastModified) {
                             foundFile = file.getName();
                             lastModified = file.lastModified();
                         }
                     }
-                    // Gắn query string để phá cache
                     foundFile = foundFile + "?" + lastModified;
                 }
-                // Nếu không tìm thấy file, vẫn để default.jpg
                 productImageMap.put(p, foundFile);
             }
 
-            // Gửi dữ liệu sang JSP
             request.setAttribute("productImageMap", productImageMap);
             request.setAttribute("categoryMap", categoryMap);
-            request.setAttribute("categories", categories); // (dùng cho <select> nếu cần)
+            request.setAttribute("categories", categories);
             request.setAttribute("totalPages", totalPages);
             request.setAttribute("currentPage", page);
             request.setAttribute("pageSize", pageSize);
 
-            // Gửi thông báo nếu có
+            // Gửi các filter sang JSP để giữ trạng thái filter (giữ lại trên giao diện)
+            request.setAttribute("keyword", keyword);
+            request.setAttribute("minPrice", minPriceStr);
+            request.setAttribute("maxPrice", maxPriceStr);
+            request.setAttribute("origin", origin);
+            request.setAttribute("categoryId", categoryIdStr);
+
             String notification = (String) request.getAttribute("Notification");
             if (notification != null && !notification.isEmpty()) {
                 request.setAttribute("Notification", notification);
@@ -169,6 +188,37 @@ public class ProductController extends HttpServlet {
             if (p == null) {
                 response.sendRedirect("ProductController");
                 return;
+            }
+            String uploadDir = getServletContext().getRealPath("/image");
+            String[] extensions = {"jpg", "jpeg", "png", "webp"};
+            String foundFile = null;
+            long lastModified = 0;
+
+            File dir = new File(uploadDir);
+            if (dir.exists()) {
+                File[] files = dir.listFiles((d, name) -> {
+                    for (String ext : extensions) {
+                        if (name.startsWith(id + "_product") && name.toLowerCase().endsWith("." + ext)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+                if (files != null && files.length > 0) {
+                    // Lấy file mới nhất (nếu có nhiều file)
+                    for (File file : files) {
+                        if (file.lastModified() > lastModified) {
+                            foundFile = file.getName();
+                            lastModified = file.lastModified();
+                        }
+                    }
+                }
+            }
+
+            if (foundFile != null) {
+                request.setAttribute("imageFileName", foundFile);
+            } else {
+                request.setAttribute("imageFileName", "na.jpg"); // ảnh mặc định nếu không có
             }
             request.setAttribute("product", p);
             // Nếu cần truyền categories cho trang chi tiết, làm ở đây:
@@ -236,7 +286,7 @@ public class ProductController extends HttpServlet {
                     if (dotIndex >= 0) {
                         extension = submittedFileName.substring(dotIndex).toLowerCase();
                     }
-                    String imageFileName = newId+"_product"+ extension;
+                    String imageFileName = newId + "_product" + extension;
                     filePart.write(uploadDir + File.separator + imageFileName);
                     // Không update vào DB, chỉ lưu file
                 } else {
@@ -446,6 +496,28 @@ public class ProductController extends HttpServlet {
             }
         }
 
+        if (service.equals("deleteProduct")) {
+            String[] selectedProducts = request.getParameterValues("id");
+
+            if (selectedProducts != null && selectedProducts.length > 0) {
+                try {
+                    for (String idStr : selectedProducts) {
+                        int product_id = Integer.parseInt(idStr);
+
+                        // Xóa ảnh dựa theo pattern
+                        deleteImageByPattern(product_id);
+
+                        // Xóa sản phẩm
+                        products.deleteProduct(product_id);
+                    }
+                } catch (NumberFormatException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            response.sendRedirect("ProductController");
+        }
+
     }
 
     public String generateRandomProductCode(ProductDAO dao) {
@@ -456,6 +528,23 @@ public class ProductController extends HttpServlet {
             code = "SP" + num;
         } while (dao.checkProductCodeExists(code));
         return code;
+    }
+
+    public void deleteImageByPattern(int productId) {
+        String imageFolderPath = "D:\\New folder\\ISP490_SU25_G4\\web\\image";
+        File folder = new File(imageFolderPath);
+
+        if (folder.exists() && folder.isDirectory()) {
+            File[] files = folder.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    String name = file.getName();
+                    if (name.startsWith(productId + "_product")) {
+                        boolean deleted = file.delete();
+                    }
+                }
+            }
+        }
     }
 
     /**

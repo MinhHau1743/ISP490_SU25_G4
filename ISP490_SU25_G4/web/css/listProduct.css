@@ -171,7 +171,7 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     font-weight: 500;
     color: var(--text-secondary);
 }
-.filter-group select, .filter-group input[type="number"] {
+.filter-group select, .filter-group input[type="text"] {
     height: 38px;
     padding: 0 12px;
     border-radius: 6px;
@@ -185,7 +185,7 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     align-items: center;
     gap: 8px;
 }
-.price-inputs input[type="number"] {
+.price-inputs input[type="text"] {
     width: 110px;
 }
 .price-inputs span {
