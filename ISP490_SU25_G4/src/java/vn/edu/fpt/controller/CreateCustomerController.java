@@ -1,6 +1,9 @@
 // File: src/java/vn/edu/fpt/controller/CreateCustomerController.java
 package vn.edu.fpt.controller;
 
+import vn.edu.fpt.dao.*;
+import vn.edu.fpt.model.*;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -12,15 +15,16 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.Part;
 import vn.edu.fpt.dao.AddressDAO;
 import vn.edu.fpt.dao.CustomerTypeDAO;
 import vn.edu.fpt.dao.EnterpriseDAO;
-import vn.edu.fpt.dao.ProvinceDAO;
 import vn.edu.fpt.model.CustomerType;
-import vn.edu.fpt.model.Enterprise;
-import vn.edu.fpt.model.EnterpriseContact;
+
 import vn.edu.fpt.model.Province;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
 
 @WebServlet(name = "CreateCustomerController", urlPatterns = {"/createCustomer"})
 @MultipartConfig(fileSizeThreshold = 1024 * 1024 * 2, maxFileSize = 1024 * 1024 * 10, maxRequestSize = 1024 * 1024 * 50)
@@ -31,11 +35,25 @@ public class CreateCustomerController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Tải dữ liệu ban đầu cho form
-        CustomerTypeDAO customerTypeDAO = new CustomerTypeDAO();
-        ProvinceDAO provinceDAO = new ProvinceDAO();
-        request.setAttribute("customerTypes", customerTypeDAO.getAllCustomerTypes());
-        request.setAttribute("provinces", provinceDAO.getAllProvinces());
+        try {
+            // Tải dữ liệu cần thiết cho các dropdown
+            AddressDAO addressDAO = new AddressDAO();
+            CustomerTypeDAO customerTypeDAO = new CustomerTypeDAO();
+            UserDAO userDAO = new UserDAO();
+
+            List<Province> provinces = addressDAO.getAllProvinces();
+            List<CustomerType> customerTypes = customerTypeDAO.getAllCustomerTypes();
+            List<User> employees = userDAO.getAllEmployees();
+
+            request.setAttribute("provinces", provinces);
+            request.setAttribute("customerTypes", customerTypes);
+            request.setAttribute("employees", employees); // JSP đang comment, nhưng ta vẫn gửi qua
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("errorMessage", "Không thể tải dữ liệu cần thiết: " + e.getMessage());
+        }
+
         request.getRequestDispatcher("/jsp/sales/createCustomer.jsp").forward(request, response);
     }
 
@@ -44,75 +62,79 @@ public class CreateCustomerController extends HttpServlet {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
 
-        // Lấy dữ liệu từ form
-        String customerName = request.getParameter("customerName");
-        String phone = request.getParameter("phone");
-        String email = request.getParameter("email");
-        String streetAddress = request.getParameter("streetAddress");
-
-        // <<< SỬA LỖI: Kiểm tra tất cả các giá trị trước khi parse >>>
-        String provinceIdStr = request.getParameter("province");
-        String districtIdStr = request.getParameter("district");
-        String wardIdStr = request.getParameter("ward");
-        String customerGroupIdStr = request.getParameter("customerGroup");
-
-        if (provinceIdStr == null || districtIdStr == null || wardIdStr == null || customerGroupIdStr == null
-                || provinceIdStr.trim().isEmpty() || districtIdStr.trim().isEmpty() || wardIdStr.trim().isEmpty() || customerGroupIdStr.trim().isEmpty()) {
-
-            request.setAttribute("errorMessage", "Vui lòng chọn đầy đủ Tỉnh/Thành, Quận/Huyện, Phường/Xã và Nhóm khách hàng.");
-            doGet(request, response);
-            return;
-        }
-
-        int provinceId, districtId, wardId, customerTypeId;
+        Connection conn = null;
         try {
-            provinceId = Integer.parseInt(provinceIdStr);
-            districtId = Integer.parseInt(districtIdStr);
-            wardId = Integer.parseInt(wardIdStr);
-            customerTypeId = Integer.parseInt(customerGroupIdStr);
-        } catch (NumberFormatException e) {
-            request.setAttribute("errorMessage", "Dữ liệu ID không hợp lệ. Vui lòng thử lại.");
+            // Lấy dữ liệu từ form
+            String customerName = request.getParameter("customerName");
+            String phone = request.getParameter("phone");
+            String email = request.getParameter("email");
+            int provinceId = Integer.parseInt(request.getParameter("province"));
+            int districtId = Integer.parseInt(request.getParameter("district"));
+            int wardId = Integer.parseInt(request.getParameter("ward"));
+            String streetAddress = request.getParameter("streetAddress");
+            int customerGroupId = Integer.parseInt(request.getParameter("customerGroup"));
+
+            // Bắt đầu transaction
+            conn = new DBContext().getConnection();
+            conn.setAutoCommit(false);
+
+            String employeeIdStr = request.getParameter("employeeId");
+            if (employeeIdStr == null || employeeIdStr.isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng chọn nhân viên phụ trách.");
+                // Tải lại dữ liệu cho form và hiển thị lại trang với thông báo lỗi
+                doGet(request, response);
+                return; // Dừng xử lý ngay lập tức
+            }
+            int employeeId = Integer.parseInt(employeeIdStr);
+
+            AddressDAO addressDAO = new AddressDAO();
+            EnterpriseDAO enterpriseDAO = new EnterpriseDAO();
+            EnterpriseAssignmentDAO assignmentDAO = new EnterpriseAssignmentDAO(); // KHỞI TẠO DAO MỚI
+
+            // 1. Thêm địa chỉ và lấy ID trả về
+            int newAddressId = addressDAO.insertAddress(conn, streetAddress, wardId, districtId, provinceId);
+
+            // 2. Thêm doanh nghiệp và lấy ID trả về
+            int newEnterpriseId = enterpriseDAO.insertEnterprise(conn, customerName, customerGroupId, newAddressId);
+
+            // 3. Thêm người liên hệ chính cho doanh nghiệp (giữ nguyên)
+            enterpriseDAO.insertEnterpriseContact(conn, newEnterpriseId, customerName, phone, email);
+
+            // 4. Phân công nhân viên phụ trách (SỬ DỤNG DAO MỚI)
+            // Vì giao diện chỉ có 1 dropdown, ta sẽ gán một vai trò mặc định
+            String assignmentType = "account_manager"; // Ví dụ: người quản lý chính
+            assignmentDAO.insertAssignment(conn, newEnterpriseId, employeeId, assignmentType);
+
+            // Nếu không có lỗi, commit transaction
+            conn.commit();
+
+            // Chuyển hướng về trang danh sách
+            response.sendRedirect("listCustomer");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Nếu có lỗi, rollback transaction
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            // Gửi thông báo lỗi về lại trang tạo mới
+            request.setAttribute("errorMessage", "Tạo khách hàng thất bại: " + e.getMessage());
+            // Tải lại dữ liệu cho form
             doGet(request, response);
-            return;
+        } finally {
+            // Đóng connection
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
         }
-
-        // Xử lý upload file
-        Part filePart = request.getPart("avatar");
-        // ... (code xử lý upload file của bạn đặt ở đây nếu cần)
-
-        // Các bước tiếp theo chỉ thực hiện khi dữ liệu hợp lệ
-        AddressDAO addressDAO = new AddressDAO();
-        int addressId = addressDAO.insertAddress(streetAddress, wardId, districtId, provinceId);
-
-        if (addressId <= 0) {
-            request.setAttribute("errorMessage", "Lỗi từ DB: Không thể tạo địa chỉ.");
-            doGet(request, response);
-            return;
-        }
-
-        EnterpriseDAO enterpriseDAO = new EnterpriseDAO();
-        String enterpriseCode = "KH-" + System.currentTimeMillis() % 100000;
-        Enterprise enterprise = new Enterprise();
-        enterprise.setEnterpriseCode(enterpriseCode);
-        enterprise.setName(customerName);
-        enterprise.setCustomerTypeId(customerTypeId);
-        enterprise.setAddressId(addressId);
-
-        int enterpriseId = enterpriseDAO.insertEnterprise(enterprise);
-
-        if (enterpriseId <= 0) {
-            request.setAttribute("errorMessage", "Lỗi từ DB: Không thể tạo thông tin khách hàng.");
-            doGet(request, response);
-            return;
-        }
-
-        EnterpriseContact contact = new EnterpriseContact();
-        contact.setEnterpriseId(enterpriseId);
-        contact.setFullName(customerName);
-        contact.setPhoneNumber(phone);
-        contact.setEmail(email);
-        enterpriseDAO.insertEnterpriseContact(contact);
-
-        response.sendRedirect(request.getContextPath() + "/listCustomer?create_status=success");
     }
 }
