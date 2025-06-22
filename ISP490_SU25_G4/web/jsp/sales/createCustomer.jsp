@@ -148,15 +148,12 @@
                                     <!-- <<< SỬA LỖI: Thêm lại các trường bị thiếu >>> -->
                                     <div class="form-group">
                                         <label for="employeeId">Nhân viên phụ trách</label>
-                                        <select id="employeeId" name="employeeId" class="form-control">
+                                        <select id="employeeId" name="employeeId" class="form-control" required>
                                             <option value="" disabled selected>-- Chọn nhân viên --</option>
-                                            <%-- Khi có DAO cho nhân viên, bạn sẽ mở phần này ra
+                                            <%-- Khi có DAO cho nhân viên, bạn sẽ mở phần này ra --%>
                                             <c:forEach var="emp" items="${employees}">
-                                                <option value="${emp.id}">${emp.firstName} ${emp.lastName}</option>
+                                                <option value="${emp.id}">${emp.fullName}</option>
                                             </c:forEach>
-                                            --%>
-                                            <option value="1">Nguyễn Văn A</option>
-                                            <option value="2">Trần Thị B</option>
                                         </select>
                                     </div>
                                     <div class="form-group">
@@ -207,45 +204,47 @@
                     wardSelect.disabled = true;
 
                     if (provinceId) {
-                        fetch(`${baseUrl}/getDistricts?provinceId=${provinceId}`)
-                                                .then(response => response.json())
-                                                .then(data => {
-                                                    districtSelect.innerHTML = '<option value="" disabled selected>-- Chọn Quận/Huyện --</option>';
-                                                    data.forEach(function (district) {
-                                                        const option = document.createElement('option');
-                                                        option.value = district.id;
-                                                        option.textContent = district.name;
-                                                        districtSelect.appendChild(option);
-                                                    });
-                                                    districtSelect.disabled = false;
-                                                })
-                                                .catch(error => console.error('Error fetching districts:', error));
-                                    }
-                                });
+                        // SỬA DÒNG NÀY
+                        fetch('${BASE_URL}/getDistricts?provinceId=' + provinceId)
+                                .then(response => response.json())
+                                .then(data => {
+                                    districtSelect.innerHTML = '<option value="" disabled selected>-- Chọn Quận/Huyện --</option>';
+                                    data.forEach(function (district) {
+                                        const option = document.createElement('option');
+                                        option.value = district.id;
+                                        option.textContent = district.name;
+                                        districtSelect.appendChild(option);
+                                    });
+                                    districtSelect.disabled = false;
+                                })
+                                .catch(error => console.error('Error fetching districts:', error));
+                    }
+                });
 
-                                districtSelect.addEventListener('change', function () {
-                                    const districtId = this.value;
-                                    // Reset ward select
-                                    wardSelect.innerHTML = '<option value="" disabled selected>-- Đang tải... --</option>';
-                                    wardSelect.disabled = true;
+                districtSelect.addEventListener('change', function () {
+                    const districtId = this.value;
+                    // Reset ward select
+                    wardSelect.innerHTML = '<option value="" disabled selected>-- Đang tải... --</option>';
+                    wardSelect.disabled = true;
 
-                                    if (districtId) {
-                                        fetch(`${baseUrl}/getWards?districtId=${districtId}`)
-                                                                .then(response => response.json())
-                                                                .then(data => {
-                                                                    wardSelect.innerHTML = '<option value="" disabled selected>-- Chọn Phường/Xã --</option>';
-                                                                    data.forEach(function (ward) {
-                                                                        const option = document.createElement('option');
-                                                                        option.value = ward.id;
-                                                                        option.textContent = ward.name;
-                                                                        wardSelect.appendChild(option);
-                                                                    });
-                                                                    wardSelect.disabled = false;
-                                                                })
-                                                                .catch(error => console.error('Error fetching wards:', error));
-                                                    }
-                                                });
-                                            });
+                    if (districtId) {
+                        // SỬA DÒNG NÀY
+                        fetch('${BASE_URL}/getWards?districtId=' + districtId)
+                                .then(response => response.json())
+                                .then(data => {
+                                    wardSelect.innerHTML = '<option value="" disabled selected>-- Chọn Phường/Xã --</option>';
+                                    data.forEach(function (ward) {
+                                        const option = document.createElement('option');
+                                        option.value = ward.id;
+                                        option.textContent = ward.name;
+                                        wardSelect.appendChild(option);
+                                    });
+                                    wardSelect.disabled = false;
+                                })
+                                .catch(error => console.error('Error fetching wards:', error));
+                    }
+                });
+            });
         </script>
     </body>
 </html>
