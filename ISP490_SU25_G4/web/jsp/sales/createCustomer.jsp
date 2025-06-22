@@ -1,7 +1,7 @@
 <%--
     Document   : createCustomer
     Created on : Jun 18, 2025
-    Author     : NGUYEN MINH
+    Author     : anhndhe172050
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
@@ -27,13 +27,45 @@
         <link rel="stylesheet" href="${BASE_URL}/css/createCustomer.css">
         <link rel="stylesheet" href="${BASE_URL}/css/viewCustomerDetail.css">
 
-        <%-- <<< SỬA LỖI: Thêm CSS để giới hạn kích thước ảnh avatar >>> --%>
         <style>
             .avatar-section #avatarPreview {
-                width: 120px;       /* Giới hạn chiều rộng */
-                height: 120px;      /* Giới hạn chiều cao */
-                object-fit: cover;  /* Đảm bảo ảnh lấp đầy khung mà không bị méo */
-                border-radius: 8px; /* Bo góc cho đẹp */
+                width: 120px;
+                height: 120px;
+                object-fit: cover;
+                border-radius: 8px;
+            }
+
+            /* === STYLE FOR SUCCESS OVERLAY === */
+            #successOverlay {
+                display: flex;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.6);
+                z-index: 1050;
+                align-items: center;
+                justify-content: center;
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity 0.3s ease, visibility 0.3s ease;
+            }
+            #successOverlay.show {
+                opacity: 1;
+                visibility: visible;
+            }
+            .success-box {
+                background-color: white;
+                padding: 40px;
+                border-radius: 12px;
+                text-align: center;
+                box-shadow: 0 4px 25px rgba(0,0,0,0.2);
+                transform: scale(0.9);
+                transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            }
+            #successOverlay.show .success-box {
+                transform: scale(1);
             }
         </style>
     </head>
@@ -63,7 +95,6 @@
                     <div class="detail-layout">
                         <div class="main-column">
                             <div class="profile-header-card detail-card">
-                                <!-- Phần thông tin chính và avatar giữ nguyên -->
                                 <div class="card-body">
                                     <div class="avatar-section">
                                         <img src="https://placehold.co/120x120/E0F7FA/00796B?text=Ảnh" alt="Ảnh đại diện" id="avatarPreview">
@@ -92,10 +123,12 @@
                                     <div class="info-grid">
                                         <div class="form-group"><label for="phone">Số điện thoại (*)</label><input type="tel" id="phone" name="phone" class="form-control" placeholder="VD: 0987654321" required></div>
                                         <div class="form-group"><label for="email">Email</label><input type="email" id="email" name="email" class="form-control" placeholder="VD: example@email.com"></div>
-                                        <div class="form-group"><label for="website">Website</label><input type="url" id="website" name="website" class="form-control" placeholder="VD: https://example.com"></div>
+                                        <div class="form-group"><label for="taxCode">Mã số thuế</label><input type="text" id="taxCode" name="taxCode" class="form-control" placeholder="Nhập mã số thuế"></div>
+                                        <div class="form-group"><label for="bankNumber">Số tài khoản ngân hàng</label><input type="text" id="bankNumber" name="bankNumber" class="form-control" placeholder="Nhập số tài khoản ngân hàng"></div>
                                     </div>
+                                    
+                                    <hr style="margin: 1.5rem 0;">
 
-                                    <!-- <<< PHẦN ĐỊA CHỈ ĐƯỢC THAY ĐỔI HOÀN TOÀN >>> -->
                                     <div class="info-grid" style="margin-top: 1rem; grid-template-columns: repeat(3, 1fr);">
                                         <div class="form-group">
                                             <label for="province">Tỉnh/Thành phố (*)</label>
@@ -128,7 +161,6 @@
                         </div>
 
                         <div class="sidebar-column">
-                            <!-- Phần thông tin bổ sung -->
                             <div class="detail-card">
                                 <h3 class="card-title">Thông tin bổ sung</h3>
                                 <div class="card-body">
@@ -136,34 +168,24 @@
                                     <div class="form-group">
                                         <label for="customerGroup">Nhóm khách hàng</label>
                                         <select id="customerGroup" name="customerGroup" class="form-control">
-                                            <c:if test="${empty customerTypes}">
-                                                <option value="" disabled>Không tải được dữ liệu</option>
-                                            </c:if>
                                             <c:forEach var="type" items="${customerTypes}">
                                                 <option value="${type.id}">${type.name}</option>
                                             </c:forEach>
                                         </select>
                                     </div>
-
-                                    <!-- <<< SỬA LỖI: Thêm lại các trường bị thiếu >>> -->
                                     <div class="form-group">
                                         <label for="employeeId">Nhân viên phụ trách</label>
-                                        <select id="employeeId" name="employeeId" class="form-control">
+                                        <select id="employeeId" name="employeeId" class="form-control" required>
                                             <option value="" disabled selected>-- Chọn nhân viên --</option>
-                                            <%-- Khi có DAO cho nhân viên, bạn sẽ mở phần này ra
                                             <c:forEach var="emp" items="${employees}">
-                                                <option value="${emp.id}">${emp.firstName} ${emp.lastName}</option>
+                                                <option value="${emp.id}">${emp.fullName}</option>
                                             </c:forEach>
-                                            --%>
-                                            <option value="1">Nguyễn Văn A</option>
-                                            <option value="2">Trần Thị B</option>
                                         </select>
                                     </div>
                                     <div class="form-group">
                                         <label for="joinDate">Ngày tham gia</label>
                                         <input type="date" id="joinDate" name="joinDate" class="form-control" readonly>
                                     </div>
-
                                 </div>
                             </div>
                         </div>
@@ -172,11 +194,23 @@
             </main>
         </div>
 
+        <%-- === HTML FOR SUCCESS OVERLAY === --%>
+        <c:if test="${not empty successMessage}">
+            <div id="successOverlay">
+                <div class="success-box">
+                    <i data-feather="check-circle" style="color: #4CAF50; width: 64px; height: 64px;"></i>
+                    <h2 style="color: #333; margin-top: 20px;">Thành công!</h2>
+                    <p style="color: #555; font-size: 18px; max-width: 400px;">${successMessage}</p>
+                    <p style="color: #999; margin-top: 15px; font-size: 14px;">Sẽ tự động chuyển hướng sau 3 giây...</p>
+                </div>
+            </div>
+        </c:if>
+
         <script>
-            // Thay thế biểu tượng feather
+            // Replace feather icons on initial load
             feather.replace();
 
-            // Script cho avatar preview
+            // Avatar preview script
             document.getElementById('btnChooseAvatar').addEventListener('click', function () {
                 document.getElementById('avatarUpload').click();
             });
@@ -187,65 +221,82 @@
                 }
             });
 
-            // <<< SCRIPT TẢI ĐỘNG ĐỊA CHỈ & NGÀY THAM GIA >>>
+            // Dynamic address loading and other DOM manipulations
             document.addEventListener('DOMContentLoaded', function () {
                 const provinceSelect = document.getElementById('province');
                 const districtSelect = document.getElementById('district');
                 const wardSelect = document.getElementById('ward');
-                const baseUrl = '${BASE_URL}';
 
-                // <<< SỬA LỖI: Tự động điền ngày tham gia là ngày hiện tại >>>
+                // Set join date to today
                 const today = new Date().toISOString().split('T')[0];
                 document.getElementById('joinDate').value = today;
 
                 provinceSelect.addEventListener('change', function () {
                     const provinceId = this.value;
-                    // Reset district and ward selects
                     districtSelect.innerHTML = '<option value="" disabled selected>-- Đang tải... --</option>';
                     wardSelect.innerHTML = '<option value="" disabled selected>-- Chọn Phường/Xã --</option>';
                     districtSelect.disabled = true;
                     wardSelect.disabled = true;
 
                     if (provinceId) {
-                        fetch(`${baseUrl}/getDistricts?provinceId=${provinceId}`)
-                                                .then(response => response.json())
-                                                .then(data => {
-                                                    districtSelect.innerHTML = '<option value="" disabled selected>-- Chọn Quận/Huyện --</option>';
-                                                    data.forEach(function (district) {
-                                                        const option = document.createElement('option');
-                                                        option.value = district.id;
-                                                        option.textContent = district.name;
-                                                        districtSelect.appendChild(option);
-                                                    });
-                                                    districtSelect.disabled = false;
-                                                })
-                                                .catch(error => console.error('Error fetching districts:', error));
-                                    }
-                                });
+                        fetch('${BASE_URL}/getDistricts?provinceId=' + provinceId)
+                                .then(response => response.json())
+                                .then(data => {
+                                    districtSelect.innerHTML = '<option value="" disabled selected>-- Chọn Quận/Huyện --</option>';
+                                    data.forEach(function (district) {
+                                        const option = document.createElement('option');
+                                        option.value = district.id;
+                                        option.textContent = district.name;
+                                        districtSelect.appendChild(option);
+                                    });
+                                    districtSelect.disabled = false;
+                                })
+                                .catch(error => console.error('Error fetching districts:', error));
+                    }
+                });
 
-                                districtSelect.addEventListener('change', function () {
-                                    const districtId = this.value;
-                                    // Reset ward select
-                                    wardSelect.innerHTML = '<option value="" disabled selected>-- Đang tải... --</option>';
-                                    wardSelect.disabled = true;
+                districtSelect.addEventListener('change', function () {
+                    const districtId = this.value;
+                    wardSelect.innerHTML = '<option value="" disabled selected>-- Đang tải... --</option>';
+                    wardSelect.disabled = true;
 
-                                    if (districtId) {
-                                        fetch(`${baseUrl}/getWards?districtId=${districtId}`)
-                                                                .then(response => response.json())
-                                                                .then(data => {
-                                                                    wardSelect.innerHTML = '<option value="" disabled selected>-- Chọn Phường/Xã --</option>';
-                                                                    data.forEach(function (ward) {
-                                                                        const option = document.createElement('option');
-                                                                        option.value = ward.id;
-                                                                        option.textContent = ward.name;
-                                                                        wardSelect.appendChild(option);
-                                                                    });
-                                                                    wardSelect.disabled = false;
-                                                                })
-                                                                .catch(error => console.error('Error fetching wards:', error));
-                                                    }
-                                                });
-                                            });
+                    if (districtId) {
+                        fetch('${BASE_URL}/getWards?districtId=' + districtId)
+                                .then(response => response.json())
+                                .then(data => {
+                                    wardSelect.innerHTML = '<option value="" disabled selected>-- Chọn Phường/Xã --</option>';
+                                    data.forEach(function (ward) {
+                                        const option = document.createElement('option');
+                                        option.value = ward.id;
+                                        option.textContent = ward.name;
+                                        wardSelect.appendChild(option);
+                                    });
+                                    wardSelect.disabled = false;
+                                })
+                                .catch(error => console.error('Error fetching wards:', error));
+                    }
+                });
+
+                // --- SCRIPT FOR SUCCESS OVERLAY ---
+                const successOverlay = document.getElementById('successOverlay');
+                const redirectUrl = "${redirectUrl}";
+
+                if (successOverlay) {
+                    // Re-run feather replace for the icon inside the overlay
+                    feather.replace();
+
+                    // Show the overlay with a fade-in effect
+                    setTimeout(() => {
+                        successOverlay.classList.add('show');
+                    }, 10);
+
+                    // Set a timeout to redirect after 3 seconds
+                    setTimeout(function () {
+                        window.location.href = redirectUrl;
+                    }, 3000); // 3000 milliseconds = 3 seconds
+                }
+            });
         </script>
+        <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>

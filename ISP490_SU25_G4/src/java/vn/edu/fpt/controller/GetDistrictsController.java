@@ -2,15 +2,17 @@
 package vn.edu.fpt.controller;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.List;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import vn.edu.fpt.dao.DistrictDAO;
+import vn.edu.fpt.dao.AddressDAO;
 import vn.edu.fpt.model.District;
+import com.google.gson.Gson;
+import java.io.PrintWriter;
+import java.util.Collections;
+import java.util.List;
 
 @WebServlet(name = "GetDistrictsController", urlPatterns = {"/getDistricts"})
 public class GetDistrictsController extends HttpServlet {
@@ -22,34 +24,29 @@ public class GetDistrictsController extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
 
         String provinceIdStr = request.getParameter("provinceId");
+        List<District> districts = Collections.emptyList(); // Mặc định là danh sách rỗng
 
-        try (PrintWriter out = response.getWriter()) {
-            if (provinceIdStr == null || provinceIdStr.trim().isEmpty()) {
-                out.print("[]");
-                return;
-            }
-
+        if (provinceIdStr != null && !provinceIdStr.trim().isEmpty()) {
             try {
                 int provinceId = Integer.parseInt(provinceIdStr);
-                DistrictDAO districtDAO = new DistrictDAO();
-                List<District> districts = districtDAO.getDistrictsByProvinceId(provinceId);
-
-                StringBuilder json = new StringBuilder("[");
-                for (int i = 0; i < districts.size(); i++) {
-                    District d = districts.get(i);
-                    String safeName = d.getName().replace("\"", "\\\"");
-                    json.append("{\"id\":").append(d.getId()).append(",\"name\":\"").append(safeName).append("\"}");
-                    if (i < districts.size() - 1) {
-                        json.append(",");
-                    }
-                }
-                json.append("]");
-
-                out.print(json.toString());
-
+                AddressDAO addressDAO = new AddressDAO();
+                districts = addressDAO.getDistrictsByProvinceId(provinceId);
             } catch (NumberFormatException e) {
-                out.print("[]");
+                // Log lỗi nếu provinceId không phải là số
+                System.err.println("Invalid provinceId format: " + provinceIdStr);
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            } catch (Exception e) {
+                // Log lỗi nếu có vấn đề với cơ sở dữ liệu
+                e.printStackTrace();
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
+        }
+
+        Gson gson = new Gson();
+        try (PrintWriter out = response.getWriter()) {
+            out.print(gson.toJson(districts));
+            out.flush();
         }
     }
 }
+

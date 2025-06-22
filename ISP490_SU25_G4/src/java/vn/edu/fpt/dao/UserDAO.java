@@ -7,6 +7,8 @@ package vn.edu.fpt.dao;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 import org.mindrot.jbcrypt.BCrypt;
 import vn.edu.fpt.model.User;
 
@@ -270,4 +272,19 @@ public class UserDAO {
 //        }
 //        return null; // Không tìm thấy user
 //    }
+    // Lấy danh sách nhân viên để hiển thị trong dropdown
+    public List<User> getAllEmployees() throws Exception {
+        List<User> employees = new ArrayList<>();
+        String sql = "SELECT id, first_name, last_name FROM Users WHERE is_deleted = 0 AND status = 'active'";
+        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                User u = new User();
+                u.setId(rs.getInt("id"));
+                u.setFirstName(rs.getString("first_name"));
+                u.setLastName(rs.getString("last_name"));
+                employees.add(u);
+            }
+        }
+        return employees;
+    }
 }

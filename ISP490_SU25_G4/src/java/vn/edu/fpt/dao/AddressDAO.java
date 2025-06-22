@@ -9,7 +9,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 import vn.edu.fpt.model.Address;
+import vn.edu.fpt.model.District;
+import vn.edu.fpt.model.Province;
+import vn.edu.fpt.model.Ward;
 
 /**
  *
@@ -17,25 +22,71 @@ import vn.edu.fpt.model.Address;
  */
 public class AddressDAO extends DBContext {
 
-    public int insertAddress(String streetAddress, int wardId, int districtId, int provinceId) {
-        String sql = "INSERT INTO Addresses (street_address, ward_id, district_id, province_id) VALUES (?, ?, ?, ?)";
-        int generatedId = -1;
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            pstmt.setString(1, streetAddress);
-            pstmt.setInt(2, wardId);
-            pstmt.setInt(3, districtId);
-            pstmt.setInt(4, provinceId);
-            int affectedRows = pstmt.executeUpdate();
-            if (affectedRows > 0) {
-                try (ResultSet rs = pstmt.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        generatedId = rs.getInt(1);
-                    }
+    public List<Province> getAllProvinces() throws Exception {
+        List<Province> provinces = new ArrayList<>();
+        String sql = "SELECT id, name FROM Provinces ORDER BY name";
+        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Province p = new Province();
+                p.setId(rs.getInt("id"));
+                p.setName(rs.getString("name"));
+                provinces.add(p);
+            }
+        }
+        return provinces;
+    }
+
+    public List<District> getDistrictsByProvinceId(int provinceId) throws Exception {
+        List<District> districts = new ArrayList<>();
+        String sql = "SELECT id, name FROM Districts WHERE province_id = ? ORDER BY name";
+        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, provinceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    District d = new District();
+                    d.setId(rs.getInt("id"));
+                    d.setName(rs.getString("name"));
+                    districts.add(d);
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
-        return generatedId;
+        return districts;
+    }
+
+    public List<Ward> getWardsByDistrictId(int districtId) throws Exception {
+        List<Ward> wards = new ArrayList<>();
+        String sql = "SELECT id, name FROM Wards WHERE district_id = ? ORDER BY name";
+        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, districtId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Ward w = new Ward();
+                    w.setId(rs.getInt("id"));
+                    w.setName(rs.getString("name"));
+                    wards.add(w);
+                }
+            }
+        }
+        return wards;
+    }
+
+    // Phương thức này nhận Connection để có thể tham gia vào transaction
+    public int insertAddress(Connection conn, String streetAddress, int wardId, int districtId, int provinceId) throws SQLException {
+        String sql = "INSERT INTO Addresses (street_address, ward_id, district_id, province_id) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, streetAddress);
+            ps.setInt(2, wardId);
+            ps.setInt(3, districtId);
+            ps.setInt(4, provinceId);
+            ps.executeUpdate();
+
+            try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    return generatedKeys.getInt(1);
+                } else {
+                    throw new SQLException("Creating address failed, no ID obtained.");
+                }
+            }
+        }
     }
 }

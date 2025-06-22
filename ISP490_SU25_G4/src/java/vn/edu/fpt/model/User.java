@@ -42,6 +42,10 @@ public class User {
     // Constructors
     public User() {
     }
+    
+    public String getFullName() {
+        return firstName + " " + middleName + " " + lastName;
+    }
 
     // Getters and Setters for all fields
     public int getId() {
@@ -220,10 +224,4 @@ public class User {
         this.provinceName = provinceName;
     }
 
-    // Helper method để lấy tên đầy đủ
-    public String getFullName() {
-        return (lastName != null ? lastName : "") + " "
-                + (middleName != null ? middleName : "") + " "
-                + (firstName != null ? firstName : "");
-    }
 }
