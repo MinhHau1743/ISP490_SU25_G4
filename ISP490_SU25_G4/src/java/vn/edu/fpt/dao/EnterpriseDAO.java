@@ -9,8 +9,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import vn.edu.fpt.model.Enterprise;
 import vn.edu.fpt.model.EnterpriseContact;
+import vn.edu.fpt.model.User;
 
 /**
  *
@@ -67,4 +72,77 @@ public class EnterpriseDAO extends DBContext {
             ps.executeUpdate();
         }
     }
+    
+     public List<Enterprise> getAllActiveEnterprises() throws Exception {
+        Map<Integer, Enterprise> enterpriseMap = new HashMap<>();
+
+        // Updated SQL to JOIN with Wards, Districts, and Provinces tables
+        String sql = "SELECT " +
+                     "    e.id AS enterprise_id, e.name AS enterprise_name, e.enterprise_code, " +
+                     "    a.street_address, " +
+                     "    w.name AS ward_name, " +
+                     "    d.name AS district_name, " +
+                     "    p.name AS province_name, " +
+                     "    ct.name AS customer_type_name, " +
+                     "    (SELECT ec.phone_number FROM EnterpriseContacts ec WHERE ec.enterprise_id = e.id AND ec.is_primary_contact = 1 LIMIT 1) AS primary_phone, " +
+                     "    u.id AS user_id, u.first_name, u.last_name, u.middle_name, u.avatar_url " +
+                     "FROM Enterprises e " +
+                     "LEFT JOIN CustomerTypes ct ON e.customer_type_id = ct.id " +
+                     "LEFT JOIN Addresses a ON e.address_id = a.id " +
+                     "LEFT JOIN Wards w ON a.ward_id = w.id " +
+                     "LEFT JOIN Districts d ON a.district_id = d.id " +
+                     "LEFT JOIN Provinces p ON a.province_id = p.id " +
+                     "LEFT JOIN EnterpriseAssignments ea ON e.id = ea.enterprise_id " +
+                     "LEFT JOIN Users u ON ea.user_id = u.id AND u.is_deleted = 0 " +
+                     "WHERE e.is_deleted = 0 " +
+                     "ORDER BY e.name, u.id";
+
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                int enterpriseId = rs.getInt("enterprise_id");
+                Enterprise enterprise = enterpriseMap.get(enterpriseId);
+
+                if (enterprise == null) {
+                    enterprise = new Enterprise();
+                    enterprise.setId(enterpriseId);
+                    enterprise.setName(rs.getString("enterprise_name"));
+                    enterprise.setEnterpriseCode(rs.getString("enterprise_code"));
+                    enterprise.setCustomerTypeName(rs.getString("customer_type_name"));
+                    enterprise.setPrimaryContactPhone(rs.getString("primary_phone"));
+                    enterprise.setAssignedUsers(new ArrayList<>());
+                    
+                    // --- Construct the full, detailed address ---
+                    String street = rs.getString("street_address");
+                    String ward = rs.getString("ward_name");
+                    String district = rs.getString("district_name");
+                    String province = rs.getString("province_name");
+
+                    List<String> addressParts = new ArrayList<>();
+                    if (street != null && !street.trim().isEmpty()) addressParts.add(street);
+                    if (ward != null && !ward.trim().isEmpty()) addressParts.add(ward);
+                    if (district != null && !district.trim().isEmpty()) addressParts.add(district);
+                    if (province != null && !province.trim().isEmpty()) addressParts.add(province);
+
+                    // Join the parts with a comma and a space
+                    String fullAddress = String.join(", ", addressParts);
+                    enterprise.setFullAddress(fullAddress);
+                    
+                    enterpriseMap.put(enterpriseId, enterprise);
+                }
+
+                // If there's an assigned user in this row, add them to the list.
+                if (rs.getObject("user_id") != null) {
+                    User assignee = new User();
+                    assignee.setId(rs.getInt("user_id"));
+                    // ... set other user properties ...
+                    enterprise.getAssignedUsers().add(assignee);
+                }
+            }
+        }
+        return new ArrayList<>(enterpriseMap.values());
+    }
 }
+

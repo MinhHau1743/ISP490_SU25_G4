@@ -1,59 +1,63 @@
-// File: src/java/vn/edu/fpt/controller/CreateCustomerController.java
+// File: src/main/java/vn/edu/fpt/controller/CreateCustomerController.java
 package vn.edu.fpt.controller;
 
-import vn.edu.fpt.dao.*;
-import vn.edu.fpt.model.*;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.UUID;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import vn.edu.fpt.dao.AddressDAO;
-import vn.edu.fpt.dao.CustomerTypeDAO;
-import vn.edu.fpt.dao.EnterpriseDAO;
+import vn.edu.fpt.dao.*;
 import vn.edu.fpt.model.CustomerType;
-
 import vn.edu.fpt.model.Province;
+import vn.edu.fpt.model.User;
+
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
+/**
+ * Handles the creation of a new customer.
+ * GET: Displays the form with necessary data for dropdowns.
+ * POST: Processes the form submission, saves the data, and shows a success message.
+ */
 @WebServlet(name = "CreateCustomerController", urlPatterns = {"/createCustomer"})
-@MultipartConfig(fileSizeThreshold = 1024 * 1024 * 2, maxFileSize = 1024 * 1024 * 10, maxRequestSize = 1024 * 1024 * 50)
+@MultipartConfig(
+    fileSizeThreshold = 1024 * 1024 * 2,  // 2MB
+    maxFileSize = 1024 * 1024 * 10,       // 10MB
+    maxRequestSize = 1024 * 1024 * 50     // 50MB
+)
 public class CreateCustomerController extends HttpServlet {
-
-    private static final String UPLOAD_DIR = "uploads" + File.separator + "avatars";
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        try {
-            // Tải dữ liệu cần thiết cho các dropdown
-            AddressDAO addressDAO = new AddressDAO();
-            CustomerTypeDAO customerTypeDAO = new CustomerTypeDAO();
-            UserDAO userDAO = new UserDAO();
+        
+        // Only load data for dropdowns if we are not showing a success message.
+        // This prevents unnecessary database queries when forwarding just to show the overlay.
+        if (request.getAttribute("successMessage") == null) {
+            try {
+                AddressDAO addressDAO = new AddressDAO();
+                CustomerTypeDAO customerTypeDAO = new CustomerTypeDAO();
+                UserDAO userDAO = new UserDAO();
 
-            List<Province> provinces = addressDAO.getAllProvinces();
-            List<CustomerType> customerTypes = customerTypeDAO.getAllCustomerTypes();
-            List<User> employees = userDAO.getAllEmployees();
+                List<Province> provinces = addressDAO.getAllProvinces();
+                List<CustomerType> customerTypes = customerTypeDAO.getAllCustomerTypes();
+                // Use the optimized method for dropdowns
+                List<User> employees = userDAO.getAllEmployees(); 
 
-            request.setAttribute("provinces", provinces);
-            request.setAttribute("customerTypes", customerTypes);
-            request.setAttribute("employees", employees); // JSP đang comment, nhưng ta vẫn gửi qua
+                request.setAttribute("provinces", provinces);
+                request.setAttribute("customerTypes", customerTypes);
+                request.setAttribute("employees", employees);
 
-        } catch (Exception e) {
-            e.printStackTrace();
-            request.setAttribute("errorMessage", "Không thể tải dữ liệu cần thiết: " + e.getMessage());
+            } catch (Exception e) {
+                e.printStackTrace();
+                request.setAttribute("errorMessage", "Không thể tải dữ liệu cần thiết: " + e.getMessage());
+            }
         }
-
+        
+        // Always forward to the JSP page.
         request.getRequestDispatcher("/jsp/sales/createCustomer.jsp").forward(request, response);
     }
 
@@ -63,9 +67,11 @@ public class CreateCustomerController extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
 
         Connection conn = null;
+        // Get customer name early to use in success/error messages
+        String customerName = request.getParameter("customerName");
+        
         try {
-            // Lấy dữ liệu từ form
-            String customerName = request.getParameter("customerName");
+            // Get other form parameters
             String phone = request.getParameter("phone");
             String email = request.getParameter("email");
             int provinceId = Integer.parseInt(request.getParameter("province"));
@@ -73,67 +79,58 @@ public class CreateCustomerController extends HttpServlet {
             int wardId = Integer.parseInt(request.getParameter("ward"));
             String streetAddress = request.getParameter("streetAddress");
             int customerGroupId = Integer.parseInt(request.getParameter("customerGroup"));
-
-            // Bắt đầu transaction
-            conn = new DBContext().getConnection();
-            conn.setAutoCommit(false);
-
             String employeeIdStr = request.getParameter("employeeId");
+
+            // Validate that an employee was selected
             if (employeeIdStr == null || employeeIdStr.isEmpty()) {
                 request.setAttribute("errorMessage", "Vui lòng chọn nhân viên phụ trách.");
-                // Tải lại dữ liệu cho form và hiển thị lại trang với thông báo lỗi
                 doGet(request, response);
-                return; // Dừng xử lý ngay lập tức
+                return;
             }
             int employeeId = Integer.parseInt(employeeIdStr);
 
+            // Start a database transaction
+            conn = new DBContext().getConnection();
+            conn.setAutoCommit(false);
+
+            // Initialize DAOs
             AddressDAO addressDAO = new AddressDAO();
             EnterpriseDAO enterpriseDAO = new EnterpriseDAO();
-            EnterpriseAssignmentDAO assignmentDAO = new EnterpriseAssignmentDAO(); // KHỞI TẠO DAO MỚI
+            EnterpriseAssignmentDAO assignmentDAO = new EnterpriseAssignmentDAO();
 
-            // 1. Thêm địa chỉ và lấy ID trả về
+            // 1. Insert address and get the new ID
             int newAddressId = addressDAO.insertAddress(conn, streetAddress, wardId, districtId, provinceId);
-
-            // 2. Thêm doanh nghiệp và lấy ID trả về
+            // 2. Insert enterprise and get the new ID
             int newEnterpriseId = enterpriseDAO.insertEnterprise(conn, customerName, customerGroupId, newAddressId);
-
-            // 3. Thêm người liên hệ chính cho doanh nghiệp (giữ nguyên)
+            // 3. Insert primary contact for the enterprise
             enterpriseDAO.insertEnterpriseContact(conn, newEnterpriseId, customerName, phone, email);
-
-            // 4. Phân công nhân viên phụ trách (SỬ DỤNG DAO MỚI)
-            // Vì giao diện chỉ có 1 dropdown, ta sẽ gán một vai trò mặc định
-            String assignmentType = "account_manager"; // Ví dụ: người quản lý chính
-            assignmentDAO.insertAssignment(conn, newEnterpriseId, employeeId, assignmentType);
-
-            // Nếu không có lỗi, commit transaction
+            // 4. Assign the responsible employee
+            assignmentDAO.insertAssignment(conn, newEnterpriseId, employeeId, "account_manager");
+            
+            // If all operations are successful, commit the transaction
             conn.commit();
 
-            // Chuyển hướng về trang danh sách
-            response.sendRedirect("listCustomer");
+            // --- SUCCESS LOGIC ---
+            // 1. Set success message and redirect URL as request attributes
+            request.setAttribute("successMessage", "Đã thêm thành công khách hàng '" + customerName + "'!");
+            request.setAttribute("redirectUrl", request.getContextPath() + "/listCustomer");
+
+            // 2. Forward back to the JSP to display the success overlay
+            doGet(request, response);
 
         } catch (Exception e) {
             e.printStackTrace();
-            // Nếu có lỗi, rollback transaction
+            // If any error occurs, rollback the transaction
             if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
             }
-            // Gửi thông báo lỗi về lại trang tạo mới
+            // Send error message back to the form
             request.setAttribute("errorMessage", "Tạo khách hàng thất bại: " + e.getMessage());
-            // Tải lại dữ liệu cho form
             doGet(request, response);
         } finally {
-            // Đóng connection
+            // Close the connection
             if (conn != null) {
-                try {
-                    conn.setAutoCommit(true);
-                    conn.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+                try { conn.setAutoCommit(true); conn.close(); } catch (SQLException ex) { ex.printStackTrace(); }
             }
         }
     }
