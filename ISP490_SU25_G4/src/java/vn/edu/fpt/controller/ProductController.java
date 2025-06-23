@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -116,37 +117,7 @@ public class ProductController extends HttpServlet {
             for (ProductCategory c : categories) {
                 categoryMap.put(c.getId(), c.getName());
             }
-
-            // --- Map sản phẩm với ảnh ---
-            Map<Product, String> productImageMap = new LinkedHashMap<>();
-            String imageDir = getServletContext().getRealPath("/image");
-            String[] extensions = {"jpg", "jpeg", "png", "webp"};
-            for (Product p : listProducts) {
-                String foundFile = "default.jpg";
-                long lastModified = 0;
-                File dir = new File(imageDir);
-                File[] files = dir.listFiles((d, name) -> {
-                    for (String ext : extensions) {
-                        if (name.startsWith(p.getId() + "_product") && name.toLowerCase().endsWith("." + ext)) {
-                            return true;
-                        }
-                    }
-                    return false;
-                });
-
-                if (files != null && files.length > 0) {
-                    for (File file : files) {
-                        if (file.lastModified() > lastModified) {
-                            foundFile = file.getName();
-                            lastModified = file.lastModified();
-                        }
-                    }
-                    foundFile = foundFile + "?" + lastModified;
-                }
-                productImageMap.put(p, foundFile);
-            }
-
-            request.setAttribute("productImageMap", productImageMap);
+            request.setAttribute("productList", listProducts);
             request.setAttribute("categoryMap", categoryMap);
             request.setAttribute("categories", categories);
             request.setAttribute("totalPages", totalPages);
@@ -189,37 +160,7 @@ public class ProductController extends HttpServlet {
                 response.sendRedirect("ProductController");
                 return;
             }
-            String uploadDir = getServletContext().getRealPath("/image");
-            String[] extensions = {"jpg", "jpeg", "png", "webp"};
-            String foundFile = null;
-            long lastModified = 0;
 
-            File dir = new File(uploadDir);
-            if (dir.exists()) {
-                File[] files = dir.listFiles((d, name) -> {
-                    for (String ext : extensions) {
-                        if (name.startsWith(id + "_product") && name.toLowerCase().endsWith("." + ext)) {
-                            return true;
-                        }
-                    }
-                    return false;
-                });
-                if (files != null && files.length > 0) {
-                    // Lấy file mới nhất (nếu có nhiều file)
-                    for (File file : files) {
-                        if (file.lastModified() > lastModified) {
-                            foundFile = file.getName();
-                            lastModified = file.lastModified();
-                        }
-                    }
-                }
-            }
-
-            if (foundFile != null) {
-                request.setAttribute("imageFileName", foundFile);
-            } else {
-                request.setAttribute("imageFileName", "na.jpg"); // ảnh mặc định nếu không có
-            }
             request.setAttribute("product", p);
             // Nếu cần truyền categories cho trang chi tiết, làm ở đây:
             ProductCategoriesDAO categoriesDAO = new ProductCategoriesDAO();
@@ -237,26 +178,27 @@ public class ProductController extends HttpServlet {
                 String priceRaw = request.getParameter("price");
                 String description = request.getParameter("description");
                 int categoryId = Integer.parseInt(request.getParameter("categoryId"));
+                Part filePart = request.getPart("image");
 
-                // Chuẩn hóa giá
+                // Normalize price
                 if (priceRaw != null) {
                     priceRaw = priceRaw.replace(",", "").replace(".", "");
                 }
                 double price = Double.parseDouble(priceRaw);
 
-                // Thời gian tạo
+                // Creation time
                 DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                 String createdAt = LocalDateTime.now().format(dtf);
 
-                // Tạo DAO
+                // Create DAO
                 ProductDAO dao = new ProductDAO();
 
-                // Nếu không nhập productCode, tự sinh code không trùng
+                // Generate product code if empty
                 if (productCode == null || productCode.trim().isEmpty()) {
                     productCode = generateRandomProductCode(dao);
                 }
 
-                // Tạo đối tượng sản phẩm (ID tự tăng)
+                // Create product object
                 Product p = new Product();
                 p.setName(name);
                 p.setProductCode(productCode);
@@ -268,17 +210,17 @@ public class ProductController extends HttpServlet {
                 p.setCreatedAt(createdAt);
                 p.setUpdatedAt(null);
 
-                // B1: Insert và lấy ID mới
-                int newId = dao.insertProduct(p);
+                // B1: Insert and get new ID
+                int newId = products.insertProduct(p);
 
-                // B2: Xử lý ảnh
+                // B2: Process image
                 String uploadDir = "D:/New folder/ISP490_SU25_G4/web/image";
                 File uploadPath = new File(uploadDir);
                 if (!uploadPath.exists()) {
                     uploadPath.mkdirs();
                 }
 
-                Part filePart = request.getPart("image");
+                String imageFileName = null;
                 if (filePart != null && filePart.getSize() > 0) {
                     String submittedFileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
                     String extension = "";
@@ -286,16 +228,26 @@ public class ProductController extends HttpServlet {
                     if (dotIndex >= 0) {
                         extension = submittedFileName.substring(dotIndex).toLowerCase();
                     }
-                    String imageFileName = newId + "_product" + extension;
+                    // Rename to id_product.extension format
+                    imageFileName = newId + "_product" + extension;
                     filePart.write(uploadDir + File.separator + imageFileName);
-                    // Không update vào DB, chỉ lưu file
+
+                    // Update product with image filename in database
+                    p.setId(newId);
+                    p.setImage(imageFileName);
+                    dao.updateProductImage(newId, imageFileName);
                 } else {
-                    // Không có ảnh thì có thể copy file default.jpg sang product_{newId}.jpg hoặc bỏ qua bước này
-                    // Ví dụ:
-                    // Files.copy(Paths.get(uploadDir + File.separator + "default.jpg"), Paths.get(uploadDir + File.separator + "product_" + newId + ".jpg"));
+                    // Set default image if no file uploaded
+                    imageFileName = "default.jpg";
+                    Files.copy(
+                            Paths.get(uploadDir + File.separator + "default.jpg"),
+                            Paths.get(uploadDir + File.separator + newId + "_product.jpg")
+                    );
+                    // Update product with default image filename in database
+                    dao.updateProductImage(newId, newId + "_product.jpg");
                 }
 
-                // Chuyển trang hoặc show thông báo
+                // Redirect or show message
                 request.setAttribute("redirectUrl", "ProductController");
                 request.getRequestDispatcher("editLoading.jsp").forward(request, response);
 
@@ -318,44 +270,10 @@ public class ProductController extends HttpServlet {
             Product p = dao.getProductById(id);
             List<ProductCategory> categoryList = productCategories.getAllCategories();
             request.setAttribute("categories", categoryList);
-
             if (p == null) {
                 response.sendRedirect("ProductController");
                 return;
             }
-            // Tìm ảnh hiện có theo ID (dạng id_product*.ext)
-            String uploadDir = getServletContext().getRealPath("/image");
-            String[] extensions = {"jpg", "jpeg", "png", "webp"};
-            String foundFile = null;
-            long lastModified = 0;
-
-            File dir = new File(uploadDir);
-            if (dir.exists()) {
-                File[] files = dir.listFiles((d, name) -> {
-                    for (String ext : extensions) {
-                        if (name.startsWith(id + "_product") && name.toLowerCase().endsWith("." + ext)) {
-                            return true;
-                        }
-                    }
-                    return false;
-                });
-                if (files != null && files.length > 0) {
-                    // Lấy file mới nhất (nếu có nhiều file)
-                    for (File file : files) {
-                        if (file.lastModified() > lastModified) {
-                            foundFile = file.getName();
-                            lastModified = file.lastModified();
-                        }
-                    }
-                }
-            }
-
-            if (foundFile != null) {
-                request.setAttribute("imageFileName", foundFile);
-            } else {
-                request.setAttribute("imageFileName", "na.jpg"); // ảnh mặc định nếu không có
-            }
-
             request.setAttribute("product", p);
             request.getRequestDispatcher("jsp/technicalSupport/editProductDetail.jsp").forward(request, response);
         }
@@ -439,10 +357,10 @@ public class ProductController extends HttpServlet {
                 Product old = products.getProductById(id);
                 String productCode = old.getProductCode();
                 Product p = new Product();
-// Tạo đối tượng sản phẩm
                 p.setId(id);
                 p.setName(name);
                 p.setProductCode(productCode);
+                p.setImage(imageFileName);
                 p.setOrigin(origin);
                 p.setPrice(price);
                 p.setDescription(description);

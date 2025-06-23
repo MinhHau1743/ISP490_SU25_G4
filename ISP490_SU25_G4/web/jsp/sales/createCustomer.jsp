@@ -33,7 +33,6 @@
                 height: 120px;
                 object-fit: cover;
                 border-radius: 8px;
-<<<<<<< Updated upstream
             }
 
             /* === STYLE FOR SUCCESS OVERLAY === */
@@ -67,8 +66,6 @@
             }
             #successOverlay.show .success-box {
                 transform: scale(1);
-=======
->>>>>>> Stashed changes
             }
         </style>
     </head>
@@ -165,7 +162,6 @@
                                     <div class="form-group">
                                         <label for="customerGroup">Nhóm khách hàng</label>
                                         <select id="customerGroup" name="customerGroup" class="form-control">
-<<<<<<< Updated upstream
                                             <c:forEach var="type" items="${customerTypes}">
                                                 <option value="${type.id}">${type.name}</option>
                                             </c:forEach>
@@ -184,7 +180,6 @@
                                         <label for="joinDate">Ngày tham gia</label>
                                         <input type="date" id="joinDate" name="joinDate" class="form-control" readonly>
                                     </div>
-=======
                                             <c:if test="${empty customerTypes}"><option value="" disabled>Không tải được</option></c:if>
                                             <c:forEach var="type" items="${customerTypes}"><option value="${type.id}">${type.name}</option></c:forEach>
                                             </select>
@@ -201,15 +196,12 @@
                                             <input type="date" id="joinDate" name="joinDate" class="form-control" readonly>
                                         </div>
                                     </div>
->>>>>>> Stashed changes
                                 </div>
                             </div>
                         </div>
                     </form>
                 </main>
             </div>
-
-<<<<<<< Updated upstream
         <%-- === HTML FOR SUCCESS OVERLAY === --%>
         <c:if test="${not empty successMessage}">
             <div id="successOverlay">
@@ -312,7 +304,6 @@
                     }, 3000); // 3000 milliseconds = 3 seconds
                 }
             });
-=======
             <script>
                 feather.replace();
                 document.getElementById('btnChooseAvatar').addEventListener('click', () => document.getElementById('avatarUpload').click());
@@ -391,7 +382,6 @@
                                                         }
                                                     });
                                                 });
->>>>>>> Stashed changes
         </script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
