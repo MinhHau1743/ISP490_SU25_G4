@@ -78,16 +78,13 @@ public class EnterpriseDAO extends DBContext {
     public List<Enterprise> getAllActiveEnterprises() throws Exception {
         Map<Integer, Enterprise> enterpriseMap = new HashMap<>();
 
-        // Updated SQL to JOIN with Wards, Districts, and Provinces tables
+        // SQL query corrected with aliases for avatar_url
         String sql = "SELECT "
-                + "    e.id AS enterprise_id, e.name AS enterprise_name, e.enterprise_code, "
-                + "    a.street_address, "
-                + "    w.name AS ward_name, "
-                + "    d.name AS district_name, "
-                + "    p.name AS province_name, "
+                + "    e.id AS enterprise_id, e.name AS enterprise_name, e.enterprise_code, e.avatar_url AS enterprise_avatar, "
+                + "    CONCAT_WS(', ', a.street_address, w.name, d.name, p.name) AS full_address, "
                 + "    ct.name AS customer_type_name, "
-                + "    (SELECT ec.phone_number FROM EnterpriseContacts ec WHERE ec.enterprise_id = e.id AND ec.is_primary_contact = 1 LIMIT 1) AS primary_phone, "
-                + "    u.id AS user_id, u.first_name, u.last_name, u.middle_name, u.avatar_url "
+                + "    u.id AS user_id, u.first_name, u.last_name, u.middle_name, u.avatar_url AS user_avatar, "
+                + "    (SELECT ec.phone_number FROM EnterpriseContacts ec WHERE ec.enterprise_id = e.id AND ec.is_primary_contact = 1 LIMIT 1) AS primary_phone "
                 + "FROM Enterprises e "
                 + "LEFT JOIN CustomerTypes ct ON e.customer_type_id = ct.id "
                 + "LEFT JOIN Addresses a ON e.address_id = a.id "
@@ -111,41 +108,24 @@ public class EnterpriseDAO extends DBContext {
                     enterprise.setName(rs.getString("enterprise_name"));
                     enterprise.setEnterpriseCode(rs.getString("enterprise_code"));
                     enterprise.setCustomerTypeName(rs.getString("customer_type_name"));
+                    enterprise.setFullAddress(rs.getString("full_address"));
                     enterprise.setPrimaryContactPhone(rs.getString("primary_phone"));
+
+                    // Set avatar using the correct alias
+                    enterprise.setAvatarUrl(rs.getString("enterprise_avatar"));
+
                     enterprise.setAssignedUsers(new ArrayList<>());
-
-                    // --- Construct the full, detailed address ---
-                    String street = rs.getString("street_address");
-                    String ward = rs.getString("ward_name");
-                    String district = rs.getString("district_name");
-                    String province = rs.getString("province_name");
-
-                    List<String> addressParts = new ArrayList<>();
-                    if (street != null && !street.trim().isEmpty()) {
-                        addressParts.add(street);
-                    }
-                    if (ward != null && !ward.trim().isEmpty()) {
-                        addressParts.add(ward);
-                    }
-                    if (district != null && !district.trim().isEmpty()) {
-                        addressParts.add(district);
-                    }
-                    if (province != null && !province.trim().isEmpty()) {
-                        addressParts.add(province);
-                    }
-
-                    // Join the parts with a comma and a space
-                    String fullAddress = String.join(", ", addressParts);
-                    enterprise.setFullAddress(fullAddress);
-
                     enterpriseMap.put(enterpriseId, enterprise);
                 }
 
-                // If there's an assigned user in this row, add them to the list.
                 if (rs.getObject("user_id") != null) {
                     User assignee = new User();
                     assignee.setId(rs.getInt("user_id"));
-                    // ... set other user properties ...
+                    assignee.setFirstName(rs.getString("first_name"));
+                    assignee.setLastName(rs.getString("last_name"));
+                    assignee.setMiddleName(rs.getString("middle_name"));
+                    // Set user avatar using the correct alias
+                    assignee.setAvatarUrl(rs.getString("user_avatar"));
                     enterprise.getAssignedUsers().add(assignee);
                 }
             }
@@ -162,7 +142,7 @@ public class EnterpriseDAO extends DBContext {
      * @throws Exception if a database access error occurs.
      */
     public Enterprise getEnterpriseById(int enterpriseId) throws Exception {
-         Enterprise enterprise = null;
+        Enterprise enterprise = null;
         // === SQL UPDATED to select the raw ID fields from the Addresses table ===
         String sql = "SELECT "
                 + "    e.*, " // Select all from Enterprises
@@ -194,17 +174,17 @@ public class EnterpriseDAO extends DBContext {
                     enterprise.setAvatarUrl(rs.getString("avatar_url"));
                     enterprise.setCustomerTypeId(rs.getInt("customer_type_id"));
                     enterprise.setAddressId(rs.getInt("address_id"));
-                    
+
                     // Set joined fields
                     enterprise.setCustomerTypeName(rs.getString("customer_type_name"));
                     enterprise.setFullAddress(rs.getString("full_address"));
-                    
+
                     // === SET THE MISSING FIELDS FOR THE EDIT FORM ===
                     enterprise.setProvinceId(rs.getInt("province_id"));
                     enterprise.setDistrictId(rs.getInt("district_id"));
                     enterprise.setWardId(rs.getInt("ward_id"));
                     enterprise.setStreetAddress(rs.getString("street_address"));
-                    
+
                     // Fetch related data using other DAOs
                     enterprise.setContacts(new EnterpriseContactDAO().getContactsByEnterpriseId(enterpriseId));
                     enterprise.setAssignedUsers(new UserDAO().getAssignedUsersForEnterprise(enterpriseId));
