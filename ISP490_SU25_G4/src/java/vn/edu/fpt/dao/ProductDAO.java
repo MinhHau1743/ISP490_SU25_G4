@@ -22,11 +22,11 @@ public class ProductDAO extends DBContext {
 
     Connection conn = getConnection();
 
-
     public boolean editProduct(Product p) {
         String query = "UPDATE Products SET "
                 + "name = ?, "
                 + "product_code = ?, "
+                + "image = ?, " // Thêm dòng này
                 + "origin = ?, "
                 + "price = ?, "
                 + "description = ?, "
@@ -39,16 +39,17 @@ public class ProductDAO extends DBContext {
             PreparedStatement st = conn.prepareStatement(query);
             st.setString(1, p.getName());
             st.setString(2, p.getProductCode());
-            st.setString(3, p.getOrigin());
-            st.setDouble(4, p.getPrice());
-            st.setString(5, p.getDescription());
-            st.setInt(6, p.getCategoryId());
-            st.setBoolean(7, p.isIsDeleted());
-            st.setString(8, p.getCreatedAt());
-            st.setString(9, p.getUpdatedAt());
-            st.setInt(10, p.getId());
+            st.setString(3, p.getImage());        // Thêm dòng này
+            st.setString(4, p.getOrigin());
+            st.setDouble(5, p.getPrice());
+            st.setString(6, p.getDescription());
+            st.setInt(7, p.getCategoryId());
+            st.setBoolean(8, p.isIsDeleted());
+            st.setString(9, p.getCreatedAt());
+            st.setString(10, p.getUpdatedAt());
+            st.setInt(11, p.getId());
             int rows = st.executeUpdate();
-            return rows > 0; // Trả về true nếu update thành công
+            return rows > 0;
         } catch (SQLException e) {
             System.out.println("Lỗi khi cập nhật dữ liệu: " + e.getMessage());
             return false;
@@ -66,6 +67,7 @@ public class ProductDAO extends DBContext {
                 p.setId(rs.getInt("id"));
                 p.setName(rs.getString("name"));
                 p.setProductCode(rs.getString("product_code"));
+                p.setImage(rs.getString("image"));        // Thêm dòng này
                 p.setOrigin(rs.getString("origin"));
                 p.setPrice(rs.getDouble("price"));
                 p.setDescription(rs.getString("description"));
@@ -83,20 +85,20 @@ public class ProductDAO extends DBContext {
 
     public int insertProduct(Product p) {
         String sql = "INSERT INTO Products "
-                + "(name, category_id, product_code, origin, price, description, is_deleted, created_at, updated_at) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "(name, category_id, product_code, image, origin, price, description, is_deleted, created_at, updated_at) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try {
-            // Sửa ở đây: thêm Statement.RETURN_GENERATED_KEYS
             PreparedStatement st = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
             st.setString(1, p.getName());
             st.setInt(2, p.getCategoryId());
             st.setString(3, p.getProductCode());
-            st.setString(4, p.getOrigin());
-            st.setDouble(5, p.getPrice());
-            st.setString(6, p.getDescription());
-            st.setBoolean(7, p.isIsDeleted());
-            st.setString(8, p.getCreatedAt());
-            st.setString(9, p.getUpdatedAt());
+            st.setString(4, p.getImage());
+            st.setString(5, p.getOrigin());
+            st.setDouble(6, p.getPrice());
+            st.setString(7, p.getDescription());
+            st.setBoolean(8, p.isIsDeleted());
+            st.setString(9, p.getCreatedAt());
+            st.setString(10, p.getUpdatedAt());
 
             int rows = st.executeUpdate();
             if (rows == 0) {
@@ -115,6 +117,17 @@ public class ProductDAO extends DBContext {
         }
         // Trả về -1 nếu thất bại
         return -1;
+    }
+
+    public void updateProductImage(int productId, String imageFileName) throws SQLException {
+        String sql = "UPDATE Products SET image = ? WHERE id = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, imageFileName);
+            pstmt.setInt(2, productId);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new SQLException("Error updating product image: " + e.getMessage(), e);
+        }
     }
 
     public List<Product> searchProducts(String keyword, Double minPrice, Double maxPrice, String origin, Integer categoryId) {
@@ -157,6 +170,7 @@ public class ProductDAO extends DBContext {
                 p.setName(rs.getString("name"));
                 p.setCategoryId(rs.getInt("category_id"));
                 p.setProductCode(rs.getString("product_code"));
+                p.setImage(rs.getString("image")); // Thêm dòng này
                 p.setOrigin(rs.getString("origin"));
                 p.setPrice(rs.getDouble("price"));
                 p.setDescription(rs.getString("description"));
@@ -257,6 +271,7 @@ public class ProductDAO extends DBContext {
                 p.setName(rs.getString("name"));
                 p.setCategoryId(rs.getInt("category_id"));
                 p.setProductCode(rs.getString("product_code"));
+                p.setImage(rs.getString("image"));
                 p.setOrigin(rs.getString("origin"));
                 p.setPrice(rs.getDouble("price"));
                 p.setDescription(rs.getString("description"));

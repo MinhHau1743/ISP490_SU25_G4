@@ -113,15 +113,14 @@
 
                             <%-- LẶP QUA DANH SÁCH SẢN PHẨM VÀ HIỂN THỊ --%>
                             <div id="productList">
-                                <c:forEach var="entry" items="${productImageMap}">
-                                    <c:set var="p" value="${entry.key}" />
-                                    <c:set var="imageFileName" value="${entry.value}" />
+                                <c:forEach var="p" items="${productList}">
+
 
                                     <div class="product-card">
                                         <div class="card-image">
                                             <img 
                                                 class="modal-img" 
-                                                src="${pageContext.request.contextPath}/image/${imageFileName}"
+                                                src="${pageContext.request.contextPath}/image/${p.image}"
                                                 alt="Ảnh sản phẩm"
                                                 style="width: 100%; height: auto;"
                                                 onerror="this.src='${pageContext.request.contextPath}/image/na.jpg'" 
@@ -148,8 +147,8 @@
                                                 </div>
                                                 <div class="action-buttons">
                                                     <a href="ProductController?service=getProductById&id=${p.id}" title="Xem"><i data-feather="eye"></i></a>
-                                                    <a href="ProductController?service=getProductToEdit&id=${p.id}&image=${imageFileName}" title="Sửa"><i data-feather="edit-2"></i></a>
-                                                    <a href="#" class="delete-trigger-btn" data-id="${p.id}" data-name="${p.name}" data-image="${imageFileName}"title="Xóa"><i data-feather="trash-2"></i></a>
+                                                    <a href="ProductController?service=getProductToEdit&id=${p.id}&image=${p.image}" title="Sửa"><i data-feather="edit-2"></i></a>
+                                                    <a href="#" class="delete-trigger-btn" data-id="${p.id}" data-name="${p.name}" data-image="${p.image}"title="Xóa"><i data-feather="trash-2"></i></a>
                                                 </div>
                                             </div>
                                         </div>
@@ -160,12 +159,12 @@
                                     <img class="modal-content" id="img01">
                                     <div id="caption"></div>
                                 </div>
-                                <c:if test="${empty productImageMap}">
+                                <c:if test="${empty productList}">
                                     <p id="noResultMsg" style="grid-column: 1 / -1; text-align: center; color: var(--text-secondary); margin-top:24px;">
                                         Không tìm thấy sản phẩm nào phù hợp.
                                     </p>
                                 </c:if>
- j            </div>
+            </div>
 
                         </div>
 

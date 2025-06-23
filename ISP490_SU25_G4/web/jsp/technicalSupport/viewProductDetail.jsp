@@ -79,7 +79,7 @@
 
                                     <div class="view-actions">
                                         <%-- Link sửa sản phẩm với ID động --%>
-                                        <a href="ProductController?service=getProductToEdit&id=${product.id}&image=${imageFileName}" class="btn btn-primary"><i data-feather="edit"></i> Sửa thông tin</a>
+                                        <a href="ProductController?service=getProductToEdit&id=${product.id}&image=${product.image}" class="btn btn-primary"><i data-feather="edit"></i> Sửa thông tin</a>
                                     </div>
                                 </div>
 
