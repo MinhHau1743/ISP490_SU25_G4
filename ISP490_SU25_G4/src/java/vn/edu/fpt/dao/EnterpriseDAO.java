@@ -24,12 +24,12 @@ import vn.edu.fpt.model.User;
 public class EnterpriseDAO extends DBContext {
 
     // Phương thức này nhận Connection để có thể tham gia vào transaction
-    public int insertEnterprise(Connection conn, String name, int customerTypeId, int addressId, String taxCode, String bankNumber) throws SQLException {
+    public int insertEnterprise(Connection conn, String name, int customerTypeId, int addressId, String taxCode, String bankNumber, String avatarUrl) throws SQLException {
         // Tạo mã khách hàng duy nhất, ví dụ: KH-timestamp
         String enterpriseCode = "KH-" + System.currentTimeMillis();
 
         // Theo DB schema, fax và bank_number là NOT NULL, ta sẽ để giá trị tạm thời
-        String sql = "INSERT INTO Enterprises (enterprise_code, name, fax, bank_number, tax_code, customer_type_id, address_id) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Enterprises (enterprise_code, name, fax, bank_number, tax_code, customer_type_id, address_id, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, enterpriseCode);
@@ -39,6 +39,7 @@ public class EnterpriseDAO extends DBContext {
             ps.setString(5, taxCode);
             ps.setInt(6, customerTypeId);
             ps.setInt(7, addressId);
+            ps.setString(8, avatarUrl);
             ps.executeUpdate();
 
             try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
@@ -153,8 +154,7 @@ public class EnterpriseDAO extends DBContext {
     }
 
     /**
-     * Retrieves a single enterprise by its ID with all related details for the
-     * view page.
+     * Retrieves a single enterprise by its ID, now including the avatar URL.
      *
      * @param enterpriseId The ID of the enterprise to retrieve.
      * @return An Enterprise object populated with details, or null if not
@@ -163,8 +163,9 @@ public class EnterpriseDAO extends DBContext {
      */
     public Enterprise getEnterpriseById(int enterpriseId) throws Exception {
         Enterprise enterprise = null;
+        // === SQL UPDATED TO INCLUDE e.avatar_url ===
         String sql = "SELECT "
-                + "    e.id AS enterprise_id, e.name AS enterprise_name, e.enterprise_code, e.tax_code, e.bank_number, "
+                + "    e.id AS enterprise_id, e.name AS enterprise_name, e.enterprise_code, e.tax_code, e.bank_number, e.avatar_url, "
                 + "    a.street_address, w.name AS ward_name, d.name AS district_name, p.name AS province_name, "
                 + "    ct.name AS customer_type_name, "
                 + "    (SELECT ec.phone_number FROM EnterpriseContacts ec WHERE ec.enterprise_id = e.id AND ec.is_primary_contact = 1 LIMIT 1) AS primary_phone, "
@@ -192,6 +193,9 @@ public class EnterpriseDAO extends DBContext {
                     enterprise.setPrimaryContactPhone(rs.getString("primary_phone"));
                     enterprise.setPrimaryContactEmail(rs.getString("primary_email"));
 
+                    // === SET THE AVATAR URL HERE ===
+                    enterprise.setAvatarUrl(rs.getString("avatar_url"));
+
                     // Construct the full address
                     String street = rs.getString("street_address");
                     String ward = rs.getString("ward_name");
@@ -199,9 +203,8 @@ public class EnterpriseDAO extends DBContext {
                     String province = rs.getString("province_name");
                     enterprise.setFullAddress(String.join(", ", street, ward, district, province));
 
-                    // Now, fetch assigned users and contracts separately
+                    // Fetch assigned users and contracts separately
                     enterprise.setAssignedUsers(getAssignedUsersForEnterprise(conn, enterpriseId));
-                    // enterprise.setContracts(getContractsForEnterprise(conn, enterpriseId)); // (Optional)
                 }
             }
         }
