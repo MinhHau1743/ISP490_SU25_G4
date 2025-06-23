@@ -89,4 +89,29 @@ public class AddressDAO extends DBContext {
             }
         }
     }
+
+    /**
+     * Updates an existing address in the database. This method should be part
+     * of a transaction.
+     *
+     * @param conn The transaction's database connection.
+     * @param addressId The ID of the address to update.
+     * @param streetAddress The new street address.
+     * @param wardId The new ward ID.
+     * @param districtId The new district ID.
+     * @param provinceId The new province ID.
+     * @return true if the update was successful, false otherwise.
+     * @throws SQLException
+     */
+    public boolean updateAddress(Connection conn, int addressId, String streetAddress, int wardId, int districtId, int provinceId) throws SQLException {
+        String sql = "UPDATE Addresses SET street_address = ?, ward_id = ?, district_id = ?, province_id = ? WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, streetAddress);
+            ps.setInt(2, wardId);
+            ps.setInt(3, districtId);
+            ps.setInt(4, provinceId);
+            ps.setInt(5, addressId);
+            return ps.executeUpdate() > 0;
+        }
+    }
 }

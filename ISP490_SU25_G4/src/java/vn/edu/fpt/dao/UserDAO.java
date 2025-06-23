@@ -287,4 +287,28 @@ public class UserDAO {
         }
         return employees;
     }
+
+    public List<User> getAssignedUsersForEnterprise(int enterpriseId) throws Exception {
+        List<User> userList = new ArrayList<>();
+        String sql = "SELECT u.id, u.first_name, u.last_name, u.middle_name, u.avatar_url "
+                + "FROM Users u "
+                + "JOIN EnterpriseAssignments ea ON u.id = ea.user_id "
+                + "WHERE ea.enterprise_id = ? AND u.is_deleted = 0";
+
+        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, enterpriseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    User user = new User();
+                    user.setId(rs.getInt("id"));
+                    user.setFirstName(rs.getString("first_name"));
+                    user.setLastName(rs.getString("last_name"));
+                    user.setMiddleName(rs.getString("middle_name"));
+                    user.setAvatarUrl(rs.getString("avatar_url"));
+                    userList.add(user);
+                }
+            }
+        }
+        return userList;
+    }
 }
