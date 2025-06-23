@@ -39,6 +39,10 @@ public class Enterprise {
 
     // === THÊM TRƯỜNG MỚI VÀO ĐÂY ===
     private String primaryContactEmail;
+    private int provinceId;
+    private int districtId;
+    private int wardId;
+    private String streetAddress;
 
 // === THIS FIELD WAS MISSING ===
     private List<EnterpriseContact> contacts;
@@ -64,6 +68,38 @@ public class Enterprise {
         this.isDeleted = isDeleted;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+
+    public int getProvinceId() {
+        return provinceId;
+    }
+
+    public void setProvinceId(int provinceId) {
+        this.provinceId = provinceId;
+    }
+
+    public int getDistrictId() {
+        return districtId;
+    }
+
+    public void setDistrictId(int districtId) {
+        this.districtId = districtId;
+    }
+
+    public int getWardId() {
+        return wardId;
+    }
+
+    public void setWardId(int wardId) {
+        this.wardId = wardId;
+    }
+
+    public String getStreetAddress() {
+        return streetAddress;
+    }
+
+    public void setStreetAddress(String streetAddress) {
+        this.streetAddress = streetAddress;
     }
 
     public String getPrimaryContactEmail() {

@@ -10,9 +10,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import vn.edu.fpt.dao.AddressDAO;
 import vn.edu.fpt.model.District;
 import com.google.gson.Gson;
+<<<<<<< Updated upstream
 import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.List;
+=======
+>>>>>>> Stashed changes
 
 @WebServlet(name = "GetDistrictsController", urlPatterns = {"/getDistricts"})
 public class GetDistrictsController extends HttpServlet {

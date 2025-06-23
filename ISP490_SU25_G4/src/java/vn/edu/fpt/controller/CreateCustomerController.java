@@ -7,33 +7,40 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
+import java.io.File;
 import vn.edu.fpt.dao.*;
 import vn.edu.fpt.model.CustomerType;
 import vn.edu.fpt.model.Province;
 import vn.edu.fpt.model.User;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.UUID;
 
 /**
- * Handles the creation of a new customer.
- * GET: Displays the form with necessary data for dropdowns.
- * POST: Processes the form submission, saves the data, and shows a success message.
+ * Handles the creation of a new customer. GET: Displays the form with necessary
+ * data for dropdowns. POST: Processes the form submission, saves the data, and
+ * shows a success message.
  */
 @WebServlet(name = "CreateCustomerController", urlPatterns = {"/createCustomer"})
 @MultipartConfig(
-    fileSizeThreshold = 1024 * 1024 * 2,  // 2MB
-    maxFileSize = 1024 * 1024 * 10,       // 10MB
-    maxRequestSize = 1024 * 1024 * 50     // 50MB
+        fileSizeThreshold = 1024 * 1024 * 2, // 2MB
+        maxFileSize = 1024 * 1024 * 10, // 10MB
+        maxRequestSize = 1024 * 1024 * 50 // 50MB
 )
 public class CreateCustomerController extends HttpServlet {
+
+    // Thư mục lưu trữ ảnh, tương đối so với thư mục gốc của ứng dụng web
+    private static final String UPLOAD_DIR = "uploads" + File.separator + "avatars";
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         // Only load data for dropdowns if we are not showing a success message.
         // This prevents unnecessary database queries when forwarding just to show the overlay.
         if (request.getAttribute("successMessage") == null) {
@@ -45,7 +52,7 @@ public class CreateCustomerController extends HttpServlet {
                 List<Province> provinces = addressDAO.getAllProvinces();
                 List<CustomerType> customerTypes = customerTypeDAO.getAllCustomerTypes();
                 // Use the optimized method for dropdowns
-                List<User> employees = userDAO.getAllEmployees(); 
+                List<User> employees = userDAO.getAllEmployees();
 
                 request.setAttribute("provinces", provinces);
                 request.setAttribute("customerTypes", customerTypes);
@@ -56,7 +63,7 @@ public class CreateCustomerController extends HttpServlet {
                 request.setAttribute("errorMessage", "Không thể tải dữ liệu cần thiết: " + e.getMessage());
             }
         }
-        
+
         // Always forward to the JSP page.
         request.getRequestDispatcher("/jsp/sales/createCustomer.jsp").forward(request, response);
     }
@@ -69,14 +76,43 @@ public class CreateCustomerController extends HttpServlet {
         Connection conn = null;
         // Get customer name early to use in success/error messages
         String customerName = request.getParameter("customerName");
-        
+
         try {
+
+            // === PHẦN 1: XỬ LÝ UPLOAD FILE ẢNH ===
+            String avatarDbPath = null; // Đường dẫn để lưu vào DB
+            Part filePart = request.getPart("avatar"); // Lấy file từ form
+
+            // Kiểm tra xem người dùng có thực sự tải file lên không
+            if (filePart != null && filePart.getSize() > 0 && filePart.getSubmittedFileName() != null && !filePart.getSubmittedFileName().isEmpty()) {
+                String originalFileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+                // Tạo tên file duy nhất để tránh ghi đè
+                String uniqueFileName = UUID.randomUUID().toString() + "_" + originalFileName;
+
+                // Lấy đường dẫn tuyệt đối đến thư mục gốc của ứng dụng web
+                String applicationPath = request.getServletContext().getRealPath("");
+                // Tạo đường dẫn đầy đủ đến thư mục lưu trữ
+                String uploadFilePath = applicationPath + File.separator + UPLOAD_DIR;
+
+                // Tạo thư mục nếu nó chưa tồn tại
+                File fileSaveDir = new File(uploadFilePath);
+                if (!fileSaveDir.exists()) {
+                    fileSaveDir.mkdirs();
+                }
+
+                // Ghi file vào thư mục
+                filePart.write(uploadFilePath + File.separator + uniqueFileName);
+
+                // Tạo đường dẫn tương đối để lưu vào DB (dùng dấu / cho web path)
+                avatarDbPath = "uploads/avatars/" + uniqueFileName;
+            }
+
             // Get other form parameters
             String phone = request.getParameter("phone");
             String email = request.getParameter("email");
             String taxCode = request.getParameter("taxCode");
             String bankNumber = request.getParameter("bankNumber");
-            
+
             int provinceId = Integer.parseInt(request.getParameter("province"));
             int districtId = Integer.parseInt(request.getParameter("district"));
             int wardId = Integer.parseInt(request.getParameter("ward"));
@@ -104,12 +140,12 @@ public class CreateCustomerController extends HttpServlet {
             // 1. Insert address and get the new ID
             int newAddressId = addressDAO.insertAddress(conn, streetAddress, wardId, districtId, provinceId);
             // 2. Insert enterprise and get the new ID
-            int newEnterpriseId = enterpriseDAO.insertEnterprise(conn, customerName, customerGroupId, newAddressId, taxCode, bankNumber);
+            int newEnterpriseId = enterpriseDAO.insertEnterprise(conn, customerName, customerGroupId, newAddressId, taxCode, bankNumber, avatarDbPath);
             // 3. Insert primary contact for the enterprise
             enterpriseDAO.insertEnterpriseContact(conn, newEnterpriseId, customerName, phone, email);
             // 4. Assign the responsible employee
             assignmentDAO.insertAssignment(conn, newEnterpriseId, employeeId, "account_manager");
-            
+
             // If all operations are successful, commit the transaction
             conn.commit();
 
@@ -125,7 +161,11 @@ public class CreateCustomerController extends HttpServlet {
             e.printStackTrace();
             // If any error occurs, rollback the transaction
             if (conn != null) {
-                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
             }
             // Send error message back to the form
             request.setAttribute("errorMessage", "Tạo khách hàng thất bại: " + e.getMessage());
@@ -133,7 +173,12 @@ public class CreateCustomerController extends HttpServlet {
         } finally {
             // Close the connection
             if (conn != null) {
-                try { conn.setAutoCommit(true); conn.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
             }
         }
     }

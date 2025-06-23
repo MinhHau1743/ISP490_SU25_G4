@@ -6,7 +6,7 @@ import java.sql.SQLException;
 
 public class DBContext {
 
-    // Các thông số kết nối CSDL
+    // Các thông số kết nối CSDL đã được cập nhật
     private static final String DB_URL = "jdbc:mysql://localhost:3306/isp490_su25_gr4";
     private static final String DB_USER_NAME = "root";
     private static final String DB_PASSWORD = "123456";
@@ -17,10 +17,13 @@ public class DBContext {
      */
     public static Connection getConnection() {
         try {
+
             // Nạp driver của MySQL
             Class.forName("com.mysql.cj.jdbc.Driver");
-            // Trả về một kết nối mới
+            
+            // Trả về một kết nối mới sử dụng các thông tin đã khai báo ở trên
             return DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD);
+            
         } catch (ClassNotFoundException | SQLException ex) {
             System.err.println("--- LOI KET NOI CSDL ---");
             ex.printStackTrace(); // In ra lỗi chi tiết để gỡ rối
@@ -53,7 +56,8 @@ public class DBContext {
             System.err.println("===> KET NOI THAT BAI! <===");
             System.err.println("Vui long kiem tra lai cac thong tin sau:");
             System.err.println("1. MySQL Server da duoc khoi dong chua?");
-            System.err.println("2. Ten CSDL (database name) trong DB_URL co dung la 'datn' khong?");
+            // Đã cập nhật lại tên CSDL trong thông báo lỗi
+            System.err.println("2. Ten CSDL (database name) trong DB_URL co dung la 'isp490_su25_gr4' khong?");
             System.err.println("3. Username va password co chinh xac khong?");
             System.err.println("4. Thu vien MySQL Connector/J da duoc them vao du an chua?");
         }
