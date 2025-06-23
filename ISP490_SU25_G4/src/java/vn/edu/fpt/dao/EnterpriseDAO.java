@@ -162,11 +162,12 @@ public class EnterpriseDAO extends DBContext {
      * @throws Exception if a database access error occurs.
      */
     public Enterprise getEnterpriseById(int enterpriseId) throws Exception {
-        Enterprise enterprise = null;
-        // === SQL UPDATED TO INCLUDE e.avatar_url ===
+         Enterprise enterprise = null;
+        // === SQL UPDATED to select the raw ID fields from the Addresses table ===
         String sql = "SELECT "
-                + "    e.id AS enterprise_id, e.name AS enterprise_name, e.enterprise_code, e.tax_code, e.bank_number, e.avatar_url, "
-                + "    a.street_address, w.name AS ward_name, d.name AS district_name, p.name AS province_name, "
+                + "    e.*, " // Select all from Enterprises
+                + "    a.province_id, a.district_id, a.ward_id, a.street_address, " // Select address IDs and street
+                + "    CONCAT_WS(', ', a.street_address, w.name, d.name, p.name) AS full_address, "
                 + "    ct.name AS customer_type_name, "
                 + "    (SELECT ec.phone_number FROM EnterpriseContacts ec WHERE ec.enterprise_id = e.id AND ec.is_primary_contact = 1 LIMIT 1) AS primary_phone, "
                 + "    (SELECT ec.email FROM EnterpriseContacts ec WHERE ec.enterprise_id = e.id AND ec.is_primary_contact = 1 LIMIT 1) AS primary_email "
@@ -184,27 +185,29 @@ public class EnterpriseDAO extends DBContext {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     enterprise = new Enterprise();
-                    enterprise.setId(rs.getInt("enterprise_id"));
-                    enterprise.setName(rs.getString("enterprise_name"));
+                    // Set all fields from Enterprises table
+                    enterprise.setId(rs.getInt("id"));
+                    enterprise.setName(rs.getString("name"));
                     enterprise.setEnterpriseCode(rs.getString("enterprise_code"));
                     enterprise.setTaxCode(rs.getString("tax_code"));
                     enterprise.setBankNumber(rs.getString("bank_number"));
-                    enterprise.setCustomerTypeName(rs.getString("customer_type_name"));
-                    enterprise.setPrimaryContactPhone(rs.getString("primary_phone"));
-                    enterprise.setPrimaryContactEmail(rs.getString("primary_email"));
-
-                    // === SET THE AVATAR URL HERE ===
                     enterprise.setAvatarUrl(rs.getString("avatar_url"));
-
-                    // Construct the full address
-                    String street = rs.getString("street_address");
-                    String ward = rs.getString("ward_name");
-                    String district = rs.getString("district_name");
-                    String province = rs.getString("province_name");
-                    enterprise.setFullAddress(String.join(", ", street, ward, district, province));
-
-                    // Fetch assigned users and contracts separately
-                    enterprise.setAssignedUsers(getAssignedUsersForEnterprise(conn, enterpriseId));
+                    enterprise.setCustomerTypeId(rs.getInt("customer_type_id"));
+                    enterprise.setAddressId(rs.getInt("address_id"));
+                    
+                    // Set joined fields
+                    enterprise.setCustomerTypeName(rs.getString("customer_type_name"));
+                    enterprise.setFullAddress(rs.getString("full_address"));
+                    
+                    // === SET THE MISSING FIELDS FOR THE EDIT FORM ===
+                    enterprise.setProvinceId(rs.getInt("province_id"));
+                    enterprise.setDistrictId(rs.getInt("district_id"));
+                    enterprise.setWardId(rs.getInt("ward_id"));
+                    enterprise.setStreetAddress(rs.getString("street_address"));
+                    
+                    // Fetch related data using other DAOs
+                    enterprise.setContacts(new EnterpriseContactDAO().getContactsByEnterpriseId(enterpriseId));
+                    enterprise.setAssignedUsers(new UserDAO().getAssignedUsersForEnterprise(enterpriseId));
                 }
             }
         }
@@ -233,13 +236,14 @@ public class EnterpriseDAO extends DBContext {
     }
 
     public boolean updateEnterprise(Connection conn, Enterprise enterprise) throws SQLException {
-        String sql = "UPDATE Enterprises SET name = ?, tax_code = ?, bank_number = ?, customer_type_id = ? WHERE id = ?";
+        String sql = "UPDATE Enterprises SET name = ?, tax_code = ?, bank_number = ?, customer_type_id = ?, avatar_url = ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, enterprise.getName());
             ps.setString(2, enterprise.getTaxCode());
             ps.setString(3, enterprise.getBankNumber());
             ps.setInt(4, enterprise.getCustomerTypeId());
-            ps.setInt(5, enterprise.getId());
+            ps.setString(5, enterprise.getAvatarUrl()); // Thêm avatar_url
+            ps.setInt(6, enterprise.getId());
             return ps.executeUpdate() > 0;
         }
     }
