@@ -8,9 +8,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
-import java.util.List;
+import java.sql.Date;
 import org.mindrot.jbcrypt.BCrypt;
 import vn.edu.fpt.model.User;
+import java.sql.SQLException;
+import java.time.Instant;     // <-- Có thể cần cho các xử lý thời gian khác
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.List;
 
 /**
  *
@@ -219,59 +224,102 @@ public class UserDAO {
 //        }
 //    }
 
-// // Lấy all thông tin user dựa vào ID
-//    public User getUserById(int userId) {
-//        
-//        String sql = "SELECT * FROM Users WHERE id = ?";
-//        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-//
-//            ps.setInt(1, userId);
-//            ResultSet rs = ps.executeQuery();
-//
-//            if (rs.next()) {
-//                // Sử dụng lại logic tương tự hàm login để lấy đầy đủ thông tin
-//                User user = new User();
-//
-//                user.setId(rs.getInt("id"));
-//                user.setLastName(rs.getString("last_name"));
-//                user.setMiddleName(rs.getString("middle_name"));
-//                user.setFirstName(rs.getString("first_name"));
-//                user.setEmail(rs.getString("email"));
-//                user.setPasswordHash(rs.getString("password_hash"));
-//                user.setRole(rs.getString("role"));
-//                user.setStatus(rs.getString("status"));                
-//                user.setEmployeeCode(rs.getString("employee_code"));
-//                user.setPosition(rs.getString("position"));
-//                user.setDepartment(rs.getString("department"));
-//                user.setPhoneNumber(rs.getString("phone_number"));
-//                user.setNotes(rs.getString("notes")); 
-//                user.setAvatarUrl(rs.getString("avatar_url"));
-//                user.setIdentityCardNumber(rs.getString("identity_card_number"));
-//                
-//                if (rs.getDate("date_of_birth") != null) {
-//                    user.setDateOfBirth(rs.getDate("date_of_birth").toLocalDate());
-//                }
-//                
-//                user.setGender(rs.getString("gender"));
-//                user.setAddress(rs.getString("address"));
-//                user.setWard(rs.getString("ward"));
-//                user.setDistrict(rs.getString("district"));
-//                user.setCity(rs.getString("city"));
-//                user.setSocialMediaLink(rs.getString("social_media_link"));
-//                user.setIsDeleted(rs.getBoolean("is_deleted"));
-//                user.setCreatedAt(rs.getTimestamp("created_at"));
-//                user.setUpdatedAt(rs.getTimestamp("updated_at"));
-//                
-//                
-//                
-//
-//                return user;
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        return null; // Không tìm thấy user
-//    }
+//  Lấy all thông tin user dựa vào ID
+    public User getUserById(int userId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        // Câu lệnh SQL sử dụng LEFT JOIN để gom thông tin từ các bảng liên quan
+        String query = "SELECT "
+                + "u.id, u.email, u.last_name, u.middle_name, u.first_name, "
+                + "u.avatar_url, u.employee_code, u.phone_number, u.date_of_birth, u.gender, "
+                + "u.identity_card_number, u.notes, u.status, u.created_at, u.updated_at, "
+                + "p.name AS position_name, "
+                + "d.name AS department_name, "
+                + "r.name AS role_name, "
+                + "a.street_address, "
+                + "w.name AS ward_name, "
+                + "dist.name AS district_name, "
+                + "prov.name AS province_name "
+                + "FROM Users u "
+                + "LEFT JOIN Positions p ON u.position_id = p.id "
+                + "LEFT JOIN Departments d ON u.department_id = d.id "
+                + "LEFT JOIN Roles r ON u.role_id = r.id "
+                + "LEFT JOIN Addresses a ON u.address_id = a.id "
+                + "LEFT JOIN Wards w ON a.ward_id = w.id "
+                + "LEFT JOIN Districts dist ON a.district_id = dist.id "
+                + "LEFT JOIN Provinces prov ON a.province_id = prov.id "
+                + "WHERE u.id = ? AND u.is_deleted = 0";
+
+        try {
+            // Kết nối đến DB (thay thế bằng lớp kết nối của bạn)
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setInt(1, userId);
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                User user = new User();
+
+                // === Gán các trường từ bảng Users ===
+                user.setId(rs.getInt("id"));
+                user.setEmail(rs.getString("email"));
+                user.setLastName(rs.getString("last_name"));
+                user.setMiddleName(rs.getString("middle_name"));
+                user.setFirstName(rs.getString("first_name"));
+                user.setAvatarUrl(rs.getString("avatar_url"));
+                user.setEmployeeCode(rs.getString("employee_code"));
+                user.setPhoneNumber(rs.getString("phone_number"));
+
+                // Chuyển đổi java.sql.Date sang java.time.LocalDate
+                Date dobSql = rs.getDate("date_of_birth");
+                if (dobSql != null) {
+                    user.setDateOfBirth(dobSql.toLocalDate());
+                }
+
+                user.setGender(rs.getString("gender"));
+                user.setIdentityCardNumber(rs.getString("identity_card_number"));
+                user.setNotes(rs.getString("notes"));
+                user.setStatus(rs.getString("status"));
+                user.setCreatedAt(rs.getTimestamp("created_at"));
+                user.setUpdatedAt(rs.getTimestamp("updated_at"));
+
+                // === Gán các trường từ các bảng JOIN (DTO style) ===
+                user.setRoleName(rs.getString("role_name"));
+                user.setPositionName(rs.getString("position_name"));
+                user.setDepartmentName(rs.getString("department_name"));
+                user.setStreetAddress(rs.getString("street_address"));
+                user.setWardName(rs.getString("ward_name"));
+                user.setDistrictName(rs.getString("district_name"));
+                user.setProvinceName(rs.getString("province_name"));
+
+                return user;
+            }
+        } catch (Exception e) {
+            // In lỗi ra console để debug
+            e.printStackTrace();
+        } finally {
+            // Đóng các kết nối để tránh rò rỉ tài nguyên
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (ps != null) {
+                    ps.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // Trả về null nếu không tìm thấy user hoặc có lỗi xảy ra
+        return null;
+    }
+
     // Lấy danh sách nhân viên để hiển thị trong dropdown
     public List<User> getAllEmployees() throws Exception {
         List<User> employees = new ArrayList<>();

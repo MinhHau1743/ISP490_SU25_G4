@@ -12,7 +12,7 @@
     <nav class="sidebar-nav">
         <ul>
             <%-- Mục "Tổng quan" --%>
-            <li><a href="${pageContext.request.contextPath}/jsp/dashboard.jsp" class="${currentPage == 'dashboard' ? 'active' : ''}"><i data-feather="grid"></i><span>Tổng quan</span></a></li>
+            <li><a href="${pageContext.request.contextPath}/dashboard.jsp" class="${currentPage == 'dashboard' ? 'active' : ''}"><i data-feather="grid"></i><span>Tổng quan</span></a></li>
 
             <%-- Mục "Khách hàng" --%>
             <li><a href="${pageContext.request.contextPath}/jsp/sales/listCustomer.jsp" class="${currentPage == 'listCustomer' ? 'active' : ''}"><i data-feather="user"></i><span>Khách hàng</span></a></li>
@@ -49,12 +49,12 @@
 
                 <ul class="sub-menu">
                     <li>
-                        <a href="${pageContext.request.contextPath}/jsp/viewProfile.jsp" class="${currentPage == 'viewProfile' ? 'active' : ''}">
+                        <a href="${pageContext.request.contextPath}/viewProfile" class="${currentPage == 'viewProfile' ? 'active' : ''}">
                             Xem thông tin cá nhân
                         </a>
                     </li>
                     <li>
-                        <a href="${pageContext.request.contextPath}/jsp/changePassword.jsp" class="${currentPage == 'changePassword' ? 'active' : ''}">Đổi mật khẩu</a>
+                        <a href="${pageContext.request.contextPath}/changePassword.jsp" class="${currentPage == 'changePassword' ? 'active' : ''}">Đổi mật khẩu</a>
                     </li>
 
                 </ul>

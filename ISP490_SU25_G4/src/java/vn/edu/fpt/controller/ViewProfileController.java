@@ -1,11 +1,6 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package vn.edu.fpt.controller;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -23,53 +18,75 @@ import vn.edu.fpt.model.User;
 public class ViewProfileController extends HttpServlet {
 
     /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
+     * Xử lý yêu cầu GET để hiển thị trang thông tin cá nhân của người dùng.
      *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @param request đối tượng servlet request
+     * @param response đối tượng servlet response
+     * @throws ServletException nếu có lỗi đặc trưng của servlet
+     * @throws IOException nếu có lỗi I/O
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-//         // --- BẮT ĐẦU ĐOẠN CODE KIỂM TRA SESSION ---
-//    HttpSession session = request.getSession();
-//
-//    // THÊM DÒNG NÀY VÀO
-//    System.out.println("\n1. === TRONG ViewProfileController (doGet) ===");
-//    System.out.println("User trong session là: " + session.getAttribute("user"));
-//        // 1. Lấy user đang đăng nhập từ session
-////        HttpSession session = request.getSession();
-//        User loggedInUser = (User) session.getAttribute("user"); // Giả sử khi đăng nhập bạn đã lưu user vào session với key là "account"
-//
-//        // 2. Kiểm tra xem người dùng đã đăng nhập chưa
-//        if (loggedInUser == null) {
-//            // Nếu chưa, chuyển hướng về trang đăng nhập
-//            response.sendRedirect("login.jsp");
-//            return; // Dừng việc thực thi tiếp theo
-//    }
-//
-//        // 3. Gọi DAO để lấy thông tin chi tiết nhất của user từ DB
-//        UserDAO userDAO = new UserDAO();
-//        User userProfile = userDAO.getUserById(loggedInUser.getId());
-//   
-//        // 4. Gửi đối tượng user (userProfile) sang cho trang JSP
-//        if (userProfile != null) {
-//            // Đặt đối tượng vào request attribute với tên là "profile"
-//            request.setAttribute("profile", userProfile);
-//            
-//            // 5. Chuyển tiếp (forward) yêu cầu đến trang viewProfile.jsp để hiển thị
-//            request.getRequestDispatcher("viewProfile.jsp").forward(request, response);
-//        } else {
-//            // Xử lý trường hợp hiếm gặp: user có trong session nhưng không có trong DB
-//            response.setContentType("text/html;charset=UTF-8");
-//            response.getWriter().println("<h1>Lỗi: Không tìm thấy thông tin người dùng.</h1>");
-//        }
+
+        // 1. Lấy session hiện tại
+        HttpSession session = request.getSession();
+
+        // 2. Lấy đối tượng User đã được lưu trong session khi đăng nhập
+        // Giả sử bạn lưu user với key là "user"
+        User loggedInUser = (User) session.getAttribute("user");
+
+        // --- THÊM CÁC DÒNG DEBUG VÀO ĐÂY ---
+        System.out.println("\n--- DEBUGGING ViewProfileController ---");
+        if (loggedInUser != null) {
+            System.out.println("User trong session: " + loggedInUser); // In ra để xem toString() của User
+            System.out.println("ID của user trong session: " + loggedInUser.getId());
+        } else {
+            System.out.println("User trong session là NULL.");
+        }
+        System.out.println("--- END DEBUGGING ---\n");
+        // --- KẾT THÚC PHẦN DEBUG ---
+
+        if (loggedInUser == null) {
+            response.sendRedirect("login.jsp");
+            return;
+        }
+
+        // 3. Kiểm tra xem người dùng đã đăng nhập chưa
+        if (loggedInUser == null) {
+            // Nếu chưa, chuyển hướng về trang đăng nhập
+            response.sendRedirect("login.jsp");
+            return; // Dừng thực thi
+        }
+
+        // 4. Khởi tạo UserDAO để truy vấn cơ sở dữ liệu
+        UserDAO userDAO = new UserDAO();
+
+        // 5. Gọi phương thức để lấy thông tin chi tiết nhất của người dùng từ DB
+        // Phương thức này sẽ trả về một đối tượng User "phẳng" đã chứa đủ thông tin
+        User userProfile = userDAO.getUserById(loggedInUser.getId());
+
+        // 6. Xử lý kết quả trả về từ DAO
+        if (userProfile != null) {
+            // Nếu tìm thấy user, đặt đối tượng userProfile vào request scope
+            request.setAttribute("profile", userProfile);
+
+            // 7. Chuyển tiếp (forward) yêu cầu đến trang viewProfile.jsp để hiển thị
+            request.getRequestDispatcher("viewProfile.jsp").forward(request, response);
+        } else {
+            // Xử lý trường hợp hiếm gặp: user có trong session nhưng đã bị xóa khỏi DB
+            // Hủy session cũ và thông báo lỗi
+            session.invalidate();
+            response.setContentType("text/html;charset=UTF-8");
+            response.getWriter().println("<h1>Lỗi: Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.</h1>");
+            response.getWriter().println("<a href='login.jsp'>Quay về trang đăng nhập</a>");
+        }
     }
 
-   
+    /**
+     * Xử lý yêu cầu POST bằng cách gọi lại doGet. Điều này hữu ích nếu có một
+     * form nào đó POST đến URL này để xem profile.
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -77,13 +94,10 @@ public class ViewProfileController extends HttpServlet {
     }
 
     /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
+     * Trả về mô tả ngắn của servlet.
      */
     @Override
     public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
-
+        return "Servlet for viewing user profile details.";
+    }
 }
