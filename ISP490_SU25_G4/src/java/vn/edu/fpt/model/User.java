@@ -42,9 +42,12 @@ public class User {
     // Constructors
     public User() {
     }
-    
+
     public String getFullName() {
-        return firstName + " " + middleName + " " + lastName;
+        if (middleName != null && !middleName.trim().isEmpty()) {
+            return lastName + " " + middleName + " " + firstName;
+        }
+        return lastName + " " + firstName;
     }
 
     // Getters and Setters for all fields

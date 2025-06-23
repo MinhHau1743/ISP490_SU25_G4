@@ -275,12 +275,13 @@ public class UserDAO {
     // Lấy danh sách nhân viên để hiển thị trong dropdown
     public List<User> getAllEmployees() throws Exception {
         List<User> employees = new ArrayList<>();
-        String sql = "SELECT id, first_name, last_name FROM Users WHERE is_deleted = 0 AND status = 'active'";
+        String sql = "SELECT id, first_name, middle_name, last_name FROM Users WHERE is_deleted = 0 AND status = 'active'";
         try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 User u = new User();
                 u.setId(rs.getInt("id"));
                 u.setFirstName(rs.getString("first_name"));
+                u.setMiddleName(rs.getString("middle_name"));
                 u.setLastName(rs.getString("last_name"));
                 employees.add(u);
             }
