@@ -240,4 +240,17 @@ public class EnterpriseDAO extends DBContext {
             return ps.executeUpdate() > 0;
         }
     }
+
+    public boolean softDeleteEnterprise(int enterpriseId) throws Exception {
+        String sql = "UPDATE Enterprises SET is_deleted = 1 WHERE id = ?";
+
+        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, enterpriseId);
+
+            // executeUpdate() returns the number of rows affected.
+            // If it's greater than 0, the update was successful.
+            return ps.executeUpdate() > 0;
+        }
+    }
 }
