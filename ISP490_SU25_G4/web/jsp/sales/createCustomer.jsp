@@ -22,10 +22,10 @@
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <script src="https://unpkg.com/feather-icons"></script>
 
-        <link rel="stylesheet" href="${BASE_URL}/css/style.css">
-        <link rel="stylesheet" href="${BASE_URL}/css/mainMenu.css">
-        <link rel="stylesheet" href="${BASE_URL}/css/createCustomer.css">
-        <link rel="stylesheet" href="${BASE_URL}/css/viewCustomerDetail.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/createCustomer.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/viewCustomerDetail.css">
 
         <style>
             .avatar-section #avatarPreview {
@@ -33,6 +33,7 @@
                 height: 120px;
                 object-fit: cover;
                 border-radius: 8px;
+<<<<<<< Updated upstream
             }
 
             /* === STYLE FOR SUCCESS OVERLAY === */
@@ -66,12 +67,15 @@
             }
             #successOverlay.show .success-box {
                 transform: scale(1);
+=======
+>>>>>>> Stashed changes
             }
         </style>
     </head>
-    <body>
+
+    <body data-base-url="${pageContext.request.contextPath}">
         <div class="app-container">
-            <jsp:include page="/mainMenu.jsp"/>
+            <jsp:include page="../../mainMenu.jsp"/> 
             <main class="main-content">
 
                 <c:if test="${not empty errorMessage}">
@@ -80,15 +84,11 @@
                     </div>
                 </c:if>
 
-                <form class="page-content" id="createCustomerForm" action="${BASE_URL}/createCustomer" method="post" enctype="multipart/form-data">
+                <form class="page-content" id="createCustomerForm" action="${pageContext.request.contextPath}/createCustomer" method="post" enctype="multipart/form-data">
                     <div class="detail-header">
-                        <a href="${BASE_URL}/listCustomer" class="back-link">
-                            <i data-feather="arrow-left"></i><span>Hủy</span>
-                        </a>
+                        <a href="${pageContext.request.contextPath}/listCustomer" class="back-link"><i data-feather="arrow-left"></i><span>Hủy</span></a>
                         <div class="action-buttons">
-                            <button type="submit" class="btn btn-primary">
-                                <i data-feather="plus-circle"></i>Tạo Khách hàng
-                            </button>
+                            <button type="submit" class="btn btn-primary"><i data-feather="plus-circle"></i>Tạo Khách hàng</button>
                         </div>
                     </div>
 
@@ -139,17 +139,14 @@
                                                 </c:forEach>
                                             </select>
                                         </div>
+
                                         <div class="form-group">
                                             <label for="district">Quận/Huyện (*)</label>
-                                            <select id="district" name="district" class="form-control" required disabled>
-                                                <option value="" disabled selected>-- Chọn Quận/Huyện --</option>
-                                            </select>
+                                            <select id="district" name="district" class="form-control" required disabled><option value="" disabled selected>-- Chọn Quận/Huyện --</option></select>
                                         </div>
                                         <div class="form-group">
                                             <label for="ward">Phường/Xã (*)</label>
-                                            <select id="ward" name="ward" class="form-control" required disabled>
-                                                <option value="" disabled selected>-- Chọn Phường/Xã --</option>
-                                            </select>
+                                            <select id="ward" name="ward" class="form-control" required disabled><option value="" disabled selected>-- Chọn Phường/Xã --</option></select>
                                         </div>
                                     </div>
                                     <div class="form-group" style="margin-top: 1rem;">
@@ -168,6 +165,7 @@
                                     <div class="form-group">
                                         <label for="customerGroup">Nhóm khách hàng</label>
                                         <select id="customerGroup" name="customerGroup" class="form-control">
+<<<<<<< Updated upstream
                                             <c:forEach var="type" items="${customerTypes}">
                                                 <option value="${type.id}">${type.name}</option>
                                             </c:forEach>
@@ -186,14 +184,32 @@
                                         <label for="joinDate">Ngày tham gia</label>
                                         <input type="date" id="joinDate" name="joinDate" class="form-control" readonly>
                                     </div>
+=======
+                                            <c:if test="${empty customerTypes}"><option value="" disabled>Không tải được</option></c:if>
+                                            <c:forEach var="type" items="${customerTypes}"><option value="${type.id}">${type.name}</option></c:forEach>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="employeeId">Nhân viên phụ trách</label>
+                                            <select id="employeeId" name="employeeId" class="form-control">
+                                                <option value="" disabled selected>-- Chọn nhân viên --</option>
+                                                <option value="1">Nguyễn Văn A</option><option value="2">Trần Thị B</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="joinDate">Ngày tham gia</label>
+                                            <input type="date" id="joinDate" name="joinDate" class="form-control" readonly>
+                                        </div>
+                                    </div>
+>>>>>>> Stashed changes
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </form>
-            </main>
-        </div>
+                    </form>
+                </main>
+            </div>
 
+<<<<<<< Updated upstream
         <%-- === HTML FOR SUCCESS OVERLAY === --%>
         <c:if test="${not empty successMessage}">
             <div id="successOverlay">
@@ -296,6 +312,86 @@
                     }, 3000); // 3000 milliseconds = 3 seconds
                 }
             });
+=======
+            <script>
+                feather.replace();
+                document.getElementById('btnChooseAvatar').addEventListener('click', () => document.getElementById('avatarUpload').click());
+                document.getElementById('avatarUpload').addEventListener('change', event => {
+                    const [file] = event.target.files;
+                    if (file) {
+                        document.getElementById('avatarPreview').src = URL.createObjectURL(file);
+                    }
+                });
+
+                document.addEventListener('DOMContentLoaded', function () {
+                    const provinceSelect = document.getElementById('province');
+                    const districtSelect = document.getElementById('district');
+                    const wardSelect = document.getElementById('ward');
+
+                    // <<< FINAL FIX: Đọc contextPath từ thuộc tính data-base-url của thẻ body >>>
+                    const baseUrl = document.body.dataset.baseUrl;
+
+                    document.getElementById('joinDate').value = new Date().toISOString().split('T')[0];
+
+                    provinceSelect.addEventListener('change', function () {
+                        const provinceId = this.value;
+                        districtSelect.innerHTML = '<option value="" disabled selected>-- Đang tải... --</option>';
+                        wardSelect.innerHTML = '<option value="" disabled selected>-- Chọn Phường/Xã --</option>';
+                        districtSelect.disabled = true;
+                        wardSelect.disabled = true;
+
+                        if (provinceId) {
+                            const fetchUrl = `${baseUrl}/getDistricts?provinceId=${provinceId}`;
+
+                                            fetch(fetchUrl)
+                                                    .then(response => {
+                                                        if (!response.ok)
+                                                            throw new Error(`Lỗi mạng: ${response.status}`);
+                                                        return response.json();
+                                                    })
+                                                    .then(data => {
+                                                        districtSelect.innerHTML = '<option value="" disabled selected>-- Chọn Quận/Huyện --</option>';
+                                                        data.forEach(district => {
+                                                            districtSelect.add(new Option(district.name, district.id));
+                                                        });
+                                                        districtSelect.disabled = false;
+                                                    })
+                                                    .catch(error => {
+                                                        console.error('Lỗi khi tải quận/huyện:', error);
+                                                        districtSelect.innerHTML = '<option value="" disabled selected>-- Lỗi tải dữ liệu --</option>';
+                                                    });
+                                        }
+                                    });
+
+                                    districtSelect.addEventListener('change', function () {
+                                        const districtId = this.value;
+                                        wardSelect.innerHTML = '<option value="" disabled selected>-- Đang tải... --</option>';
+                                        wardSelect.disabled = true;
+
+                                        if (districtId) {
+                                            const fetchUrl = `${baseUrl}/getWards?districtId=${districtId}`;
+
+                                                            fetch(fetchUrl)
+                                                                    .then(response => {
+                                                                        if (!response.ok)
+                                                                            throw new Error(`Lỗi mạng: ${response.status}`);
+                                                                        return response.json();
+                                                                    })
+                                                                    .then(data => {
+                                                                        wardSelect.innerHTML = '<option value="" disabled selected>-- Chọn Phường/Xã --</option>';
+                                                                        data.forEach(ward => {
+                                                                            wardSelect.add(new Option(ward.name, ward.id));
+                                                                        });
+                                                                        wardSelect.disabled = false;
+                                                                    })
+                                                                    .catch(error => {
+                                                                        console.error('Lỗi khi tải phường/xã:', error);
+                                                                        wardSelect.innerHTML = '<option value="" disabled selected>-- Lỗi tải dữ liệu --</option>';
+                                                                    });
+                                                        }
+                                                    });
+                                                });
+>>>>>>> Stashed changes
         </script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
