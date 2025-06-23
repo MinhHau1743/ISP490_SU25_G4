@@ -164,6 +164,7 @@
                             <jsp:include page="kanbanColumn.jsp"><jsp:param name="columnKey" value="vip"/><jsp:param name="columnTitle" value="Khách hàng VIP"/></jsp:include>
                             <jsp:include page="kanbanColumn.jsp"><jsp:param name="columnKey" value="loyal"/><jsp:param name="columnTitle" value="Khách hàng Thân thiết"/></jsp:include>
                             <jsp:include page="kanbanColumn.jsp"><jsp:param name="columnKey" value="potential"/><jsp:param name="columnTitle" value="Khách hàng Tiềm năng"/></jsp:include>
+                            <jsp:include page="kanbanColumn.jsp"><jsp:param name="columnKey" value="other"/><jsp:param name="columnTitle" value="Khách hàng Khác"/></jsp:include>
                             </div>
                         </div>
                     </div>
