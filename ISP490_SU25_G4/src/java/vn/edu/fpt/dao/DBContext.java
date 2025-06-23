@@ -17,15 +17,12 @@ public class DBContext {
      */
     public static Connection getConnection() {
         try {
-<<<<<<< Updated upstream
-            // Nạp driver của MySQL
-=======
-            // Edit URL, username, password to authenticate with your MySQL Server
+
             String url = "jdbc:mysql://localhost:3306/isp490_su25_gr4";
             String userName = "root";
             String password = "123456";
 
->>>>>>> Stashed changes
+
             Class.forName("com.mysql.cj.jdbc.Driver");
             // Trả về một kết nối mới
             return DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD);
