@@ -15,7 +15,7 @@
             <li><a href="${pageContext.request.contextPath}/dashboard.jsp" class="${currentPage == 'dashboard' ? 'active' : ''}"><i data-feather="grid"></i><span>Tổng quan</span></a></li>
 
             <%-- Mục "Khách hàng" --%>
-            <li><a href="${pageContext.request.contextPath}/jsp/sales/listCustomer.jsp" class="${currentPage == 'listCustomer' ? 'active' : ''}"><i data-feather="user"></i><span>Khách hàng</span></a></li>
+            <li><a href="${pageContext.request.contextPath}/listCustomer" class="${currentPage == 'listCustomer' ? 'active' : ''}"><i data-feather="user"></i><span>Khách hàng</span></a></li>
             <li><a href="${pageContext.request.contextPath}/jsp/chiefOfStaff/listContract.jsp" class="${currentPage == 'listContract' ? 'active' : ''}"><i data-feather="file-text"></i><span>Hợp đồng</span></a></li>
 
             <%-- Mục "Hàng hóa" (dropdown) 

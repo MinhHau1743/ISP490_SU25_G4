@@ -232,5 +232,6 @@
                 }
             });
         </script>
+        <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>
