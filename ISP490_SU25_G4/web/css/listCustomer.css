@@ -149,6 +149,14 @@ body {
 .kanban-column.potential .status-dot {
     background-color: #2563eb;
 }
+/* === BỔ SUNG CSS CHO CỘT 'KHÁCH HÀNG KHÁC' === */
+.kanban-column.other .kanban-column-header {
+    border-color: #6b7280;
+}
+.kanban-column.other .status-dot {
+    background-color: #6b7280;
+}
+/* ============================================== */
 .kanban-column-header .column-title {
     font-weight: 600;
     font-size: 16px;
