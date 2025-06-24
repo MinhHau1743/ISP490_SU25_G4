@@ -360,4 +360,41 @@ public class UserDAO {
         }
         return userList;
     }
+
+    public List<User> getUsersByRoleName(String roleName) {
+        List<User> userList = new ArrayList<>();
+        String sql = "SELECT u.*, r.name as role_name "
+                + "FROM users u "
+                + "JOIN roles r ON u.role_id = r.id "
+                + "WHERE r.name = ? AND u.is_deleted = 0";
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, roleName);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    User user = new User();
+                    user.setId(rs.getInt("id"));
+                    user.setEmail(rs.getString("email"));
+                    user.setLastName(rs.getString("last_name"));
+                    user.setMiddleName(rs.getString("middle_name"));
+                    user.setFirstName(rs.getString("first_name"));
+                    user.setAvatarUrl(rs.getString("avatar_url"));
+                    user.setEmployeeCode(rs.getString("employee_code"));
+                    user.setPhoneNumber(rs.getString("phone_number"));
+                    if (rs.getDate("date_of_birth") != null) {
+                        user.setDateOfBirth(rs.getDate("date_of_birth").toLocalDate());
+                    }
+                    user.setGender(rs.getString("gender"));
+                    user.setStatus(rs.getString("status"));
+                    user.setRoleName(rs.getString("role_name"));
+                    userList.add(user);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return userList;
+    }
 }
