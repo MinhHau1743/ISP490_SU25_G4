@@ -15,6 +15,7 @@ import jakarta.servlet.http.Part;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -172,33 +173,74 @@ public class ProductController extends HttpServlet {
 
         if (service.equals("createProduct")) {
             try {
+                List<String> errors = new ArrayList<>();
+                // ---- VALIDATE BEGIN ----
                 String name = request.getParameter("name");
-                String productCode = request.getParameter("productCode");
-                String origin = request.getParameter("origin");
-                String priceRaw = request.getParameter("price");
-                String description = request.getParameter("description");
-                int categoryId = Integer.parseInt(request.getParameter("categoryId"));
-                Part filePart = request.getPart("image");
-
-                // Normalize price
-                if (priceRaw != null) {
-                    priceRaw = priceRaw.replace(",", "").replace(".", "");
+                if (name == null || name.trim().isEmpty()) {
+                    errors.add("Tên sản phẩm không được để trống!");
                 }
-                double price = Double.parseDouble(priceRaw);
 
-                // Creation time
+                String origin = request.getParameter("origin");
+                if (origin == null || origin.trim().isEmpty()) {
+                    errors.add("Xuất xứ không được để trống!");
+                }
+                String priceRaw = request.getParameter("price");
+                double price = 0;
+                if (priceRaw == null || priceRaw.trim().isEmpty()) {
+                    errors.add("Giá không được để trống!");
+                } else {
+                    try {
+                        priceRaw = priceRaw.replace(",", "").replace(".", "");
+                        price = Double.parseDouble(priceRaw);
+                        if (price < 0) {
+                            errors.add("Giá phải lớn hơn hoặc bằng 0!");
+                        }
+                    } catch (NumberFormatException ex) {
+                        errors.add("Giá không hợp lệ!");
+                    }
+                }
+                String description = request.getParameter("description");
+                String categoryIdRaw = request.getParameter("categoryId");
+                int categoryId = 0;
+                if (categoryIdRaw == null || categoryIdRaw.trim().isEmpty()) {
+                    errors.add("Danh mục không được để trống!");
+                } else {
+                    try {
+                        categoryId = Integer.parseInt(categoryIdRaw);
+                    } catch (NumberFormatException ex) {
+                        errors.add("Danh mục không hợp lệ!");
+                    }
+                }
+                Part filePart = request.getPart("image");
+                // ---- VALIDATE END ----
+
+                // Nếu có lỗi thì forward về lại form nhập, KHÔNG LÀM GÌ THÊM!
+                if (!errors.isEmpty()) {
+                    request.setAttribute("errors", errors);
+                    // Trả lại các giá trị đã nhập để user không phải nhập lại
+                    request.setAttribute("name", name);
+                    request.setAttribute("origin", origin);
+                    request.setAttribute("price", priceRaw);
+                    request.setAttribute("description", description);
+                    request.setAttribute("categoryId", categoryIdRaw);
+
+                    ProductCategoriesDAO categoriesDAO = new ProductCategoriesDAO();
+                    List<ProductCategory> categories = categoriesDAO.getAllCategories();
+                    request.setAttribute("categories", categories);
+
+                    request.getRequestDispatcher("jsp/technicalSupport/createProduct.jsp").forward(request, response);
+                    return; // return!
+                }
+
+                // ==== ĐẾN ĐÂY CHẮC CHẮN ĐÚNG DỮ LIỆU, TIẾP TỤC TẠO SẢN PHẨM ====
                 DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                 String createdAt = LocalDateTime.now().format(dtf);
 
-                // Create DAO
                 ProductDAO dao = new ProductDAO();
-
-                // Generate product code if empty
+                String productCode = null;
                 if (productCode == null || productCode.trim().isEmpty()) {
                     productCode = generateRandomProductCode(dao);
                 }
-
-                // Create product object
                 Product p = new Product();
                 p.setName(name);
                 p.setProductCode(productCode);
@@ -210,16 +252,13 @@ public class ProductController extends HttpServlet {
                 p.setCreatedAt(createdAt);
                 p.setUpdatedAt(null);
 
-                // B1: Insert and get new ID
-                int newId = products.insertProduct(p);
+                int newId = dao.insertProduct(p); // Nếu đúng là ProductDAO, chỗ này là dao chứ không phải products!
 
-                // B2: Process image
                 String uploadDir = "D:/New folder/ISP490_SU25_G4/web/image";
                 File uploadPath = new File(uploadDir);
                 if (!uploadPath.exists()) {
                     uploadPath.mkdirs();
                 }
-
                 String imageFileName = null;
                 if (filePart != null && filePart.getSize() > 0) {
                     String submittedFileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
@@ -228,26 +267,21 @@ public class ProductController extends HttpServlet {
                     if (dotIndex >= 0) {
                         extension = submittedFileName.substring(dotIndex).toLowerCase();
                     }
-                    // Rename to id_product.extension format
                     imageFileName = newId + "_product" + extension;
                     filePart.write(uploadDir + File.separator + imageFileName);
 
-                    // Update product with image filename in database
                     p.setId(newId);
                     p.setImage(imageFileName);
                     dao.updateProductImage(newId, imageFileName);
                 } else {
-                    // Set default image if no file uploaded
-                    imageFileName = "default.jpg";
+                    imageFileName = "na.jpg";
                     Files.copy(
-                            Paths.get(uploadDir + File.separator + "default.jpg"),
-                            Paths.get(uploadDir + File.separator + newId + "_product.jpg")
+                            Paths.get(uploadDir + File.separator + "na.jpg"),
+                            Paths.get(uploadDir + File.separator + newId + "_product.jpg"),
+                            StandardCopyOption.REPLACE_EXISTING // tránh lỗi nếu file đã tồn tại
                     );
-                    // Update product with default image filename in database
                     dao.updateProductImage(newId, newId + "_product.jpg");
                 }
-
-                // Redirect or show message
                 request.setAttribute("redirectUrl", "ProductController");
                 request.getRequestDispatcher("editLoading.jsp").forward(request, response);
 
@@ -280,37 +314,104 @@ public class ProductController extends HttpServlet {
 
         if (service.equals("editProduct")) {
             try {
-                int id = Integer.parseInt(request.getParameter("id"));
+                List<String> errors = new ArrayList<>();
+                int id = 0;
+                try {
+                    id = Integer.parseInt(request.getParameter("id"));
+                } catch (Exception ex) {
+                    errors.add("ID sản phẩm không hợp lệ!");
+                }
+
                 String name = request.getParameter("name");
+                if (name == null || name.trim().isEmpty()) {
+                    errors.add("Tên sản phẩm không được để trống!");
+                }
+
                 String origin = request.getParameter("origin");
+                if (origin == null || origin.trim().isEmpty()) {
+                    errors.add("Xuất xứ không được để trống!");
+                }
+
                 String priceRaw = request.getParameter("price");
-// Loại cả dấu phẩy và dấu chấm (nếu dùng kiểu VN)
-                priceRaw = priceRaw.replace(",", "").replace(".", "");
-                double price = Double.parseDouble(priceRaw);
+                double price = 0;
+                if (priceRaw == null || priceRaw.trim().isEmpty()) {
+                    errors.add("Giá không được để trống!");
+                } else {
+                    try {
+                        priceRaw = priceRaw.replace(",", "").replace(".", "");
+                        price = Double.parseDouble(priceRaw);
+                        if (price < 0) {
+                            errors.add("Giá phải lớn hơn hoặc bằng 0!");
+                        }
+                    } catch (NumberFormatException ex) {
+                        errors.add("Giá không hợp lệ!");
+                    }
+                }
 
                 String description = request.getParameter("description");
-                int categoryId = Integer.parseInt(request.getParameter("categoryId"));
+                String categoryIdRaw = request.getParameter("categoryId");
+                int categoryId = 0;
+                if (categoryIdRaw == null || categoryIdRaw.trim().isEmpty()) {
+                    errors.add("Danh mục không được để trống!");
+                } else {
+                    try {
+                        categoryId = Integer.parseInt(categoryIdRaw);
+                    } catch (NumberFormatException ex) {
+                        errors.add("Danh mục không hợp lệ!");
+                    }
+                }
+
                 String createdAt = request.getParameter("createdAt");
                 String updatedAt = request.getParameter("updatedAt");
                 boolean isDeleted = "true".equals(request.getParameter("isDeleted"));
 
-                // Thư mục chứa ảnh
+                Part filePart = null;
+                try {
+                    filePart = request.getPart("image");
+                } catch (Exception ex) {
+                    // Bỏ qua, filePart = null nếu không có file mới
+                }
+
+                String oldImage = request.getParameter("oldImage");
+
+                // Nếu có lỗi thì forward về lại form và giữ lại dữ liệu đã nhập
+                if (!errors.isEmpty()) {
+                    Product p = new Product();
+                    p.setId(id);
+                    p.setName(name);
+                    p.setOrigin(origin);
+                    p.setPrice(price);
+                    p.setDescription(description);
+                    p.setCategoryId(categoryId);
+                    p.setIsDeleted(isDeleted);
+                    p.setCreatedAt(createdAt);
+                    p.setUpdatedAt(updatedAt);
+                    p.setImage(oldImage);
+
+                    request.setAttribute("product", p);
+                    request.setAttribute("editErrors", errors);
+
+                    // Lấy danh sách danh mục
+                    ProductCategoriesDAO categoriesDAO = new ProductCategoriesDAO();
+                    List<ProductCategory> categories = categoriesDAO.getAllCategories();
+                    request.setAttribute("categories", categories);
+
+                    request.getRequestDispatcher("jsp/technicalSupport/editProductDetail.jsp").forward(request, response);
+                    return;
+                }
+
+                // ĐẾN ĐÂY DỮ LIỆU ĐÃ HỢP LỆ, XỬ LÝ UPDATE
                 String uploadDir = "D:\\New folder\\ISP490_SU25_G4\\web\\image";
                 File uploadPath = new File(uploadDir);
                 if (!uploadPath.exists()) {
                     uploadPath.mkdirs();
                 }
 
-                // Xử lý ảnh
                 String imageFileName = null;
-                Part filePart = request.getPart("image");
-                String oldImage = request.getParameter("oldImage");
-
-                // Danh sách các file ảnh cũ cần xóa
                 List<File> filesToDelete = new ArrayList<>();
 
                 if (filePart != null && filePart.getSize() > 0) {
-                    // Lấy tên file gốc và extension
+                    // Xử lý file mới
                     String submittedFileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
                     String extension = "";
                     int dotIndex = submittedFileName.lastIndexOf('.');
@@ -318,13 +419,9 @@ public class ProductController extends HttpServlet {
                         extension = submittedFileName.substring(dotIndex).toLowerCase();
                     }
 
-                    // Tạo tên file ảnh duy nhất (tránh cache)
                     imageFileName = id + "_product_" + System.currentTimeMillis() + extension;
-
-                    // Ghi ảnh vào thư mục
                     filePart.write(uploadDir + File.separator + imageFileName);
 
-                    // Tìm tất cả ảnh cũ của sản phẩm để xóa sau
                     File[] existingFiles = uploadPath.listFiles();
                     if (existingFiles != null) {
                         String prefix = id + "_product";
@@ -335,7 +432,7 @@ public class ProductController extends HttpServlet {
                         }
                     }
                 } else {
-                    // Không upload ảnh mới, tìm ảnh cũ nếu có
+                    // Không upload file mới, tìm ảnh cũ nếu có
                     File[] existingFiles = uploadPath.listFiles();
                     if (existingFiles != null) {
                         String prefix = id + "_product";
@@ -348,14 +445,16 @@ public class ProductController extends HttpServlet {
                     }
                 }
 
-                // Nếu vẫn không có ảnh → dùng mặc định
+                // Nếu vẫn không có ảnh thì dùng default
                 if (imageFileName == null) {
                     imageFileName = "default.jpg";
                 }
+
                 DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-                //Check product_code ở backend
-                Product old = products.getProductById(id);
+                ProductDAO dao = new ProductDAO();
+                Product old = dao.getProductById(id);
                 String productCode = old.getProductCode();
+
                 Product p = new Product();
                 p.setId(id);
                 p.setName(name);
@@ -369,44 +468,38 @@ public class ProductController extends HttpServlet {
                 p.setCreatedAt(createdAt);
                 p.setUpdatedAt(LocalDateTime.now().format(dtf));
 
-                // Gọi DAO để cập nhật sản phẩm
-                ProductDAO dao = new ProductDAO();
                 boolean success = dao.editProduct(p);
 
-                // Xóa ảnh cũ SAU KHI cập nhật thành công
+                // Xóa ảnh cũ nếu cập nhật thành công
                 if (success && !filesToDelete.isEmpty()) {
                     new Thread(() -> {
                         for (File file : filesToDelete) {
                             try {
                                 if (file.exists()) {
-                                    if (file.delete()) {
-                                        System.out.println("Đã xóa ảnh cũ: " + file.getName());
-                                    } else {
-                                        System.err.println("Không thể xóa: " + file.getName());
-                                    }
+                                    file.delete();
                                 }
                             } catch (SecurityException e) {
-                                System.err.println("Lỗi bảo mật khi xóa ảnh: " + e.getMessage());
+                                // Ignore
                             }
                         }
                     }).start();
                 }
 
-                // Gán lại ảnh cho view (thêm cache-busting)
                 long timestamp = System.currentTimeMillis();
                 request.setAttribute("imageVersion", timestamp);
                 request.setAttribute("imageFileName", imageFileName + "?v=" + timestamp);
 
-                // Điều hướng sau khi cập nhật
                 if (success) {
                     request.setAttribute("redirectUrl", "ProductController?cache=" + timestamp);
                     request.getRequestDispatcher("editLoading.jsp").forward(request, response);
                 } else {
                     request.setAttribute("product", p);
                     request.setAttribute("editError", "Cập nhật thất bại!");
-                    request.getRequestDispatcher("ProductController").forward(request, response);
+                    ProductCategoriesDAO categoriesDAO = new ProductCategoriesDAO();
+                    List<ProductCategory> categories = categoriesDAO.getAllCategories();
+                    request.setAttribute("categories", categories);
+                    request.getRequestDispatcher("jsp/technicalSupport/editProductDetail.jsp").forward(request, response);
                 }
-
             } catch (Exception e) {
                 e.printStackTrace();
                 request.setAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
