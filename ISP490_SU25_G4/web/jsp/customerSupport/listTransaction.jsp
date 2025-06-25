@@ -1,15 +1,8 @@
-<%-- 
-    Document   : listTransaction
-    Created on : Jun 14, 2025, 1:33:23 PM
-    Author     : NGUYEN MINH
---%>
-
+<%-- File: /view/customerSupport/listTransaction.jsp --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
-
-<c:set var="currentPage" value="listTransaction" />
-
+<%-- CẬP NHẬT: Thêm thư viện JSTL format để định dạng ngày tháng --%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -22,53 +15,39 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <script src="https://unpkg.com/feather-icons"></script>
-        <link rel="stylesheet" href="../../css/style.css">
-        <link rel="stylesheet" href="../../css/header.css">
-        <link rel="stylesheet" href="../../css/mainMenu.css">
-        <link rel="stylesheet" href="../../css/listTransaction.css"> 
-        <link rel="stylesheet" href="../../css/pagination.css">
+
+        <%-- CẬP NHẬT: Sửa tất cả đường dẫn CSS để dùng contextPath --%>
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/listTransaction.css"> 
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pagination.css">
     </head>
     <body>
         <div class="app-container">
-            <jsp:include page="../../mainMenu.jsp"/>
+            <%-- CẬP NHẬT: Sửa đường dẫn để dùng contextPath --%>
+            <jsp:include page="/mainMenu.jsp"/>
             <main class="main-content">
                 <header class="page-header">
                     <div class="title-section">
                         <div class="title">Lịch sử giao dịch</div>
-                        <div class="breadcrumb">Hóa đơn / <span>Lịch sử giao dịch</span></div>
+                        <div class="breadcrumb">Yêu cầu / <span>Lịch sử giao dịch</span></div>
                     </div>
-                    <button class="notification-btn">
-                        <i data-feather="bell"></i>
-                        <span class="notification-badge"></span>
-                    </button>
                 </header>
 
                 <div class="page-content">
                     <div class="content-card">
-                        <form class="table-toolbar" action="your-servlet-url-for-filtering" method="get">
+                        <%-- CẬP NHẬT: Sửa action của form và link "Tạo Phiếu" --%>
+                        <form class="table-toolbar" action="${pageContext.request.contextPath}/ticket" method="get">
+                             <input type="hidden" name="action" value="list">
                             <div class="search-box">
                                 <i data-feather="search" class="feather-search"></i>
-                                <input type="text" name="query" placeholder="Tìm kiếm...">
+                                <input type="text" name="query" placeholder="Tìm kiếm theo mã phiếu, khách hàng...">
                             </div>
-                            <div class="filter-group">
-                                <label for="type-filter">Loại giao dịch</label>
-                                <select id="type-filter" name="type">
-                                    <option value="">Tất cả</option>
-                                    <option value="Hỗ trợ sự cố">Hỗ trợ sự cố</option>
-                                    <option value="Bảo trì định kỳ">Bảo trì định kỳ</option>
-                                </select>
-                            </div>
-                            <div class="filter-group">
-                                <label for="status-filter">Trạng thái</label>
-                                <select id="status-filter" name="status">
-                                    <option value="">Tất cả</option>
-                                    <option value="completed">Đã hoàn thành</option>
-                                    <option value="processing">Đang xử lý</option>
-                                </select>
-                            </div>
+                            <%-- Phần lọc sẽ được phát triển sau --%>
                             <button type="submit" class="btn btn-secondary"><i data-feather="search"></i>Tìm kiếm</button>
                             <div class="toolbar-actions">
-                                <a href="createTicket.jsp" class="btn btn-primary"><i data-feather="plus"></i>Tạo Phiếu</a>
+                                <a href="${pageContext.request.contextPath}/ticket?action=create" class="btn btn-primary"><i data-feather="plus"></i>Tạo Phiếu</a>
                             </div>
                         </form>
 
@@ -77,49 +56,67 @@
                                 <p style="grid-column: 1 / -1; text-align: center;">Không có giao dịch nào để hiển thị.</p>
                             </c:if>
 
-                            <%-- Vòng lặp JSTL để hiển thị dữ liệu thật từ database --%>
                             <c:forEach var="tx" items="${transactions}">
                                 <div class="transaction-card">
                                     <div class="card-header">
-                                        <a href="../customerSupport/viewTransaction.jsp?id=${tx.id}" class="transaction-code-link">
-                                            <span class="transaction-code">${tx.transactionCode}</span>
+                                        <%-- CẬP NHẬT: Sử dụng requestCode từ model --%>
+                                        <a href="#" class="transaction-code-link">
+                                            <span class="transaction-code">${tx.requestCode}</span>
                                         </a>
-                                        <span class="status-pill ${tx.statusClass}">${tx.status}</span>
+                                        
+                                        <%-- CẬP NHẬT: Chuyển đổi status sang tiếng Việt và thêm class màu --%>
+                                        <c:choose>
+                                            <c:when test="${tx.status == 'new'}"><span class="status-pill status-new">Mới</span></c:when>
+                                            <c:when test="${tx.status == 'assigned'}"><span class="status-pill status-assigned">Đã giao</span></c:when>
+                                            <c:when test="${tx.status == 'in_progress'}"><span class="status-pill status-in-progress">Đang xử lý</span></c:when>
+                                            <c:when test="${tx.status == 'resolved'}"><span class="status-pill status-resolved">Đã xử lý</span></c:when>
+                                            <c:when test="${tx.status == 'closed'}"><span class="status-pill status-closed">Đã đóng</span></c:when>
+                                            <c:otherwise><span class="status-pill">${tx.status}</span></c:otherwise>
+                                        </c:choose>
                                     </div>
                                     <div class="card-body">
                                         <div class="card-info-row">
                                             <i data-feather="briefcase"></i>
-                                            <span class="info-value">${tx.contractCode}</span>
+                                            <%-- CẬP NHẬT: Kiểm tra nếu hợp đồng có tồn tại --%>
+                                            <span class="info-value">${not empty tx.contractCode ? tx.contractCode : 'Không có hợp đồng'}</span>
                                         </div>
                                         <div class="card-info-row">
                                             <i data-feather="user"></i>
-                                            <span class="info-value">${tx.customer}</span>
+                                            <%-- CẬP NHẬT: Sử dụng enterpriseName từ model --%>
+                                            <span class="info-value">${tx.enterpriseName}</span>
                                         </div>
                                         <div class="card-info-row">
                                             <i data-feather="tool"></i>
-                                            <span class="info-value">${tx.type}</span>
+                                            <%-- CẬP NHẬT: Sử dụng serviceName từ model --%>
+                                            <span class="info-value">${tx.serviceName}</span>
+                                        </div>
+                                        <div class="card-info-row">
+                                            <i data-feather="calendar"></i>
+                                            <%-- CẬP NHẬT: Định dạng lại ngày tạo cho đẹp hơn --%>
+                                            <span class="info-value"><fmt:formatDate value="${tx.createdAt}" pattern="HH:mm dd/MM/yyyy" /></span>
                                         </div>
                                     </div>
                                     <div class="card-footer">
                                         <div class="billing-status">
+                                            <%-- CẬP NHẬT: Sử dụng isIsBillable() theo model của bạn --%>
                                             <c:if test="${tx.isBillable}">
                                                 <i data-feather="dollar-sign" class="icon-billable" title="Có tính phí"></i>
                                             </c:if>
                                             <c:if test="${not tx.isBillable}">
-                                                <i data-feather="dollar-sign" class="icon-non-billable" title="Miễn phí (Bảo hành/SLA)"></i>
+                                                <i data-feather="dollar-sign" class="icon-non-billable" title="Miễn phí (Bảo hành)"></i>
                                             </c:if>
                                         </div>
                                         <div class="action-buttons">
-                                            <a href="../customerSupport/viewTransaction.jsp?id=${tx.id}" title="Xem chi tiết"><i data-feather="eye" class="icon-view"></i></a>
-                                            <a href="../customerSupport/editTransaction?id=${tx.id}" title="Sửa"><i data-feather="edit-2" class="icon-edit"></i></a>
-                                            <a href="deleteTransaction?id=${tx.id}" onclick="return confirm('Xóa giao dịch ${tx.transactionCode}?')" title="Xóa"><i data-feather="trash-2" class="icon-delete"></i></a>
+                                            <%-- Các link này sẽ được làm sau --%>
+                                            <a href="#" title="Xem chi tiết"><i data-feather="eye" class="icon-view"></i></a>
+                                            <a href="#" title="Sửa"><i data-feather="edit-2" class="icon-edit"></i></a>
+                                            <a href="#" onclick="return confirm('Xóa giao dịch ${tx.requestCode}?')" title="Xóa"><i data-feather="trash-2" class="icon-delete"></i></a>
                                         </div>
                                     </div>
                                 </div>
                             </c:forEach>
                         </div>
-
-                        <jsp:include page="../../pagination.jsp" />
+                        <%-- <jsp:include page="/view/pagination.jsp" /> --%>
                     </div>
                 </div>
             </main>
@@ -129,8 +126,6 @@
                 feather.replace();
             });
         </script>
-        <script src="../../js/mainMenu.js"></script>
-        <script src="../../js/editProfile.js"></script>
+        <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>
-
