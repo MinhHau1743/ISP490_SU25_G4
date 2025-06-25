@@ -35,12 +35,14 @@ public class EnterpriseContactDAO {
     /**
      * Updates the primary contact information for an enterprise.
      */
-    public boolean updatePrimaryContact(Connection conn, int enterpriseId, String phone, String email) throws SQLException {
-        String sql = "UPDATE EnterpriseContacts SET phone_number = ?, email = ? WHERE enterprise_id = ? AND is_primary_contact = 1";
+    public boolean updatePrimaryContact(Connection conn, int enterpriseId, String fullName, String position, String phone, String email) throws SQLException {
+        String sql = "UPDATE EnterpriseContacts SET full_name = ?, position = ?, phone_number = ?, email = ? WHERE enterprise_id = ? AND is_primary_contact = 1";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, phone);
-            ps.setString(2, email);
-            ps.setInt(3, enterpriseId);
+            ps.setString(1, fullName);
+            ps.setString(2, position);
+            ps.setString(3, phone);
+            ps.setString(4, email);
+            ps.setInt(5, enterpriseId);
             return ps.executeUpdate() > 0;
         }
     }

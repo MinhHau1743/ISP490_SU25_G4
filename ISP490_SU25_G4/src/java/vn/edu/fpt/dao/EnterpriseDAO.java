@@ -53,14 +53,15 @@ public class EnterpriseDAO extends DBContext {
     }
 
     // Tương tự, tạo các phương thức insert cho EnterpriseContacts và EnterpriseAssignments
-    public void insertEnterpriseContact(Connection conn, int enterpriseId, String fullName, String phone, String email) throws SQLException {
-        String sql = "INSERT INTO EnterpriseContacts (enterprise_id, full_name, phone_number, email, is_primary_contact) VALUES (?, ?, ?, ?, ?)";
+    public void insertEnterpriseContact(Connection conn, int enterpriseId, String fullName, String position, String phone, String email) throws SQLException {
+        String sql = "INSERT INTO EnterpriseContacts (enterprise_id, full_name, position, phone_number, email, is_primary_contact) VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, enterpriseId);
             ps.setString(2, fullName);
-            ps.setString(3, phone);
-            ps.setString(4, email);
-            ps.setBoolean(5, true); // Đánh dấu là người liên hệ chính
+            ps.setString(3, position);
+            ps.setString(4, phone);
+            ps.setString(5, email);
+            ps.setBoolean(6, true); // Đánh dấu là người liên hệ chính
             ps.executeUpdate();
         }
     }

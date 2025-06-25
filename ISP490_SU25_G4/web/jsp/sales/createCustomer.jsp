@@ -103,16 +103,10 @@
                                     </div>
                                     <div class="customer-main-info" style="width: 100%;">
                                         <div class="form-group" style="margin-bottom: 16px;">
-                                            <label for="customerName">Tên khách hàng (*)</label>
+                                            <label for="customerName">Tên doanh nghiệp (*)</label>
                                             <input type="text" id="customerName" name="customerName" class="form-control" placeholder="Nhập tên công ty hoặc cá nhân" required>
                                         </div>
-                                        <div class="form-group">
-                                            <label>Loại khách hàng (*)</label>
-                                            <div class="radio-group">
-                                                <label><input type="radio" name="customerTypeRadio" value="individual" checked> Cá nhân</label>
-                                                <label><input type="radio" name="customerTypeRadio" value="business"> Doanh nghiệp</label>
-                                            </div>
-                                        </div>
+                                        
                                     </div>
                                 </div>
                             </div>
@@ -121,10 +115,12 @@
                                 <h3 class="card-title">Thông tin liên hệ</h3>
                                 <div class="card-body">
                                     <div class="info-grid">
-                                        <div class="form-group"><label for="phone">Số điện thoại (*)</label><input type="tel" id="phone" name="phone" class="form-control" placeholder="VD: 0987654321" required></div>
-                                        <div class="form-group"><label for="email">Email</label><input type="email" id="email" name="email" class="form-control" placeholder="VD: example@email.com"></div>
-                                        <div class="form-group"><label for="taxCode">Mã số thuế</label><input type="text" id="taxCode" name="taxCode" class="form-control" placeholder="Nhập mã số thuế"></div>
-                                        <div class="form-group"><label for="bankNumber">Số tài khoản ngân hàng</label><input type="text" id="bankNumber" name="bankNumber" class="form-control" placeholder="Nhập số tài khoản ngân hàng"></div>
+                                        <div class="form-group"><label for="fullName">Người đại diện (*)</label><input type="text" id="fullName" name="fullName" class="form-control" required></div>
+                                        <div class="form-group"><label for="position">Chức vụ (*)</label><input type="text" id="position" name="position" class="form-control" required></div>
+                                        <div class="form-group"><label for="phone">Số điện thoại (*)</label><input type="tel" id="phone" name="phone" class="form-control" required></div>
+                                        <div class="form-group"><label for="email">Email</label><input type="email" id="email" name="email" class="form-control"></div>
+                                        <div class="form-group"><label for="taxCode">Mã số thuế</label><input type="text" id="taxCode" name="taxCode" class="form-control"></div>
+                                        <div class="form-group"><label for="bankNumber">Số tài khoản ngân hàng</label><input type="text" id="bankNumber" name="bankNumber" class="form-control"></div>
                                     </div>
 
                                     <hr style="margin: 1.5rem 0;">

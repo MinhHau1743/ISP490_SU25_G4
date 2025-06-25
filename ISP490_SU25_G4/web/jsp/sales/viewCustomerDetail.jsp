@@ -136,6 +136,11 @@
                                     <div class="detail-card">
                                         <h3 class="card-title">Thông tin Doanh nghiệp & Liên hệ</h3>
                                         <div class="card-body info-grid">
+                                            <c:if test="${not empty customer.contacts}">
+                                                <c:set var="primaryContact" value="${customer.contacts[0]}"/>
+                                            </c:if>
+                                            <div class="info-item"><span class="label"><i data-feather="user"></i>Người đại diện</span><span class="value"><c:out value="${primaryContact.fullName}"/></span></div>
+                                            <div class="info-item"><span class="label"><i data-feather="briefcase"></i>Chức vụ</span><span class="value"><c:out value="${primaryContact.position}"/></span></div>
                                             <div class="info-item"><span class="label"><i data-feather="phone"></i>Số điện thoại</span><span class="value"><c:out value="${customer.contacts[0].phoneNumber}"/></span></div>
                                             <div class="info-item"><span class="label"><i data-feather="mail"></i>Email</span><span class="value"><a href="mailto:<c:out value='${customer.contacts[0].email}'/>"><c:out value="${customer.contacts[0].email}"/></a></span></div>
                                             <div class="info-item"><span class="label"><i data-feather="hash"></i>Mã số thuế</span><span class="value"><c:out value="${not empty customer.taxCode ? customer.taxCode : 'N/A'}"/></span></div>

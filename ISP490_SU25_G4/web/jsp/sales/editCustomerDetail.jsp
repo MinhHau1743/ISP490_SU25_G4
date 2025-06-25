@@ -92,6 +92,14 @@
                                         <c:if test="${not empty customer.contacts}">
                                             <c:set var="primaryContact" value="${customer.contacts[0]}"/>
                                         </c:if>
+                                        <div class="form-group">
+                                            <label for="representative">Người đại diện (*)</label>
+                                            <input type="text" id="fullName" name="fullName" class="form-control" value="<c:out value='${primaryContact.fullName}'/>" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="position">Chức vụ (*)</label>
+                                            <input type="text" id="position" name="position" class="form-control" value="<c:out value='${primaryContact.position}'/>" required>
+                                        </div>
                                         <div class="form-group"><label for="phone">Số điện thoại (*)</label><input type="tel" id="phone" name="phone" class="form-control" value="<c:out value='${primaryContact.phoneNumber}'/>" required></div>
                                         <div class="form-group"><label for="email">Email</label><input type="email" id="email" name="email" class="form-control" value="<c:out value='${primaryContact.email}'/>"></div>
                                         <div class="form-group"><label for="taxCode">Mã số thuế</label><input type="text" id="taxCode" name="taxCode" class="form-control" value="<c:out value='${customer.taxCode}'/>"></div>

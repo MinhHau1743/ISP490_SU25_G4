@@ -88,6 +88,8 @@ public class EditCustomerController extends HttpServlet {
             String customerName = request.getParameter("name");
             String taxCode = request.getParameter("taxCode");
             String bankNumber = request.getParameter("bankNumber");
+            String fullName = request.getParameter("fullName");
+            String position = request.getParameter("position");
             String phone = request.getParameter("phone");
             String email = request.getParameter("email");
             int customerTypeId = Integer.parseInt(request.getParameter("customerTypeId"));
@@ -114,7 +116,7 @@ public class EditCustomerController extends HttpServlet {
 
             new EnterpriseDAO().updateEnterprise(conn, enterpriseToUpdate);
             new AddressDAO().updateAddress(conn, addressId, streetAddress, wardId, districtId, provinceId);
-            new EnterpriseContactDAO().updatePrimaryContact(conn, enterpriseId, phone, email);
+            new EnterpriseContactDAO().updatePrimaryContact(conn, enterpriseId, fullName, position, phone, email);
             new EnterpriseAssignmentDAO().updateMainAssignment(conn, enterpriseId, employeeId);
 
             conn.commit();
