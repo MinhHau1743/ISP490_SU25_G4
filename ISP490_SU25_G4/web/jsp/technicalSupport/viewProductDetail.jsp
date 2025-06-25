@@ -46,7 +46,7 @@
                                 <div class="product-gallery">
                                     <div class="main-image">
                                         <%-- Hiển thị ảnh đầu tiên trong danh sách làm ảnh chính --%>
-                                        <img id="mainProductImage" src="${pageContext.request.contextPath}/image/${imageFileName}" alt="Main image of ${product.name}">
+                                        <img id="mainProductImage" src="${pageContext.request.contextPath}/image/${product.image}" alt="Main image of ${product.name}">
                                     </div>
                                     <div class="thumbnail-list">
                                         <%-- Lặp qua danh sách ảnh để hiển thị thumbnail --%>
