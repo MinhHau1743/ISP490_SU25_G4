@@ -108,6 +108,8 @@ public class CreateCustomerController extends HttpServlet {
             }
 
             // Get other form parameters
+            String fullName = request.getParameter("fullName");
+            String position = request.getParameter("position");           
             String phone = request.getParameter("phone");
             String email = request.getParameter("email");
             String taxCode = request.getParameter("taxCode");
@@ -142,7 +144,7 @@ public class CreateCustomerController extends HttpServlet {
             // 2. Insert enterprise and get the new ID
             int newEnterpriseId = enterpriseDAO.insertEnterprise(conn, customerName, customerGroupId, newAddressId, taxCode, bankNumber, avatarDbPath);
             // 3. Insert primary contact for the enterprise
-            enterpriseDAO.insertEnterpriseContact(conn, newEnterpriseId, customerName, phone, email);
+            enterpriseDAO.insertEnterpriseContact(conn, newEnterpriseId, fullName, position, phone, email);
             // 4. Assign the responsible employee
             assignmentDAO.insertAssignment(conn, newEnterpriseId, employeeId, "account_manager");
 
