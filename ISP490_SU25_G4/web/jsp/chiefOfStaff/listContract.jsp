@@ -1,7 +1,7 @@
-<%-- 
+<%--
     Document   : listContract
-    Created on : Jun 20, 2025, 8:44:52 AM
-    Author     : NGUYEN MINH
+    Created on : Jun 25, 2025, 11:20:00 PM
+    Author     : NGUYEN MINH (Adjusted by Gemini to match DB Schema)
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
@@ -16,19 +16,17 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Danh sách Hợp đồng</title>
-
+        
+        <%-- Các file CSS/JS và font chữ của bạn được giữ nguyên --%>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
         <script src="https://unpkg.com/feather-icons"></script>
-
-        <link rel="stylesheet" href="../../css/style.css">
-        <link rel="stylesheet" href="../../css/mainMenu.css">
-        <link rel="stylesheet" href="../../css/pagination.css">
-        <link rel="stylesheet" href="../../css/listContract.css">
-
-
+        
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pagination.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/listContract.css">
     </head>
     <body>
         <div class="app-container">
@@ -37,7 +35,7 @@
                 <header class="page-header">
                     <div class="title-section">
                         <h1 class="title">Danh sách Hợp đồng</h1>
-                        <div class="breadcrumb">Hợp đồng<span>Danh sách</span></div>
+                        <div class="breadcrumb">Hợp đồng<span>/</span><span>Danh sách</span></div>
                     </div>
                     <div class="header-actions">
                         <button class="notification-btn"><i data-feather="bell"></i></button>
@@ -50,11 +48,12 @@
                             <div class="table-toolbar">
                                 <div class="search-box">
                                     <i data-feather="search" class="feather-search"></i>
+                                    <%-- Tìm kiếm theo contract_code và contract_name --%>
                                     <input type="text" name="searchQuery" placeholder="Tìm mã, tên hợp đồng..." value="${param.searchQuery}">
                                 </div>
                                 <button type="button" class="filter-button" id="filterBtn"><i data-feather="filter"></i><span>Bộ lọc</span></button>
                                 <div class="toolbar-actions">
-                                    <a href="createContract.jsp" class="btn btn-primary"><i data-feather="plus"></i>Tạo Hợp đồng</a>
+                                    <a href="contract?action=create" class="btn btn-primary"><i data-feather="plus"></i>Tạo Hợp đồng</a>
                                 </div>
                             </div>
                             <div class="filter-container" id="filterContainer">
@@ -63,24 +62,28 @@
                                         <label for="status-filter">Trạng thái</label>
                                         <select id="status-filter" name="status">
                                             <option value="">Tất cả</option>
+                                            <option value="pending" ${param.status == 'pending' ? 'selected' : ''}>Chờ duyệt</option>
                                             <option value="active" ${param.status == 'active' ? 'selected' : ''}>Còn hiệu lực</option>
                                             <option value="expiring" ${param.status == 'expiring' ? 'selected' : ''}>Sắp hết hạn</option>
                                             <option value="expired" ${param.status == 'expired' ? 'selected' : ''}>Đã hết hạn</option>
+                                            <option value="cancelled" ${param.status == 'cancelled' ? 'selected' : ''}>Đã hủy</option>
                                         </select>
                                     </div>
+                                    
+                                    <%-- 
+                                        ĐÃ XÓA BỘ LỌC "LOẠI HỢP ĐỒNG"
+                                        Lý do: Bảng `Contracts` trong CSDL của bạn không có cột 'contract_type'.
+                                        Để thêm lại bộ lọc này, bạn cần chạy lệnh SQL:
+                                        ALTER TABLE Contracts ADD COLUMN contract_type VARCHAR(50) NULL;
+                                        Và cập nhật logic ở backend.
+                                    --%>
+                                    
                                     <div class="filter-group">
-                                        <label for="type-filter">Loại hợp đồng</label>
-                                        <select id="type-filter" name="type">
-                                            <option value="">Tất cả</option>
-                                            <option value="maintenance" ${param.type == 'maintenance' ? 'selected' : ''}>Bảo trì</option>
-                                            <option value="supply" ${param.type == 'supply' ? 'selected' : ''}>Cung cấp</option>
-                                        </select>
-                                    </div>
-                                    <div class="filter-group">
-                                        <label>Ngày ký</label>
+                                        <label>Ngày ký (từ `start_date`)</label>
                                         <div class="date-inputs">
-                                            <input type="date" name="signDateFrom" value="${param.signDateFrom}">
-                                            <input type="date" name="signDateTo" value="${param.signDateTo}">
+                                            <%-- Đổi tên param để rõ nghĩa hơn, map với `start_date` --%>
+                                            <input type="date" name="startDateFrom" value="${param.startDateFrom}">
+                                            <input type="date" name="startDateTo" value="${param.startDateTo}">
                                         </div>
                                     </div>
                                 </div>
@@ -106,41 +109,46 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <%-- Kiểm tra nếu danh sách rỗng --%>
                                     <c:if test="${empty contractList}">
                                         <tr>
                                             <td colspan="8" style="text-align: center; padding: 40px;">Không có hợp đồng nào phù hợp.</td>
                                         </tr>
                                     </c:if>
 
-                                    <%-- Vòng lặp để hiển thị dữ liệu hợp đồng --%>
                                     <c:forEach var="contract" items="${contractList}">
                                         <tr>
+                                            <%-- contract.contractCode -> Contracts.contract_code --%>
                                             <td><a href="contract?action=view&id=${contract.id}" class="contract-code">${contract.contractCode}</a></td>
-                                            <td>${contract.name}</td>
-                                            <td class="customer-name">${contract.customerName}</td>
-                                            <td><fmt:formatDate value="${contract.signDate}" pattern="dd/MM/yyyy"/></td>
-                                            <td><fmt:formatDate value="${contract.expirationDate}" pattern="dd/MM/yyyy"/></td>
-                                            <td class="contract-value"><fmt:formatNumber value="${contract.value}" type="currency" currencyCode="VND"/></td>
+                                            
+                                            <%-- contract.contractName -> Contracts.contract_name --%>
+                                            <td>${contract.contractName}</td>
+                                            
+                                            <%-- contract.enterpriseName -> Lấy từ bảng Enterprises qua JOIN --%>
+                                            <td class="customer-name">${contract.enterpriseName}</td>
+                                            
+                                            <%-- contract.startDate -> Contracts.start_date --%>
+                                            <td><fmt:formatDate value="${contract.startDate}" pattern="dd/MM/yyyy"/></td>
+                                            
+                                            <%-- contract.endDate -> Contracts.end_date --%>
+                                            <td><fmt:formatDate value="${contract.endDate}" pattern="dd/MM/yyyy"/></td>
+                                            
+                                            <%-- contract.totalValue -> Tính từ bảng ContractProducts qua JOIN và SUM --%>
+                                            <td class="contract-value"><fmt:formatNumber value="${contract.totalValue}" type="currency" currencySymbol="₫" maxFractionDigits="0"/></td>
+                                            
+                                            <%-- contract.status -> Contracts.status --%>
                                             <td>
                                                 <c:choose>
-                                                    <c:when test="${contract.status == 'active'}">
-                                                        <span class="status-pill status-active">Còn hiệu lực</span>
-                                                    </c:when>
-                                                    <c:when test="${contract.status == 'expiring'}">
-                                                        <span class="status-pill status-expiring">Sắp hết hạn</span>
-                                                    </c:when>
-                                                    <c:when test="${contract.status == 'expired'}">
-                                                        <span class="status-pill status-expired">Đã hết hạn</span>
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                        <span class="status-pill">${contract.status}</span>
-                                                    </c:otherwise>
+                                                    <c:when test="${contract.status == 'active'}"><span class="status-pill status-active">Còn hiệu lực</span></c:when>
+                                                    <c:when test="${contract.status == 'pending'}"><span class="status-pill status-pending">Chờ duyệt</span></c:when>
+                                                    <c:when test="${contract.status == 'expiring'}"><span class="status-pill status-expiring">Sắp hết hạn</span></c:when>
+                                                    <c:when test="${contract.status == 'expired'}"><span class="status-pill status-expired">Đã hết hạn</span></c:when>
+                                                    <c:when test="${contract.status == 'cancelled'}"><span class="status-pill status-cancelled">Đã hủy</span></c:when>
+                                                    <c:otherwise><span class="status-pill">${contract.status}</span></c:otherwise>
                                                 </c:choose>
                                             </td>
                                             <td class="table-actions">
-                                                <a href="viewContractDetail.jsp" title="Xem"><i data-feather="eye"></i></a>
-                                                <a href="editContractDetail.jsp" title="Sửa"><i data-feather="edit-2"></i></a>
+                                                <a href="contract?action=view&id=${contract.id}" title="Xem"><i data-feather="eye"></i></a>
+                                                <a href="contract?action=edit&id=${contract.id}" title="Sửa"><i data-feather="edit-2"></i></a>
                                                 <a href="#" onclick="confirmDelete('${contract.id}', '${contract.contractCode}')" title="Xóa"><i data-feather="trash-2"></i></a>
                                             </td>
                                         </tr>
@@ -153,9 +161,7 @@
                 </div>
             </main>
         </div>
-        <script src="../../js/listContract.js"></script>
-        <script src="../../js/mainMenu.js"></script>
+        <script src="${pageContext.request.contextPath}/js/listContract.js"></script>
+        <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>
-
-
