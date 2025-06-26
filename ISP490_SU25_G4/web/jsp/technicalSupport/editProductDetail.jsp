@@ -37,7 +37,7 @@
                 <div class="page-content">
                     <div class="content-card">
 
-                        <form action="ProductController" method="post" enctype="multipart/form-data">
+                        <form action="editProduct" method="post" enctype="multipart/form-data">
 
                             <%-- Các input ẩn quan trọng để xác định hành động và đối tượng --%>
                             <input type="hidden" name="service" value="editProduct">
