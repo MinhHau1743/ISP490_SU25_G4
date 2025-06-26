@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const openDeleteModal = (id, name, image) => {
             deleteMessage.innerHTML = `Bạn có chắc chắn muốn xóa sản phẩm '<strong>${name}</strong>'?`;
             // Cập nhật link xóa trong servlet của bạn
-            confirmDeleteBtn.href = `deleteProduct?id=${id}`;
+            confirmDeleteBtn.href = `ProductController?service=deleteProduct&id=${id}&image=${image}`;
             deleteModal.classList.add('show');
             feather.replace(); // Phải gọi lại để render icon X và alert-triangle trong modal
         };
