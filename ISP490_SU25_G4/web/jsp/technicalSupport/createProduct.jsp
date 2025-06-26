@@ -49,7 +49,7 @@
 
                 <section class="content-body">
                     <div class="form-container">
-                        <form action="ProductController" method="POST" class="product-form" enctype="multipart/form-data">
+                        <form action="createProduct" method="POST" class="product-form" enctype="multipart/form-data">
                             <input type="hidden" name="service" value="createProduct">
                             <div class="form-main-layout">
                                 <div class="product-image-section">
@@ -68,10 +68,16 @@
                                         <div class="details-grid">
 
                                             <!-- Tên sản phẩm -->
-                                            <div class="form-group">
+                                            <div class="form-group full-width">
                                                 <label class="form-label" for="productName">Tên sản phẩm</label>
                                                 <input type="text" id="productName" name="name" class="form-control"
                                                        value="${product.name}" required>
+                                            </div>
+                                            
+                                            <div class="form-group">
+                                                <label class="form-label" for="productCode">Mã sản phẩm</label>
+                                                <input type="text" id="productCode" name="productCode" class="form-control"
+                                                       value="${product.productCode}" required>
                                             </div>
 
 

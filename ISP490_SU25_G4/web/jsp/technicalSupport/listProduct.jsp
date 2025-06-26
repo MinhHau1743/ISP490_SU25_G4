@@ -55,7 +55,7 @@
                                 </div>
                                 <button type="button" class="filter-button" id="filterBtn"><i data-feather="filter"></i><span>Bộ lọc</span></button>
                                 <div class="toolbar-actions">
-                                    <a href="ProductController?service=getProductById" class="btn btn-primary">
+                                    <a href="createProduct" class="btn btn-primary">
                                         <i data-feather="plus"></i>
                                         <span>Thêm Sản phẩm</span>
                                     </a>
@@ -147,8 +147,8 @@
                                                 </div>
                                                 <div class="action-buttons">
                                                     <a href="ProductController?service=getProductById&id=${p.id}" title="Xem"><i data-feather="eye"></i></a>
-                                                    <a href="ProductController?service=getProductToEdit&id=${p.id}&image=${p.image}" title="Sửa"><i data-feather="edit-2"></i></a>
-                                                    <a href="#" class="delete-trigger-btn" data-id="${p.id}" data-name="${p.name}" data-image="${p.image}"title="Xóa"><i data-feather="trash-2"></i></a>
+                                                    <a href="editProduct?id=${p.id}" title="Sửa"><i data-feather="edit-2"></i></a>
+                                                    <a href="deleteProduct" class="delete-trigger-btn" data-id="${p.id}" data-name="${p.name}" data-image="${p.image}"title="Xóa"><i data-feather="trash-2"></i></a>
                                                 </div>
                                             </div>
                                         </div>
