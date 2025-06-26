@@ -360,48 +360,47 @@ public class UserDAO {
         }
         return userList;
     }
-   
-public List<User> getUsersByRoleName(String roleName) {
-    List<User> userList = new ArrayList<>();
-    // Câu lệnh SQL được cập nhật để LEFT JOIN thêm positions và departments
-    String sql = "SELECT u.*, r.name as role_name, p.name as position_name, d.name as department_name " +
-                 "FROM users u " +
-                 "JOIN roles r ON u.role_id = r.id " +
-                 "LEFT JOIN positions p ON u.position_id = p.id " +
-                 "LEFT JOIN departments d ON u.department_id = d.id " +
-                 "WHERE r.name = ? AND u.is_deleted = 0";
 
-    try (Connection conn = DBContext.getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql)) {
+    public List<User> getUsersByRoleName(String roleName) {
+        List<User> userList = new ArrayList<>();
+        // Câu lệnh SQL được cập nhật để LEFT JOIN thêm positions và departments
+        String sql = "SELECT u.*, r.name as role_name, p.name as position_name, d.name as department_name "
+                + "FROM users u "
+                + "JOIN roles r ON u.role_id = r.id "
+                + "LEFT JOIN positions p ON u.position_id = p.id "
+                + "LEFT JOIN departments d ON u.department_id = d.id "
+                + "WHERE r.name = ? AND u.is_deleted = 0";
 
-        ps.setString(1, roleName);
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
-        try (ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                User user = new User();
-                // Gán các trường cơ bản từ bảng Users
-                user.setId(rs.getInt("id"));
-                user.setEmail(rs.getString("email"));
-                user.setLastName(rs.getString("last_name"));
-                user.setMiddleName(rs.getString("middle_name"));
-                user.setFirstName(rs.getString("first_name"));
-                user.setAvatarUrl(rs.getString("avatar_url"));
-                user.setEmployeeCode(rs.getString("employee_code"));
-                user.setPhoneNumber(rs.getString("phone_number"));
-                user.setStatus(rs.getString("status"));
+            ps.setString(1, roleName);
 
-                // Gán các trường lấy từ bảng JOIN
-                user.setRoleName(rs.getString("role_name"));
-                user.setPositionName(rs.getString("position_name")); // Dữ liệu mới
-                user.setDepartmentName(rs.getString("department_name")); // Dữ liệu mới
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    User user = new User();
+                    // Gán các trường cơ bản từ bảng Users
+                    user.setId(rs.getInt("id"));
+                    user.setEmail(rs.getString("email"));
+                    user.setLastName(rs.getString("last_name"));
+                    user.setMiddleName(rs.getString("middle_name"));
+                    user.setFirstName(rs.getString("first_name"));
+                    user.setAvatarUrl(rs.getString("avatar_url"));
+                    user.setEmployeeCode(rs.getString("employee_code"));
+                    user.setPhoneNumber(rs.getString("phone_number"));
+                    user.setStatus(rs.getString("status"));
 
-                userList.add(user);
+                    // Gán các trường lấy từ bảng JOIN
+                    user.setRoleName(rs.getString("role_name"));
+                    user.setPositionName(rs.getString("position_name")); // Dữ liệu mới
+                    user.setDepartmentName(rs.getString("department_name")); // Dữ liệu mới
+
+                    userList.add(user);
+                }
             }
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi lấy danh sách user theo vai trò: " + e.getMessage());
+            e.printStackTrace();
         }
-    } catch (SQLException e) {
-        System.err.println("Lỗi khi lấy danh sách user theo vai trò: " + e.getMessage());
-        e.printStackTrace();
+        return userList;
     }
-    return userList;
-}
 }
