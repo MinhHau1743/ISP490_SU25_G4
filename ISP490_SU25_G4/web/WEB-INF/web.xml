@@ -1,18 +1,4 @@
-<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_1.xsd"
-         version="6.1">
-
-    <!-- Định nghĩa bộ lọc loginFilter -->
-    <filter>
-        <filter-name>loginFilter</filter-name>
-        <filter-class>LoginFilter</filter-class>
-    </filter>
-
-    <!-- Cấu hình áp dụng bộ lọc cho tất cả các URL -->
-    <filter-mapping>
-        <filter-name>loginFilter</filter-name>
-        <url-pattern>/*</url-pattern>
-    </filter-mapping>
-
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="6.1" xmlns="https://jakarta.ee/xml/ns/jakartaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_1.xsd">
+    
 </web-app>
