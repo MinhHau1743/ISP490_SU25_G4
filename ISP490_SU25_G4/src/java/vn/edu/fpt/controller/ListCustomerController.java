@@ -25,8 +25,12 @@ public class ListCustomerController extends HttpServlet {
             throws ServletException, IOException {
         
         try {
+             // === SỬA LỖI: Lấy tham số tìm kiếm từ request ===
+            String searchQuery = request.getParameter("search");
+
             EnterpriseDAO enterpriseDAO = new EnterpriseDAO();
-            List<Enterprise> allEnterprises = enterpriseDAO.getAllActiveEnterprises();
+            // Truyền tham số tìm kiếm vào DAO
+            List<Enterprise> allEnterprises = enterpriseDAO.getAllActiveEnterprises(searchQuery);
 
             // Prepare a map to hold categorized customer lists for the Kanban board
             Map<String, List<Enterprise>> customerColumns = new HashMap<>();
@@ -51,6 +55,8 @@ public class ListCustomerController extends HttpServlet {
             }
 
             request.setAttribute("customerColumns", customerColumns);
+            // Gửi lại từ khóa tìm kiếm để hiển thị trên ô input
+            request.setAttribute("searchQuery", searchQuery);
 
         } catch (Exception e) {
             e.printStackTrace();
