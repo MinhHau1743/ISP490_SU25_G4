@@ -146,6 +146,44 @@
                 gap: 12px;
                 margin-top: 24px;
             }
+
+            .success-message {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background-color: #28a745; /* Màu xanh lá cây cho thành công */
+                color: white;
+                padding: 16px 24px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                z-index: 2000;
+                opacity: 0;
+                transform: translateX(100%);
+                animation: slideInFadeOut 5s forwards; /* Tổng thời gian 5s */
+            }
+
+            .success-message .icon {
+                width: 24px;
+                height: 24px;
+            }
+
+            @keyframes slideInFadeOut {
+                0% {
+                    opacity: 0;
+                    transform: translateX(100%);
+                }
+                15%, 85% { /* Hiển thị trong 70% của 5s = 3.5s */
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+                100% {
+                    opacity: 0;
+                    transform: translateX(100%);
+                }
+            }
         </style>
     </head>
     <body>
@@ -162,7 +200,10 @@
                 <div class="page-content">
                     <%-- Display success/error messages from session and remove them --%>
                     <c:if test="${not empty sessionScope.successMessage}">
-                        <div class="success-message">${sessionScope.successMessage}</div>
+                        <div class="success-message">
+                            <i data-feather="check-circle" class="icon"></i>
+                            <span>${sessionScope.successMessage}</span>
+                        </div>
                         <c:remove var="successMessage" scope="session"/>
                     </c:if>
                     <c:if test="${not empty sessionScope.errorMessage}">
@@ -224,6 +265,7 @@
             document.addEventListener('DOMContentLoaded', function () {
                 // Render all Feather icons on the page
                 feather.replace();
+                setTimeout(() => feather.replace(), 100);
 
                 // --- Collapsible Menu Logic ---
                 const appContainer = document.querySelector('.app-container');
@@ -253,8 +295,11 @@
                         button.addEventListener('click', function (event) {
                             event.preventDefault();
 
-                            const customerId = this.getAttribute('data-id');
-                            const customerName = this.getAttribute('data-name') || "khách hàng này";
+                            const customerId = this.dataset.id;
+                            const customerName = this.dataset.name || "khách hàng này"; // Sử dụng dataset
+
+                            // In ra console để kiểm tra (bạn có thể xóa dòng này sau khi đã xác nhận hoạt động)
+                            console.log(`Preparing to delete customer: ID=${customerId}, Name=${customerName}`);
 
                             // Use innerHTML to allow for strong tag styling
                             deleteMessage.innerHTML = `Bạn có chắc chắn muốn xóa khách hàng <strong>"${customerName}"</strong>? Hành động này không thể hoàn tác.`;
