@@ -18,7 +18,7 @@
     <div class="kanban-cards">
         <c:forEach var="customer" items="${columnItems}">
             <div class="customer-kanban-card">
-                
+
                 <%-- Customer Avatar and Name --%>
                 <div class="card-main-info" style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
                     <div class="card-avatar">
@@ -39,7 +39,7 @@
                 <%-- Contact Info --%>
                 <div class="card-info-row"><i data-feather="phone"></i><span><c:out value="${not empty customer.primaryContactPhone ? customer.primaryContactPhone : 'Chưa có SĐT'}"/></span></div>
                 <div class="card-info-row"><i data-feather="map-pin"></i><span><c:out value="${not empty customer.fullAddress ? customer.fullAddress : 'Chưa có địa chỉ'}"/></span></div>
-                
+
                 <%-- Card Footer with Assigned Users' Avatars --%>
                 <div class="card-footer">
                     <div class="card-assignees">
@@ -63,7 +63,8 @@
                     <div class="card-actions">
                         <a href="${BASE_URL}/viewCustomer?id=${customer.id}" title="Xem"><i data-feather="eye"></i></a>
                         <a href="${BASE_URL}/editCustomer?id=${customer.id}" title="Sửa"><i data-feather="edit-2"></i></a>
-                        <a href="#" class="delete-trigger-btn" data-id="${customer.id}" data-name="<c:out value='${customer.name}'/>" title="Xóa"><i data-feather="trash-2"></i></a>
+                            <%-- Dòng mới --%>
+                        <a href="#" class="delete-trigger-btn" data-id="${customer.id}" data-name='<c:out value="${customer.name}"/>' title="Xóa"><i data-feather="trash-2"></i></a>
                     </div>
                 </div>
             </div>
