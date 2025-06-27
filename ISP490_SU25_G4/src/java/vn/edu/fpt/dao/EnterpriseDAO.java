@@ -76,11 +76,13 @@ public class EnterpriseDAO extends DBContext {
         }
     }
 
-    public List<Enterprise> getAllActiveEnterprises() throws Exception {
+    public List<Enterprise> getAllActiveEnterprises(String searchQuery) throws Exception {
         Map<Integer, Enterprise> enterpriseMap = new HashMap<>();
+        boolean isSearching = (searchQuery != null && !searchQuery.trim().isEmpty());
 
-        // SQL query corrected with aliases for avatar_url
-        String sql = "SELECT "
+        // Base query to fetch all enterprise details
+        StringBuilder sql = new StringBuilder(
+                "SELECT "
                 + "    e.id AS enterprise_id, e.name AS enterprise_name, e.enterprise_code, e.avatar_url AS enterprise_avatar, "
                 + "    CONCAT_WS(', ', a.street_address, w.name, d.name, p.name) AS full_address, "
                 + "    ct.name AS customer_type_name, "
@@ -95,39 +97,68 @@ public class EnterpriseDAO extends DBContext {
                 + "LEFT JOIN EnterpriseAssignments ea ON e.id = ea.enterprise_id "
                 + "LEFT JOIN Users u ON ea.user_id = u.id AND u.is_deleted = 0 "
                 + "WHERE e.is_deleted = 0 "
-                + "ORDER BY e.name, u.id";
+        );
 
-        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+        // Dynamically build the WHERE clause for searching to find matching enterprise IDs
+        if (isSearching) {
+            sql.append(" AND e.id IN ( ");
+            sql.append("   SELECT id FROM Enterprises WHERE name LIKE ? ");
+            sql.append("   UNION "); // UNION automatically handles duplicates
+            sql.append("   SELECT enterprise_id FROM EnterpriseContacts WHERE full_name LIKE ? ");
+            sql.append("   UNION ");
+            sql.append("   SELECT ea.enterprise_id FROM EnterpriseAssignments ea JOIN Users u ON ea.user_id = u.id WHERE CONCAT_WS(' ', u.last_name, u.middle_name, u.first_name) LIKE ? ");
+            sql.append(" ) ");
+        }
 
-            while (rs.next()) {
-                int enterpriseId = rs.getInt("enterprise_id");
-                Enterprise enterprise = enterpriseMap.get(enterpriseId);
+        sql.append(" ORDER BY e.name, u.id");
 
-                if (enterprise == null) {
-                    enterprise = new Enterprise();
-                    enterprise.setId(enterpriseId);
-                    enterprise.setName(rs.getString("enterprise_name"));
-                    enterprise.setEnterpriseCode(rs.getString("enterprise_code"));
-                    enterprise.setCustomerTypeName(rs.getString("customer_type_name"));
-                    enterprise.setFullAddress(rs.getString("full_address"));
-                    enterprise.setPrimaryContactPhone(rs.getString("primary_phone"));
+        // The try-with-resources statement now only handles Connection and PreparedStatement
+        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
-                    // Set avatar using the correct alias
-                    enterprise.setAvatarUrl(rs.getString("enterprise_avatar"));
+            // Set parameters ONLY if searching
+            if (isSearching) {
+                String searchPattern = "%" + searchQuery + "%";
+                ps.setString(1, searchPattern);
+                ps.setString(2, searchPattern);
+                ps.setString(3, searchPattern);
+            }
 
-                    enterprise.setAssignedUsers(new ArrayList<>());
-                    enterpriseMap.put(enterpriseId, enterprise);
-                }
+            // Execute the query and process the results in a separate try block
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int enterpriseId = rs.getInt("enterprise_id");
+                    // Use computeIfAbsent for cleaner and more efficient code
+                    Enterprise enterprise = enterpriseMap.computeIfAbsent(enterpriseId, id -> {
+                        Enterprise newEnterprise = new Enterprise();
+                        try {
+                            newEnterprise.setId(rs.getInt("enterprise_id"));
+                            newEnterprise.setName(rs.getString("enterprise_name"));
+                            newEnterprise.setEnterpriseCode(rs.getString("enterprise_code"));
+                            newEnterprise.setCustomerTypeName(rs.getString("customer_type_name"));
+                            newEnterprise.setFullAddress(rs.getString("full_address"));
+                            newEnterprise.setPrimaryContactPhone(rs.getString("primary_phone"));
+                            newEnterprise.setAvatarUrl(rs.getString("enterprise_avatar"));
+                            newEnterprise.setAssignedUsers(new ArrayList<>());
+                        } catch (SQLException e) {
+                            throw new RuntimeException(e); // Propagate SQL exception
+                        }
+                        return newEnterprise;
+                    });
 
-                if (rs.getObject("user_id") != null) {
-                    User assignee = new User();
-                    assignee.setId(rs.getInt("user_id"));
-                    assignee.setFirstName(rs.getString("first_name"));
-                    assignee.setLastName(rs.getString("last_name"));
-                    assignee.setMiddleName(rs.getString("middle_name"));
-                    // Set user avatar using the correct alias
-                    assignee.setAvatarUrl(rs.getString("user_avatar"));
-                    enterprise.getAssignedUsers().add(assignee);
+                    // If an assigned user exists for this row, add them to the list
+                    if (rs.getObject("user_id") != null) {
+                        User assignee = new User();
+                        assignee.setId(rs.getInt("user_id"));
+                        assignee.setFirstName(rs.getString("first_name"));
+                        assignee.setLastName(rs.getString("last_name"));
+                        assignee.setMiddleName(rs.getString("middle_name"));
+                        assignee.setAvatarUrl(rs.getString("user_avatar"));
+
+                        // Prevent adding duplicate users if an enterprise has multiple assignments
+                        if (enterprise.getAssignedUsers().stream().noneMatch(u -> u.getId() == assignee.getId())) {
+                            enterprise.getAssignedUsers().add(assignee);
+                        }
+                    }
                 }
             }
         }
@@ -240,5 +271,30 @@ public class EnterpriseDAO extends DBContext {
             // If it's greater than 0, the update was successful.
             return ps.executeUpdate() > 0;
         }
+    }
+
+    /**
+     * Retrieves a list of customer names for search suggestions.
+     *
+     * @param query The partial name to search for.
+     * @return A list of up to 10 matching customer names.
+     * @throws Exception
+     */
+    public List<String> getCustomerNameSuggestions(String query) throws Exception {
+        List<String> suggestions = new ArrayList<>();
+        // Lấy tối đa 10 kết quả phù hợp nhất
+        String sql = "SELECT name FROM Enterprises WHERE name LIKE ? AND is_deleted = 0 LIMIT 10";
+
+        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, "%" + query + "%");
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    suggestions.add(rs.getString("name"));
+                }
+            }
+        }
+        return suggestions;
     }
 }

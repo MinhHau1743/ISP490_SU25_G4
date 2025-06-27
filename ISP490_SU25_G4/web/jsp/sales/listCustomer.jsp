@@ -28,6 +28,29 @@
         <link rel="stylesheet" href="${BASE_URL}/css/listCustomer.css">
 
         <style>
+            /* === STYLES FOR SEARCH SUGGESTIONS === */
+            .suggestions-list {
+                display: none; /* Ẩn mặc định */
+                position: absolute;
+                background-color: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                width: 100%;
+                max-height: 250px;
+                overflow-y: auto;
+                z-index: 1000;
+                margin-top: 6px; /* Khoảng cách với ô tìm kiếm */
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            }
+            .suggestion-item {
+                padding: 10px 16px;
+                cursor: pointer;
+                font-size: 0.9rem;
+                color: #2d3748;
+            }
+            .suggestion-item:hover {
+                background-color: #f7fafc;
+            }
             /* Styles for Kanban Board Layout */
             .customer-board-container {
                 display: flex;
@@ -147,15 +170,25 @@
                         <c:remove var="errorMessage" scope="session"/>
                     </c:if>
 
-                    <div class="content-card">
-                        <div class="table-toolbar">
-                            <div class="search-box">
-                                <i data-feather="search" class="feather-search"></i>
-                                <input type="text" placeholder="Tìm kiếm khách hàng...">
+                    <div class="table-toolbar">
+                        <%-- === SEARCH FORM WITH SUGGESTIONS === --%>
+                        <form class="search-form" action="${BASE_URL}/listCustomer" method="GET" style="display: flex; align-items: center; gap: 12px;">
+                            <%-- Wrapper for positioning suggestions --%>
+                            <div style="position: relative;">
+                                <div class="search-box">
+                                    <i data-feather="search"></i>
+                                    <%-- Thêm id="searchInput" để dễ dàng truy cập bằng JS --%>
+                                    <input type="text" id="searchInput" name="search" placeholder="Tìm theo tên khách hàng" value="<c:out value='${searchQuery}'/>" autocomplete="off">
+                                </div>
+                                <%-- Container để hiển thị các gợi ý --%>
+                                <div id="suggestionsContainer" class="suggestions-list"></div>
                             </div>
-                            <div class="toolbar-actions">
-                                <a href="${BASE_URL}/createCustomer" class="btn btn-primary"><i data-feather="plus"></i>Thêm Khách hàng</a>
-                            </div>
+                            <button type="submit" class="btn">Tìm kiếm</button>
+                        </form>
+
+                        <%-- Class "toolbar-actions" với "margin-left: auto" sẽ tự động đẩy nút này sang phải --%>
+                        <div class="toolbar-actions">
+                            <a href="${BASE_URL}/createCustomer" class="btn btn-primary"><i data-feather="plus"></i>Thêm Khách hàng</a>
                         </div>
                     </div>
 
@@ -240,6 +273,68 @@
                         }
                     });
                 }
+                // ===================================================================
+                // <<< BẮT ĐẦU: LOGIC GỢI Ý TÌM KIẾM (PHIÊN BẢN ĐÃ SỬA LỖI) >>>
+                // ===================================================================
+                const searchInput = document.getElementById('searchInput');
+                const suggestionsContainer = document.getElementById('suggestionsContainer');
+                const searchForm = document.querySelector('.search-form');
+
+                if (searchInput && suggestionsContainer && searchForm) {
+                    searchInput.addEventListener('input', async function () {
+                        const query = this.value.trim();
+
+                        if (query.length < 2) {
+                            suggestionsContainer.style.display = 'none';
+                            return;
+                        }
+
+                        try {
+                            // === DÒNG CODE ĐÃ ĐƯỢC SỬA LẠI ĐỂ AN TOÀN HƠN ===
+                            const url = '${BASE_URL}' + '/searchSuggestions?query=' + encodeURIComponent(query);
+                            const response = await fetch(url);
+                            // ===============================================
+
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            const suggestions = await response.json();
+
+                            suggestionsContainer.innerHTML = '';
+
+                            if (suggestions.length > 0) {
+                                suggestions.forEach(name => {
+                                    const item = document.createElement('div');
+                                    item.className = 'suggestion-item';
+                                    item.textContent = name;
+
+                                    item.addEventListener('click', function () {
+                                        searchInput.value = this.textContent;
+                                        suggestionsContainer.style.display = 'none';
+                                        searchForm.submit();
+                                    });
+                                    suggestionsContainer.appendChild(item);
+                                });
+                                suggestionsContainer.style.display = 'block';
+                            } else {
+                                suggestionsContainer.style.display = 'none';
+                            }
+
+                        } catch (error) {
+                            console.error('Lỗi khi lấy gợi ý tìm kiếm:', error);
+                            suggestionsContainer.style.display = 'none';
+                        }
+                    });
+
+                    document.addEventListener('click', function (event) {
+                        if (!searchInput.contains(event.target) && !suggestionsContainer.contains(event.target)) {
+                            suggestionsContainer.style.display = 'none';
+                        }
+                    });
+                }
+                // ===================================================================
+                // <<< KẾT THÚC: LOGIC GỢI Ý TÌM KIẾM >>>
+                // ===================================================================
             });
         </script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
