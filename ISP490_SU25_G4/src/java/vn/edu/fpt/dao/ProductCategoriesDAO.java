@@ -3,6 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package vn.edu.fpt.dao;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.PreparedStatement;
@@ -16,8 +17,10 @@ import vn.edu.fpt.model.ProductCategory;
  *
  * @author phamh
  */
-public class ProductCategoriesDAO extends DBContext{
+public class ProductCategoriesDAO extends DBContext {
+
     Connection conn = getConnection();
+
     public List<ProductCategory> getAllCategories() {
         List<ProductCategory> categories = new ArrayList<>();
 
@@ -37,4 +40,18 @@ public class ProductCategoriesDAO extends DBContext{
         }
         return categories;
     }
+
+    public boolean insertCategory(ProductCategory category) {
+        String sql = "INSERT INTO ProductCategories (name) VALUES (?)";
+        try {
+            PreparedStatement st = conn.prepareStatement(sql);
+            st.setString(1, category.getName());
+            int rowsInserted = st.executeUpdate();
+            return rowsInserted > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
 }

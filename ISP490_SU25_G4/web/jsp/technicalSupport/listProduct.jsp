@@ -59,7 +59,7 @@
                                         <i data-feather="plus"></i>
                                         <span>Thêm Sản phẩm</span>
                                     </a>
-                                    <a href="../technicalSupport/createGroupProduct.jsp" class="btn btn-primary">
+                                    <a href="${pageContext.request.contextPath}/jsp/technicalSupport/createGroupProduct.jsp" class="btn btn-primary">
                                         <i data-feather="plus-square"></i>
                                         <span>Thêm nhóm hàng</span>
                                     </a>

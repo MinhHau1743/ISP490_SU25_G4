@@ -18,11 +18,11 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <script src="https://unpkg.com/feather-icons"></script>
-        <link rel="stylesheet" href="../../css/style.css">       
-        <link rel="stylesheet" href="../../css/header.css">
-        <link rel="stylesheet" href="../../css/mainMenu.css">
-        <link rel="stylesheet" href="../../css/createGroupProduct.css">
-        <link rel="stylesheet" href="../../css/pagination.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">       
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/createGroupProduct.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pagination.css">
     </head>
     <body>
         <div class="app-container">
@@ -37,23 +37,17 @@
                 </header>
                 <section class="content-body">
                     <div class="form-container">
-                        <form action="createGroupProduct" method="POST">
+                        <form action="${pageContext.request.contextPath}/ProductCategories" method="POST">
                             <div class="form-header">
                                 <h2>Thêm nhóm các sản phẩm</h2>
                             </div>
 
                             <div class="form-group inline-group">
                                 <label for="groupName">Tên nhóm sản phẩm:</label>
-                                <input type="text" id="groupName" name="groupName" value="Máy phát điện" required>
+                                <input type="text" id="groupName" name="groupName" required>
                             </div>
-
-                            <div class="form-group inline-group">
-                                <label for="description">Mô tả:</label>
-                                <input type="text" id="description" name="description" value="Phát điện">
-                            </div>
-
                             <div class="form-actions">
-                                <a href="../technicalSupport/listProduct.jsp" class="btn btn-cancel" style="text-decoration: none;">Hủy</a>
+                                <a href="${pageContext.request.contextPath}/ProductController" class="btn btn-cancel" style="text-decoration: none;">Hủy</a>
                                 <button type="submit" class="btn btn-submit">Thêm và đóng</button>
                             </div>
                         </form>
@@ -65,7 +59,7 @@
             feather.replace();
         </script>
 
-        <script src="../../js/mainMenu.js"></script>
+        <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>
 
