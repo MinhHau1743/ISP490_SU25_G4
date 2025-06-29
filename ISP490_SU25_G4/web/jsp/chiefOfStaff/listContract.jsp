@@ -1,7 +1,7 @@
 <%--
-    Document   : listContract
+    Document   : listContract.jsp
     Created on : Jun 25, 2025, 11:20:00 PM
-    Author     : NGUYEN MINH (Adjusted by Gemini to match DB Schema)
+    Author     : NGUYEN MINH (Final version as of Jun 30, 2025)
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
@@ -17,7 +17,6 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Danh sách Hợp đồng</title>
         
-        <%-- Các file CSS/JS và font chữ của bạn được giữ nguyên --%>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -30,7 +29,9 @@
     </head>
     <body>
         <div class="app-container">
+            <%-- Phần menu chính của bạn --%>
             <jsp:include page="../../mainMenu.jsp"/>
+            
             <main class="main-content">
                 <header class="page-header">
                     <div class="title-section">
@@ -48,14 +49,16 @@
                             <div class="table-toolbar">
                                 <div class="search-box">
                                     <i data-feather="search" class="feather-search"></i>
-                                    <%-- Tìm kiếm theo contract_code và contract_name --%>
                                     <input type="text" name="searchQuery" placeholder="Tìm mã, tên hợp đồng..." value="${param.searchQuery}">
                                 </div>
                                 <button type="button" class="filter-button" id="filterBtn"><i data-feather="filter"></i><span>Bộ lọc</span></button>
                                 <div class="toolbar-actions">
-                                    <a href="contract?action=create" class="btn btn-primary"><i data-feather="plus"></i>Tạo Hợp đồng</a>
+                                    <%-- Nút "Tạo Hợp đồng" điều hướng trực tiếp đến file jsp --%>
+                                   <a href="${pageContext.request.contextPath}/jsp/chiefOfStaff/createContract.jsp" class="btn btn-primary"><i data-feather="plus"></i>Tạo Hợp đồng</a>
                                 </div>
                             </div>
+                            
+                            <%-- Vùng chứa bộ lọc, được bật/tắt bởi JavaScript --%>
                             <div class="filter-container" id="filterContainer">
                                 <div class="filter-controls">
                                     <div class="filter-group">
@@ -69,19 +72,10 @@
                                             <option value="cancelled" ${param.status == 'cancelled' ? 'selected' : ''}>Đã hủy</option>
                                         </select>
                                     </div>
-                                    
-                                    <%-- 
-                                        ĐÃ XÓA BỘ LỌC "LOẠI HỢP ĐỒNG"
-                                        Lý do: Bảng `Contracts` trong CSDL của bạn không có cột 'contract_type'.
-                                        Để thêm lại bộ lọc này, bạn cần chạy lệnh SQL:
-                                        ALTER TABLE Contracts ADD COLUMN contract_type VARCHAR(50) NULL;
-                                        Và cập nhật logic ở backend.
-                                    --%>
-                                    
+
                                     <div class="filter-group">
-                                        <label>Ngày ký (từ `start_date`)</label>
+                                        <label>Ngày hiệu lực (từ `start_date`)</label>
                                         <div class="date-inputs">
-                                            <%-- Đổi tên param để rõ nghĩa hơn, map với `start_date` --%>
                                             <input type="date" name="startDateFrom" value="${param.startDateFrom}">
                                             <input type="date" name="startDateTo" value="${param.startDateTo}">
                                         </div>
@@ -101,7 +95,7 @@
                                         <th>Mã Hợp đồng</th>
                                         <th>Tên Hợp đồng</th>
                                         <th>Khách hàng</th>
-                                        <th>Ngày ký</th>
+                                        <th>Ngày hiệu lực</th>
                                         <th>Ngày hết hạn</th>
                                         <th>Giá trị</th>
                                         <th>Trạng thái</th>
@@ -109,33 +103,23 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    <%-- Hiển thị thông báo nếu không có dữ liệu --%>
                                     <c:if test="${empty contractList}">
                                         <tr>
                                             <td colspan="8" style="text-align: center; padding: 40px;">Không có hợp đồng nào phù hợp.</td>
                                         </tr>
                                     </c:if>
 
+                                    <%-- Lặp qua danh sách hợp đồng do Servlet cung cấp --%>
                                     <c:forEach var="contract" items="${contractList}">
                                         <tr>
-                                            <%-- contract.contractCode -> Contracts.contract_code --%>
                                             <td><a href="contract?action=view&id=${contract.id}" class="contract-code">${contract.contractCode}</a></td>
-                                            
-                                            <%-- contract.contractName -> Contracts.contract_name --%>
                                             <td>${contract.contractName}</td>
-                                            
-                                            <%-- contract.enterpriseName -> Lấy từ bảng Enterprises qua JOIN --%>
-                                            <td class="customer-name">${contract.enterpriseName}</td>
-                                            
-                                            <%-- contract.startDate -> Contracts.start_date --%>
+                                            <%-- Giả định đối tượng enterprise được lồng trong contract --%>
+                                            <td class="customer-name">${contract.enterprise.name}</td>
                                             <td><fmt:formatDate value="${contract.startDate}" pattern="dd/MM/yyyy"/></td>
-                                            
-                                            <%-- contract.endDate -> Contracts.end_date --%>
                                             <td><fmt:formatDate value="${contract.endDate}" pattern="dd/MM/yyyy"/></td>
-                                            
-                                            <%-- contract.totalValue -> Tính từ bảng ContractProducts qua JOIN và SUM --%>
                                             <td class="contract-value"><fmt:formatNumber value="${contract.totalValue}" type="currency" currencySymbol="₫" maxFractionDigits="0"/></td>
-                                            
-                                            <%-- contract.status -> Contracts.status --%>
                                             <td>
                                                 <c:choose>
                                                     <c:when test="${contract.status == 'active'}"><span class="status-pill status-active">Còn hiệu lực</span></c:when>
@@ -149,6 +133,7 @@
                                             <td class="table-actions">
                                                 <a href="contract?action=view&id=${contract.id}" title="Xem"><i data-feather="eye"></i></a>
                                                 <a href="contract?action=edit&id=${contract.id}" title="Sửa"><i data-feather="edit-2"></i></a>
+                                                <%-- Gọi hàm JS để xác nhận xóa --%>
                                                 <a href="#" onclick="confirmDelete('${contract.id}', '${contract.contractCode}')" title="Xóa"><i data-feather="trash-2"></i></a>
                                             </td>
                                         </tr>
@@ -156,11 +141,14 @@
                                 </tbody>
                             </table>
                         </div>
+                        
+                        <%-- Phần phân trang của bạn --%>
                         <jsp:include page="../../pagination.jsp"/>
                     </div>
                 </div>
             </main>
         </div>
+        
         <script src="${pageContext.request.contextPath}/js/listContract.js"></script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>

@@ -1,3 +1,5 @@
+package vn.edu.fpt.common;
+
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import java.io.IOException;
