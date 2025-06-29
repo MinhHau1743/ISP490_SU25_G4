@@ -39,7 +39,7 @@
                     <div class="content-card">
                         <%-- CẬP NHẬT: Sửa action của form và link "Tạo Phiếu" --%>
                         <form class="table-toolbar" action="${pageContext.request.contextPath}/ticket" method="get">
-                             <input type="hidden" name="action" value="list">
+                            <input type="hidden" name="action" value="list">
                             <div class="search-box">
                                 <i data-feather="search" class="feather-search"></i>
                                 <input type="text" name="query" placeholder="Tìm kiếm theo mã phiếu, khách hàng...">
@@ -60,10 +60,10 @@
                                 <div class="transaction-card">
                                     <div class="card-header">
                                         <%-- CẬP NHẬT: Sử dụng requestCode từ model --%>
-                                        <a href="#" class="transaction-code-link">
+                                        <a href="${pageContext.request.contextPath}/ticket?action=view&id=${tx.id}" class="transaction-code-link">
                                             <span class="transaction-code">${tx.requestCode}</span>
                                         </a>
-                                        
+
                                         <%-- CẬP NHẬT: Chuyển đổi status sang tiếng Việt và thêm class màu --%>
                                         <c:choose>
                                             <c:when test="${tx.status == 'new'}"><span class="status-pill status-new">Mới</span></c:when>
@@ -99,17 +99,25 @@
                                     <div class="card-footer">
                                         <div class="billing-status">
                                             <%-- CẬP NHẬT: Sử dụng isIsBillable() theo model của bạn --%>
-                                            <c:if test="${tx.isBillable}">
-                                                <i data-feather="dollar-sign" class="icon-billable" title="Có tính phí"></i>
-                                            </c:if>
-                                            <c:if test="${not tx.isBillable}">
-                                                <i data-feather="dollar-sign" class="icon-non-billable" title="Miễn phí (Bảo hành)"></i>
-                                            </c:if>
+                                            <c:choose>
+                                                <c:when test="${tx.isBillable}">
+                                                    <i data-feather="dollar-sign" class="icon-billable" title="Có tính phí"></i>
+                                                    <span class="cost-value">
+                                                        <fmt:formatNumber value="${tx.estimatedCost}" type="number" maxFractionDigits="0"/> VND
+                                                    </span>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <i data-feather="dollar-sign" class="icon-non-billable" title="Miễn phí (Bảo hành)"></i>
+                                                    <%-- Thêm văn bản để làm rõ --%>
+                                                    <span class="cost-value" style="color: #6c757d;">Miễn phí</span>
+                                                </c:otherwise>
+                                            </c:choose>
                                         </div>
                                         <div class="action-buttons">
                                             <%-- Các link này sẽ được làm sau --%>
-                                            <a href="#" title="Xem chi tiết"><i data-feather="eye" class="icon-view"></i></a>
-                                            <a href="#" title="Sửa"><i data-feather="edit-2" class="icon-edit"></i></a>
+                                            <a href="${pageContext.request.contextPath}/ticket?action=view&id=${tx.id}" title="Xem chi tiết"><i data-feather="eye" class="icon-view"></i></a>
+
+                                            <a href="${pageContext.request.contextPath}/ticket?action=edit&id=${tx.id}" title="Sửa"><i data-feather="edit-2" class="icon-edit"></i></a>
                                             <a href="#" onclick="return confirm('Xóa giao dịch ${tx.requestCode}?')" title="Xóa"><i data-feather="trash-2" class="icon-delete"></i></a>
                                         </div>
                                     </div>
