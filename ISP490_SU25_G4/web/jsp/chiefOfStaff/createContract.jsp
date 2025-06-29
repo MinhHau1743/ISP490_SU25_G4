@@ -23,15 +23,15 @@
 
         <script src="https://unpkg.com/feather-icons"></script>
 
-        <link rel="stylesheet" href="../../css/style.css">
-        <link rel="stylesheet" href="../../css/mainMenu.css">
-        <link rel="stylesheet" href="../../css/createContract.css">
+        <link rel="stylesheet" href="css/style.css">
+        <link rel="stylesheet" href="css/mainMenu.css">
+        <link rel="stylesheet" href="css/createContract.css">
 
 
     </head>
     <body>
         <div class="app-container">
-            <jsp:include page="../../mainMenu.jsp"/>
+            <jsp:include page="mainMenu.jsp"/>
             <main class="main-content">                
 
                 <form class="page-content" action="contract" method="post">
@@ -162,7 +162,7 @@
                 </div>
             </div>
         </div>
-        <script src="../../js/createContract.js"></script>
+        <script src="js/createContract.js"></script>
         <script src="../../js/mainMenu.js"></script>
     </body>
 </html>
