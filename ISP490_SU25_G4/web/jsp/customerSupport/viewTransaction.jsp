@@ -7,6 +7,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
 <c:set var="currentPage" value="listTransaction" />
 
@@ -18,29 +19,28 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Chi tiết giao dịch - ${transaction.transactionCode}</title>
 
-        <link rel="stylesheet" href="../../css/style.css">
-        <link rel="stylesheet" href="../../css/header.css">
-        <link rel="stylesheet" href="../../css/mainMenu.css">
-        <link rel="stylesheet" href="../../css/viewTransaction.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
+        <%-- Tái sử dụng CSS từ file viewTransaction.css của bạn --%>
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/viewTransaction.css">
+        <script src="https://unpkg.com/feather-icons"></script>
     </head>
     <body>
         <div class="app-container">
-            <jsp:include page="../../mainMenu.jsp"/>
+            <jsp:include page="/mainMenu.jsp"/>
             <main class="main-content">
                 <div class="page-content">
 
                     <div class="detail-header">
-                        <a href="../customerSupport/listTransaction.jsp" class="back-link">
+                        <a href="${pageContext.request.contextPath}/ticket?action=list" class="back-link">
                             <i data-feather="arrow-left"></i>
                             <span>Quay lại danh sách</span>
                         </a>
                         <div class="action-buttons" style="display: flex; gap: 8px;">
-                            <a href="../customerSupport/editTransaction.jsp" class="btn btn-secondary">
-                                <i data-feather="edit-2"></i>Sửa
-                            </a>
-                            <a href="#" class="btn btn-primary">
-                                <i data-feather="printer"></i>In Phiếu
-                            </a>
+                            <%-- Các chức năng Sửa, In sẽ được phát triển sau --%>
+                            <a href="#" class="btn btn-secondary"><i data-feather="edit-2"></i>Sửa</a>
+                            <a href="#" class="btn btn-primary"><i data-feather="printer"></i>In Phiếu</a>
                         </div>
                     </div>
 
@@ -50,140 +50,123 @@
                                 <h2 class="card-title">Thông tin chung</h2>
                                 <div class="info-grid">
                                     <div class="info-item">
-                                        <span class="label">Mã giao dịch</span>
-                                        <div class="value">${transaction.transactionCode}</div>
+                                        <span class="label">Mã phiếu</span>
+                                        <div class="value">${ticket.requestCode}</div>
                                     </div>
                                     <div class="info-item">
                                         <span class="label">Mã hợp đồng</span>
-                                        <div class="value">${transaction.contractCode}</div>
+                                        <div class="value">${not empty ticket.contractCode ? ticket.contractCode : 'Không có'}</div>
                                     </div>
                                     <div class="info-item">
                                         <span class="label">Khách hàng</span>
-                                        <div class="value">${transaction.customer}</div>
+                                        <div class="value">${ticket.enterpriseName}</div>
                                     </div>
                                     <div class="info-item">
-                                        <span class="label">Loại giao dịch</span>
-                                        <div class="value">${transaction.type}</div>
+                                        <span class="label">Loại phiếu</span>
+                                        <div class="value">${ticket.serviceName}</div>
                                     </div>
                                     <div class="info-item full-width">
                                         <span class="label">Mô tả chi tiết</span>
-                                        <div class="value">${transaction.description}</div>
+                                        <div class="value">${ticket.description}</div>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="detail-card">
                                 <h2 class="card-title">Các thiết bị liên quan</h2>
-                                <table class="device-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Tên thiết bị</th>
-                                            <th>Serial Number</th>
-                                            <th>Ghi chú xử lý</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <c:forEach var="device" items="${transaction.devices}">
+                                <%-- SỬA LỖI Ở ĐÂY: Thay "devices" thành "products" --%>
+                                <c:if test="${empty ticket.devices}">
+                                    <p>Không có thiết bị nào được ghi nhận cho yêu cầu này.</p>
+                                </c:if>
+                                <c:if test="${not empty ticket.devices}">
+                                    <table class="device-table">
+                                        <thead>
                                             <tr>
-                                                <td>${device.name}</td>
-                                                <td>${device.serial}</td>
-                                                <td>${device.notes}</td>
+                                                <th>Tên thiết bị</th>
+                                                <th>Mã thiết bị</th>
+                                                <th>Mô tả sự cố</th>
                                             </tr>
-                                        </c:forEach>
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            <%-- SỬA LỖI Ở ĐÂY: Lặp qua "products" và hiển thị đúng thuộc tính --%>
+                                            <c:forEach var="device" items="${ticket.devices}">
+                                                <tr>
+                                                    <td>${device.deviceName}</td>
+                                                    <td>${device.serialNumber}</td>
+                                                    <td>${device.problemDescription}</td>
+                                                </tr>
+                                            </c:forEach>
+                                        </tbody>
+                                    </table>
+                                </c:if>
                             </div>
                         </div>
 
-                        <!-- CỘT PHỤ (BÊN PHẢI) -->
                         <div class="sidebar-column">
                             <div class="detail-card">
                                 <h2 class="card-title">Chi tiết Trạng thái</h2>
-
-                                <%-- BỐ CỤC MỚI CHO KHUNG BÊN PHẢI --%>
                                 <div class="info-item">
                                     <span class="label">Trạng thái</span>
                                     <span class="value">
-                                        <span class="status-pill ${transaction.statusClass}">${transaction.status}</span>
+                                        <%-- Logic để hiển thị trạng thái với màu sắc --%>
+                                        <c:choose>
+                                            <c:when test="${ticket.status == 'new'}"><span class="status-pill status-new">Mới</span></c:when>
+                                            <c:when test="${ticket.status == 'assigned'}"><span class="status-pill status-assigned">Đã giao</span></c:when>
+                                            <c:when test="${ticket.status == 'in_progress'}"><span class="status-pill status-in-progress">Đang xử lý</span></c:when>
+                                            <c:when test="${ticket.status == 'resolved'}"><span class="status-pill status-resolved">Đã xử lý</span></c:when>
+                                            <c:when test="${ticket.status == 'closed'}"><span class="status-pill status-closed">Đã đóng</span></c:when>
+                                            <c:otherwise><span class="status-pill">${ticket.status}</span></c:otherwise>
+                                        </c:choose>
                                     </span>
                                 </div>
                                 <div class="info-item">
                                     <span class="label">Mức độ ưu tiên</span>
                                     <span class="value">
-                                        <span class="priority-pill ${transaction.priorityClass}">${transaction.priority}</span>
+                                        <c:choose>
+                                            <c:when test="${ticket.priority == 'high'}"><span class="priority-pill priority-high">Cao</span></c:when>
+                                            <c:when test="${ticket.priority == 'critical'}"><span class="priority-pill priority-critical">Khẩn cấp</span></c:when>
+                                            <c:otherwise><span class="priority-pill priority-medium">Thông thường</span></c:otherwise>
+                                        </c:choose>
                                     </span>
                                 </div>
                                 <div class="info-item">
                                     <span class="label">Nhân viên phụ trách</span>
-                                    <span class="value">${transaction.employee}</span>
+                                    <span class="value">${not empty ticket.assignedToName ? ticket.assignedToName : 'Chưa gán'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Người tạo phiếu</span>
+                                    <span class="value">${ticket.reporterName}</span>
                                 </div>
                                 <div class="info-item">
                                     <span class="label">Ngày tạo</span>
-                                    <span class="value">${transaction.createdDate}</span>
+                                    <span class="value">
+                                        <c:if test="${ticket.createdAt != null}">
+                                            <fmt:formatDate value="${ticket.createdAt}" pattern="HH:mm dd/MM/yyyy" />
+                                        </c:if>
+                                    </span>
                                 </div>
                                 <div class="info-item">
                                     <span class="label">Tính phí?</span>
-                                    <span class="value">
-                                        <c:if test="${transaction.isBillable}">Có</c:if>
-                                        <c:if test="${not transaction.isBillable}">Không (Bảo hành)</c:if>
-                                        </span>
-                                    </div>
+                                    <span class="value">${ticket.isBillable ? 'Có' : 'Không (Bảo hành)'}</span>
                                 </div>
-
-                                <div class="detail-card">
-                                    <h2 class="card-title">Lịch sử cập nhật</h2>
-                                    <ul class="history-list">
-                                    <c:forEach var="item" items="${transaction.history}">
-                                        <li class="history-item">
-                                            <div class="history-time">${item.time}</div>
-                                            <div class="history-action"><strong>${item.user}</strong>: ${item.action}</div>
-                                        </li>
-                                    </c:forEach>
-                                </ul>
+                                <c:if test="${ticket.isBillable}">
+                                    <div class="info-item">
+                                        <span class="label">Chi phí dự kiến</span>
+                                        <%-- Hiển thị giá trị gốc để kiểm tra, thay vì dùng fmt:formatNumber --%>
+                                        <span class="value">${ticket.estimatedCost} VND</span>
+                                    </div>
+                                </c:if>
                             </div>
                         </div>
                     </div>
-
                 </div>
             </main>
         </div>
-
-        <script src="https://unpkg.com/feather-icons"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                // 1. Kích hoạt Feather Icons
                 feather.replace();
-
-                // 2. Logic cho nút Toggle Menu (Đóng/Mở Sidebar)
-                const toggleBtn = document.querySelector('.toggle-btn');
-                const appContainer = document.querySelector('.app-container');
-
-                if (toggleBtn && appContainer) {
-                    toggleBtn.addEventListener('click', function () {
-                        appContainer.classList.toggle('sidebar-collapsed');
-                    });
-                }
-
-                // 3. Logic cho các mục Dropdown trong Menu
-                const dropdownLinks = document.querySelectorAll('.sidebar-nav .nav-item-dropdown > a');
-
-                if (dropdownLinks.length > 0) {
-                    dropdownLinks.forEach(function (link) {
-                        link.addEventListener('click', function (event) {
-                            // Ngăn thẻ <a> điều hướng khi href="#"
-                            if (this.getAttribute('href') === '#') {
-                                event.preventDefault();
-                            }
-
-                            const parentLi = this.parentElement;
-                            if (parentLi) {
-                                parentLi.classList.toggle('open');
-                            }
-                        });
-                    });
-                }
             });
         </script>
+        <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>
-
