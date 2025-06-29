@@ -5,6 +5,7 @@
 package vn.edu.fpt.model;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 /**
  *
@@ -25,23 +26,23 @@ public class TechnicalRequest {
     private Integer assignedToId;
     private boolean isBillable;
     private double estimatedCost;
-
-    // Các trường này bây giờ đã là kiểu java.sql.Timestamp, tương thích với JDBC
     private Timestamp createdAt;
     private Timestamp resolvedAt;
 
-    // Các trường phụ để hiển thị
+    // Các trường ảo để hiển thị
     private String enterpriseName;
     private String contractCode;
     private String serviceName;
     private String assignedToName;
     private String reporterName;
 
+    // SỬ DỤNG ĐÚNG DANH SÁCH THIẾT BỊ
+    private List<TechnicalRequestDevice> devices;
+
+    // Constructors, Getters, và Setters...
     public TechnicalRequest() {
     }
 
-    // --- GETTERS AND SETTERS ---
-    // (Toàn bộ các hàm get/set của bạn được giữ nguyên)
     public int getId() {
         return id;
     }
@@ -200,5 +201,14 @@ public class TechnicalRequest {
 
     public void setReporterName(String reporterName) {
         this.reporterName = reporterName;
+    }
+
+    // Getter và Setter cho devices
+    public List<TechnicalRequestDevice> getDevices() {
+        return devices;
+    }
+
+    public void setDevices(List<TechnicalRequestDevice> devices) {
+        this.devices = devices;
     }
 }

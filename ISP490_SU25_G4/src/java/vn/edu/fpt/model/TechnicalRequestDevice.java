@@ -16,7 +16,7 @@ public class TechnicalRequestDevice {
     private String serialNumber;
     private String problemDescription;
 
-    // Constructors, Getters và Setters
+    // Constructors
     public TechnicalRequestDevice() {
     }
 
@@ -26,7 +26,7 @@ public class TechnicalRequestDevice {
         this.problemDescription = problemDescription;
     }
 
-    // (Vui lòng tự tạo các hàm getter và setter cho tất cả các trường trên)
+    // Getters and Setters
     public int getId() {
         return id;
     }
