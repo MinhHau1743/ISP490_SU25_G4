@@ -146,7 +146,7 @@
                                                     <span><fmt:formatNumber value="${p.price}" type="currency" currencyCode="VND"/></span>
                                                 </div>
                                                 <div class="action-buttons">
-                                                    <a href="ProductController?service=getProductById&id=${p.id}" title="Xem"><i data-feather="eye"></i></a>
+                                                    <a href="getProductById?id=${p.id}" title="Xem"><i data-feather="eye"></i></a>
                                                     <a href="editProduct?id=${p.id}" title="Sửa"><i data-feather="edit-2"></i></a>
                                                     <a href="deleteProduct" class="delete-trigger-btn" data-id="${p.id}" data-name="${p.name}" data-image="${p.image}"title="Xóa"><i data-feather="trash-2"></i></a>
                                                 </div>
