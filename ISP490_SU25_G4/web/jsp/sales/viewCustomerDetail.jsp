@@ -31,10 +31,16 @@
                 <c:choose>
                     <c:when test="${not empty customer}">
                         <div class="page-content">
+                            <%-- Đoạn code mới đã được cập nhật --%>
                             <div class="detail-header">
                                 <a href="${BASE_URL}/listCustomer" class="back-link"><i data-feather="arrow-left"></i><span>Quay lại danh sách</span></a>
-                            </div>
 
+                                <%-- Các nút hành động được chuyển lên đây --%>
+                                <div class="header-actions">
+                                    <a href="${BASE_URL}/editCustomer?id=${customer.id}" class="btn btn-secondary"><i data-feather="edit-2"></i>Sửa</a>
+                                    <a href="#" class="btn btn-danger delete-trigger-btn" data-id="<c:out value='${customer.id}'/>" data-name="<c:out value='${customer.name}'/>"><i data-feather="trash-2"></i>Xóa</a>
+                                </div>
+                            </div>
                             <%-- Customer details content --%>
                             <div class="detail-layout">
                                 <div class="main-column">
@@ -84,11 +90,7 @@
                                 </div>
                             </div>
 
-                            <!-- Action Footer -->
-                            <div class="page-footer-actions">
-                                <a href="${BASE_URL}/editCustomer?id=${customer.id}" class="btn btn-secondary"><i data-feather="edit-2"></i>Sửa</a>
-                                <a href="#" class="btn btn-danger delete-trigger-btn" data-id="<c:out value='${customer.id}'/>" data-name="<c:out value='${customer.name}'/>"><i data-feather="trash-2"></i>Xóa</a>
-                            </div>
+
                         </div>
                     </c:when>
                     <c:otherwise>
