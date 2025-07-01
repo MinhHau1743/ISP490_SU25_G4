@@ -247,6 +247,7 @@
                 }
             });
         </script>
+        //them js di 
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>
