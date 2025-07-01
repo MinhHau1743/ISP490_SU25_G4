@@ -25,7 +25,7 @@
         <script src="https://unpkg.com/feather-icons"></script>
 
         <style>
-            /* CSS for action footer and modal */
+            /* CSS for action footer */
             .page-content {
                 display: flex;
                 flex-direction: column;
@@ -44,13 +44,15 @@
                 gap: 12px;
                 box-shadow: 0 -4px 10px -5px rgba(0,0,0,0.05);
             }
+
+            /* === UPDATED STYLES FOR DELETE MODAL (GIỐNG FILE THỨ 2) === */
             .modal-overlay {
                 position: fixed;
                 top: 0;
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background-color: rgba(31, 41, 55, 0.6);
+                background-color: rgba(0, 0, 0, 0.6);
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -65,38 +67,35 @@
             }
             .modal-content {
                 background: white;
-                padding: 32px;
+                padding: 24px 32px;
                 border-radius: 12px;
                 width: 90%;
                 max-width: 450px;
                 text-align: center;
-                transform: scale(0.95);
+                transform: scale(0.9);
                 transition: transform 0.3s;
-                box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             }
             .modal-overlay.show .modal-content {
                 transform: scale(1);
             }
             .warning-icon {
-                color: #f97316;
+                color: #f59e0b; /* Màu vàng cảnh báo */
                 width: 48px;
                 height: 48px;
                 margin-bottom: 16px;
             }
             .modal-title {
                 font-size: 1.25rem;
-                font-weight: 700;
-                color: #1f2937;
+                font-weight: 600; /* Chỉnh lại font-weight cho giống ảnh mẫu */
                 margin-bottom: 8px;
             }
             #deleteMessage {
-                color: #4b5563;
+                color: #4A5568;
                 line-height: 1.6;
                 margin: 16px 0;
-                font-size: 1rem;
             }
             #deleteMessage strong {
-                color: #dc2626;
+                color: #c53030; /* Màu đỏ nhấn mạnh */
                 font-weight: 600;
             }
             .modal-footer {
@@ -104,6 +103,17 @@
                 justify-content: center;
                 gap: 12px;
                 margin-top: 24px;
+            }
+
+            /* === BỔ SUNG: Đảm bảo nút Xóa luôn có màu đỏ === */
+            .modal-footer .btn-danger {
+                background-color: #E53E3E; /* Màu đỏ */
+                color: white;
+                border-color: #E53E3E;
+            }
+            .modal-footer .btn-danger:hover {
+                background-color: #C53030; /* Màu đỏ đậm hơn khi hover */
+                border-color: #C53030;
             }
         </style>
     </head>
