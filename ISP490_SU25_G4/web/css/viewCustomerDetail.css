@@ -308,3 +308,47 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     background-color: #e5e7eb;
     color: #4b5563;
 }
+
+/* Thêm đoạn CSS này vào file viewCustomerDetail.css */
+
+.detail-header {
+    display: flex;
+    justify-content: space-between; /* Đẩy các phần tử con ra 2 phía */
+    align-items: center;            /* Căn giữa theo chiều dọc */
+    margin-bottom: 24px;            /* Giữ khoảng cách với nội dung bên dưới */
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px; /* Tạo khoảng cách giữa 2 nút Sửa và Xóa */
+}
+
+/* Bạn có thể xóa class .page-footer-actions cũ nếu nó không được dùng ở đâu khác */
+
+/*
+ * Thêm vào file: viewCustomerDetail.css
+ * Mục đích: Định dạng lại nút Sửa và Xóa trong header cho đồng bộ.
+*/
+
+.header-actions .btn {
+    background-color: #469990; /* Màu xanh mòng két giống trong ảnh */
+    color: #ffffff;             /* Chữ và icon màu trắng */
+    border: none;                /* Bỏ đường viền */
+    border-radius: 8px;          /* Bo tròn các góc */
+    font-weight: 500;
+    transition: background-color 0.2s ease-in-out; /* Hiệu ứng chuyển màu mượt mà */
+}
+
+/* Làm cho nút tối hơn một chút khi di chuột qua */
+.header-actions .btn:hover {
+    background-color: #3a8078; /* Màu xanh đậm hơn khi hover */
+    color: #ffffff;
+}
+
+/* Ghi đè lên màu của các lớp btn-danger và btn-secondary cũ */
+.header-actions .btn.btn-danger,
+.header-actions .btn.btn-secondary {
+    background-color: #469990;
+    color: #ffffff;
+    border-color: transparent; /* Đảm bảo không có viền màu khác */
+}
