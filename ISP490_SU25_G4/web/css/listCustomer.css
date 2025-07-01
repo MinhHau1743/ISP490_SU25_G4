@@ -1,11 +1,79 @@
 /*
-Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
-Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
-*/
-/* 
     Created on : Jun 17, 2025, 11:07:11 AM
     Author     : NGUYEN MINH
 */
+
+/* ============================================================ */
+/* === CSS ĐƯỢC CHUYỂN TỪ FILE listCustomer.jsp SANG ĐÂY === */
+/* ============================================================ */
+
+/* === STYLES FOR SEARCH SUGGESTIONS === */
+.suggestions-list {
+    display: none; /* Ẩn mặc định */
+    position: absolute;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    width: 100%;
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 1000;
+    margin-top: 6px; /* Khoảng cách với ô tìm kiếm */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+.suggestion-item {
+    padding: 10px 16px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #2d3748;
+}
+.suggestion-item:hover {
+    background-color: #f7fafc;
+}
+
+/* === STYLES FOR SUCCESS MESSAGE === */
+.success-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #28a745; /* Màu xanh lá cây cho thành công */
+    color: white;
+    padding: 16px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 2000;
+    opacity: 0;
+    transform: translateX(100%);
+    animation: slideInFadeOut 5s forwards; /* Tổng thời gian 5s */
+}
+
+.success-message .icon {
+    width: 24px;
+    height: 24px;
+}
+
+@keyframes slideInFadeOut {
+    0% {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    15%, 85% { /* Hiển thị trong 70% của 5s = 3.5s */
+        opacity: 1;
+        transform: translateX(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+
+/* ============================================================ */
+/* === PHẦN CSS GỐC CỦA BẠN === */
+/* ============================================================ */
+
 :root {
     --primary-color: #0d9488;
 }
@@ -100,14 +168,12 @@ body {
     padding: 0;
 }
 .customer-board-container {
-    display: flex;
-    justify-content: center;
     overflow-x: auto;
     padding: 24px;
 }
 .customer-board {
     display: flex;
-    gap: 20px;
+    gap: 16px;
 }
 .kanban-column {
     display: flex;
@@ -243,7 +309,7 @@ body {
     height: 16px;
 }
 
-/* CSS CHO MODAL XÓA */
+/* === UPDATED STYLES FOR DELETE MODAL === */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -252,12 +318,12 @@ body {
     height: 100%;
     background-color: rgba(0, 0, 0, 0.6);
     display: flex;
-    justify-content: center;
     align-items: center;
-    z-index: 2000;
+    justify-content: center;
+    z-index: 1050;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
+    transition: opacity 0.3s, transform 0.3s;
 }
 .modal-overlay.show {
     opacity: 1;
@@ -268,63 +334,47 @@ body {
 }
 .modal-content {
     background: white;
+    padding: 24px 32px; /* Increased padding */
     border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     width: 90%;
     max-width: 450px;
-    transform: scale(0.95);
-    transition: transform 0.3s ease;
+    text-align: center;
+    transform: scale(0.9);
+    transition: transform 0.3s;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     overflow: hidden;
 }
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 24px;
-    border-bottom: 1px solid #e5e7eb;
-}
-.modal-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #111827;
-    margin: 0;
-}
-.close-modal-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 5px;
-    line-height: 0;
-    color: #9ca3af;
-}
-.close-modal-btn:hover {
-    color: #111827;
-}
-.modal-body {
-    padding: 24px 30px;
-    text-align: center;
-}
-.warning-icon {
-    width: 50px;
-    height: 50px;
+
+.modal-content .warning-icon {
     color: #f59e0b;
+    width: 48px;
+    height: 48px;
     margin-bottom: 16px;
 }
-#deleteMessage {
-    font-size: 16px;
-    color: #4b5563;
-    margin: 0;
-    line-height: 1.6;
+.modal-content .modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #111827;
 }
-#deleteMessage strong {
-    color: #1f2937;
+.modal-content #deleteMessage {
+    color: #4A5568;
+    line-height: 1.6;
+    margin: 16px 0;
+    font-size: 16px;
+}
+.modal-content #deleteMessage strong {
+    color: #c53030;
+    font-weight: 600;
 }
 .modal-footer {
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
     gap: 12px;
+    margin-top: 24px;
     padding: 16px 24px;
     background-color: #f9fafb;
+    border-top: 1px solid #e5e7eb;
 }
 .btn.btn-secondary {
     background-color: #fff;
