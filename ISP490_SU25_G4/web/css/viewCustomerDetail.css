@@ -2,15 +2,34 @@
 Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
 Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
 */
-/* 
-    Created on : Jun 17, 2025, 12:12:40 PM
+/* Created on : Jun 17, 2025, 12:12:40 PM
     Author     : NGUYEN MINH
 */
+
+/* --- Page Layout & Sticky Footer --- */
 .page-content {
     padding: 24px;
     background-color: #f9fafb;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 64px); /* Giả sử mainMenu cao 64px */
 }
 
+.detail-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr; /* Tỷ lệ 2:1 cho cột chính và cột phụ */
+    gap: 24px;
+    align-items: flex-start;
+    flex-grow: 1; /* Giúp đẩy footer xuống cuối trang */
+}
+
+.main-column, .sidebar-column {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* --- Detail Header --- */
 .detail-header {
     display: flex;
     justify-content: space-between;
@@ -31,20 +50,7 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     color: var(--primary-color, #298E94);
 }
 
-.detail-layout {
-    display: grid;
-    grid-template-columns: 2fr 1fr; /* Tỷ lệ 2:1 cho cột chính và cột phụ */
-    gap: 24px;
-    align-items: flex-start;
-}
-
-.main-column, .sidebar-column {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-}
-
-/* --- Thẻ chung --- */
+/* --- Generic Detail Card --- */
 .detail-card {
     background: #ffffff;
     border-radius: 12px;
@@ -67,7 +73,7 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     gap: 16px;
 }
 
-/* --- Thẻ Header Profile --- */
+/* --- Profile Header Card --- */
 .profile-header-card .card-body {
     flex-direction: row;
     align-items: center;
@@ -98,7 +104,7 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     display: inline-block;
 }
 
-/* --- Các mục thông tin --- */
+/* --- Info Items Grid --- */
 .info-grid {
     display: grid;
     grid-template-columns: 1fr 1fr; /* 2 cột thông tin */
@@ -137,8 +143,89 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     text-decoration: underline;
 }
 
+/* --- Action Footer --- */
+.page-footer-actions {
+    background-color: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    padding: 16px 24px;
+    margin-top: 32px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    box-shadow: 0 -4px 10px -5px rgba(0,0,0,0.05);
+}
 
-/* --- Lịch sử giao dịch --- */
+/* --- Delete Confirmation Modal --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s;
+}
+.modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+.modal-content {
+    background: white;
+    padding: 24px 32px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 450px;
+    text-align: center;
+    transform: scale(0.9);
+    transition: transform 0.3s;
+}
+.modal-overlay.show .modal-content {
+    transform: scale(1);
+}
+.warning-icon {
+    color: #f59e0b; /* Màu vàng cảnh báo */
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+}
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+#deleteMessage {
+    color: #4A5568;
+    line-height: 1.6;
+    margin: 16px 0;
+}
+#deleteMessage strong {
+    color: #c53030; /* Màu đỏ nhấn mạnh */
+    font-weight: 600;
+}
+.modal-footer {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 24px;
+}
+.modal-footer .btn-danger {
+    background-color: #E53E3E; /* Màu đỏ */
+    color: white;
+    border-color: #E53E3E;
+}
+.modal-footer .btn-danger:hover {
+    background-color: #C53030; /* Màu đỏ đậm hơn khi hover */
+    border-color: #C53030;
+}
+
+/* --- Unused styles from original CSS (kept for reference) --- */
+
 .transaction-history-list {
     list-style: none;
     padding: 0;
@@ -146,7 +233,6 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     display: flex;
     flex-direction: column;
 }
-
 .transaction-item {
     display: flex;
     justify-content: space-between;
@@ -157,7 +243,6 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
 .transaction-item:last-child {
     border-bottom: none;
 }
-
 .transaction-info .code {
     font-weight: 600;
     color: #1f2937;
@@ -171,8 +256,6 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     color: #6b7280;
     margin-top: 2px;
 }
-
-/* Các pill trạng thái */
 .status-pill {
     padding: 4px 10px;
     border-radius: 16px;
@@ -225,4 +308,3 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     background-color: #e5e7eb;
     color: #4b5563;
 }
-
