@@ -247,7 +247,7 @@
                 }
             });
         </script>
-        //them js di , bi sao the, huhu
+        //them js di , bi sao the, huhu, toang roi 
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>
