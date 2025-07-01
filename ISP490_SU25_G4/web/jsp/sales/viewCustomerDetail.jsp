@@ -247,7 +247,7 @@
                 }
             });
         </script>
-        //them js di , bi sao the
+        //them js di , bi sao the, huhu
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>
