@@ -119,43 +119,7 @@
                 </div>
             </div>
         </div>
-
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                feather.replace();
-
-                // Logic for the delete confirmation modal
-                const modal = document.getElementById('deleteConfirmModal');
-                if (modal) {
-                    const deleteMessage = document.getElementById('deleteMessage');
-                    const customerIdInput = document.getElementById('customerIdToDelete');
-                    const cancelBtn = document.getElementById('cancelDeleteBtn');
-                    const deleteButton = document.querySelector('.delete-trigger-btn');
-
-                    if (deleteButton) {
-                        deleteButton.addEventListener('click', function (event) {
-                            event.preventDefault(); // Prevent the link from adding '#' to the URL
-
-                            const customerId = this.getAttribute('data-id');
-                            const customerName = this.getAttribute('data-name') || "khách hàng này";
-
-                            deleteMessage.innerHTML = `Bạn có chắc chắn muốn xóa khách hàng <strong>"${customerName}"</strong>? Hành động này không thể hoàn tác.`;
-                            customerIdInput.value = customerId;
-
-                            modal.classList.add('show');
-                            feather.replace();
-                        });
-                    }
-
-                    const closeModal = () => modal.classList.remove('show');
-                    cancelBtn.addEventListener('click', closeModal);
-                    modal.addEventListener('click', event => {
-                        if (event.target === modal)
-                            closeModal();
-                    });
-                }
-            });
-        </script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
+        <script src="${pageContext.request.contextPath}/js/delete-modal-handler.js"></script>
     </body>
 </html>
