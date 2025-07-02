@@ -124,41 +124,7 @@
                     }
                 }
 
-                // === UPDATED DELETE CONFIRMATION LOGIC ===
-                const modal = document.getElementById('deleteConfirmModal');
-                if (modal) {
-                    const deleteMessage = document.getElementById('deleteMessage');
-                    const customerIdInput = document.getElementById('customerIdToDelete');
-                    const cancelBtn = document.getElementById('cancelDeleteBtn');
-                    const deleteButtons = document.querySelectorAll('.delete-trigger-btn');
 
-                    deleteButtons.forEach(button => {
-                        button.addEventListener('click', function (event) {
-                            event.preventDefault();
-
-                            const customerId = this.dataset.id;
-                            const customerName = this.dataset.name || "khách hàng này"; // Sử dụng dataset
-
-                            // In ra console để kiểm tra (bạn có thể xóa dòng này sau khi đã xác nhận hoạt động)
-                            console.log(`Preparing to delete customer: ID=${customerId}, Name=${customerName}`);
-
-                            // Use innerHTML to allow for strong tag styling
-                            deleteMessage.innerHTML = `Bạn có chắc chắn muốn xóa khách hàng <strong>"${customerName}"</strong>? Hành động này không thể hoàn tác.`;
-                            customerIdInput.value = customerId;
-
-                            modal.classList.add('show');
-                            feather.replace(); // Re-render icon inside the modal
-                        });
-                    });
-
-                    const closeModal = () => modal.classList.remove('show');
-                    cancelBtn.addEventListener('click', closeModal);
-                    modal.addEventListener('click', function (event) {
-                        if (event.target === modal) {
-                            closeModal();
-                        }
-                    });
-                }
                 // ===================================================================
                 // <<< BẮT ĐẦU: LOGIC GỢI Ý TÌM KIẾM (PHIÊN BẢN ĐÃ SỬA LỖI) >>>
                 // ===================================================================
@@ -223,6 +189,7 @@
                 // ===================================================================
             });
         </script>
+        <script src="${pageContext.request.contextPath}/js/delete-modal-handler.js"></script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>
