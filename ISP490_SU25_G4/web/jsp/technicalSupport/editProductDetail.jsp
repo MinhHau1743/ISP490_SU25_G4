@@ -68,7 +68,7 @@
                                                 <div class="image-list" style="display: flex; gap: 24px; align-items: center; flex-wrap: wrap;">
                                                     <!-- Ảnh đang có -->
                                                     <img id="productImagePreview"
-                                                         src="${pageContext.request.contextPath}/image/${imageFileName}"
+                                                         src="${pageContext.request.contextPath}/image/${product.image}"
                                                          alt="Ảnh sản phẩm"
                                                          style="width: 260px; height: auto; border: 1px solid #ccc; border-radius: 8px;"
                                                          onerror="this.src='${pageContext.request.contextPath}/image/na.jpg'" />

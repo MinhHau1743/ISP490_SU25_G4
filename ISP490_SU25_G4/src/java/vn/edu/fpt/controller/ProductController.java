@@ -115,6 +115,7 @@ public class ProductController extends HttpServlet {
             for (ProductCategory c : categories) {
                 categoryMap.put(c.getId(), c.getName());
             }
+            
             request.setAttribute("productList", listProducts);
             request.setAttribute("categoryMap", categoryMap);
             request.setAttribute("categories", categories);

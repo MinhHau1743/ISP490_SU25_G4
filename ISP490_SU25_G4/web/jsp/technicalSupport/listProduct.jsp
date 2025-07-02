@@ -92,7 +92,7 @@
                                         <label for="category-filter">Nhóm hàng</label>
                                         <select id="category-filter" name="categoryId">
                                             <option value="">Tất cả</option>
-                                            <c:forEach var="category" items="${categoryList}">
+                                            <c:forEach var="category" items="${categories}">
                                                 <option value="${category.id}" ${param.categoryId == category.id ? 'selected' : ''}>${category.name}</option>
                                             </c:forEach>
                                         </select>
