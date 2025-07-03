@@ -23,16 +23,14 @@ public class ListAllEmployeesServlet extends HttpServlet {
             throws ServletException, IOException {
         
         UserDAO userDAO = new UserDAO();
-        
-        // Lấy danh sách nhân viên từ CSDL với tên vai trò chính xác
-        List<User> cskhEmployeeList = userDAO.getUsersByRoleName("Chăm sóc khách hàng");
-        
-        // **QUAN TRỌNG**: Đặt danh sách vào request với tên là "employeeList"
-        // để khớp với file JSP.
-        request.setAttribute("employeeList", cskhEmployeeList);
-        
-        // Chuyển tiếp tới file JSP trong thư mục /view/admin/
-        // Hãy chắc chắn đường dẫn này đúng với cấu trúc thư mục của bạn
-        request.getRequestDispatcher("/jsp/admin/listEmployeeCustomer.jsp").forward(request, response);
+
+        // Gọi phương thức mới để lấy TẤT CẢ nhân viên
+        List<User> allEmployeesList = userDAO.getAllEmployeesRole();
+
+        // Đặt danh sách vào request với tên là "employeeList" để JSP sử dụng
+        request.setAttribute("employeeList", allEmployeesList);
+
+        // Chuyển tiếp tới một file JSP chung (bạn sẽ tạo ở bước 3)
+        request.getRequestDispatcher("/jsp/admin/listAllEmployees.jsp").forward(request, response);
     }
 }
