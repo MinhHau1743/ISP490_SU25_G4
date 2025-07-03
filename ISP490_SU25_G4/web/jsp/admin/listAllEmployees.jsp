@@ -8,7 +8,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nhân viên CSKH</title>
+    <title>Danh sách nhân viên</title>
 
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
@@ -164,7 +164,7 @@
         <jsp:include page="/menu.jsp" />
         <main class="main-content">
             <header class="main-top-bar">
-                <div class="page-title">Nhân viên Chăm sóc khách hàng</div>
+                <div class="page-title">Danh sách Nhân viên</div>
                 <button class="notification-btn">
                     <i data-feather="bell"></i>
                 </button>
@@ -176,7 +176,7 @@
                         <i data-feather="search"></i>
                         <input type="text" placeholder="Tìm kiếm nhân viên...">
                     </div>
-                    <a href="${pageContext.request.contextPath}/view/admin/addEmployeeCustomerSupport.jsp" class="btn btn-primary">
+                      <a href="${pageContext.request.contextPath}/admin/employees/add" class="btn btn-primary">
                         <i data-feather="plus"></i> Thêm nhân viên
                     </a>
                 </div>
@@ -194,12 +194,22 @@
                             </div>
                             <div class="card-secondary-info">
                                 <div class="info-row">
+                                    <i data-feather="shield"></i>
+                                    <span class="info-label">
+                                        ${empty user.roleName ? 'Chưa có vai trò' : user.roleName}
+                                    </span>
+                                </div>
+                                <div class="info-row">
                                     <i data-feather="briefcase"></i>
-                                    <span class="info-label">${empty user.departmentName ? 'Chưa có' : user.departmentName}</span>
+                                    <span class="info-label">
+                                        ${empty user.departmentName ? 'Chưa có phòng ban' : user.departmentName}
+                                    </span>
                                 </div>
                                 <div class="info-row">
                                     <i data-feather="award"></i>
-                                    <span class="position-badge">${empty user.positionName ? 'Nhân viên' : user.positionName}</span>
+                                    <span class="position-badge">
+                                        ${empty user.positionName ? 'Nhân viên' : user.positionName}
+                                    </span>
                                 </div>
                             </div>
                             <div class="card-actions">
