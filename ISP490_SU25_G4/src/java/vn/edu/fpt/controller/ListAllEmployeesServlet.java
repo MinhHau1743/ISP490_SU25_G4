@@ -15,7 +15,7 @@ import java.util.List;
  * Servlet để xử lý việc hiển thị danh sách nhân viên Chăm sóc khách hàng.
  */
 // Đặt một URL rõ ràng cho servlet này
-@WebServlet(name = "ListEmployeeCskhServlet", urlPatterns = {"/admin/employees/cskh"})
+@WebServlet(name = "ListAllEmployeesServlet", urlPatterns = {"/admin/employees/list"})
 public class ListAllEmployeesServlet extends HttpServlet {
 
     @Override
