@@ -162,7 +162,6 @@
 <body>
     <div class="app-container">
         <jsp:include page="/menu.jsp" />
-
         <main class="main-content">
             <header class="main-top-bar">
                 <div class="page-title">Nhân viên Chăm sóc khách hàng</div>
