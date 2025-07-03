@@ -16,7 +16,7 @@ import java.util.List;
  */
 // Đặt một URL rõ ràng cho servlet này
 @WebServlet(name = "ListEmployeeCskhServlet", urlPatterns = {"/admin/employees/cskh"})
-public class ListEmployeeCskhServlet extends HttpServlet {
+public class ListAllEmployeesServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
