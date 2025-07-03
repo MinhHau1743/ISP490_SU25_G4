@@ -403,4 +403,45 @@ public class UserDAO {
         }
         return userList;
     }
+    public List<User> getAllEmployeesRole() {
+    List<User> employeeList = new ArrayList<>();
+    // Câu lệnh SQL JOIN các bảng và loại trừ vai trò 'Admin'
+    String sql = "SELECT u.*, r.name as role_name, p.name as position_name, d.name as department_name "
+            + "FROM users u "
+            + "JOIN roles r ON u.role_id = r.id "
+            + "LEFT JOIN positions p ON u.position_id = p.id "
+            + "LEFT JOIN departments d ON u.department_id = d.id "
+            + "WHERE r.name <> 'Admin' AND u.is_deleted = 0 " // Loại trừ Admin và user đã bị xóa
+            + "ORDER BY u.id"; // Sắp xếp cho nhất quán
+
+    try (Connection conn = DBContext.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql);
+         ResultSet rs = ps.executeQuery()) {
+
+        while (rs.next()) {
+            User user = new User();
+            // Gán các trường cơ bản từ bảng Users
+            user.setId(rs.getInt("id"));
+            user.setEmail(rs.getString("email"));
+            user.setLastName(rs.getString("last_name"));
+            user.setMiddleName(rs.getString("middle_name"));
+            user.setFirstName(rs.getString("first_name"));
+            user.setAvatarUrl(rs.getString("avatar_url"));
+            user.setEmployeeCode(rs.getString("employee_code"));
+            user.setPhoneNumber(rs.getString("phone_number"));
+            user.setStatus(rs.getString("status"));
+
+            // Gán các trường lấy từ bảng JOIN
+            user.setRoleName(rs.getString("role_name"));
+            user.setPositionName(rs.getString("position_name"));
+            user.setDepartmentName(rs.getString("department_name"));
+
+            employeeList.add(user);
+        }
+    } catch (Exception e) {
+        System.err.println("Lỗi khi lấy danh sách tất cả nhân viên: " + e.getMessage());
+        e.printStackTrace();
+    }
+    return employeeList;
+}
 }
