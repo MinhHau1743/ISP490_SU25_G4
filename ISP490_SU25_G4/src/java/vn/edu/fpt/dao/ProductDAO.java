@@ -98,6 +98,23 @@ public class ProductDAO extends DBContext {
         return false;
     }
 
+    public List<String> getAllOrigins() {
+        List<String> origins = new ArrayList<>();
+        String query = "SELECT DISTINCT origin FROM Products WHERE origin IS NOT NULL AND origin != ''";
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(query); ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                origins.add(rs.getString("origin"));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace(); // Có thể thay bằng logging nếu cần
+        }
+
+        return origins;
+    }
+
     public int insertProduct(Product p) {
         String sql = "INSERT INTO Products "
                 + "(name, category_id, product_code, image, origin, price, description, is_deleted, created_at, updated_at) "

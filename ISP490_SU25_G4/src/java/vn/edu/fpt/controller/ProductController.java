@@ -68,76 +68,76 @@ public class ProductController extends HttpServlet {
         ProductDAO products = new ProductDAO();
         ProductCategoriesDAO productCategories = new ProductCategoriesDAO();
 
-            int page = 1;
-            int pageSize = 10;
+        int page = 1;
+        int pageSize = 10;
 
-            String pageRaw = request.getParameter("page");
-            String sizeRaw = request.getParameter("size");
-            if (pageRaw != null) {
-                page = Integer.parseInt(pageRaw);
-            }
-            if (sizeRaw != null) {
-                pageSize = Integer.parseInt(sizeRaw);
-            }
+        String pageRaw = request.getParameter("page");
+        String sizeRaw = request.getParameter("size");
+        if (pageRaw != null) {
+            page = Integer.parseInt(pageRaw);
+        }
+        if (sizeRaw != null) {
+            pageSize = Integer.parseInt(sizeRaw);
+        }
 
-            // --- Lấy filter từ request ---
-            String keyword = request.getParameter("keyword");
-            String minPriceStr = request.getParameter("minPrice");
-            String maxPriceStr = request.getParameter("maxPrice");
-            String origin = request.getParameter("origin");
-            String categoryIdStr = request.getParameter("categoryId");
+        // --- Lấy filter từ request ---
+        String keyword = request.getParameter("keyword");
+        String minPriceStr = request.getParameter("minPrice");
+        String maxPriceStr = request.getParameter("maxPrice");
+        String origin = request.getParameter("origin");
+        String categoryIdStr = request.getParameter("categoryId");
 
-            Double minPrice = null, maxPrice = null;
-            Integer categoryId = null;
-            if (minPriceStr != null && !minPriceStr.isEmpty()) {
-                minPrice = Double.parseDouble(minPriceStr);
-            }
-            if (maxPriceStr != null && !maxPriceStr.isEmpty()) {
-                maxPrice = Double.parseDouble(maxPriceStr);
-            }
-            if (categoryIdStr != null && !categoryIdStr.isEmpty()) {
-                categoryId = Integer.parseInt(categoryIdStr);
-            }
-            if (origin != null && origin.trim().isEmpty()) {
-                origin = null;
-            }
+        Double minPrice = null, maxPrice = null;
+        Integer categoryId = null;
+        if (minPriceStr != null && !minPriceStr.isEmpty()) {
+            minPrice = Double.parseDouble(minPriceStr);
+        }
+        if (maxPriceStr != null && !maxPriceStr.isEmpty()) {
+            maxPrice = Double.parseDouble(maxPriceStr);
+        }
+        if (categoryIdStr != null && !categoryIdStr.isEmpty()) {
+            categoryId = Integer.parseInt(categoryIdStr);
+        }
+        if (origin != null && origin.trim().isEmpty()) {
+            origin = null;
+        }
 
-            // --- Đếm tổng sản phẩm và tổng trang theo filter ---
-            int totalProducts = products.countProductsWithFilter(keyword, minPrice, maxPrice, origin, categoryId);
-            int totalPages = (int) Math.ceil((double) totalProducts / pageSize);
+        // --- Đếm tổng sản phẩm và tổng trang theo filter ---
+        int totalProducts = products.countProductsWithFilter(keyword, minPrice, maxPrice, origin, categoryId);
+        int totalPages = (int) Math.ceil((double) totalProducts / pageSize);
 
-            // --- Lấy danh sách sản phẩm theo filter và phân trang ---
-            List<Product> listProducts = products.getProductsWithFilter(keyword, minPrice, maxPrice, origin, categoryId, page, pageSize);
+        // --- Lấy danh sách sản phẩm theo filter và phân trang ---
+        List<Product> listProducts = products.getProductsWithFilter(keyword, minPrice, maxPrice, origin, categoryId, page, pageSize);
 
-            // --- Lấy toàn bộ danh mục, map categoryId -> name ---
-            List<ProductCategory> categories = productCategories.getAllCategories();
-            Map<Integer, String> categoryMap = new HashMap<>();
-            for (ProductCategory c : categories) {
-                categoryMap.put(c.getId(), c.getName());
-            }
-            
-            request.setAttribute("productList", listProducts);
-            request.setAttribute("categoryMap", categoryMap);
-            request.setAttribute("categories", categories);
-            request.setAttribute("totalPages", totalPages);
-            request.setAttribute("currentPage", page);
-            request.setAttribute("pageSize", pageSize);
+        // --- Lấy toàn bộ danh mục, map categoryId -> name ---
+        List<ProductCategory> categories = productCategories.getAllCategories();
+        Map<Integer, String> categoryMap = new HashMap<>();
+        for (ProductCategory c : categories) {
+            categoryMap.put(c.getId(), c.getName());
+        }
+        List<String> origins = products.getAllOrigins();  // Giả định bạn có method này
+        request.setAttribute("originList", origins);
+        request.setAttribute("productList", listProducts);
+        request.setAttribute("categoryMap", categoryMap);
+        request.setAttribute("categories", categories);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("pageSize", pageSize);
 
-            // Gửi các filter sang JSP để giữ trạng thái filter (giữ lại trên giao diện)
-            request.setAttribute("keyword", keyword);
-            request.setAttribute("minPrice", minPriceStr);
-            request.setAttribute("maxPrice", maxPriceStr);
-            request.setAttribute("origin", origin);
-            request.setAttribute("categoryId", categoryIdStr);
+        // Gửi các filter sang JSP để giữ trạng thái filter (giữ lại trên giao diện)
+        request.setAttribute("keyword", keyword);
+        request.setAttribute("minPrice", minPriceStr);
+        request.setAttribute("maxPrice", maxPriceStr);
+        request.setAttribute("origin", origin);
+        request.setAttribute("categoryId", categoryIdStr);
 
-            String notification = (String) request.getAttribute("Notification");
-            if (notification != null && !notification.isEmpty()) {
-                request.setAttribute("Notification", notification);
-            }
+        String notification = (String) request.getAttribute("Notification");
+        if (notification != null && !notification.isEmpty()) {
+            request.setAttribute("Notification", notification);
+        }
 
-            request.getRequestDispatcher("jsp/technicalSupport/listProduct.jsp").forward(request, response);
+        request.getRequestDispatcher("jsp/technicalSupport/listProduct.jsp").forward(request, response);
     }
-
 
     /**
      * Handles the HTTP <code>POST</code> method.
