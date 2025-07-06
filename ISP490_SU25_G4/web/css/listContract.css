@@ -281,3 +281,44 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     background-color: #6C757D;
     color: white;
 }
+
+/* css/listContract.css */
+
+/* Mặc định ẩn bộ lọc */
+.filter-container {
+    display: none;
+    /* Thêm các style khác nếu bạn muốn có hiệu ứng chuyển động */
+    transition: all 0.3s ease-in-out;
+}
+
+/* Khi có class .show, bộ lọc sẽ hiện ra với display: flex */
+.filter-container.show {
+    display: flex;
+}
+
+/* Style cho nút "Bộ lọc" khi nó đang active */
+.filter-button.active {
+    background-color: #f0fdfa; /* Một màu xanh lá cây rất nhạt */
+    border-color: #0d9488; /* Màu teal-600 */
+    color: #0d9488;
+}
+
+/* Thêm vào file: /css/listContract.css */
+
+/* Mặc định ẩn bộ lọc */
+.filter-container {
+    display: none;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Khi có class .show, bộ lọc sẽ hiện ra với display: flex */
+.filter-container.show {
+    display: flex;
+}
+
+/* Style cho nút "Bộ lọc" khi nó đang active (bộ lọc đang mở) */
+.filter-button.active {
+    background-color: #f0fdfa; /* Một màu xanh lá cây rất nhạt */
+    border-color: #0d9488; /* Màu teal-600 */
+    color: #0d9488;
+}

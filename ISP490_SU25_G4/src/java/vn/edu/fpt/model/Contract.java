@@ -5,9 +5,11 @@
 package vn.edu.fpt.model;
 
 import java.math.BigDecimal;
-import java.util.Date;
+import java.sql.Date; // SỬA LỖI: Import java.sql.Date thay vì LocalDate
+import java.time.LocalDateTime;
 
 /**
+ * Lớp này ánh xạ trực tiếp đến bảng 'Contracts' trong cơ sở dữ liệu.
  *
  * @author datnt
  */
@@ -15,30 +17,57 @@ public class Contract {
 
     private long id;
     private String contractCode;
-    private String name; // Tên hợp đồng (sẽ được tạo ở DAO)
-    private String customerName; // Tên khách hàng (lấy từ bảng Enterprises)
-    private Date signDate; // Ánh xạ từ cột start_date
-    private Date expirationDate; // Ánh xạ từ cột end_date
-    private BigDecimal value; // Giá trị hợp đồng (tính từ bảng ContractProducts)
+    private String contractName;
+    private long enterpriseId;
+    private Long contractTypeId;
+    private Long createdById;
+    
+    // SỬA LỖI: Đổi kiểu dữ liệu từ LocalDate sang java.sql.Date
+    private Date startDate; 
+    private Date endDate;   
+    private Date signedDate;
+    
     private String status;
+    private BigDecimal totalValue;
+    private String notes;
+    private String fileUrl;
+    private Long renewedFromContractId;
+    private boolean isDeleted;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    // Các thuộc tính không có trong DB nhưng hữu ích cho việc hiển thị
+    private String enterpriseName;
+    private String createdByName;
 
     // Constructor mặc định
     public Contract() {
     }
 
-    // Constructor đầy đủ tham số
-    public Contract(long id, String contractCode, String name, String customerName, Date signDate, Date expirationDate, BigDecimal value, String status) {
+    // Constructor đầy đủ (ví dụ)
+    // SỬA LỖI: Cập nhật kiểu dữ liệu trong constructor
+    public Contract(long id, String contractCode, String contractName, long enterpriseId, Long contractTypeId, Long createdById, Date startDate, Date endDate, Date signedDate, String status, BigDecimal totalValue, String notes, String fileUrl, Long renewedFromContractId, boolean isDeleted, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.contractCode = contractCode;
-        this.name = name;
-        this.customerName = customerName;
-        this.signDate = signDate;
-        this.expirationDate = expirationDate;
-        this.value = value;
+        this.contractName = contractName;
+        this.enterpriseId = enterpriseId;
+        this.contractTypeId = contractTypeId;
+        this.createdById = createdById;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.signedDate = signedDate;
         this.status = status;
+        this.totalValue = totalValue;
+        this.notes = notes;
+        this.fileUrl = fileUrl;
+        this.renewedFromContractId = renewedFromContractId;
+        this.isDeleted = isDeleted;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
-    // Getters and Setters cho tất cả các thuộc tính
+    // Getters and Setters
+
     public long getId() {
         return id;
     }
@@ -55,51 +84,141 @@ public class Contract {
         this.contractCode = contractCode;
     }
 
-    public String getName() {
-        return name;
+    public String getContractName() {
+        return contractName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setContractName(String contractName) {
+        this.contractName = contractName;
     }
 
-    public String getCustomerName() {
-        return customerName;
+    public long getEnterpriseId() {
+        return enterpriseId;
     }
 
-    public void setCustomerName(String customerName) {
-        this.customerName = customerName;
+    public void setEnterpriseId(long enterpriseId) {
+        this.enterpriseId = enterpriseId;
     }
 
-    public Date getSignDate() {
-        return signDate;
+    public Long getContractTypeId() {
+        return contractTypeId;
     }
 
-    public void setSignDate(Date signDate) {
-        this.signDate = signDate;
+    public void setContractTypeId(Long contractTypeId) {
+        this.contractTypeId = contractTypeId;
     }
 
-    public Date getExpirationDate() {
-        return expirationDate;
+    public Long getCreatedById() {
+        return createdById;
     }
 
-    public void setExpirationDate(Date expirationDate) {
-        this.expirationDate = expirationDate;
+    public void setCreatedById(Long createdById) {
+        this.createdById = createdById;
     }
 
-    public BigDecimal getValue() {
-        return value;
+    // SỬA LỖI: Cập nhật Getters và Setters cho các trường Date
+    public Date getStartDate() {
+        return startDate;
     }
 
-    public void setValue(BigDecimal value) {
-        this.value = value;
+    public void setStartDate(Date startDate) {
+        this.startDate = startDate;
     }
 
+    public Date getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
+    }
+
+    public Date getSignedDate() {
+        return signedDate;
+    }
+
+    public void setSignedDate(Date signedDate) {
+        this.signedDate = signedDate;
+    }
+    
     public String getStatus() {
         return status;
     }
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public BigDecimal getTotalValue() {
+        return totalValue;
+    }
+
+    public void setTotalValue(BigDecimal totalValue) {
+        this.totalValue = totalValue;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
+
+    public String getFileUrl() {
+        return fileUrl;
+    }
+
+    public void setFileUrl(String fileUrl) {
+        this.fileUrl = fileUrl;
+    }
+
+    public Long getRenewedFromContractId() {
+        return renewedFromContractId;
+    }
+
+    public void setRenewedFromContractId(Long renewedFromContractId) {
+        this.renewedFromContractId = renewedFromContractId;
+    }
+
+    public boolean isIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    // Getters and setters cho các trường JOIN
+    public String getEnterpriseName() {
+        return enterpriseName;
+    }
+
+    public void setEnterpriseName(String enterpriseName) {
+        this.enterpriseName = enterpriseName;
+    }
+
+    public String getCreatedByName() {
+        return createdByName;
+    }
+
+    public void setCreatedByName(String createdByName) {
+        this.createdByName = createdByName;
     }
 }
