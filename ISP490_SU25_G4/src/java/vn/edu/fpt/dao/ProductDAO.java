@@ -381,4 +381,27 @@ public class ProductDAO extends DBContext {
         }
 
     }
+
+    public List<Product> getAllActiveProducts() {
+        List<Product> products = new ArrayList<>();
+        String query = "SELECT * FROM Products WHERE is_deleted = 0 ORDER BY name";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement st = conn.prepareStatement(query); ResultSet rs = st.executeQuery()) {
+            while (rs.next()) {
+                Product p = new Product();
+                p.setId(rs.getInt("id"));
+                p.setName(rs.getString("name"));
+                p.setProductCode(rs.getString("product_code"));
+                p.setImage(rs.getString("image"));
+                p.setOrigin(rs.getString("origin"));
+                p.setPrice(rs.getDouble("price"));
+                p.setDescription(rs.getString("description"));
+                p.setCategoryId(rs.getInt("category_id"));
+                products.add(p);
+            }
+        } catch (SQLException e) {
+            System.out.println("Lỗi khi truy vấn tất cả sản phẩm: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return products;
+    }
 }

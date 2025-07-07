@@ -53,7 +53,7 @@
                                 </div>
                                 <button type="button" class="filter-button" id="filterBtn"><i data-feather="filter"></i><span>Bộ lọc</span></button>
                                 <div class="toolbar-actions">
-                                    <a href="${pageContext.request.contextPath}/jsp/chiefOfStaff/createContract.jsp" class="btn btn-primary"><i data-feather="plus"></i>Tạo Hợp đồng</a>
+                                    <a href="${pageContext.request.contextPath}/createContract" class="btn btn-primary"><i data-feather="plus"></i>Tạo Hợp đồng</a>
                                 </div>
                             </div>
 
@@ -139,8 +139,8 @@
                                                 </c:choose>
                                             </td>
                                             <td class="table-actions">
-                                                <a href="viewContractDetail?action=view&id=${contract.id}" title="Xem"><i data-feather="eye"></i></a>
-                                                <a href="editContractDetail?action=edit&id=${contract.id}" title="Sửa"><i data-feather="edit-2"></i></a>
+                                                <a href="viewContract?action=view&id=${contract.id}" title="Xem"><i data-feather="eye"></i></a>
+                                                <a href="editContract?action=edit&id=${contract.id}" title="Sửa"><i data-feather="edit-2"></i></a>
                                                 <a href="#" onclick="confirmDelete('${contract.id}', '${contract.contractCode}')" title="Xóa"><i data-feather="trash-2"></i></a>
                                             </td>
                                         </tr>

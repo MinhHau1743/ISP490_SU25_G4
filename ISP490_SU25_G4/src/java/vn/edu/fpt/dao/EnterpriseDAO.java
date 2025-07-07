@@ -297,4 +297,20 @@ public class EnterpriseDAO extends DBContext {
         }
         return suggestions;
     }
+    public List<Enterprise> getAllActiveEnterprisesSimple() throws Exception {
+        List<Enterprise> enterpriseList = new ArrayList<>();
+        String sql = "SELECT id, name FROM Enterprises WHERE is_deleted = 0 ORDER BY name";
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Enterprise enterprise = new Enterprise();
+                enterprise.setId(rs.getInt("id"));
+                enterprise.setName(rs.getString("name"));
+                enterpriseList.add(enterprise);
+            }
+        }
+        return enterpriseList;
+    }
+    
 }

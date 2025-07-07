@@ -19,7 +19,7 @@ public class Contract {
     private String contractCode;
     private String contractName;
     private long enterpriseId;
-    private Long contractTypeId;
+//    private Long contractTypeId;
     private Long createdById;
     
     // SỬA LỖI: Đổi kiểu dữ liệu từ LocalDate sang java.sql.Date
@@ -51,7 +51,7 @@ public class Contract {
         this.contractCode = contractCode;
         this.contractName = contractName;
         this.enterpriseId = enterpriseId;
-        this.contractTypeId = contractTypeId;
+//        this.contractTypeId = contractTypeId;
         this.createdById = createdById;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -100,13 +100,13 @@ public class Contract {
         this.enterpriseId = enterpriseId;
     }
 
-    public Long getContractTypeId() {
-        return contractTypeId;
-    }
-
-    public void setContractTypeId(Long contractTypeId) {
-        this.contractTypeId = contractTypeId;
-    }
+//    public Long getContractTypeId() {
+//        return contractTypeId;
+//    }
+//
+//    public void setContractTypeId(Long contractTypeId) {
+//        this.contractTypeId = contractTypeId;
+//    }
 
     public Long getCreatedById() {
         return createdById;
