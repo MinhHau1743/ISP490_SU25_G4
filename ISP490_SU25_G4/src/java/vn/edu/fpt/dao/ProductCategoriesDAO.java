@@ -54,4 +54,18 @@ public class ProductCategoriesDAO extends DBContext {
         return false;
     }
 
+    public boolean checkDuplicate(String name) {
+        String sql = "SELECT COUNT(*) FROM product_category WHERE LOWER(name) = LOWER(?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, name);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
 }

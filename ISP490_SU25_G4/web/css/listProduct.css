@@ -629,3 +629,27 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     height: 36px;
     padding: 0;
 }
+/* Đảm bảo modal hiển thị trên cùng */
+.modal {
+    z-index: 1050 !important;
+}
+
+.modal-backdrop {
+    z-index: 1040 !important;
+    opacity: 0.5 !important;
+}
+
+/* Đảm bảo modal-body không bị co lại */
+.modal .modal-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+/* Tùy chỉnh input đẹp hơn */
+.modal .form-control {
+    width: 100%;
+    max-width: 400px;
+    margin: auto;
+}

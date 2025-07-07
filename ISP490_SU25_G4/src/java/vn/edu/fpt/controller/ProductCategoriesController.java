@@ -62,21 +62,36 @@ public class ProductCategoriesController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Lấy tham số từ form
+        request.setCharacterEncoding("UTF-8");
         String name = request.getParameter("groupName");
+
         ProductCategoriesDAO productCategories = new ProductCategoriesDAO();
+
+        // Kiểm tra rỗng
+        if (name == null || name.trim().isEmpty()) {
+            request.setAttribute("error", "Tên nhóm không được để trống!");
+            request.getRequestDispatcher("/ProductController").forward(request, response);
+            return;
+        }
+
+        // Kiểm tra trùng
+        if (productCategories.checkDuplicate(name.trim())) {
+            request.setAttribute("error", "Tên nhóm đã tồn tại!");
+            request.getRequestDispatcher("/ProductController").forward(request, response);
+            return;
+        }
+
+        // Nếu hợp lệ, tiến hành thêm
         ProductCategory category = new ProductCategory();
-        category.setName(name);
+        category.setName(name.trim());
 
         boolean success = productCategories.insertCategory(category);
 
         if (success) {
-            // Redirect luôn về ProductController
             response.sendRedirect(request.getContextPath() + "/ProductController");
         } else {
-            // Thêm thất bại, forward về trang thêm với thông báo lỗi
-            request.setAttribute("errorMessage", "Thêm danh mục thất bại!");
-            request.getRequestDispatcher("/addCategory.jsp").forward(request, response);
+            request.setAttribute("error", "Thêm danh mục thất bại!");
+            request.getRequestDispatcher("/ProductController").forward(request, response);
         }
     }
 

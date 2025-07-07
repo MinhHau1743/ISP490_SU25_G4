@@ -1,17 +1,14 @@
-/* 
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/JavaScript.js to edit this template
- */
 document.addEventListener('DOMContentLoaded', function () {
+    // 1. Format giá khi load trang
     document.querySelectorAll('.number-format').forEach(function (input) {
-        // Format value khi load trang
+        // Format khi load
         if (input.value && !isNaN(input.value.replace(/[^0-9]/g, ''))) {
             let raw = input.value.replace(/[^0-9]/g, '');
             input.value = Number(raw).toLocaleString('vi-VN');
         }
 
-        // Format realtime khi nhập
-        input.addEventListener('input', function (e) {
+        // Format khi nhập
+        input.addEventListener('input', function () {
             let raw = input.value.replace(/[^0-9]/g, '');
             if (raw === '') {
                 input.value = '';
@@ -21,27 +18,54 @@ document.addEventListener('DOMContentLoaded', function () {
             input.setSelectionRange(input.value.length, input.value.length);
         });
 
-        // Khi submit, bỏ dấu phẩy
+        // Bỏ dấu phẩy khi submit
         input.form && input.form.addEventListener('submit', function () {
             input.value = input.value.replace(/[^0-9]/g, '');
         });
     });
-});
 
+    // 2. Toggle dạng xem (lưới/bảng)
+    const gridViewBtn = document.getElementById("gridViewBtn");
+    const tableViewBtn = document.getElementById("tableViewBtn");
+    const productList = document.getElementById("productList");
+    const productTable = document.getElementById("productTable");
 
+    if (gridViewBtn && tableViewBtn && productList && productTable) {
+        function setActiveButton(mode) {
+            if (mode === "grid") {
+                gridViewBtn.classList.add("active");
+                tableViewBtn.classList.remove("active");
+                productList.style.display = "flex";
+                productTable.style.display = "none";
+            } else {
+                tableViewBtn.classList.add("active");
+                gridViewBtn.classList.remove("active");
+                productList.style.display = "none";
+                productTable.style.display = "block";
+            }
+            localStorage.setItem("productViewMode", mode);
+            feather.replace();
+        }
 
-document.addEventListener('DOMContentLoaded', function () {
-    feather.replace();
+        gridViewBtn.addEventListener("click", () => setActiveButton("grid"));
+        tableViewBtn.addEventListener("click", () => setActiveButton("table"));
 
-    // Logic cho nút filter
+        const savedView = localStorage.getItem("productViewMode") || "table";
+        setActiveButton(savedView);
+    }
+
+    // 3. feather icons
+    if (typeof feather !== "undefined") {
+        feather.replace();
+    }
+
+    // 4. Bộ lọc (filter)
     const filterBtn = document.getElementById('filterBtn');
     const filterContainer = document.getElementById('filterContainer');
-
-    // Hiển thị bộ lọc nếu có tham số lọc trên URL
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('minPrice') || urlParams.has('maxPrice') || urlParams.has('originId') || urlParams.has('categoryId')) {
         if (filterContainer)
-            filterContainer.style.display = 'flex'; // Sử dụng flex để khớp với CSS
+            filterContainer.style.display = 'flex';
         if (filterBtn)
             filterBtn.classList.add('active');
     } else {
@@ -52,12 +76,12 @@ document.addEventListener('DOMContentLoaded', function () {
     if (filterBtn && filterContainer) {
         filterBtn.addEventListener('click', function () {
             const isHidden = filterContainer.style.display === 'none';
-            filterContainer.style.display = isHidden ? 'flex' : 'none'; // Đổi thành flex
+            filterContainer.style.display = isHidden ? 'flex' : 'none';
             this.classList.toggle('active', isHidden);
         });
     }
 
-    // Logic cho modal xóa (không thay đổi)
+    // 5. Modal xác nhận xoá
     const deleteModal = document.getElementById('deleteConfirmModal');
     if (deleteModal) {
         const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
@@ -68,10 +92,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const openDeleteModal = (id, name, image) => {
             deleteMessage.innerHTML = `Bạn có chắc chắn muốn xóa sản phẩm '<strong>${name}</strong>'?`;
-            // Cập nhật link xóa trong servlet của bạn
             confirmDeleteBtn.href = `deleteProduct?id=${id}`;
             deleteModal.classList.add('show');
-            feather.replace(); // Phải gọi lại để render icon X và alert-triangle trong modal
+            feather.replace();
         };
 
         const closeDeleteModal = () => deleteModal.classList.remove('show');
@@ -90,34 +113,67 @@ document.addEventListener('DOMContentLoaded', function () {
                 closeDeleteModal();
         });
     }
-});
-// Lấy modal, ảnh lớn và caption
-var modal = document.getElementById("myModal");
-var modalImg = document.getElementById("img01");
-var captionText = document.getElementById("caption");
 
-// Sửa thành: Chọn tất cả ảnh bằng CLASS
-var thumbnails = document.querySelectorAll(".modal-img");
+    // 6. Modal xem ảnh lớn
+    const modal = document.getElementById("myModal");
+    const modalImg = document.getElementById("img01");
+    const captionText = document.getElementById("caption");
+    const thumbnails = document.querySelectorAll(".modal-img");
 
-// Gắn sự kiện cho từng ảnh
-thumbnails.forEach(function (img) {
-    img.addEventListener("click", function () {
-        modal.style.display = "block";
-        modalImg.src = this.src; // Hiển thị ảnh click
-        captionText.innerHTML = this.alt;
-    });
-});
+    if (modal && modalImg && captionText && thumbnails.length > 0) {
+        thumbnails.forEach(function (img) {
+            img.addEventListener("click", function () {
+                modal.style.display = "block";
+                modalImg.src = this.src;
+                captionText.innerHTML = this.alt;
+            });
+        });
 
-// Đóng modal
-var span = document.getElementsByClassName("close")[0];
-span.onclick = function () {
-    modal.style.display = "none";
-};
+        const span = document.getElementsByClassName("close")[0];
+        if (span) {
+            span.onclick = function () {
+                modal.style.display = "none";
+            };
+        }
 
-// (Optional) Đóng khi click ngoài ảnh
-modal.addEventListener("click", function (e) {
-    if (e.target === modal) {
-        modal.style.display = "none";
+        modal.addEventListener("click", function (e) {
+            if (e.target === modal) {
+                modal.style.display = "none";
+            }
+        });
     }
 });
 
+document.addEventListener("DOMContentLoaded", function () {
+    const alertBox = document.getElementById("customAlert");
+    const progressBar = document.getElementById("alertProgressBar");
+    if (alertBox && progressBar) {
+        setTimeout(() => {
+            progressBar.style.width = '0%';
+        }, 100);
+        setTimeout(() => {
+            $(alertBox).alert('close');
+        }, 5100);
+    }
+});
+// Hide loading overlay when page fully loaded
+window.addEventListener("load", function () {
+    const overlay = document.getElementById("loadingOverlay");
+    if (overlay) {
+        overlay.style.opacity = "0";
+        overlay.style.transition = "opacity 0.5s ease";
+        setTimeout(() => overlay.style.display = "none", 500);
+    }
+});
+// Sau 100ms để đảm bảo DOM render xong mới bắt đầu chạy progress
+setTimeout(function () {
+    document.getElementById("alertProgressBar").style.width = "0%";
+}, 100);
+
+// Sau 5s thì tự động ẩn alert
+setTimeout(function () {
+    const alertBox = document.getElementById("customAlert");
+    if (alertBox) {
+        $(alertBox).alert('close'); // Bootstrap dismiss
+    }
+}, 5100);

@@ -32,13 +32,30 @@
         <div class="app-container">
             <jsp:include page="../../mainMenu.jsp"/>
             <main class="main-content">
-                <header class="page-header">
+                <header class="page-header mb-4">
                     <div class="title-section">
                         <div class="title">Danh sách Sản phẩm</div>
                         <div class="breadcrumb">Sản phẩm / <span>Danh sách</span></div>
+
                     </div>
                     <button class="notification-btn"><i data-feather="bell"></i><span class="notification-badge"></span></button>
                 </header>
+                <c:if test="${not empty error}">
+                    <div id="customAlert" class="alert alert-danger alert-dismissible fade show" role="alert" 
+                         style="max-width: 1600px; margin-bottom: 20px; padding-right: 3rem; position: relative;">
+                        ${error}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close" 
+                                style="position: absolute; top: 10px; right: 10px;">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+
+                        <!-- Progress bar -->
+                        <div class="progress mt-2" style="height: 4px;">
+                            <div id="alertProgressBar" class="progress-bar bg-danger" role="progressbar" 
+                                 style="width: 100%; transition: width 5s linear;"></div>
+                        </div>
+                    </div>
+                </c:if>
 
                 <div class="page-content">
                     <div class="content-card">
@@ -54,19 +71,22 @@
                                 </button>
                                 <div class="toolbar-actions">
                                     <div class="view-toggle ml-3">
-                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="gridViewBtn" title="Xem dạng lưới">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm active" id="gridViewBtn" title="Xem dạng lưới">
                                             <i data-feather="grid"></i>
                                         </button>
                                         <button type="button" class="btn btn-outline-secondary btn-sm" id="tableViewBtn" title="Xem dạng bảng">
                                             <i data-feather="list"></i>
                                         </button>
                                     </div>
+
                                     <a href="createProduct" class="btn btn-primary">
                                         <i data-feather="plus"></i><span>Thêm Sản phẩm</span>
                                     </a>
-                                    <a href="${pageContext.request.contextPath}/jsp/technicalSupport/createGroupProduct.jsp" class="btn btn-primary">
-                                        <i data-feather="plus-square"></i><span>Thêm nhóm hàng</span>
-                                    </a>
+                                    <!-- Nút mở modal -->
+                                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addGroupModal">
+                                        <i data-feather="plus-square"></i><span> Thêm nhóm hàng</span>
+                                    </button>
+
                                 </div>
                             </div>
 
@@ -107,7 +127,7 @@
                             </div>
                         </form>
 
-                        <!-- Hiển thị sản phẩm -->
+
                         <div class="product-grid">
                             <div class="view-mode-container">
                                 <!-- Dạng lưới -->
@@ -152,32 +172,38 @@
                                     <table class="table table-bordered table-hover w-100">
                                         <thead class="thead-light">
                                             <tr>
-                                                <th>Ảnh</th>
                                                 <th>Tên</th>
                                                 <th>Mã SP</th>
                                                 <th>Danh mục</th>
                                                 <th>Xuất xứ</th>
                                                 <th>Giá</th>
                                                 <th>Ngày tạo</th>
+                                                <th>Cập nhật</th>
                                                 <th>Hành động</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <c:forEach var="p" items="${productList}">
                                                 <tr>
-                                                    <td><img src="${pageContext.request.contextPath}/image/${p.image}" width="60" height="60"
-                                                             onerror="this.src='${pageContext.request.contextPath}/image/na.jpg'" /></td>
                                                     <td>${p.name}</td>
                                                     <td>${p.productCode}</td>
                                                     <td>${categoryMap[p.categoryId]}</td>
                                                     <td>${p.origin}</td>
                                                     <td><fmt:formatNumber value="${p.price}" type="currency" currencyCode="VND"/></td>
                                                     <td>${p.createdAt}</td>
-                                                    <td>
-                                                        <a href="getProductById?id=${p.id}" title="Xem"><i data-feather="eye"></i></a>
-                                                        <a href="editProduct?id=${p.id}" title="Sửa"><i data-feather="edit-2"></i></a>
-                                                        <a href="deleteProduct" class="delete-trigger-btn" data-id="${p.id}" title="Xóa"><i data-feather="trash-2"></i></a>
+                                                    <td>${p.updatedAt}</td>
+                                                    <td class="text-center">
+                                                        <a href="getProductById?id=${p.id}" title="Xem" class="btn-action view">
+                                                            <i data-feather="eye"></i>
+                                                        </a>
+                                                        <a href="editProduct?id=${p.id}" title="Sửa" class="btn-action edit">
+                                                            <i data-feather="edit-2"></i>
+                                                        </a>
+                                                        <a href="deleteProduct" data-id="${p.id}" title="Xóa" class="btn-action delete delete-trigger-btn">
+                                                            <i data-feather="trash-2"></i>
+                                                        </a>
                                                     </td>
+
                                                 </tr>
                                             </c:forEach>
                                         </tbody>
@@ -187,6 +213,7 @@
                         </div>
 
                         <jsp:include page="../../pagination.jsp"/>
+                        <jsp:include page="../technicalSupport/createGroupProduct.jsp" />
                     </div>
                 </div>
             </main>
@@ -204,45 +231,6 @@
         <!-- Scripts -->
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
         <script src="${pageContext.request.contextPath}/js/listProduct.js"></script>
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                const gridViewBtn = document.getElementById("gridViewBtn");
-                const tableViewBtn = document.getElementById("tableViewBtn");
-                const productList = document.getElementById("productList");
-                const productTable = document.getElementById("productTable");
-
-                if (!gridViewBtn || !tableViewBtn || !productList || !productTable) {
-                    console.warn("Thiếu phần tử HTML cần thiết.");
-                    return;
-                }
-
-                function showGridView() {
-                    productList.style.display = "flex";
-                    productTable.style.display = "none";
-                    localStorage.setItem("productViewMode", "grid");
-                }
-
-                function showTableView() {
-                    productList.style.display = "none";
-                    productTable.style.display = "block";
-                    localStorage.setItem("productViewMode", "table");
-                }
-
-                gridViewBtn.addEventListener("click", showGridView);
-                tableViewBtn.addEventListener("click", showTableView);
-
-                const savedView = localStorage.getItem("productViewMode");
-                if (savedView === "table") {
-                    showTableView();
-                } else {
-                    showGridView();
-                }
-
-                if (typeof feather !== "undefined") {
-                    feather.replace();
-                }
-            });
-        </script>
 
     </body>
 </html>

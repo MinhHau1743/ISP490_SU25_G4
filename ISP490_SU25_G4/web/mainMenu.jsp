@@ -72,7 +72,7 @@
             <li><a href="${pageContext.request.contextPath}/jsp/logout.jsp" class="${currentPage == 'logout' ? 'active' : ''}"><i data-feather="user"></i><span>Đăng xuất</span></a></li>
         </ul>
     </nav>
-
+    
     <div class="sidebar-footer">
         <p>© 2025 DPCRM from ISP490_SU25_GR4</p>
     </div>
