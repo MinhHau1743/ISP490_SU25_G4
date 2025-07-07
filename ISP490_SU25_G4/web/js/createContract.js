@@ -1,102 +1,155 @@
-/* 
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/JavaScript.js to edit this template
- */
+// Chờ cho đến khi toàn bộ cấu trúc HTML của trang đã được tải xong
 document.addEventListener('DOMContentLoaded', function () {
-                feather.replace();
-                const today = new Date().toISOString().split('T')[0];
-                const signDateInput = document.getElementById('signDate');
-                if(signDateInput) signDateInput.value = today;
 
-                const addProductBtn = document.getElementById('addProductBtn');
-                const productModal = document.getElementById('productSearchModal');
-                const closeProductModalBtn = document.getElementById('closeProductModalBtn');
-                const productListContainer = document.getElementById('productList');
-                const contractItemList = document.getElementById('contract-item-list');
-                const subTotalEl = document.getElementById('subTotal');
-                const vatAmountEl = document.getElementById('vatAmount');
-                const grandTotalEl = document.getElementById('grandTotal');
-                const contractValueInput = document.getElementById('contractValue');
-                const productSearchInput = document.getElementById('productSearchInput');
+    // --- Hằng số ---
+    const VAT_RATE = 0.10; // Tách riêng tỉ lệ VAT để dễ dàng thay đổi
 
-                const closeModal = () => { productModal.style.display = 'none'; };
-                addProductBtn.addEventListener('click', () => { productModal.style.display = 'flex'; feather.replace(); });
-                closeProductModalBtn.addEventListener('click', closeModal);
-                productModal.addEventListener('click', (e) => { if(e.target === productModal) closeModal(); });
+    // --- Lấy ra các phần tử DOM ---
+    const addProductBtn = document.getElementById('addProductBtn');
+    const productModal = document.getElementById('productSearchModal');
+    const closeProductModalBtn = document.getElementById('closeProductModalBtn');
+    const productListContainer = document.getElementById('productList');
+    const contractItemList = document.getElementById('contract-item-list');
+    const subTotalEl = document.getElementById('subTotal');
+    const vatAmountEl = document.getElementById('vatAmount');
+    const grandTotalEl = document.getElementById('grandTotal');
+    const contractValueInput = document.getElementById('contractValue');
+    const productSearchInput = document.getElementById('productSearchInput');
+    const signDateInput = document.getElementById('signDate');
 
-                // Lọc sản phẩm trong modal
-                productSearchInput.addEventListener('keyup', function() {
-                    const filter = this.value.toUpperCase();
-                    const items = productListContainer.getElementsByClassName('product-search-item');
-                    for (let i = 0; i < items.length; i++) {
-                        const name = items[i].querySelector('.name').textContent.toUpperCase();
-                        if (name.indexOf(filter) > -1) {
-                            items[i].style.display = "";
-                        } else {
-                            items[i].style.display = "none";
-                        }
-                    }
-                });
+    // --- Các hàm xử lý ---
 
-                productListContainer.addEventListener('click', (e) => {
-                    const item = e.target.closest('.product-search-item');
-                    if (!item) return;
-                    
-                    const existingItem = contractItemList.querySelector(`tr[data-id='${item.dataset.id}']`);
-                    if (existingItem) {
-                        alert('Sản phẩm này đã có trong hợp đồng.');
-                        return;
-                    }
+    /** Mở modal chọn sản phẩm */
+    const openModal = () => {
+        if (productModal) {
+            productModal.style.display = 'flex';
+            feather.replace(); // Re-initialize icons inside modal
+        }
+    };
 
-                    const id = item.dataset.id;
-                    const name = item.dataset.name;
-                    const price = parseFloat(item.dataset.price);
-                    const newRow = document.createElement('tr');
-                    newRow.dataset.price = price;
-                    newRow.dataset.id = id;
-                    
-                    newRow.innerHTML = `
-                        <td class="product-name-cell">${name}<input type="hidden" name="productId" value="${id}"></td>
-                        <td><input type="number" name="quantity" class="form-control item-quantity" value="1" min="1"></td>
-                        <td class="item-price" style="text-align: right;">${price.toLocaleString('vi-VN')}</td>
-                        <td class="item-total" style="text-align: right;">${price.toLocaleString('vi-VN')}</td>
-                        <td style="text-align: center;"><button type="button" class="delete-item-btn"><i data-feather="trash-2" style="width:16px; height: 16px;"></i></button></td>
-                    `;
-                    contractItemList.appendChild(newRow);
-                    feather.replace();
-                    updateTotals();
-                    closeModal();
-                });
+    /** Đóng modal chọn sản phẩm */
+    const closeModal = () => {
+        if (productModal) {
+            productModal.style.display = 'none';
+        }
+    };
 
-                contractItemList.addEventListener('click', (e) => {
-                    if (e.target.closest('.delete-item-btn')) {
-                        e.target.closest('tr').remove();
-                        updateTotals();
-                    }
-                });
-                contractItemList.addEventListener('input', (e) => {
-                     if (e.target.classList.contains('item-quantity')) {
-                        updateTotals();
-                    }
-                });
+    /** Cập nhật tất cả các giá trị tổng */
+    const updateTotals = () => {
+        let subTotal = 0;
+        const rows = contractItemList.querySelectorAll('tr');
 
-                function updateTotals() {
-                    let subTotal = 0;
-                    contractItemList.querySelectorAll('tr').forEach(row => {
-                        const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
-                        const price = parseFloat(row.dataset.price) || 0; 
-                        const total = quantity * price;
-                        row.querySelector('.item-total').textContent = total.toLocaleString('vi-VN');
-                        subTotal += total;
-                    });
-                    const vat = subTotal * 0.1;
-                    const grandTotal = subTotal + vat;
-                    subTotalEl.textContent = subTotal.toLocaleString('vi-VN');
-                    vatAmountEl.textContent = vat.toLocaleString('vi-VN');
-                    grandTotalEl.textContent = grandTotal.toLocaleString('vi-VN');
-                    contractValueInput.value = grandTotal;
-                }
-                
+        rows.forEach(row => {
+            const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
+            const price = parseFloat(row.dataset.price) || 0;
+            const total = quantity * price;
+
+            // Cập nhật thành tiền cho từng dòng
+            const itemTotalEl = row.querySelector('.item-total');
+            if (itemTotalEl) {
+                itemTotalEl.textContent = total.toLocaleString('vi-VN');
+            }
+            subTotal += total;
+        });
+
+        const vat = subTotal * VAT_RATE;
+        const grandTotal = subTotal + vat;
+
+        // Cập nhật các giá trị ở footer bảng
+        if (subTotalEl) subTotalEl.textContent = subTotal.toLocaleString('vi-VN');
+        if (vatAmountEl) vatAmountEl.textContent = vat.toLocaleString('vi-VN');
+        if (grandTotalEl) grandTotalEl.innerHTML = `<strong>${grandTotal.toLocaleString('vi-VN')}</strong>`; // Dùng innerHTML để giữ đậm
+        
+        // Cập nhật giá trị vào input ẩn để gửi đi
+        if (contractValueInput) contractValueInput.value = grandTotal;
+    };
+
+    /** Thêm một sản phẩm vào bảng chi tiết hợp đồng */
+    const addProductToContract = (item) => {
+        const id = item.dataset.id;
+        
+        // Kiểm tra sản phẩm đã tồn tại trong hợp đồng chưa
+        if (contractItemList.querySelector(`tr[data-id='${id}']`)) {
+            alert('Sản phẩm này đã có trong hợp đồng.');
+            return;
+        }
+
+        const name = item.dataset.name;
+        const price = parseFloat(item.dataset.price);
+        const newRow = document.createElement('tr');
+        newRow.dataset.id = id;
+        newRow.dataset.price = price;
+
+        newRow.innerHTML = `
+            <td class="product-name-cell">${name}
+                <input type="hidden" name="productId" value="${id}">
+            </td>
+            <td><input type="number" name="quantity" class="form-control item-quantity" value="1" min="1"></td>
+            <td class="item-price" style="text-align: right;">${price.toLocaleString('vi-VN')}</td>
+            <td class="item-total" style="text-align: right;">${price.toLocaleString('vi-VN')}</td>
+            <td style="text-align: center;"><button type="button" class="delete-item-btn"><i data-feather="trash-2" style="width:16px; height: 16px;"></i></button></td>
+        `;
+
+        contractItemList.appendChild(newRow);
+        feather.replace(); // Kích hoạt icon cho nút xóa mới
+        updateTotals();
+        closeModal();
+    };
+    
+    /** Lọc danh sách sản phẩm trong modal */
+    const filterProducts = (event) => {
+        const filter = event.target.value.toUpperCase();
+        const items = productListContainer.getElementsByClassName('product-search-item');
+        Array.from(items).forEach(item => {
+            const name = item.querySelector('.name').textContent.toUpperCase();
+            item.style.display = name.includes(filter) ? "" : "none";
+        });
+    };
+
+    // --- Gắn các sự kiện (Event Listeners) ---
+    
+    if (addProductBtn) addProductBtn.addEventListener('click', openModal);
+    if (closeProductModalBtn) closeProductModalBtn.addEventListener('click', closeModal);
+    if (productSearchInput) productSearchInput.addEventListener('keyup', filterProducts);
+
+    if (productModal) {
+        productModal.addEventListener('click', (e) => {
+            if (e.target === productModal) closeModal();
+        });
+    }
+
+    if (productListContainer) {
+        productListContainer.addEventListener('click', (e) => {
+            const item = e.target.closest('.product-search-item');
+            if (item) addProductToContract(item);
+        });
+    }
+    
+    if (contractItemList) {
+        // Sử dụng event delegation cho các sự kiện input và click
+        contractItemList.addEventListener('input', (e) => {
+            if (e.target.classList.contains('item-quantity')) {
                 updateTotals();
-            });
+            }
+        });
 
+        contractItemList.addEventListener('click', (e) => {
+            const deleteBtn = e.target.closest('.delete-item-btn');
+            if (deleteBtn) {
+                deleteBtn.closest('tr').remove();
+                updateTotals();
+            }
+        });
+    }
+    
+    // --- Khởi tạo ---
+
+    // Tự động điền ngày ký là ngày hôm nay
+    if (signDateInput) {
+        signDateInput.value = new Date().toISOString().split('T')[0];
+    }
+    
+    // Khởi tạo các icon và tính toán tổng ban đầu
+    feather.replace();
+    updateTotals();
+});

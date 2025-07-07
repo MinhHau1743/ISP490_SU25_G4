@@ -48,8 +48,7 @@ public class ListContractController extends HttpServlet {
         ContractDAO dao = new ContractDAO();
         List<Contract> contractList = dao.getContracts(searchQuery, status, startDateFrom, startDateTo, page, PAGE_SIZE);
         int totalContracts = dao.getContractCount(searchQuery, status, startDateFrom, startDateTo);
-// THÊM DÒNG DEBUG NÀY VÀO
-        System.out.println(">>> SERVLET: Danh sách nhận từ DAO có " + contractList.size() + " phần tử.");
+
         // 4. Tính toán số trang
         int totalPages = (int) Math.ceil((double) totalContracts / PAGE_SIZE);
 
