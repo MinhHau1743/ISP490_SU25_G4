@@ -1,87 +1,71 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package vn.edu.fpt.controller;
 
-import java.io.IOException;
-import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import vn.edu.fpt.dao.ContractDAO;
 
 /**
+ * Servlet này xử lý yêu cầu xóa mềm một hợp đồng.
  *
- * @author PC
+ * @author PC (edited by Gemini)
  */
 @WebServlet(name = "DeleteContractController", urlPatterns = {"/deleteContract"})
 public class DeleteContractController extends HttpServlet {
 
     /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet DeleteContractController</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet DeleteContractController at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-        }
-    }
-
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * Handles the HTTP <code>GET</code> method. Xử lý yêu cầu xóa được gửi từ
+     * link trong modal xác nhận.
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        String idStr = request.getParameter("id");
+
+        try {
+            int contractId = Integer.parseInt(idStr);
+            ContractDAO dao = new ContractDAO();
+
+            // Gọi phương thức xóa mềm trong DAO
+            boolean success = dao.softDeleteContract(contractId);
+
+            // Đặt một thông báo vào session để hiển thị ở trang danh sách sau khi chuyển hướng
+            if (success) {
+                request.getSession().setAttribute("successMessage", "Đã xóa hợp đồng thành công!");
+            } else {
+                request.getSession().setAttribute("errorMessage", "Xóa hợp đồng thất bại do không tìm thấy ID hoặc lỗi CSDL.");
+            }
+
+        } catch (NumberFormatException e) {
+            // Xử lý trường hợp ID không phải là số
+            request.getSession().setAttribute("errorMessage", "ID hợp đồng không hợp lệ.");
+        } catch (Exception e) {
+            // Xử lý các lỗi khác
+            e.printStackTrace();
+            request.getSession().setAttribute("errorMessage", "Đã xảy ra lỗi trong quá trình xóa.");
+        }
+
+        // Sau khi xử lý xong, luôn chuyển hướng người dùng về trang danh sách
+        response.sendRedirect("listContract");
     }
 
     /**
      * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        doGet(request, response);
     }
 
     /**
      * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
      */
     @Override
     public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
-
+        return "Handles soft deletion of a contract.";
+    }
 }
