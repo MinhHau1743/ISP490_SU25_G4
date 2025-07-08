@@ -308,4 +308,121 @@ public class ContractDAO extends DBContext {
         return items;
     }
 
+    /**
+     * Cập nhật một hợp đồng và danh sách sản phẩm/dịch vụ đi kèm. Quá trình
+     * được bọc trong một transaction để đảm bảo toàn vẹn dữ liệu. Sử dụng chiến
+     * lược "xóa tất cả chi tiết cũ và chèn lại chi tiết mới".
+     *
+     * @param contract Đối tượng Contract chứa thông tin chung đã được cập nhật.
+     * @param items Danh sách các đối tượng ContractProduct mới.
+     * @return true nếu cập nhật thành công, false nếu thất bại.
+     */
+    public boolean updateContractWithItems(Contract contract, List<ContractProduct> items) {
+        Connection conn = null;
+
+        // Câu lệnh cập nhật thông tin chính của hợp đồng
+        String updateContractSQL = "UPDATE Contracts SET "
+                + "contract_code = ?, contract_name = ?, enterprise_id = ?, created_by_id = ?, "
+                + "start_date = ?, end_date = ?, signed_date = ?, status = ?, total_value = ?, notes = ? "
+                + "WHERE id = ?";
+
+        // Câu lệnh xóa tất cả các sản phẩm cũ thuộc hợp đồng này
+        String deleteItemsSQL = "DELETE FROM ContractProducts WHERE contract_id = ?";
+
+        // Câu lệnh chèn lại các sản phẩm mới
+        String insertItemsSQL = "INSERT INTO ContractProducts "
+                + "(contract_id, product_id, name, product_code, unit_price, quantity, description) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+        try {
+            conn = new DBContext().getConnection();
+            conn.setAutoCommit(false); // Bắt đầu transaction
+
+            // BƯỚC 1: CẬP NHẬT THÔNG TIN HỢP ĐỒNG CHÍNH
+            try (PreparedStatement psUpdate = conn.prepareStatement(updateContractSQL)) {
+                psUpdate.setString(1, contract.getContractCode());
+                psUpdate.setString(2, contract.getContractName());
+                psUpdate.setLong(3, contract.getEnterpriseId());
+                psUpdate.setObject(4, contract.getCreatedById());
+                psUpdate.setDate(5, contract.getStartDate());
+                psUpdate.setDate(6, contract.getEndDate());
+                psUpdate.setDate(7, contract.getSignedDate());
+                psUpdate.setString(8, contract.getStatus());
+                psUpdate.setBigDecimal(9, contract.getTotalValue());
+                psUpdate.setString(10, contract.getNotes());
+                psUpdate.setLong(11, contract.getId()); // Điều kiện WHERE
+                psUpdate.executeUpdate();
+            }
+
+            // BƯỚC 2: XÓA TẤT CẢ SẢN PHẨM CŨ CỦA HỢP ĐỒNG NÀY
+            try (PreparedStatement psDelete = conn.prepareStatement(deleteItemsSQL)) {
+                psDelete.setLong(1, contract.getId());
+                psDelete.executeUpdate();
+            }
+
+            // BƯỚC 3: CHÈN LẠI DANH SÁCH SẢN PHẨM MỚI (nếu có)
+            if (items != null && !items.isEmpty()) {
+                try (PreparedStatement psInsert = conn.prepareStatement(insertItemsSQL)) {
+                    for (ContractProduct item : items) {
+                        psInsert.setLong(1, contract.getId());
+                        psInsert.setObject(2, item.getProductId());
+                        psInsert.setString(3, item.getName());
+                        psInsert.setString(4, item.getProductCode());
+                        psInsert.setBigDecimal(5, item.getUnitPrice());
+                        psInsert.setInt(6, item.getQuantity());
+                        psInsert.setString(7, item.getDescription());
+                        psInsert.addBatch(); // Thêm vào lô lệnh để thực thi cùng lúc
+                    }
+                    psInsert.executeBatch(); // Thực thi lô lệnh
+                }
+            }
+
+            conn.commit(); // Lưu vĩnh viễn tất cả thay đổi nếu không có lỗi
+            return true;
+
+        } catch (Exception e) {
+            System.err.println("DAO ERROR: Giao dịch cập nhật hợp đồng thất bại, đang rollback...");
+            e.printStackTrace();
+            if (conn != null) {
+                try {
+                    conn.rollback(); // Hoàn tác tất cả thay đổi nếu có lỗi
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            return false;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true); // Trả lại trạng thái mặc định
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    /**
+     * Thực hiện xóa mềm một hợp đồng bằng cách cập nhật cờ is_deleted = 1.
+     *
+     * @param contractId ID của hợp đồng cần xóa.
+     * @return true nếu xóa thành công (1 dòng được cập nhật), ngược lại trả về
+     * false.
+     * @throws Exception nếu có lỗi xảy ra.
+     */
+    public boolean softDeleteContract(int contractId) throws Exception {
+        // Câu lệnh SQL chỉ cập nhật cờ is_deleted
+        String sql = "UPDATE Contracts SET is_deleted = 1 WHERE id = ?";
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, contractId);
+
+            // executeUpdate() trả về số dòng bị ảnh hưởng. 
+            // Nếu > 0 nghĩa là đã cập nhật thành công.
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0;
+        }
+    }
 }
