@@ -274,4 +274,38 @@ public class ContractDAO extends DBContext {
         }
     }
 
+    /**
+     * Lấy danh sách các sản phẩm/dịch vụ thuộc về một hợp đồng cụ thể.
+     *
+     * @param contractId ID của hợp đồng cần lấy chi tiết.
+     * @return Danh sách các đối tượng ContractProduct.
+     */
+    public List<ContractProduct> getContractProductsByContractId(long contractId) {
+        List<ContractProduct> items = new ArrayList<>();
+        String sql = "SELECT * FROM ContractProducts WHERE contract_id = ?";
+
+        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, contractId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ContractProduct item = new ContractProduct();
+                    item.setId(rs.getLong("id"));
+                    item.setContractId(rs.getLong("contract_id"));
+                    item.setProductId(rs.getLong("product_id"));
+                    item.setName(rs.getString("name"));
+                    item.setProductCode(rs.getString("product_code"));
+                    item.setUnitPrice(rs.getBigDecimal("unit_price"));
+                    item.setQuantity(rs.getInt("quantity"));
+                    item.setDescription(rs.getString("description"));
+                    items.add(item);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("DAO ERROR: Lỗi khi lấy chi tiết sản phẩm của hợp đồng.");
+            e.printStackTrace();
+        }
+        return items;
+    }
+
 }

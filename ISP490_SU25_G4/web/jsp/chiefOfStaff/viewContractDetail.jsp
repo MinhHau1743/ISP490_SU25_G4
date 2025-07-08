@@ -1,12 +1,13 @@
-<%-- 
-    Document   : viewContractDetail
-    Created on : Jun 20, 2025, 8:56:26 AM
-    Author     : NGUYEN MINH
+<%--
+    Document   : viewContractDetail.jsp
+    Created on : Jun 20, 2025
+    Author     : NGUYEN MINH (Fixed by Gemini)
 --%>
 
+<%-- SỬA: Chuẩn hóa taglib sang URI của Jakarta EE --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
 
 <c:set var="currentPage" value="listContract" />
 
@@ -23,12 +24,10 @@
 
         <script src="https://unpkg.com/feather-icons"></script>
 
-        <link rel="stylesheet" href="../../css/style.css">
-        <link rel="stylesheet" href="../../css/mainMenu.css">
-
-        <link rel="stylesheet" href="../../css/viewContractDetail.css">
-
-
+        <%-- SỬA: Sử dụng contextPath cho tất cả đường dẫn để đảm bảo an toàn --%>
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/viewContractDetail.css">
     </head>
     <body>
         <div class="app-container">
@@ -38,12 +37,19 @@
                 <c:if test="${not empty contract}">
                     <div class="page-content">
                         <div class="detail-header">
-                            <a href="listContract.jsp" class="back-link"><i data-feather="arrow-left"></i><span>Quay lại danh sách</span></a>
+                            <%-- SỬA: Trỏ về servlet danh sách --%>
+                            <a href="${pageContext.request.contextPath}/listContract" class="back-link"><i data-feather="arrow-left"></i><span>Quay lại danh sách</span></a>
 
                             <div class="action-buttons" style="display: flex; gap: 8px;">
-                                <a href="#" class="btn btn-primary"><i data-feather="printer"></i>In hợp đồng</a>
-                                <a href="editContractDetail.jsp" class="btn btn-primary"><i data-feather="edit-2"></i>Sửa</a>
-                                <a href="#" class="btn btn-primary delete-trigger-btn" data-id="${contract.id}" data-name="${contract.contractCode}"><i data-feather="trash-2"></i>Xóa</a>
+                                <a href="#" class="btn btn-secondary"><i data-feather="printer"></i>In hợp đồng</a>
+                                <%-- SỬA: Trỏ về servlet sửa với ID --%>
+                                <a href="${pageContext.request.contextPath}/editContract?id=${contract.id}" class="btn btn-primary"><i data-feather="edit-2"></i>Sửa</a>
+                                <button type="button" class="btn btn-danger delete-trigger-btn" 
+                                        data-id="${contract.id}" 
+                                        data-name="${contract.contractCode}"
+                                        data-delete-url="${pageContext.request.contextPath}/deleteContract">
+                                    <i data-feather="trash-2"></i>Xóa
+                                </button>
                             </div>
                         </div>
 
@@ -54,9 +60,10 @@
                                     <div class="card-body">
                                         <div class="info-grid">
                                             <div class="info-item"><span class="label">Mã hợp đồng</span><span class="value" style="font-weight: 700; color: var(--primary-color, #0d9488);">${contract.contractCode}</span></div>
-                                            <div class="info-item"><span class="label">Khách hàng</span><span class="value"><a href="../sales/viewCustomerDetail.jsp">${contract.customer.name}</a></span></div>
-                                            <div class="info-item full-width"><span class="label">Tên hợp đồng</span><span class="value">${contract.name}</span></div>
-                                            <div class="info-item full-width"><span class="label">Mô tả / Điều khoản</span><span class="value">${contract.description}</span></div>
+                                                <%-- SỬA: Dùng đúng tên biến và đường dẫn --%>
+                                            <div class="info-item"><span class="label">Khách hàng</span><span class="value"><a href="${pageContext.request.contextPath}/viewCustomerDetail?id=${contract.enterpriseId}">${contract.enterpriseName}</a></span></div>
+                                            <div class="info-item full-width"><span class="label">Tên hợp đồng</span><span class="value">${contract.contractName}</span></div>
+                                            <div class="info-item full-width"><span class="label">Mô tả / Điều khoản</span><span class="value">${contract.notes}</span></div>
                                         </div>
                                     </div>
                                 </div>
@@ -74,19 +81,37 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <c:forEach var="item" items="${contract.items}">
+                                                <%-- SỬA: Lặp qua danh sách contractItems được gửi từ Controller --%>
+                                                <c:forEach var="item" items="${contractItems}">
                                                     <tr>
                                                         <td class="product-name">${item.name}</td>
                                                         <td style="text-align: center;">${item.quantity}</td>
                                                         <td class="money-cell"><fmt:formatNumber value="${item.unitPrice}" type="currency" currencyCode="VND"/></td>
-                                                        <td class="money-cell"><fmt:formatNumber value="${item.totalPrice}" type="currency" currencyCode="VND"/></td>
+                                                        <td class="money-cell"><fmt:formatNumber value="${item.unitPrice * item.quantity}" type="currency" currencyCode="VND"/></td>
                                                     </tr>
                                                 </c:forEach>
                                             </tbody>
+
+                                            <%-- SỬA: Giao diện phần tổng kết gọn gàng --%>
                                             <tfoot>
-                                                <tr><td colspan="3">Tổng phụ</td><td class="money-cell"><fmt:formatNumber value="${contract.subtotal}" type="currency" currencyCode="VND"/></td></tr>
-                                                <tr><td colspan="3">VAT (10%)</td><td class="money-cell"><fmt:formatNumber value="${contract.vatAmount}" type="currency" currencyCode="VND"/></td></tr>
-                                                <tr class="grand-total"><td colspan="3">Tổng cộng</td><td class="money-cell"><fmt:formatNumber value="${contract.grandTotal}" type="currency" currencyCode="VND"/></td></tr>
+                                                <tr>
+                                                    <td colspan="4" style="padding: 0; border: none;"> 
+                                                        <div class="summary-wrapper">
+                                                            <div class="summary-row">
+                                                                <span class="summary-label">Tổng phụ</span>
+                                                                <span class="summary-value"><fmt:formatNumber value="${subtotal}" type="currency" currencyCode="VND"/></span>
+                                                            </div>
+                                                            <div class="summary-row">
+                                                                <span class="summary-label">VAT (10%)</span>
+                                                                <span class="summary-value"><fmt:formatNumber value="${vatAmount}" type="currency" currencyCode="VND"/></span>
+                                                            </div>
+                                                            <div class="summary-row grand-total-row">
+                                                                <span class="summary-label">Tổng cộng</span>
+                                                                <span class="summary-value"><fmt:formatNumber value="${grandTotal}" type="currency" currencyCode="VND"/></span>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
                                             </tfoot>
                                         </table>
                                     </div>
@@ -107,10 +132,12 @@
                                                 </c:choose>
                                             </span>
                                         </div>
-                                        <div class="info-item"><span class="label">Ngày ký</span><span class="value"><fmt:formatDate value="${contract.signDate}" pattern="dd/MM/yyyy"/></span></div>
-                                        <div class="info-item"><span class="label">Ngày hết hạn</span><span class="value"><fmt:formatDate value="${contract.expirationDate}" pattern="dd/MM/yyyy"/></span></div>
-                                        <div class="info-item"><span class="label">Giá trị hợp đồng (Trước VAT)</span><span class="value" style="font-size: 18px; font-weight: 700;"><fmt:formatNumber value="${contract.subtotal}" type="currency" currencyCode="VND"/></span></div>
-                                        <div class="info-item"><span class="label">Nhân viên phụ trách</span><span class="value">${contract.assignee.name}</span></div>
+                                        <%-- SỬA: Dùng đúng tên biến --%>
+                                        <div class="info-item"><span class="label">Ngày ký</span><span class="value"><fmt:formatDate value="${contract.signedDate}" pattern="dd/MM/yyyy"/></span></div>
+                                        <div class="info-item"><span class="label">Ngày hết hạn</span><span class="value"><fmt:formatDate value="${contract.endDate}" pattern="dd/MM/yyyy"/></span></div>
+                                            <%-- SỬA: Hiển thị grandTotal cho nhất quán --%>
+                                        <div class="info-item"><span class="label">Giá trị hợp đồng</span><span class="value" style="font-size: 18px; font-weight: 700;"><fmt:formatNumber value="${grandTotal}" type="currency" currencyCode="VND"/></span></div>
+                                        <div class="info-item"><span class="label">Nhân viên phụ trách</span><span class="value">${contract.createdByName}</span></div>
                                     </div>
                                 </div>
                             </div>
@@ -122,14 +149,13 @@
                     <div class="page-content" style="text-align: center; padding-top: 50px;">
                         <h2>Không tìm thấy hợp đồng</h2>
                         <p>Hợp đồng bạn yêu cầu không tồn tại hoặc đã bị xóa.</p>
-                        <a href="listContract.jsp" class="btn btn-primary">Quay lại danh sách</a>
+                        <a href="${pageContext.request.contextPath}/listContract" class="btn btn-primary">Quay lại danh sách</a>
                     </div>
                 </c:if>
-
             </main>
         </div>
 
-        <%-- Modal xác nhận xóa --%>
+        <%-- SỬA: Phục hồi lại mã HTML cho Modal xác nhận xóa --%>
         <div id="deleteConfirmModal" class="modal-overlay" style="display:none;">
             <div class="modal-content" style="background:white; border-radius:12px; max-width:400px;">
                 <div class="modal-header" style="padding:16px 24px; border-bottom:1px solid #e5e7eb; display:flex; justify-content:space-between;">
@@ -146,7 +172,11 @@
             </div>
         </div>
 
-        <script src="../../js/viewContractDetail.js"></script>
-        <script src="../../js/mainMenu.js"></script>
+        <script src="${pageContext.request.contextPath}/js/viewContractDetail.js"></script>
+        <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
+        <script>
+            // Kích hoạt Feather Icons
+            feather.replace();
+        </script>
     </body>
 </html>
