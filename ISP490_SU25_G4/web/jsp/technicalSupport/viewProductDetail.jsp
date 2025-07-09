@@ -67,12 +67,12 @@
                                     </div>
 
                                     <div class="info-snippets">
+                                        <div class="snippet"><span class="snippet-label">Tên sản phẩm</span><span class="snippet-value">${product.name}</span></div>
                                         <div class="snippet"><span class="snippet-label">Mã sản phẩm</span><span class="snippet-value">${product.productCode}</span></div>
-                                        <div class="snippet"><span class="snippet-label">Danh mục</span><span class="snippet-value">${product.categoryId}</span></div>
-                                        <div class="snippet"><span class="snippet-label">Thương hiệu</span><span class="snippet-value">${product.origin}</span></div>
-                                        <div class="snippet"><span class="snippet-label">Xuất xứ</span><span class="snippet-value">${product.description}</span></div>
-                                        <div class="snippet"><span class="snippet-label">Bảo hành</span><span class="snippet-value">${product.createdAt}</span></div>
-                                        <div class="snippet"><span class="snippet-label">Tồn kho</span><span class="snippet-value">${product.updatedAt}</span></div>
+                                        <div class="snippet"><span class="snippet-label">Danh mục</span><span class="snippet-value">${categoryMap[product.categoryId]}</span></div>
+                                        <div class="snippet"><span class="snippet-label">Xuất xứ</span><span class="snippet-value">${product.origin}</span></div>
+                                        <div class="snippet"><span class="snippet-label">Ngày tạo</span><span class="snippet-value">${product.createdAt}</span></div>
+                                        <div class="snippet"><span class="snippet-label">Cập nhật</span><span class="snippet-value">${product.updatedAt}</span></div>
                                     </div>
 
                         
