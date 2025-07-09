@@ -444,4 +444,56 @@ public class UserDAO {
     }
     return employeeList;
 }
+    
+    public boolean addEmployee(User user, int departmentId, int positionId, int roleId) {
+    // Tạo một mật khẩu mặc định. Ví dụ: "Fpt@12345"
+    // Trong một ứng dụng thực tế, bạn có thể gửi email một mật khẩu tạm thời cho người dùng.
+    String defaultPassword = "Fpt@12345";
+    String hashedPassword = BCrypt.hashpw(defaultPassword, BCrypt.gensalt());
+
+    // Tạo mã nhân viên duy nhất, ví dụ: "NV" + timestamp
+    String employeeCode = "NV" + System.currentTimeMillis() % 100000;
+
+    String sql = "INSERT INTO Users (last_name, middle_name, first_name, email, password_hash, " +
+                 "phone_number, avatar_url, employee_code, date_of_birth, gender, " +
+                 "identity_card_number, notes, status, department_id, position_id, role_id, " +
+                 "created_at, updated_at, is_deleted) " +
+                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, GETDATE(), GETDATE(), 0)";
+
+    try (Connection conn = DBContext.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+
+        ps.setString(1, user.getLastName());
+        ps.setString(2, user.getMiddleName());
+        ps.setString(3, user.getFirstName());
+        ps.setString(4, user.getEmail());
+        ps.setString(5, hashedPassword);
+        ps.setString(6, user.getPhoneNumber());
+        ps.setString(7, user.getAvatarUrl()); // Đường dẫn tới avatar đã tải lên
+        ps.setString(8, employeeCode);
+        
+        // Xử lý ngày tháng có thể là null
+        if (user.getDateOfBirth() != null) {
+            ps.setDate(9, java.sql.Date.valueOf(user.getDateOfBirth()));
+        } else {
+            ps.setNull(9, java.sql.Types.DATE);
+        }
+
+        ps.setString(10, user.getGender());
+        ps.setString(11, user.getIdentityCardNumber());
+        ps.setString(12, user.getNotes());
+        
+        // Các khóa ngoại
+        ps.setInt(13, departmentId);
+        ps.setInt(14, positionId);
+        ps.setInt(15, roleId); // Giả sử một roleId mặc định cho nhân viên mới
+
+        int rowsAffected = ps.executeUpdate();
+        return rowsAffected > 0;
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        return false;
+    }
+}
 }
