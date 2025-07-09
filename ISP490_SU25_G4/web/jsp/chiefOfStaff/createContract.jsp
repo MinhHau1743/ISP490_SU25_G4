@@ -36,7 +36,7 @@
                 <form class="page-content" action="${pageContext.request.contextPath}/createContract" method="post">
                     <input type="hidden" name="action" value="create">
                     <div class="detail-header">
-                        <a href="${pageContext.request.contextPath}/createContract" class="back-link">
+                        <a href="${pageContext.request.contextPath}/listContract" class="back-link">
                             <i data-feather="arrow-left"></i><span>Hủy</span>
                         </a>
                         <div class="action-buttons">
@@ -53,7 +53,7 @@
                                 <div class="card-body">
                                     <div class="info-grid">
                                         <div class="form-group"><label for="contractName">Tên hợp đồng (*)</label><input type="text" id="contractName" name="contractName" class="form-control" placeholder="VD: Hợp đồng bảo trì điều hòa quý 3" required></div>
-                                        <div class="form-group"><label for="contractCode">Mã hợp đồng</label><input type="text" id="contractCode" name="contractCode" class="form-control" value="(Tự động tạo)" readonly></div>
+                                        <div class="form-group"><label for="contractCode">Mã hợp đồng (*)</label><input type="text" id="contractCode" name="contractCode" class="form-control" placeholder="VD: HD-FPT-2025-001" required></div>
                                         <div class="form-group">
                                             <label for="enterpriseId">Khách hàng (*)</label>
                                             <select id="enterpriseId" name="enterpriseId" class="form-control" required>
@@ -63,7 +63,7 @@
                                                 </c:forEach>
                                             </select>
                                         </div>
-                                      
+
                                     </div>
                                     <div class="form-group">
                                         <label for="notes">Mô tả / Điều khoản chính</label>

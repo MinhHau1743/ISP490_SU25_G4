@@ -33,6 +33,24 @@
             <jsp:include page="../../mainMenu.jsp"/>
 
             <main class="main-content">
+                <div class="page-content" style="padding-bottom: 0;">
+                    <%-- Đặt ở đầu file listContract.jsp --%>
+                    <c:if test="${not empty sessionScope.successMessage}">
+                        <div class="alert alert-success">
+                            <i data-feather="check-circle"></i>
+                            <span>${sessionScope.successMessage}</span>
+                        </div>
+                        <c:remove var="successMessage" scope="session" />
+                    </c:if>
+
+                    <c:if test="${not empty sessionScope.errorMessage}">
+                        <div class="alert alert-danger">
+                            <i data-feather="alert-triangle"></i>
+                            <span>${sessionScope.errorMessage}</span>
+                        </div>
+                        <c:remove var="errorMessage" scope="session" />
+                    </c:if>
+                </div>
                 <header class="page-header">
                     <div class="title-section">
                         <h1 class="title">Danh sách Hợp đồng</h1>
@@ -42,7 +60,7 @@
                         <button class="notification-btn"><i data-feather="bell"></i></button>
                     </div>
                 </header>
-                
+
                 <div class="page-content">
                     <div class="content-card">
                         <form action="listContract" method="get">
@@ -139,9 +157,16 @@
                                                 </c:choose>
                                             </td>
                                             <td class="table-actions">
-                                                <a href="viewContract?action=view&id=${contract.id}" title="Xem"><i data-feather="eye"></i></a>
-                                                <a href="editContract?action=edit&id=${contract.id}" title="Sửa"><i data-feather="edit-2"></i></a>
-                                                <a href="#" onclick="confirmDelete('${contract.id}', '${contract.contractCode}')" title="Xóa"><i data-feather="trash-2"></i></a>
+                                                <a href="${pageContext.request.contextPath}/viewContract?id=${contract.id}" title="Xem"><i data-feather="eye"></i></a>
+                                                <a href="${pageContext.request.contextPath}/editContract?id=${contract.id}" title="Sửa"><i data-feather="edit-2"></i></a>
+
+                                                <%-- Sửa link xóa thành button với data attributes --%>
+                                                <button type="button" class="delete-btn" 
+                                                        data-id="${contract.id}" 
+                                                        data-name="${contract.contractCode}" 
+                                                        title="Xóa">
+                                                    <i data-feather="trash-2"></i>
+                                                </button>
                                             </td>
                                         </tr>
                                     </c:forEach>
@@ -151,6 +176,24 @@
 
                         <%-- Phần phân trang --%>
                         <jsp:include page="../../pagination.jsp"/>
+                    </div>
+                </div>
+                <%-- =============================================== --%>
+                <%-- MODAL XÁC NHẬN XÓA                             --%>
+                <%-- =============================================== --%>
+                <div id="deleteConfirmModal" class="modal-overlay" style="display:none;">
+                    <div class="modal-content" style="max-width: 420px;">
+                        <div class="modal-header">
+                            <h3 class="modal-title">Xác nhận xóa</h3>
+                            <button type="button" class="close-modal-btn"><i data-feather="x"></i></button>
+                        </div>
+                        <div class="modal-body" style="text-align: center; padding: 24px;">
+                            <p id="deleteMessage">Bạn có chắc chắn muốn xóa mục này?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary close-modal-btn">Hủy</button>
+                            <a href="#" class="btn btn-danger" id="confirmDeleteBtn">Xóa</a>
+                        </div>
                     </div>
                 </div>
             </main>
