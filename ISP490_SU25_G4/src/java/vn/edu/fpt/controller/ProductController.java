@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package vn.edu.fpt.controller;
 
 import java.io.IOException;
@@ -11,56 +7,41 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.Part;
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import vn.edu.fpt.dao.ProductDAO;
 import vn.edu.fpt.dao.ProductCategoriesDAO;
 import vn.edu.fpt.model.Product;
+import vn.edu.fpt.model.ProductFilterCacheKey;
 import vn.edu.fpt.model.ProductCategory;
 
-/**
- *
- * @author phamh
- */
 @WebServlet(name = "ProductController", urlPatterns = {"/ProductController"})
 @MultipartConfig
 public class ProductController extends HttpServlet {
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
+    // ====== KHAI BÁO CACHE (giới hạn tối đa 1000 entry, FIFO) ======
+    private static final int MAX_CACHE_SIZE = 1000;
 
-    }
+    // Cache cho danh sách sản phẩm
+    private static final Map<ProductFilterCacheKey, List<Product>> productCache =
+        new LinkedHashMap<ProductFilterCacheKey, List<Product>>() {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<ProductFilterCacheKey, List<Product>> eldest) {
+                return size() > MAX_CACHE_SIZE;
+            }
+        };
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
+    // Cache cho tổng số sản phẩm
+    private static final Map<ProductFilterCacheKey, Integer> countCache =
+        new LinkedHashMap<ProductFilterCacheKey, Integer>() {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<ProductFilterCacheKey, Integer> eldest) {
+                return size() > MAX_CACHE_SIZE;
+            }
+        };
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -74,10 +55,18 @@ public class ProductController extends HttpServlet {
         String pageRaw = request.getParameter("page");
         String sizeRaw = request.getParameter("size");
         if (pageRaw != null) {
-            page = Integer.parseInt(pageRaw);
+            try {
+                page = Integer.parseInt(pageRaw);
+            } catch (NumberFormatException e) {
+                page = 1;
+            }
         }
         if (sizeRaw != null) {
-            pageSize = Integer.parseInt(sizeRaw);
+            try {
+                pageSize = Integer.parseInt(sizeRaw);
+            } catch (NumberFormatException e) {
+                pageSize = 10;
+            }
         }
 
         // --- Lấy filter từ request ---
@@ -90,24 +79,54 @@ public class ProductController extends HttpServlet {
         Double minPrice = null, maxPrice = null;
         Integer categoryId = null;
         if (minPriceStr != null && !minPriceStr.isEmpty()) {
-            minPrice = Double.parseDouble(minPriceStr);
+            try {
+                minPrice = Double.parseDouble(minPriceStr);
+            } catch (NumberFormatException e) {
+                minPrice = null;
+            }
         }
         if (maxPriceStr != null && !maxPriceStr.isEmpty()) {
-            maxPrice = Double.parseDouble(maxPriceStr);
+            try {
+                maxPrice = Double.parseDouble(maxPriceStr);
+            } catch (NumberFormatException e) {
+                maxPrice = null;
+            }
         }
         if (categoryIdStr != null && !categoryIdStr.isEmpty()) {
-            categoryId = Integer.parseInt(categoryIdStr);
+            try {
+                categoryId = Integer.parseInt(categoryIdStr);
+            } catch (NumberFormatException e) {
+                categoryId = null;
+            }
         }
         if (origin != null && origin.trim().isEmpty()) {
             origin = null;
         }
 
-        // --- Đếm tổng sản phẩm và tổng trang theo filter ---
-        int totalProducts = products.countProductsWithFilter(keyword, minPrice, maxPrice, origin, categoryId);
-        int totalPages = (int) Math.ceil((double) totalProducts / pageSize);
+        // --- Sử dụng cache ---
+        ProductFilterCacheKey cacheKey = new ProductFilterCacheKey(keyword, minPrice, maxPrice, origin, categoryId, page, pageSize);
+        List<Product> listProducts;
+        Integer totalProducts;
 
-        // --- Lấy danh sách sản phẩm theo filter và phân trang ---
-        List<Product> listProducts = products.getProductsWithFilter(keyword, minPrice, maxPrice, origin, categoryId, page, pageSize);
+        synchronized (productCache) {
+            listProducts = productCache.get(cacheKey);
+        }
+        synchronized (countCache) {
+            totalProducts = countCache.get(cacheKey);
+        }
+
+        if (listProducts == null || totalProducts == null) {
+            totalProducts = products.countProductsWithFilter(keyword, minPrice, maxPrice, origin, categoryId);
+            listProducts = products.getProductsWithFilter(keyword, minPrice, maxPrice, origin, categoryId, page, pageSize);
+
+            synchronized (productCache) {
+                productCache.put(cacheKey, listProducts);
+            }
+            synchronized (countCache) {
+                countCache.put(cacheKey, totalProducts);
+            }
+        }
+        int totalPages = (int) Math.ceil((double) totalProducts / pageSize);
 
         // --- Lấy toàn bộ danh mục, map categoryId -> name ---
         List<ProductCategory> categories = productCategories.getAllCategories();
@@ -115,7 +134,7 @@ public class ProductController extends HttpServlet {
         for (ProductCategory c : categories) {
             categoryMap.put(c.getId(), c.getName());
         }
-        List<String> origins = products.getAllOrigins();  // Giả định bạn có method này
+        List<String> origins = products.getAllOrigins();
         request.setAttribute("originList", origins);
         request.setAttribute("productList", listProducts);
         request.setAttribute("categoryMap", categoryMap);
@@ -124,7 +143,7 @@ public class ProductController extends HttpServlet {
         request.setAttribute("currentPage", page);
         request.setAttribute("pageSize", pageSize);
 
-        // Gửi các filter sang JSP để giữ trạng thái filter (giữ lại trên giao diện)
+        // Gửi các filter sang JSP để giữ trạng thái filter
         request.setAttribute("keyword", keyword);
         request.setAttribute("minPrice", minPriceStr);
         request.setAttribute("maxPrice", maxPriceStr);
@@ -139,28 +158,14 @@ public class ProductController extends HttpServlet {
         request.getRequestDispatcher("jsp/technicalSupport/listProduct.jsp").forward(request, response);
     }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         doGet(request, response);
     }
 
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
     @Override
     public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
-
+        return "ProductController with in-memory cache for product filter";
+    }
 }
