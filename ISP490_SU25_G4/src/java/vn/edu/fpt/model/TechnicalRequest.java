@@ -1,16 +1,9 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+// File: vn/edu/fpt/model/TechnicalRequest.java
 package vn.edu.fpt.model;
 
 import java.sql.Timestamp;
 import java.util.List;
 
-/**
- *
- * @author NGUYEN MINH
- */
 public class TechnicalRequest {
 
     private int id;
@@ -36,13 +29,13 @@ public class TechnicalRequest {
     private String assignedToName;
     private String reporterName;
 
-    // SỬ DỤNG ĐÚNG DANH SÁCH THIẾT BỊ
+    // SỬA LẠI Ở ĐÂY: Đảm bảo sử dụng đúng danh sách TechnicalRequestDevice
     private List<TechnicalRequestDevice> devices;
 
-    // Constructors, Getters, và Setters...
     public TechnicalRequest() {
     }
 
+    // Getters and Setters cho tất cả các trường...
     public int getId() {
         return id;
     }
@@ -203,7 +196,7 @@ public class TechnicalRequest {
         this.reporterName = reporterName;
     }
 
-    // Getter và Setter cho devices
+    // SỬA LẠI Ở ĐÂY: Getter và Setter cho devices
     public List<TechnicalRequestDevice> getDevices() {
         return devices;
     }
