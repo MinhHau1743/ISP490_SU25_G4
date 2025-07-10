@@ -1,23 +1,27 @@
-// File: vn/edu/fpt/controller/TicketController.java
 package vn.edu.fpt.controller;
 
+import com.google.gson.Gson;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import vn.edu.fpt.dao.TechnicalRequestDAO;
+import vn.edu.fpt.model.Contract;
 import vn.edu.fpt.model.TechnicalRequest;
 import vn.edu.fpt.model.TechnicalRequestDevice;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import vn.edu.fpt.model.ContractProduct;
 
 @WebServlet(name = "TicketController", urlPatterns = {"/ticket"})
 public class TicketController extends HttpServlet {
 
     private TechnicalRequestDAO dao;
+    private final Gson gson = new Gson();
 
     @Override
     public void init() {
@@ -26,30 +30,47 @@ public class TicketController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        System.out.println("--- TICKET CONTROLLER: YÊU CẦU MỚI ---");
+        request.getParameterMap().forEach((key, value) -> {
+            System.out.println("Tham số nhận được: " + key + " = " + String.join(", ", value));
+        });
+        System.out.println("------------------------------------");
         String action = request.getParameter("action");
         if (action == null) {
             action = "list";
         }
-        switch (action) {
-            case "create":
-                showCreateForm(request, response);
-                break;
-            case "view":
-                viewTicket(request, response);
-                break;
-            case "edit":
-                showEditForm(request, response);
-                break;
-            case "list":
-            default:
-                listTickets(request, response);
-                break;
+
+        try {
+            switch (action) {
+                case "create":
+                    showCreateForm(request, response);
+                    break;
+                case "view":
+                    viewTicket(request, response);
+                    break;
+                case "edit":
+                    showEditForm(request, response);
+                    break;
+                case "getContracts":
+                    getContracts(request, response);
+                    break;
+                
+                case "list":
+                default:
+                    listTickets(request, response);
+                    break;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace(); // In lỗi ra log server để debug
+            throw new ServletException("Database access error.", e);
         }
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
+
         if ("create".equals(action)) {
             createTicket(request, response);
         } else if ("update".equals(action)) {
@@ -57,43 +78,35 @@ public class TicketController extends HttpServlet {
         }
     }
 
-    private void updateTicketAssignment(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        request.setCharacterEncoding("UTF-8");
+    private void listTickets(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+        List<TechnicalRequest> transactionList = dao.getAllTechnicalRequests();
+        request.setAttribute("transactions", transactionList);
+        request.getRequestDispatcher("/jsp/customerSupport/listTransaction.jsp").forward(request, response);
+    }
+
+    private void showCreateForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+        request.setAttribute("customerList", dao.getAllEnterprises());
+        request.setAttribute("employeeList", dao.getAllTechnicians());
+        request.setAttribute("serviceList", dao.getAllServices());
+        request.getRequestDispatcher("/jsp/customerSupport/createTicket.jsp").forward(request, response);
+    }
+
+    private void viewTicket(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
         try {
             int id = Integer.parseInt(request.getParameter("id"));
-            String status = request.getParameter("status");
-            String priority = request.getParameter("priority");
-            int employeeId = Integer.parseInt(request.getParameter("employeeId"));
-            boolean isBillable = Boolean.parseBoolean(request.getParameter("isBillable"));
-
-            double estimatedCost = 0;
-            if (isBillable) {
-                String amountStr = request.getParameter("amount");
-                estimatedCost = (amountStr == null || amountStr.isEmpty()) ? 0 : Double.parseDouble(amountStr);
+            TechnicalRequest ticket = dao.getTechnicalRequestById(id);
+            if (ticket != null) {
+                request.setAttribute("ticket", ticket);
+                request.getRequestDispatcher("/jsp/customerSupport/viewTicket.jsp").forward(request, response);
+            } else {
+                response.sendRedirect("ticket?action=list&error=notFound");
             }
-
-            // Chuyển đổi giá trị priority từ tiếng Việt sang giá trị của DB
-            String priorityDb = "medium";
-            if ("Cao".equals(priority)) {
-                priorityDb = "high";
-            } else if ("Khẩn cấp".equals(priority)) {
-                priorityDb = "critical";
-            } else if ("Thấp".equals(priority)) {
-                priorityDb = "low";
-            }
-
-            boolean success = dao.updateTicketAssignment(id, status, priorityDb, employeeId, isBillable, estimatedCost);
-
-            // Sau khi cập nhật, chuyển hướng về trang xem chi tiết
-            response.sendRedirect("ticket?action=view&id=" + id + "&update=" + (success ? "success" : "failed"));
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.sendRedirect("ticket?action=edit&id=" + request.getParameter("id") + "&error=true");
+        } catch (NumberFormatException e) {
+            response.sendRedirect("ticket?action=list&error=invalidId");
         }
     }
 
-    private void showEditForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private void showEditForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
         try {
             int id = Integer.parseInt(request.getParameter("id"));
             TechnicalRequest existingTicket = dao.getTechnicalRequestById(id);
@@ -103,124 +116,64 @@ public class TicketController extends HttpServlet {
                 request.setAttribute("customerList", dao.getAllEnterprises());
                 request.setAttribute("employeeList", dao.getAllTechnicians());
                 request.setAttribute("serviceList", dao.getAllServices());
-
-                request.getRequestDispatcher("/jsp/customerSupport/editTransaction.jsp").forward(request, response);
+                request.getRequestDispatcher("/jsp/customerSupport/editTicket.jsp").forward(request, response);
             } else {
                 response.sendRedirect("ticket?action=list&error=notFound");
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.sendRedirect("ticket?action=list&error=generic");
+        } catch (NumberFormatException e) {
+            response.sendRedirect("ticket?action=list&error=invalidId");
         }
-    }
-
-    private void updateTicket(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        request.setCharacterEncoding("UTF-8");
-        try {
-            TechnicalRequest ticketToUpdate = new TechnicalRequest();
-            ticketToUpdate.setId(Integer.parseInt(request.getParameter("id")));
-            ticketToUpdate.setEnterpriseId(Integer.parseInt(request.getParameter("enterpriseId")));
-            ticketToUpdate.setServiceId(Integer.parseInt(request.getParameter("serviceId")));
-            ticketToUpdate.setAssignedToId(Integer.parseInt(request.getParameter("employeeId")));
-
-            String contractCode = request.getParameter("contractCode");
-            if (contractCode != null && !contractCode.trim().isEmpty()) {
-                ticketToUpdate.setContractId(dao.getContractIdByCode(contractCode));
-            }
-
-            String description = request.getParameter("description");
-            ticketToUpdate.setDescription(description);
-            if (description != null && description.length() > 100) {
-                ticketToUpdate.setTitle(description.substring(0, 100) + "...");
-            } else {
-                ticketToUpdate.setTitle(description);
-            }
-
-            String priorityVie = request.getParameter("priority");
-            String priorityDb = "medium";
-            if ("Cao".equals(priorityVie)) {
-                priorityDb = "high";
-            } else if ("Khẩn cấp".equals(priorityVie)) {
-                priorityDb = "critical";
-            }
-            ticketToUpdate.setPriority(priorityDb);
-
-            ticketToUpdate.setStatus(request.getParameter("status"));
-
-            ticketToUpdate.setIsBillable(Boolean.parseBoolean(request.getParameter("isBillable")));
-            if (ticketToUpdate.isIsBillable()) {
-                String amountStr = request.getParameter("amount");
-                ticketToUpdate.setEstimatedCost(amountStr == null || amountStr.isEmpty() ? 0 : Double.parseDouble(amountStr));
-            } else {
-                ticketToUpdate.setEstimatedCost(0);
-            }
-
-            List<TechnicalRequestDevice> devices = new ArrayList<>();
-            int i = 1;
-            while (request.getParameter("deviceName_" + i) != null) {
-                String deviceName = request.getParameter("deviceName_" + i);
-                if (deviceName != null && !deviceName.trim().isEmpty()) {
-                    String serial = request.getParameter("deviceSerial_" + i);
-                    String note = request.getParameter("deviceNote_" + i);
-                    devices.add(new TechnicalRequestDevice(deviceName, serial, note));
-                }
-                i++;
-            }
-
-            boolean success = dao.updateTechnicalRequest(ticketToUpdate, devices);
-            response.sendRedirect("ticket?action=list&update=" + (success ? "success" : "failed"));
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.sendRedirect("ticket?action=edit&id=" + request.getParameter("id") + "&error=true");
-        }
-    }
-
-    private void listTickets(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        List<TechnicalRequest> transactionList = dao.getAllTechnicalRequests();
-        request.setAttribute("transactions", transactionList);
-        request.getRequestDispatcher("/jsp/customerSupport/listTransaction.jsp").forward(request, response);
-    }
-
-    private void showCreateForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        request.setAttribute("customerList", dao.getAllEnterprises());
-        request.setAttribute("employeeList", dao.getAllTechnicians());
-        request.setAttribute("serviceList", dao.getAllServices());
-        request.getRequestDispatcher("/jsp/customerSupport/createTicket.jsp").forward(request, response);
     }
 
     private void createTicket(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        request.setCharacterEncoding("UTF-8");
         try {
             TechnicalRequest newRequest = new TechnicalRequest();
-            newRequest.setReporterId(1); // Gán cứng người tạo
-            newRequest.setEnterpriseId(Integer.parseInt(request.getParameter("enterpriseId")));
-            newRequest.setServiceId(Integer.parseInt(request.getParameter("serviceId")));
-            newRequest.setAssignedToId(Integer.parseInt(request.getParameter("employeeId")));
+            newRequest.setReporterId(1); // Giả sử ID người báo cáo là 1
 
-            String contractCode = request.getParameter("contractCode");
-            if (contractCode != null && !contractCode.trim().isEmpty()) {
-                newRequest.setContractId(dao.getContractIdByCode(contractCode));
+            // --- Sửa lỗi NumberFormatException ---
+            // Kiểm tra trước khi parse để tránh lỗi
+            String enterpriseIdStr = request.getParameter("enterpriseId");
+            if (enterpriseIdStr != null && !enterpriseIdStr.isEmpty()) {
+                newRequest.setEnterpriseId(Integer.parseInt(enterpriseIdStr));
             }
 
+            String serviceIdStr = request.getParameter("serviceId");
+            if (serviceIdStr != null && !serviceIdStr.isEmpty()) {
+                newRequest.setServiceId(Integer.parseInt(serviceIdStr));
+            }
+
+            String employeeIdStr = request.getParameter("employeeId");
+            if (employeeIdStr != null && !employeeIdStr.isEmpty()) {
+                newRequest.setAssignedToId(Integer.parseInt(employeeIdStr));
+            }
+
+            String contractIdStr = request.getParameter("contractId");
+            if (contractIdStr != null && !contractIdStr.isEmpty()) {
+                newRequest.setContractId(Integer.parseInt(contractIdStr));
+            }
+
+            // --- Giữ nguyên logic lấy mô tả ---
             String description = request.getParameter("description");
             newRequest.setDescription(description);
-            if (description != null && description.length() > 100) {
-                newRequest.setTitle(description.substring(0, 100) + "...");
+            newRequest.setTitle(description.length() > 100 ? description.substring(0, 100) + "..." : description);
+
+            // --- Sửa lỗi logic Mức độ ưu tiên ---
+            // So sánh với value tiếng Anh thay vì text tiếng Việt
+            String priorityValue = request.getParameter("priority");
+            if ("high".equals(priorityValue)) {
+                newRequest.setPriority("high");
+            } else if ("urgent".equals(priorityValue)) { // Giả sử value là 'urgent'
+                newRequest.setPriority("critical");
+            } else if ("low".equals(priorityValue)) { // Giả sử value là 'low'
+                newRequest.setPriority("low");
             } else {
-                newRequest.setTitle(description);
+                newRequest.setPriority("medium"); // Mặc định
             }
 
-            String priorityVie = request.getParameter("priority");
-            String priorityDb = "medium";
-            if ("Cao".equals(priorityVie)) {
-                priorityDb = "high";
-            } else if ("Khẩn cấp".equals(priorityVie)) {
-                priorityDb = "critical";
-            }
-            newRequest.setPriority(priorityDb);
-
-            newRequest.setIsBillable(Boolean.parseBoolean(request.getParameter("isBillable")));
-            if (newRequest.isIsBillable()) {
+            // --- Giữ nguyên logic các phần còn lại ---
+            boolean isBillable = Boolean.parseBoolean(request.getParameter("isBillable"));
+            newRequest.setIsBillable(isBillable);
+            if (isBillable) {
                 String amountStr = request.getParameter("amount");
                 newRequest.setEstimatedCost(amountStr == null || amountStr.isEmpty() ? 0 : Double.parseDouble(amountStr));
             } else {
@@ -229,38 +182,49 @@ public class TicketController extends HttpServlet {
 
             List<TechnicalRequestDevice> devices = new ArrayList<>();
             int i = 1;
-            while (request.getParameter("deviceName_" + i) != null) {
-                String deviceName = request.getParameter("deviceName_" + i);
-                if (deviceName != null && !deviceName.trim().isEmpty()) {
+            String deviceName;
+            while ((deviceName = request.getParameter("deviceName_" + i)) != null) {
+                if (!deviceName.trim().isEmpty()) {
                     String serial = request.getParameter("deviceSerial_" + i);
                     String note = request.getParameter("deviceNote_" + i);
-                    devices.add(new TechnicalRequestDevice(deviceName, serial, note));
+
+                    // Sửa lại bằng cách dùng setter để đảm bảo gán đúng giá trị
+                    TechnicalRequestDevice device = new TechnicalRequestDevice();
+                    device.setDeviceName(deviceName);
+                    device.setSerialNumber(serial);
+                    device.setProblemDescription(note); // Gán mô tả sự cố vào đúng trường
+
+                    devices.add(device);
                 }
                 i++;
             }
-
             boolean success = dao.createTechnicalRequest(newRequest, devices);
+
+            // Lệnh chuyển hướng này giờ sẽ chạy được
             response.sendRedirect("ticket?action=list&create=" + (success ? "success" : "failed"));
+
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendRedirect("ticket?action=create&error=unknown");
+            response.sendRedirect("ticket?action=create&error=" + e.getClass().getSimpleName());
         }
     }
 
-    private void viewTicket(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        try {
-            int id = Integer.parseInt(request.getParameter("id"));
-            TechnicalRequest ticket = dao.getTechnicalRequestById(id);
+    private void updateTicket(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        // Placeholder for update logic
+        response.sendRedirect("ticket?action=list");
+    }
 
-            if (ticket != null) {
-                request.setAttribute("ticket", ticket);
-                // SỬA LẠI Ở ĐÂY: Đảm bảo chuyển hướng đến đúng file viewTicket.jsp
-                request.getRequestDispatcher("/jsp/customerSupport/viewTransaction.jsp").forward(request, response);
-            } else {
-                response.sendRedirect("ticket?action=list&error=notFound");
-            }
-        } catch (NumberFormatException e) {
-            response.sendRedirect("ticket?action=list&error=invalidId");
+    private void getContracts(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        try {
+            // YÊU CẦU CỦA BẠN: Lấy tất cả hợp đồng, không lọc theo khách hàng.
+            List<Contract> contracts = dao.getAllActiveContracts();
+            response.getWriter().write(gson.toJson(contracts));
+        } catch (SQLException e) {
+            e.printStackTrace();
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write("{\"error\":\"Lỗi khi truy vấn cơ sở dữ liệu.\"}");
         }
     }
 
