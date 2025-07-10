@@ -403,45 +403,93 @@ public class UserDAO {
         }
         return userList;
     }
+
     public List<User> getAllEmployeesRole() {
-    List<User> employeeList = new ArrayList<>();
-    // Câu lệnh SQL JOIN các bảng và loại trừ vai trò 'Admin'
-    String sql = "SELECT u.*, r.name as role_name, p.name as position_name, d.name as department_name "
-            + "FROM users u "
-            + "JOIN roles r ON u.role_id = r.id "
-            + "LEFT JOIN positions p ON u.position_id = p.id "
-            + "LEFT JOIN departments d ON u.department_id = d.id "
-            + "WHERE r.name <> 'Admin' AND u.is_deleted = 0 " // Loại trừ Admin và user đã bị xóa
-            + "ORDER BY u.id"; // Sắp xếp cho nhất quán
+        List<User> employeeList = new ArrayList<>();
+        // Câu lệnh SQL JOIN các bảng và loại trừ vai trò 'Admin'
+        String sql = "SELECT u.*, r.name as role_name, p.name as position_name, d.name as department_name "
+                + "FROM users u "
+                + "JOIN roles r ON u.role_id = r.id "
+                + "LEFT JOIN positions p ON u.position_id = p.id "
+                + "LEFT JOIN departments d ON u.department_id = d.id "
+                + "WHERE r.name <> 'Admin' AND u.is_deleted = 0 " // Loại trừ Admin và user đã bị xóa
+                + "ORDER BY u.id"; // Sắp xếp cho nhất quán
 
-    try (Connection conn = DBContext.getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql);
-         ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
-        while (rs.next()) {
-            User user = new User();
-            // Gán các trường cơ bản từ bảng Users
-            user.setId(rs.getInt("id"));
-            user.setEmail(rs.getString("email"));
-            user.setLastName(rs.getString("last_name"));
-            user.setMiddleName(rs.getString("middle_name"));
-            user.setFirstName(rs.getString("first_name"));
-            user.setAvatarUrl(rs.getString("avatar_url"));
-            user.setEmployeeCode(rs.getString("employee_code"));
-            user.setPhoneNumber(rs.getString("phone_number"));
-            user.setStatus(rs.getString("status"));
+            while (rs.next()) {
+                User user = new User();
+                // Gán các trường cơ bản từ bảng Users
+                user.setId(rs.getInt("id"));
+                user.setEmail(rs.getString("email"));
+                user.setLastName(rs.getString("last_name"));
+                user.setMiddleName(rs.getString("middle_name"));
+                user.setFirstName(rs.getString("first_name"));
+                user.setAvatarUrl(rs.getString("avatar_url"));
+                user.setEmployeeCode(rs.getString("employee_code"));
+                user.setPhoneNumber(rs.getString("phone_number"));
+                user.setStatus(rs.getString("status"));
 
-            // Gán các trường lấy từ bảng JOIN
-            user.setRoleName(rs.getString("role_name"));
-            user.setPositionName(rs.getString("position_name"));
-            user.setDepartmentName(rs.getString("department_name"));
+                // Gán các trường lấy từ bảng JOIN
+                user.setRoleName(rs.getString("role_name"));
+                user.setPositionName(rs.getString("position_name"));
+                user.setDepartmentName(rs.getString("department_name"));
 
-            employeeList.add(user);
+                employeeList.add(user);
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi khi lấy danh sách tất cả nhân viên: " + e.getMessage());
+            e.printStackTrace();
         }
-    } catch (Exception e) {
-        System.err.println("Lỗi khi lấy danh sách tất cả nhân viên: " + e.getMessage());
-        e.printStackTrace();
+        return employeeList;
     }
-    return employeeList;
-}
+
+    public boolean addEmployee(User user, int departmentId, int positionId, int roleId) {
+        String defaultPassword = "Fpt@12345";
+        String hashedPassword = BCrypt.hashpw(defaultPassword, BCrypt.gensalt());
+
+        // Tạo mã nhân viên duy nhất
+        String employeeCode = "NV" + System.currentTimeMillis() % 100000;
+
+        String sql = "INSERT INTO users (last_name, middle_name, first_name, email, password_hash, "
+                + "phone_number, avatar_url, employee_code, date_of_birth, gender, "
+                + "identity_card_number, notes, status, department_id, position_id, role_id, "
+                + "created_at, updated_at, is_deleted) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)";
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, user.getLastName());
+            ps.setString(2, user.getMiddleName());
+            ps.setString(3, user.getFirstName());
+            ps.setString(4, user.getEmail());
+            ps.setString(5, hashedPassword);
+            ps.setString(6, user.getPhoneNumber());
+            ps.setString(7, user.getAvatarUrl());
+            ps.setString(8, employeeCode);
+
+            // Ngày sinh có thể null
+            if (user.getDateOfBirth() != null) {
+                ps.setString(9, user.getDateOfBirth().toString());
+            } else {
+                ps.setNull(9, java.sql.Types.DATE);
+            }
+
+            ps.setString(10, user.getGender());
+            ps.setString(11, user.getIdentityCardNumber());
+            ps.setString(12, user.getNotes());
+
+            ps.setInt(13, departmentId);
+            ps.setInt(14, positionId);
+            ps.setInt(15, roleId);
+
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0;
+
+        } catch (Exception e) {
+            System.out.println("Error adding employee: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 }

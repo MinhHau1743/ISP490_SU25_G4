@@ -33,7 +33,13 @@
                     <div class="page-title">Thêm nhân viên</div>
                 </header>
 
-                <form action="addEmployee" method="POST" enctype="multipart/form-data">
+                <c:if test="${not empty errorMessage}">
+                    <div class="alert alert-danger" style="color: red; background-color: #fdd; padding: 10px; margin: 10px 0; border: 1px solid red; border-radius: 5px;">
+                        ${errorMessage}
+                    </div>
+                </c:if>
+
+                <form action="/ISP490_SU25_G4/admin/employees/add" method="POST" enctype="multipart/form-data">
                     <section class="content-body">
                         <div class="add-employee-page">
 
@@ -72,12 +78,12 @@
                                     <h3 class="form-card-title">Thông tin công việc</h3>
                                     <div class="form-card-grid">
                                         <div class="form-group">
-                                            <label for="position">Phòng làm việc</label>
-                                            <select id="position" name="position"><option>Bộ phận kinh doanh</option></select>
+                                            <label for="departmentId">Phòng làm việc</label>
+                                            <select id="departmentId" name="departmentId" ><option value="1">Bộ phận kinh doanh</option></select>
                                         </div> 
                                         <div class="form-group">
                                             <label for="position">Chức vụ</label>
-                                            <select id="position" name="position"><option>Quản lý</option></select>
+                                            <select id="position" name="positionId"><option value="1">Quản lý</option></select>
                                         </div>                                                                                
                                     </div>
                                     <div class="form-group full-width" style="margin-top: 20px;">
@@ -100,8 +106,8 @@
                                         <div class="form-group">
                                             <label>Giới tính</label>
                                             <div class="radio-group">
-                                                <label class="radio-option"><input type="radio" name="gender" value="Nam" checked> Nam</label>
-                                                <label class="radio-option"><input type="radio" name="gender" value="Nữ"> Nữ</label>
+                                                <label class="radio-option"><input type="radio" name="gender" value="male" checked> Nam</label>
+                                                <label class="radio-option"><input type="radio" name="gender" value="female"> Nữ</label>
                                             </div>
                                         </div>
                                     </div>
