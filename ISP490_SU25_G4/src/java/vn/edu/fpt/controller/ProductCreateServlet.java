@@ -130,6 +130,7 @@ public class ProductCreateServlet extends HttpServlet {
             int newId = dao.insertProduct(p);
 
             // ==== XỬ LÝ ẢNH ====
+            // Đổi đường dẫn theo máy
             String uploadDir = "D:/New folder/ISP490_SU25_G4/web/image";
             File uploadPath = new File(uploadDir);
             if (!uploadPath.exists()) {

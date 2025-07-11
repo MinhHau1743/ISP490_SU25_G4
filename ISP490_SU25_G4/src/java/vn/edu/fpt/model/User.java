@@ -39,6 +39,7 @@ public class User {
     private Integer provinceId;
     private Integer districtId;
     private Integer wardId;
+    private int requireChangePassword;
 
     // Constructors
     public User() {
@@ -284,4 +285,13 @@ public class User {
     public void setWardId(Integer wardId) {
         this.wardId = wardId;
     }
+
+    public int isRequireChangePassword() {
+        return requireChangePassword;
+    }
+
+    public void setRequireChangePassword(int requireChangePassword) {
+        this.requireChangePassword = requireChangePassword;
+    }
+    
 }

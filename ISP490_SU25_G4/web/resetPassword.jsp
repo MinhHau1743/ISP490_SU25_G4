@@ -31,7 +31,7 @@
 
                 <label for="confirmPassword">Nhập lại mật khẩu</label>
                 <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Nhập lại mật khẩu" required />
-
+                <input type="hidden" name="productController" value="${sessionScope.productController}" />
                 <%-- ===== PHẦN CẬP NHẬT ===== --%>
                 <%-- Hiển thị thông báo lỗi với lớp CSS mới --%>
                 <c:if test="${not empty error}">
@@ -74,4 +74,17 @@
             }, 3000); // 3000 mili giây = 3 giây
         </script>
     </c:if>
+   <c:if test="${not empty isProductController and not empty success}">
+        <script>
+            // Hiển thị thông báo cho người dùng biết họ sẽ được chuyển trang
+            console.log("Cập nhật mật khẩu thành công. Tự động chuyển đến trang đăng nhập sau 3 giây.");
+
+            // Hàm thực hiện chuyển trang sau một khoảng thời gian
+            setTimeout(function () {
+                // Chuyển hướng người dùng đến trang login.jsp
+                window.location.href = 'dashboard.jsp';
+            }, 3000); // 3000 mili giây = 3 giây
+        </script>
+    </c:if>
+        
 </html>

@@ -35,6 +35,7 @@ public class UserDAO {
      * @return Đối tượng User nếu thành công, ngược lại trả về null.
      */
     Connection conn = getConnection();
+
     public User login(String email, String password) {
         System.out.println("DAO: Bat dau ham login voi email: " + email);
 
@@ -111,7 +112,7 @@ public class UserDAO {
                         user.setWardName(rs.getString("ward_name"));
                         user.setDistrictName(rs.getString("district_name"));
                         user.setProvinceName(rs.getString("province_name"));
-
+                        user.setRequireChangePassword(rs.getInt("require_change_password"));
                         System.out.println("DAO: Tao user object thanh cong. Tra ve user.");
                         return user; // Đăng nhập thành công, trả về đối tượng User
                     } else {
@@ -245,27 +246,28 @@ public class UserDAO {
         }
         return -1; // Không tìm thấy
     }
-public int getAddressIdByDetails(String street, String provinceName, String districtName, String wardName) {
-    String sql = "SELECT a.id FROM addresses a " +
-                 "JOIN wards w ON a.ward_id = w.id " +
-                 "JOIN districts d ON a.district_id = d.id " +
-                 "JOIN provinces p ON a.province_id = p.id " +
-                 "WHERE a.street_address = ? AND w.name = ? AND d.name = ? AND p.name = ?";
-    try (Connection conn = DBContext.getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql)) {
-        ps.setString(1, street);
-        ps.setString(2, wardName);
-        ps.setString(3, districtName);
-        ps.setString(4, provinceName);
-        ResultSet rs = ps.executeQuery();
-        if (rs.next()) {
-            return rs.getInt("id");
+
+    public int getAddressIdByDetails(String street, String provinceName, String districtName, String wardName) {
+        String sql = "SELECT a.id FROM addresses a "
+                + "JOIN wards w ON a.ward_id = w.id "
+                + "JOIN districts d ON a.district_id = d.id "
+                + "JOIN provinces p ON a.province_id = p.id "
+                + "WHERE a.street_address = ? AND w.name = ? AND d.name = ? AND p.name = ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, street);
+            ps.setString(2, wardName);
+            ps.setString(3, districtName);
+            ps.setString(4, provinceName);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("id");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-    } catch (SQLException e) {
-        e.printStackTrace();
+        return -1; // Không tìm thấy
     }
-    return -1; // Không tìm thấy
-}
+
     public void updatePassword(String email, String rawPassword) {
         String sql = "UPDATE Users SET password_hash = ? WHERE email = ?";
         try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -341,7 +343,7 @@ public int getAddressIdByDetails(String street, String provinceName, String dist
 //    }
 
 //  Lấy all thông tin user dựa vào ID
-     public int insertAddress1( String streetAddress, int wardId, int districtId, int provinceId) throws SQLException {
+    public int insertAddress1(String streetAddress, int wardId, int districtId, int provinceId) throws SQLException {
         String sql = "INSERT INTO Addresses (street_address, ward_id, district_id, province_id) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, streetAddress);
@@ -359,96 +361,102 @@ public int getAddressIdByDetails(String street, String provinceName, String dist
             }
         }
     }
+
     public User getUserById(int userId) {
-    Connection conn = null;
-    PreparedStatement ps = null;
-    ResultSet rs = null;
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
 
-    // Câu lệnh SQL sử dụng LEFT JOIN để gom thông tin từ các bảng liên quan, bổ sung lấy ID địa chỉ
-    String query = "SELECT "
-            + "u.id, u.email, u.last_name, u.middle_name, u.first_name, "
-            + "u.avatar_url, u.employee_code, u.phone_number, u.date_of_birth, u.gender, "
-            + "u.identity_card_number, u.notes, u.status, u.created_at, u.updated_at, u.department_id, "
-            + "p.name AS position_name, "
-            + "d.name AS department_name, "
-            + "r.name AS role_name, "
-            + "a.street_address, a.ward_id, a.district_id, a.province_id, " // Thêm các trường ID địa chỉ
-            + "w.name AS ward_name, "
-            + "dist.name AS district_name, "
-            + "prov.name AS province_name "
-            + "FROM Users u "
-            + "LEFT JOIN Positions p ON u.position_id = p.id "
-            + "LEFT JOIN Departments d ON u.department_id = d.id "
-            + "LEFT JOIN Roles r ON u.role_id = r.id "
-            + "LEFT JOIN Addresses a ON u.address_id = a.id "
-            + "LEFT JOIN Wards w ON a.ward_id = w.id "
-            + "LEFT JOIN Districts dist ON a.district_id = dist.id "
-            + "LEFT JOIN Provinces prov ON a.province_id = prov.id "
-            + "WHERE u.id = ? AND u.is_deleted = 0";
+        // Câu lệnh SQL sử dụng LEFT JOIN để gom thông tin từ các bảng liên quan, bổ sung lấy ID địa chỉ
+        String query = "SELECT "
+                + "u.id, u.email, u.last_name, u.middle_name, u.first_name, "
+                + "u.avatar_url, u.employee_code, u.phone_number, u.date_of_birth, u.gender, "
+                + "u.identity_card_number, u.notes, u.status, u.created_at, u.updated_at, u.department_id, "
+                + "p.name AS position_name, "
+                + "d.name AS department_name, "
+                + "r.name AS role_name, "
+                + "a.street_address, a.ward_id, a.district_id, a.province_id, " // Thêm các trường ID địa chỉ
+                + "w.name AS ward_name, "
+                + "dist.name AS district_name, "
+                + "prov.name AS province_name "
+                + "FROM Users u "
+                + "LEFT JOIN Positions p ON u.position_id = p.id "
+                + "LEFT JOIN Departments d ON u.department_id = d.id "
+                + "LEFT JOIN Roles r ON u.role_id = r.id "
+                + "LEFT JOIN Addresses a ON u.address_id = a.id "
+                + "LEFT JOIN Wards w ON a.ward_id = w.id "
+                + "LEFT JOIN Districts dist ON a.district_id = dist.id "
+                + "LEFT JOIN Provinces prov ON a.province_id = prov.id "
+                + "WHERE u.id = ? AND u.is_deleted = 0";
 
-    try {
-        conn = new DBContext().getConnection();
-        ps = conn.prepareStatement(query);
-        ps.setInt(1, userId);
-        rs = ps.executeQuery();
-
-        if (rs.next()) {
-            User user = new User();
-
-            // === Gán các trường từ bảng Users ===
-            user.setId(rs.getInt("id"));
-            user.setEmail(rs.getString("email"));
-            user.setLastName(rs.getString("last_name"));
-            user.setMiddleName(rs.getString("middle_name"));
-            user.setFirstName(rs.getString("first_name"));
-            user.setAvatarUrl(rs.getString("avatar_url"));
-            user.setEmployeeCode(rs.getString("employee_code"));
-            user.setPhoneNumber(rs.getString("phone_number"));
-
-            // Chuyển đổi java.sql.Date sang java.time.LocalDate
-            Date dobSql = rs.getDate("date_of_birth");
-            if (dobSql != null) {
-                user.setDateOfBirth(dobSql.toLocalDate());
-            }
-
-            user.setGender(rs.getString("gender"));
-            user.setIdentityCardNumber(rs.getString("identity_card_number"));
-            user.setNotes(rs.getString("notes"));
-            user.setStatus(rs.getString("status"));
-            user.setCreatedAt(rs.getTimestamp("created_at"));
-            user.setUpdatedAt(rs.getTimestamp("updated_at"));
-
-            // === Gán các trường từ các bảng JOIN (DTO style) ===
-            user.setRoleName(rs.getString("role_name"));
-            user.setPositionName(rs.getString("position_name"));
-            user.setDepartmentName(rs.getString("department_name"));
-            user.setDepartmentId(rs.getInt("department_id"));
-
-            // === Gán địa chỉ (cả ID và tên) ===
-            user.setStreetAddress(rs.getString("street_address"));
-            user.setWardId(rs.getObject("ward_id") != null ? rs.getInt("ward_id") : null);
-            user.setDistrictId(rs.getObject("district_id") != null ? rs.getInt("district_id") : null);
-            user.setProvinceId(rs.getObject("province_id") != null ? rs.getInt("province_id") : null);
-            user.setWardName(rs.getString("ward_name"));
-            user.setDistrictName(rs.getString("district_name"));
-            user.setProvinceName(rs.getString("province_name"));
-
-            return user;
-        }
-    } catch (Exception e) {
-        e.printStackTrace();
-    } finally {
         try {
-            if (rs != null) rs.close();
-            if (ps != null) ps.close();
-            if (conn != null) conn.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-    return null;
-}
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setInt(1, userId);
+            rs = ps.executeQuery();
 
+            if (rs.next()) {
+                User user = new User();
+
+                // === Gán các trường từ bảng Users ===
+                user.setId(rs.getInt("id"));
+                user.setEmail(rs.getString("email"));
+                user.setLastName(rs.getString("last_name"));
+                user.setMiddleName(rs.getString("middle_name"));
+                user.setFirstName(rs.getString("first_name"));
+                user.setAvatarUrl(rs.getString("avatar_url"));
+                user.setEmployeeCode(rs.getString("employee_code"));
+                user.setPhoneNumber(rs.getString("phone_number"));
+
+                // Chuyển đổi java.sql.Date sang java.time.LocalDate
+                Date dobSql = rs.getDate("date_of_birth");
+                if (dobSql != null) {
+                    user.setDateOfBirth(dobSql.toLocalDate());
+                }
+
+                user.setGender(rs.getString("gender"));
+                user.setIdentityCardNumber(rs.getString("identity_card_number"));
+                user.setNotes(rs.getString("notes"));
+                user.setStatus(rs.getString("status"));
+                user.setCreatedAt(rs.getTimestamp("created_at"));
+                user.setUpdatedAt(rs.getTimestamp("updated_at"));
+
+                // === Gán các trường từ các bảng JOIN (DTO style) ===
+                user.setRoleName(rs.getString("role_name"));
+                user.setPositionName(rs.getString("position_name"));
+                user.setDepartmentName(rs.getString("department_name"));
+                user.setDepartmentId(rs.getInt("department_id"));
+
+                // === Gán địa chỉ (cả ID và tên) ===
+                user.setStreetAddress(rs.getString("street_address"));
+                user.setWardId(rs.getObject("ward_id") != null ? rs.getInt("ward_id") : null);
+                user.setDistrictId(rs.getObject("district_id") != null ? rs.getInt("district_id") : null);
+                user.setProvinceId(rs.getObject("province_id") != null ? rs.getInt("province_id") : null);
+                user.setWardName(rs.getString("ward_name"));
+                user.setDistrictName(rs.getString("district_name"));
+                user.setProvinceName(rs.getString("province_name"));
+
+                return user;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (ps != null) {
+                    ps.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
 
     // Lấy danh sách nhân viên để hiển thị trong dropdown
     public List<User> getAllEmployees() throws Exception {
@@ -621,16 +629,29 @@ public int getAddressIdByDetails(String street, String provinceName, String dist
             return false;
         }
     }
-public static void main(String[] args) {
+
+    public boolean setRequireChangePasswordByEmail(String email) {
+        String sql = "UPDATE Users SET require_change_password = 0 WHERE email = ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            int rowsUpdated = ps.executeUpdate();
+            return rowsUpdated > 0; // trả về true nếu có ít nhất 1 dòng được cập nhật
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static void main(String[] args) {
         // Giả sử UserDAO chứa phương thức getUserById
         UserDAO userDAO = new UserDAO();
-        
+
         // ID người dùng để test, thay đổi thành ID thực tế trong DB của bạn
         int testUserId = 8;  // Ví dụ: ID = 1
-        
+
         // Gọi phương thức getUserById
         User user = userDAO.getUserById(testUserId);
-        
+
         // Kiểm tra và in kết quả
         if (user != null) {
             System.out.println("User found:");

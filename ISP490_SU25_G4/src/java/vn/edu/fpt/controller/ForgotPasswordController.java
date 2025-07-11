@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package vn.edu.fpt.controller;
 
 import java.io.IOException;
@@ -17,93 +13,58 @@ import java.util.Random;
 import vn.edu.fpt.dao.UserDAO;
 import vn.edu.fpt.common.EmailUtil;
 
-/**
- *
- * @author NGUYEN MINH
- */
 @WebServlet(name = "ForgotPasswordController", urlPatterns = {"/ForgotPasswordController"})
 public class ForgotPasswordController extends HttpServlet {
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet ForgotPasswordController</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet ForgotPasswordController at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-        }
-    }
-
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        // Chuyển về trang quên mật khẩu
+        request.getRequestDispatcher("forgotPassword.jsp").forward(request, response);
     }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        UserDAO dao = new UserDAO();
         String email = request.getParameter("email");
+        UserDAO dao = new UserDAO();
 
+        // Kiểm tra email nhập vào
+        if (email == null || email.trim().isEmpty()) {
+            request.setAttribute("error", "Vui lòng nhập email.");
+            request.getRequestDispatcher("forgotPassword.jsp").forward(request, response);
+            return;
+        }
+
+        // Kiểm tra email có tồn tại trong hệ thống không
         if (!dao.emailExists(email)) {
             request.setAttribute("error", "Email không tồn tại.");
             request.getRequestDispatcher("forgotPassword.jsp").forward(request, response);
             return;
         }
 
+        // Sinh OTP 6 số
         String otp = String.valueOf(new Random().nextInt(900000) + 100000);
+
+        // Lưu thông tin vào session
         HttpSession session = request.getSession();
         session.setAttribute("email", email);
         session.setAttribute("otp", otp);
         session.setAttribute("otpExpiresAt", LocalDateTime.now().plusMinutes(5));
 
-        EmailUtil.sendOTP(email, otp);
-        response.sendRedirect("verifyForgotPassword.jsp");
-
+        // Gửi OTP qua email, xử lý lỗi gửi mail
+        try {
+            EmailUtil.sendOTP(email, otp);
+            response.sendRedirect("verifyForgotPassword.jsp");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            request.setAttribute("error", "Không gửi được email xác thực. Vui lòng thử lại sau.");
+            request.getRequestDispatcher("forgotPassword.jsp").forward(request, response);
+        }
     }
 
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
     @Override
     public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
-
+        return "Forgot password controller";
+    }
 }

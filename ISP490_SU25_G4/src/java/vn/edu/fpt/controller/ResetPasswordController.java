@@ -58,7 +58,7 @@ public class ResetPasswordController extends HttpServlet {
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {     
+            throws ServletException, IOException {
         request.getRequestDispatcher("resetPassword.jsp").forward(request, response);
     }
 
@@ -76,8 +76,9 @@ public class ResetPasswordController extends HttpServlet {
         UserDAO dao = new UserDAO();
         HttpSession session = request.getSession();
         String email = (String) session.getAttribute("email");
+        String param = request.getParameter("productController");
 
-        if (email == null) {
+        if (email == null && param == null) {
             response.sendRedirect("forgotPassword.jsp"); // quay lại nếu chưa xác minh
             return;
         }
@@ -96,19 +97,21 @@ public class ResetPasswordController extends HttpServlet {
             request.getRequestDispatcher("resetPassword.jsp").forward(request, response);
             return;
         }
-     
-        
+
         // --- XỬ LÝ KHI THÀNH CÔNG ---
         try {
             // 1. Tạo người dùng trong cơ sở dữ liệu
             dao.updatePassword(email, newPassword);
 
-            // 2. Xóa các thuộc tính không cần thiết khỏi session
-            session.removeAttribute("email");
-
             // 3. Đặt thuộc tính "success" để gửi thông báo về cho JSP
             request.setAttribute("success", "Cập nhật mật khẩu thành công!");
-
+            if (param != null) {
+                boolean updated = dao.setRequireChangePasswordByEmail(email);
+                if (updated) {
+                    request.setAttribute("isProductController", true);
+                }
+            }
+            session.removeAttribute("email");
             // 4. Forward về lại trang password.jsp để hiển thị thông báo
             request.getRequestDispatcher("resetPassword.jsp").forward(request, response);
 

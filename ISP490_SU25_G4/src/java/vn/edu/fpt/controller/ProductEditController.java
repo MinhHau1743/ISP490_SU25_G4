@@ -134,7 +134,7 @@ public class ProductEditController extends HttpServlet {
                 return;
             }
             request.getRequestDispatcher("/editLoading.jsp").forward(request, response);
-            // UPDATE
+            // Đổi đường dẫn theo máy
             String uploadDir = "D:/New folder/ISP490_SU25_G4/web/image";
             File uploadPath = new File(uploadDir);
             if (!uploadPath.exists()) {

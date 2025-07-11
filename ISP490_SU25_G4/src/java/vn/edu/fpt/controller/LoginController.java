@@ -82,14 +82,21 @@ public class LoginController extends HttpServlet {
         User user = dao.login(email, password);
 
         if (user != null) {
-            // Đăng nhập thành công
-            HttpSession session = request.getSession(); // Tạo session mới nếu chưa có
-            session.setAttribute("user", user); // Lưu đối tượng User vào session
-            response.sendRedirect("dashboard.jsp"); // Chuyển hướng đến trang dashboard
+            HttpSession session = request.getSession();
+            session.setAttribute("user", user);
+            int num = user.isRequireChangePassword();
+            if (num == 1) {
+                // Nếu là lần đầu đăng nhập, chuyển đến trang đổi mật khẩu
+                session.setAttribute("ProductController", true);
+                session.setAttribute("email", email);
+                response.sendRedirect("resetPassword.jsp");
+            } else {
+                // Đăng nhập bình thường
+                response.sendRedirect("dashboard.jsp");
+            }
         } else {
-            // Đăng nhập thất bại
             request.setAttribute("error", "Email hoặc mật khẩu không đúng!");
-            request.getRequestDispatcher("login.jsp").forward(request, response); // Quay lại trang login
+            request.getRequestDispatcher("login.jsp").forward(request, response);
         }
     }
 
