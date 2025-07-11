@@ -71,6 +71,10 @@
                                             <label>Mã nhân viên</label>
                                             <input type="text" value="Mã sẽ được tạo tự động" disabled>
                                         </div>
+                                        <div class="form-group">
+                                            <label for="email">Email</label>
+                                            <input type="email" id="email" name="email" required>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -113,31 +117,7 @@
                                     </div>
                                 </div>
 
-                                <div class="form-card">
-                                    <h3 class="form-card-title">Thông tin liên hệ</h3>
-                                    <div class="form-card-grid">
-                                        <div class="form-group">
-                                            <label for="email">Email</label>
-                                            <input type="email" id="email" name="email">
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="address">Địa chỉ</label>
-                                            <input type="text" id="address" name="address">
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="city">Tỉnh/Thành phố</label>
-                                            <input type="text" id="city" name="city">
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="quan">Quận/Huyện</label>
-                                            <input type="text" id="quan" name="quan">
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="stress">Phường/Xã</label>
-                                            <input type="text" id="stress" name="stress">
-                                        </div>
-                                    </div>
-                                </div>
+
                             </div>
                         </div>
                     </section>
