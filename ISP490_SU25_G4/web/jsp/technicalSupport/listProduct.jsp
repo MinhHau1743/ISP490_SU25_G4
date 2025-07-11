@@ -27,6 +27,9 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pagination.css">
     </head>
     <body>
+        <style>
+
+        </style>
         <div class="app-container">
             <jsp:include page="../../mainMenu.jsp"/>
             <main class="main-content">
