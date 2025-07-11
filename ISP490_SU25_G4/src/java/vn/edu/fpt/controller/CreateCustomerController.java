@@ -55,6 +55,7 @@ public class CreateCustomerController extends HttpServlet {
                 List<User> employees = userDAO.getAllEmployees();
 
                 request.setAttribute("provinces", provinces);
+                
                 request.setAttribute("customerTypes", customerTypes);
                 request.setAttribute("employees", employees);
 

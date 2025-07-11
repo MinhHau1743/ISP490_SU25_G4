@@ -4,6 +4,7 @@
  */
 package vn.edu.fpt.controller;
 
+import com.sun.jdi.connect.spi.Connection;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -14,13 +15,26 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.Date;
+import java.util.List;
+import vn.edu.fpt.dao.AddressDAO;
+import vn.edu.fpt.dao.DepartmentDAO;
 import vn.edu.fpt.dao.UserDAO;
+import vn.edu.fpt.model.Department;
+import vn.edu.fpt.model.Province;
 import vn.edu.fpt.model.User;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import vn.edu.fpt.model.District;
+import vn.edu.fpt.model.Ward;
 
 /**
  *
@@ -70,22 +84,70 @@ public class EditProfileController extends HttpServlet {
             throws ServletException, IOException {
 
         HttpSession session = request.getSession(false);
-// THÊM DÒNG NÀY VÀO
         System.out.println("\n2. === TRONG EditProfileController (doGet) ===");
-        System.out.println("User trong session là: " + session.getAttribute("user"));
 
-        // Kiểm tra user có trong session không
-        if (session != null && session.getAttribute("user") != null) {
-            // Lấy user từ session để hiển thị trên form edit
-            User userToEdit = (User) session.getAttribute("user");
-            request.setAttribute("user", userToEdit); // Đặt user vào request để trang jsp có thể lấy
-
-            // Chuyển tiếp đến trang JSP
-            request.getRequestDispatcher("editProfile.jsp").forward(request, response);
-        } else {
-            // Nếu không có user trong session, đá về trang đăng nhập
-            System.out.println(">>> LỖI: Không tìm thấy user trong session khi vào doGet của EditProfile.");
+        if (session == null || session.getAttribute("user") == null) {
+            System.out.println(">>> LỖI: Không tìm thấy user trong session.");
             response.sendRedirect("login.jsp");
+            return;
+        }
+
+        User loggedInUser = (User) session.getAttribute("user");
+
+        // Lấy id từ parameter nếu có, hoặc từ session
+        String idParam = request.getParameter("id");
+        int userId = loggedInUser.getId();
+        if (idParam != null) {
+            try {
+                userId = Integer.parseInt(idParam);
+            } catch (NumberFormatException e) {
+                System.out.println(">>> LỖI: id không hợp lệ.");
+                response.sendRedirect("error.jsp");
+                return;
+            }
+        }
+
+        AddressDAO addressDAO = new AddressDAO();
+        UserDAO userDAO = new UserDAO();
+        User userToEdit = userDAO.getUserById(userId);
+
+        if (userToEdit == null) {
+            System.out.println(">>> LỖI: Không tìm thấy user trong DB.");
+            response.sendRedirect("login.jsp");
+            return;
+        }
+
+        try {
+            // Load danh sách tỉnh/thành
+            List<Province> provinces = addressDAO.getAllProvinces();
+            request.setAttribute("provinces", provinces);
+
+            // Nếu user đã có địa chỉ, load luôn danh sách quận/huyện và phường/xã tương ứng
+            List<District> districts = new ArrayList<>();
+            List<Ward> wards = new ArrayList<>();
+
+            if (userToEdit.getProvinceId() != null && userToEdit.getProvinceId() > 0) {
+                districts = addressDAO.getDistrictsByProvinceId(userToEdit.getProvinceId());
+                request.setAttribute("districts", districts);
+            }
+            if (userToEdit.getDistrictId() != null && userToEdit.getDistrictId() > 0) {
+                wards = addressDAO.getWardsByDistrictId(userToEdit.getDistrictId());
+                request.setAttribute("wards", wards);
+            }
+
+            // Load list departments
+            DepartmentDAO departmentDAO = new DepartmentDAO();
+            List<Department> departments = departmentDAO.getAllDepartments();
+            request.setAttribute("departments", departments);
+
+            request.setAttribute("user", userToEdit);
+            // Update session để sync
+            session.setAttribute("user", userToEdit);
+
+            request.getRequestDispatcher("editProfile.jsp").forward(request, response);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            response.sendRedirect("error.jsp");
         }
     }
 
@@ -100,102 +162,108 @@ public class EditProfileController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
+        java.sql.Connection conn = null;
+        UserDAO userDAO = new UserDAO();
+        AddressDAO addressDAO = new AddressDAO();
+        // Lấy dữ liệu từ form
+        String employeeCode = request.getParameter("employeeCode");
+        String lastName = request.getParameter("lastName");
+        String middleName = request.getParameter("middleName");
+        String firstName = request.getParameter("firstName");
+        String phoneNumber = request.getParameter("phoneNumber");
 
-//        HttpSession session = request.getSession(false); // Dùng false để không tạo session mới nếu chưa có
-//
-////        // THÊM CÁC DÒNG NÀY ĐỂ DEBUG
-////        System.out.println("\n--- UPDATE PROFILE SUBMITTED ---");
-////        if (session != null) {
-////            System.out.println("Session ID KHI CẬP NHẬT: " + session.getId());
-////            // In ra đối tượng user để xem nó có thật sự là null không
-////            System.out.println("User lấy từ session: " + session.getAttribute("user"));
-////        } else {
-////            System.out.println("SESSION KHÔNG TỒN TẠI KHI CẬP NHẬT!");
-////        }
-////        // THÊM DÒNG NÀY VÀO
-////        System.out.println("\n3. === TRONG EditProfileController (doPost) ===");
-////        System.out.println("User trong session là: " + session.getAttribute("user"));
-//
-//        User currentUser = (User) session.getAttribute("user");
-//
-//        // Nếu người dùng chưa đăng nhập, không cho phép cập nhật
-//        if (currentUser == null) {
-//            response.sendRedirect("dashboard.jsp");
-//            return;
-//        }
-//
-//        try {
-//            // Lấy tất cả thông tin từ form
-//            String lastName = request.getParameter("lastName");
-//            String middleName = request.getParameter("middleName");
-//            String firstName = request.getParameter("firstName");
-//            String phoneNumber = request.getParameter("phoneNumber");
-//            String department = request.getParameter("department");
-//            String position = request.getParameter("position");
-//            String notes = request.getParameter("notes");
-//            String identityCardNumber = request.getParameter("identityCardNumber");
-//            String dateOfBirthStr = request.getParameter("dateOfBirth");
-//            String gender = request.getParameter("gender");
-//            String address = request.getParameter("address");
-//            String ward = request.getParameter("ward");
-//            String district = request.getParameter("district");
-//            String city = request.getParameter("city");
-//            String socialMediaLink = request.getParameter("socialMediaLink");
-//            String email = request.getParameter("email");
-//
-//            // Xử lý file ảnh đại diện
-//            Part part = request.getPart("avatar");
-//            String avatarUrl = currentUser.getAvatarUrl();
-//
-//            if (part != null && part.getSize() > 0) {
-//                String realPath = request.getServletContext().getRealPath("/uploads");
-//                String fileName = Paths.get(part.getSubmittedFileName()).getFileName().toString();
-//                Path uploadPath = Paths.get(realPath);
-//                if (!Files.exists(uploadPath)) {
-//                    Files.createDirectories(uploadPath);
-//                }
-//                part.write(realPath + "/" + fileName);
-//                avatarUrl = "uploads/" + fileName;
-//            }
-//
-//            // Cập nhật đối tượng User
-//            currentUser.setLastName(lastName);
-//            currentUser.setMiddleName(middleName);
-//            currentUser.setFirstName(firstName);
-//            currentUser.setPhoneNumber(phoneNumber);
-//            currentUser.setDepartment(department);
-//            currentUser.setPosition(position);
-//            currentUser.setNotes(notes);
-//            currentUser.setIdentityCardNumber(identityCardNumber);
-//            if (dateOfBirthStr != null && !dateOfBirthStr.isEmpty()) {
-//                currentUser.setDateOfBirth(LocalDate.parse(dateOfBirthStr));
-//            }
-//            currentUser.setGender(gender);
-//            currentUser.setAddress(address);
-//            currentUser.setWard(ward);
-//            currentUser.setDistrict(district);
-//            currentUser.setCity(city);
-//            currentUser.setSocialMediaLink(socialMediaLink);
-//            currentUser.setEmail(email);
-//            currentUser.setAvatarUrl(avatarUrl);
-//
-//            // Gọi DAO để cập nhật vào database
-//            UserDAO userDAO = new UserDAO();
-//            boolean isUpdated = userDAO.updateUserProfile(currentUser);
-//
-//            if (isUpdated) {
-//                session.setAttribute("user", currentUser);
-//                // Bạn của bạn (người làm trang view) sẽ xử lý việc hiển thị thông báo này
-//                response.sendRedirect("viewProfile?id=" + currentUser.getId() + "&status=success");
-//            } else {
-//                // Bạn của bạn (người làm trang edit) sẽ xử lý việc hiển thị thông báo này
-//                response.sendRedirect("editProfile?id=" + currentUser.getId() + "&status=fail");
-//            }
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            response.sendRedirect("editProfile?id=" + currentUser.getId() + "&status=error");
-//        }
+        String department = request.getParameter("departmentId");
+        String position = request.getParameter("position");
+        String notes = request.getParameter("notes");
+
+        String identityCardNumber = request.getParameter("identityCardNumber");
+        String dateOfBirthStr = request.getParameter("dateOfBirth");
+        LocalDate dateOfBirth = null;
+        try {
+            if (dateOfBirthStr != null && !dateOfBirthStr.isEmpty()) {
+                dateOfBirth = LocalDate.parse(dateOfBirthStr); // Định dạng yyyy-MM-dd
+            }
+        } catch (DateTimeParseException e) {
+            e.printStackTrace(); // hoặc xử lý lỗi hợp lệ hơn
+        }
+
+        String gender = request.getParameter("gender");
+
+        String address = request.getParameter("address");
+        String email = request.getParameter("email");
+
+        int cityId = Integer.parseInt(request.getParameter("province"));
+        int districtId = Integer.parseInt(request.getParameter("district"));
+        int wardId = Integer.parseInt(request.getParameter("ward"));
+        // (Tuỳ bạn lưu ID, nếu cần)
+        int userId = Integer.parseInt(request.getParameter("id")); // nếu bạn truyền id ẩn theo form
+
+        // Gọi DAO hoặc service để cập nhật vào DB
+        User user = new User();
+        user.setId(userId);
+        user.setEmployeeCode(employeeCode);
+        user.setLastName(lastName);
+        user.setMiddleName(middleName);
+        user.setFirstName(firstName);
+        user.setPhoneNumber(phoneNumber);
+        int departmentId = Integer.parseInt(department);
+        user.setDepartmentId(departmentId);
+
+        int positionId = userDAO.getPositionIdByName(position);
+        user.setPositionId(positionId);
+
+        int newAddressId = 0;  // Khởi tạo mặc định là 0 (hoặc giá trị không hợp lệ nếu cần)
+        try {
+            newAddressId = userDAO.insertAddress1(address, wardId, districtId, cityId);
+        } catch (SQLException ex) {
+            Logger.getLogger(EditProfileController.class.getName()).log(Level.SEVERE, null, ex);
+            // Xử lý lỗi: Có thể redirect đến trang lỗi hoặc set newAddressId = user.getAddressId() cũ nếu cần
+            // Ví dụ: response.sendRedirect("error.jsp"); return;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException ex) {
+                    Logger.getLogger(EditProfileController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+        user.setAddressId(newAddressId);
+        user.setNotes(notes);
+        user.setIdentityCardNumber(identityCardNumber);
+        user.setDateOfBirth(dateOfBirth);
+        user.setGender(gender);
+        user.setEmail(email);
+
+        // Cập nhật avatar (nếu có file upload)
+        Part avatarPart = request.getPart("avatar");
+        if (avatarPart != null && avatarPart.getSize() > 0) {
+            String fileName = Paths.get(avatarPart.getSubmittedFileName()).getFileName().toString();
+            String uploadPath = getServletContext().getRealPath("/uploads/avatars");
+            File uploadDir = new File(uploadPath);
+            if (!uploadDir.exists()) {
+                uploadDir.mkdirs();
+            }
+
+            String avatarPath = uploadPath + File.separator + fileName;
+            avatarPart.write(avatarPath);
+
+            // Lưu đường dẫn vào user
+            user.setAvatarUrl("uploads/avatars/" + fileName);
+        }
+
+        userDAO.updateUser(user);
+
+        // THÊM: Reload user từ DB để có dữ liệu đầy đủ (ID + name từ join)
+        User updatedUser = userDAO.getUserById(userId);  // Giả sử getUserById join và set name cho display
+
+        // Cập nhật session với updatedUser
+        HttpSession session = request.getSession();
+        session.setAttribute("user", updatedUser);
+
+        // Chuyển về viewProfile
+        response.sendRedirect("viewProfile");
     }
 
     /**

@@ -6,7 +6,7 @@
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-
+<c:set var="BASE_URL" value="${pageContext.request.contextPath}" />
 <!DOCTYPE html>
 <html lang="vi">
     <head>
@@ -82,7 +82,7 @@
                                 </div>
                             </div>
                         </div>
-
+                        <input type="hidden" name="id" value="${user.id}" />
                         <%-- Card 2: Thông tin công việc --%>
                         <div class="profile-card">
                             <div class="card-body">
@@ -90,15 +90,19 @@
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label for="department">Phòng làm việc</label>
-                                        <select id="department" name="department">
-                                            <option value="cskh" ${user.department == 'cskh' ? 'selected' : ''}>CSKH</option>
-                                            <option value="kithuat" ${user.department == 'kithuat' ? 'selected' : ''}>Kỹ thuật</option>
-                                            <option value="admin" ${user.department == 'admin' ? 'selected' : ''}>Quản trị</option>
+                                        <select id="department" name="departmentId">
+                                            <c:if test="${empty requestScope.departments}">
+                                                <option value="">Không có phòng ban</option>
+                                            </c:if>
+                                            <c:forEach var="dept" items="${requestScope.departments}">
+                                                <option value="${dept.id}" ${user.departmentId == dept.id ? 'selected' : ''}>${dept.name}</option>
+                                            </c:forEach>
                                         </select>
+
                                     </div>
                                     <div class="form-group">
                                         <label for="position">Chức vụ</label>
-                                        <input type="text" id="position" name="position" value="${user.position}">
+                                        <input type="text" id="position" name="position" value="${user.positionName}">
                                     </div>
                                 </div>
                                 <div class="form-group full-width">
@@ -139,36 +143,44 @@
                                 <h2>Thông tin liên hệ</h2>
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label for="address">Địa chỉ</label>
-                                        <input type="text" id="address" name="address" value="${user.address}">
-                                    </div>
-                                    <div class="form-group">
                                         <label for="email">Email</label>
                                         <input type="email" id="email" name="email" value="${user.email}">
                                     </div>
-                                </div>
-                                <div class="form-row">
                                     <div class="form-group">
-                                        <label for="city">Tỉnh/Thành phố</label>
-                                        <input type="text" id="city" name="city" value="${user.city}">
+                                        <label for="address">Địa chỉ</label>
+                                        <input type="text" id="address" name="address" value="${user.streetAddress}">
                                     </div>
-                                    <div class="form-group">
-                                        <label for="district">Quận/Huyện</label>
-                                        <input type="text" id="district" name="district" value="${user.district}">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="ward">Phường/Xã</label>
-                                        <input type="text" id="ward" name="ward" value="${user.ward}">
-                                    </div>
-                                </div>
-                                
-                            </div>
-                        </div>
 
-                        <div class="form-actions">
-                            <a href="viewProfile?id=${user.id}" class="btn btn-secondary" role="button">Hủy</a>
-                            <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
-                        </div>
+                                </div>
+                                <div class="info-grid" style="margin-top: 1rem; grid-template-columns: repeat(3, 1fr);">
+                                    <div class="form-group">
+                                        <label for="province">Tỉnh/Thành phố (*)</label>
+                                        <select id="province" name="province" class="form-control" required>
+                                            <option value="" disabled selected>-- Chọn Tỉnh/Thành --</option>
+                                            <c:forEach var="p" items="${provinces}">
+                                                <option value="${p.id}">${p.name}</option>
+                                            </c:forEach>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="district">Quận/Huyện (*)</label>
+                                        <select id="district" name="district" class="form-control" required disabled>
+                                            <option value="" disabled selected>-- Chọn Quận/Huyện --</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="ward">Phường/Xã (*)</label>
+                                        <select id="ward" name="ward" class="form-control" required disabled>
+                                            <option value="" disabled selected>-- Chọn Phường/Xã --</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <a href="viewProfile?id=${user.id}" class="btn btn-secondary" role="button">Hủy</a>
+                                <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                            </div>
                     </form>
                 </div>
             </main>
@@ -177,6 +189,70 @@
         <script>
             feather.replace();
         </script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+                    document.getElementById('btnChooseAvatar').addEventListener('click', function () {
+                        document.getElementById('avatarUpload').click();
+                    });
+                    document.getElementById('avatarUpload').addEventListener('change', function (event) {
+                        const [file] = event.target.files;
+                        if (file) {
+                            document.getElementById('avatarPreview').src = URL.createObjectURL(file);
+                        }
+                    });
+
+                    // Dynamic address loading
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const provinceSelect = document.getElementById('province');
+                        const districtSelect = document.getElementById('district');
+                        const wardSelect = document.getElementById('ward');
+
+                        provinceSelect.addEventListener('change', function () {
+                            const provinceId = this.value;
+                            districtSelect.innerHTML = '<option value="" disabled selected>-- Đang tải... --</option>';
+                            wardSelect.innerHTML = '<option value="" disabled selected>-- Chọn Phường/Xã --</option>';
+                            districtSelect.disabled = true;
+                            wardSelect.disabled = true;
+                            if (provinceId) {
+                                fetch('${BASE_URL}/getDistricts?provinceId=' + provinceId)
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            districtSelect.innerHTML = '<option value="" disabled selected>-- Chọn Quận/Huyện --</option>';
+                                            data.forEach(function (district) {
+                                                const option = document.createElement('option');
+                                                option.value = district.id;
+                                                option.textContent = district.name;
+                                                districtSelect.appendChild(option);
+                                            });
+                                            districtSelect.disabled = false;
+                                        })
+                                        .catch(error => console.error('Error fetching districts:', error));
+                            }
+                        });
+
+                        districtSelect.addEventListener('change', function () {
+                            const districtId = this.value;
+                            wardSelect.innerHTML = '<option value="" disabled selected>-- Đang tải... --</option>';
+                            wardSelect.disabled = true;
+                            if (districtId) {
+                                fetch('${BASE_URL}/getWards?districtId=' + districtId)
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            wardSelect.innerHTML = '<option value="" disabled selected>-- Chọn Phường/Xã --</option>';
+                                            data.forEach(function (ward) {
+                                                const option = document.createElement('option');
+                                                option.value = ward.id;
+                                                option.textContent = ward.name;
+                                                wardSelect.appendChild(option);
+                                            });
+                                            wardSelect.disabled = false;
+                                        })
+                                        .catch(error => console.error('Error fetching wards:', error));
+                            }
+                        });
+                    });
+        </script>
+
         <script src="js/mainMenu.js"></script>
         <script src="js/editProfile.js"></script>
 
