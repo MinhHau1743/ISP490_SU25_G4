@@ -166,6 +166,7 @@ public class EditProfileController extends HttpServlet {
         java.sql.Connection conn = null;
         UserDAO userDAO = new UserDAO();
         AddressDAO addressDAO = new AddressDAO();
+
         // Lấy dữ liệu từ form
         String employeeCode = request.getParameter("employeeCode");
         String lastName = request.getParameter("lastName");
@@ -260,10 +261,19 @@ public class EditProfileController extends HttpServlet {
 
         // Cập nhật session với updatedUser
         HttpSession session = request.getSession();
-        session.setAttribute("user", updatedUser);
+        Object userIDObj = session.getAttribute("userID");
+        // nếu đăng nhập lần đầu thì xóa session check đăng nhập rồi đi đến dashboard
+        if (userIDObj != null) {
+            session.removeAttribute("ProductController");
+            session.removeAttribute("userID");
+            response.sendRedirect("dashboard.jsp");
+        } else {
+            session.setAttribute("user", updatedUser);
 
-        // Chuyển về viewProfile
-        response.sendRedirect("viewProfile");
+            // Chuyển về viewProfile
+            response.sendRedirect("viewProfile");
+        }
+
     }
 
     /**

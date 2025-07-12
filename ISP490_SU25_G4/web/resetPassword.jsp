@@ -82,7 +82,7 @@
             // Hàm thực hiện chuyển trang sau một khoảng thời gian
             setTimeout(function () {
                 // Chuyển hướng người dùng đến trang login.jsp
-                window.location.href = 'dashboard.jsp';
+                window.location.href = 'editProfile?id=${userID}';
             }, 3000); // 3000 mili giây = 3 giây
         </script>
     </c:if>

@@ -1,4 +1,4 @@
-<%--
+<%-- 
     Document   : editProfile.jsp
     Created on : Jun 5, 2025, 9:27:00 PM
     Author     : minhnhn (đã được AI cập nhật)
@@ -29,7 +29,9 @@
     <body>
 
         <div class="app-container">
-            <jsp:include page="mainMenu.jsp"/>
+            <c:if test="${empty userID}">
+                <jsp:include page="mainMenu.jsp"/>
+            </c:if>
             <main class="main-content">
                 <header class="main-top-bar">
                     <div class="page-title">Chỉnh sửa thông tin chi tiết</div>
@@ -156,9 +158,9 @@
                                     <div class="form-group">
                                         <label for="province">Tỉnh/Thành phố (*)</label>
                                         <select id="province" name="province" class="form-control" required>
-                                            <option value="" disabled selected>-- Chọn Tỉnh/Thành --</option>
+                                            <option value="" disabled ${empty user.provinceId ? 'selected' : ''}>-- Chọn Tỉnh/Thành --</option>
                                             <c:forEach var="p" items="${provinces}">
-                                                <option value="${p.id}">${p.name}</option>
+                                                <option value="${p.id}" ${user.provinceId == p.id ? 'selected' : ''}>${p.name}</option>
                                             </c:forEach>
                                         </select>
                                     </div>
@@ -178,7 +180,9 @@
                             </div>
 
                             <div class="form-actions">
-                                <a href="viewProfile?id=${user.id}" class="btn btn-secondary" role="button">Hủy</a>
+                                <c:if test="${empty userID}">
+                                    <a href="viewProfile?id=${user.id}" class="btn btn-secondary" role="button">Hủy</a>  
+                                </c:if>
                                 <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
                             </div>
                     </form>
@@ -188,71 +192,13 @@
 
         <script>
             feather.replace();
+            // Khai báo global variables từ JSP
+            window.userProvinceId = '${user.provinceId}' || '';
+            window.userDistrictId = '${user.districtId}' || '';
+            window.userWardId = '${user.wardId}' || '';
+            window.BASE_URL = '${BASE_URL}';
         </script>
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <script>
-                    document.getElementById('btnChooseAvatar').addEventListener('click', function () {
-                        document.getElementById('avatarUpload').click();
-                    });
-                    document.getElementById('avatarUpload').addEventListener('change', function (event) {
-                        const [file] = event.target.files;
-                        if (file) {
-                            document.getElementById('avatarPreview').src = URL.createObjectURL(file);
-                        }
-                    });
-
-                    // Dynamic address loading
-                    document.addEventListener('DOMContentLoaded', function () {
-                        const provinceSelect = document.getElementById('province');
-                        const districtSelect = document.getElementById('district');
-                        const wardSelect = document.getElementById('ward');
-
-                        provinceSelect.addEventListener('change', function () {
-                            const provinceId = this.value;
-                            districtSelect.innerHTML = '<option value="" disabled selected>-- Đang tải... --</option>';
-                            wardSelect.innerHTML = '<option value="" disabled selected>-- Chọn Phường/Xã --</option>';
-                            districtSelect.disabled = true;
-                            wardSelect.disabled = true;
-                            if (provinceId) {
-                                fetch('${BASE_URL}/getDistricts?provinceId=' + provinceId)
-                                        .then(response => response.json())
-                                        .then(data => {
-                                            districtSelect.innerHTML = '<option value="" disabled selected>-- Chọn Quận/Huyện --</option>';
-                                            data.forEach(function (district) {
-                                                const option = document.createElement('option');
-                                                option.value = district.id;
-                                                option.textContent = district.name;
-                                                districtSelect.appendChild(option);
-                                            });
-                                            districtSelect.disabled = false;
-                                        })
-                                        .catch(error => console.error('Error fetching districts:', error));
-                            }
-                        });
-
-                        districtSelect.addEventListener('change', function () {
-                            const districtId = this.value;
-                            wardSelect.innerHTML = '<option value="" disabled selected>-- Đang tải... --</option>';
-                            wardSelect.disabled = true;
-                            if (districtId) {
-                                fetch('${BASE_URL}/getWards?districtId=' + districtId)
-                                        .then(response => response.json())
-                                        .then(data => {
-                                            wardSelect.innerHTML = '<option value="" disabled selected>-- Chọn Phường/Xã --</option>';
-                                            data.forEach(function (ward) {
-                                                const option = document.createElement('option');
-                                                option.value = ward.id;
-                                                option.textContent = ward.name;
-                                                wardSelect.appendChild(option);
-                                            });
-                                            wardSelect.disabled = false;
-                                        })
-                                        .catch(error => console.error('Error fetching wards:', error));
-                            }
-                        });
-                    });
-        </script>
-
+        <script src="http<s://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="js/mainMenu.js"></script>
         <script src="js/editProfile.js"></script>
 

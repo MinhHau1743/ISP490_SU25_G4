@@ -84,12 +84,14 @@ public class LoginController extends HttpServlet {
         if (user != null) {
             HttpSession session = request.getSession();
             session.setAttribute("user", user);
-            int num = user.isRequireChangePassword();
+            int num = user.isRequireChangePassword();  // Giả sử phương thức này trả về int (0/1); nếu là boolean, thay bằng if (user.isRequireChangePassword())
             if (num == 1) {
                 // Nếu là lần đầu đăng nhập, chuyển đến trang đổi mật khẩu
-                session.setAttribute("ProductController", true);
+                session.setAttribute("ProductController", true);  // Có vẻ như key này là typo? Có thể là "fromLogin" hoặc tương tự
                 session.setAttribute("email", email);
-                response.sendRedirect("resetPassword.jsp");
+                int userId = user.getId();  
+                session.setAttribute("userID", userId);
+                response.sendRedirect("resetPassword.jsp");  // Gửi userId qua URL query string
             } else {
                 // Đăng nhập bình thường
                 response.sendRedirect("dashboard.jsp");
