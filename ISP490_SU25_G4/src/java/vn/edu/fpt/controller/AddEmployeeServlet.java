@@ -145,7 +145,7 @@ public class AddEmployeeServlet extends HttpServlet {
                         + "<p>Thông tin đăng nhập:</p>"
                         + "<ul>"
                         + "<li>Email: " + newUser.getEmail() + "</li>"
-                        + "<li>Mật khẩu mặc định: Fpt@12345</li>"
+                        + "<li>Mật khẩu mặc định: DPCRM@12345</li>"
                         + "</ul>"
                         + "<p>Vui lòng đổi mật khẩu sau khi đăng nhập.</p>";
 
