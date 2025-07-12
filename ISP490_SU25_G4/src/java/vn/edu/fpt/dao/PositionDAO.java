@@ -16,12 +16,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PositionDAO {
+
     public List<Position> getAllPositions() {
         List<Position> list = new ArrayList<>();
-        String sql = "SELECT id, name FROM Positions WHERE is_deleted = 0 ORDER BY name";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        String sql = "SELECT id, name FROM positions ORDER BY name";
+        try (Connection conn = DBContext.getConnection(); 
+                PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(new Position(rs.getInt("id"), rs.getString("name")));
             }
@@ -29,5 +29,9 @@ public class PositionDAO {
             e.printStackTrace();
         }
         return list;
+    }
+    
+    public static void main(String[] args) {
+        System.out.println(new PositionDAO().getAllPositions());
     }
 }
