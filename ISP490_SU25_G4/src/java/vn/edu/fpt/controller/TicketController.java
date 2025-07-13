@@ -115,11 +115,20 @@ public class TicketController extends HttpServlet {
             TechnicalRequest existingTicket = dao.getTechnicalRequestById(id);
 
             if (existingTicket != null) {
+                // Dùng Gson để chuyển đổi danh sách thành chuỗi JSON an toàn
+                String allProductsJson = gson.toJson(dao.getAllProducts());
+                String existingDevicesJson = gson.toJson(existingTicket.getDevices());
+
+                // Gửi dữ liệu sang JSP
                 request.setAttribute("ticket", existingTicket);
-                // Gửi kèm các danh sách cần thiết cho dropdowns
                 request.setAttribute("customerList", dao.getAllEnterprises());
                 request.setAttribute("employeeList", dao.getAllTechnicians());
                 request.setAttribute("serviceList", dao.getAllServices());
+
+                // *** THAY ĐỔI CÁCH GỬI DỮ LIỆU SANG JSP ***
+                request.setAttribute("allProductsJson", allProductsJson);
+                request.setAttribute("existingDevicesJson", existingDevicesJson);
+
                 request.getRequestDispatcher("/jsp/customerSupport/editTransaction.jsp").forward(request, response);
             } else {
                 response.sendRedirect("ticket?action=list&error=notFound");
@@ -132,54 +141,65 @@ public class TicketController extends HttpServlet {
 // 2. Thêm phương thức mới để xử lý việc cập nhật (POST)
     private void updateTicket(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
-            // Lấy ID của ticket cần cập nhật từ hidden input
             int ticketId = Integer.parseInt(request.getParameter("id"));
 
+            // 1. Lấy tất cả thông tin từ form
             TechnicalRequest updatedRequest = new TechnicalRequest();
-            updatedRequest.setId(ticketId); // Quan trọng: Đặt ID cho ticket
-
-            // Lấy toàn bộ thông tin từ form, tương tự như hàm createTicket
+            updatedRequest.setId(ticketId);
             updatedRequest.setEnterpriseId(Integer.parseInt(request.getParameter("enterpriseId")));
             updatedRequest.setServiceId(Integer.parseInt(request.getParameter("serviceId")));
             updatedRequest.setAssignedToId(Integer.parseInt(request.getParameter("employeeId")));
 
-            // ... (Lấy các thông tin khác như description, priority, isBillable, amount...)
-            // Đoạn code này tương tự trong hàm createTicket của bạn, bạn có thể copy qua
-            // Ví dụ:
             String description = request.getParameter("description");
             updatedRequest.setDescription(description);
+            // Tự động tạo title từ description
             updatedRequest.setTitle(description.length() > 100 ? description.substring(0, 100) + "..." : description);
-            updatedRequest.setPriority(request.getParameter("priority"));
-            // ...v...v...
 
-            // Xử lý danh sách thiết bị
+            updatedRequest.setPriority(request.getParameter("priority"));
+            updatedRequest.setStatus(request.getParameter("status"));
+
+            boolean isBillable = Boolean.parseBoolean(request.getParameter("isBillable"));
+            updatedRequest.setIsBillable(isBillable);
+            if (isBillable) {
+                String amountStr = request.getParameter("amount");
+                updatedRequest.setEstimatedCost(amountStr == null || amountStr.isEmpty() ? 0 : Double.parseDouble(amountStr));
+            } else {
+                updatedRequest.setEstimatedCost(0);
+            }
+
+            // 2. Xử lý danh sách thiết bị một cách ổn định
             List<TechnicalRequestDevice> devices = new ArrayList<>();
-            int i = 1;
-            String deviceName;
-            while ((deviceName = request.getParameter("deviceName_" + i)) != null) {
+            // Vòng lặp này sẽ chạy từ 1 đến N (ví dụ 100) để tìm tất cả các thiết bị có thể có
+            // Cách này đảm bảo lấy được hết thiết bị kể cả khi người dùng xóa dòng ở giữa
+            for (int i = 1; i < 100; i++) {
+                String deviceName = request.getParameter("deviceName_" + i);
+                // Nếu không tìm thấy deviceName, nghĩa là đã hết thiết bị, dừng vòng lặp
+                if (deviceName == null) {
+                    break;
+                }
+                // Chỉ xử lý nếu deviceName không rỗng
                 if (!deviceName.trim().isEmpty()) {
                     String serial = request.getParameter("deviceSerial_" + i);
                     String note = request.getParameter("deviceNote_" + i);
+
                     TechnicalRequestDevice device = new TechnicalRequestDevice();
                     device.setDeviceName(deviceName);
                     device.setSerialNumber(serial);
                     device.setProblemDescription(note);
                     devices.add(device);
                 }
-                i++;
             }
 
-            // Gọi hàm update trong DAO
+            // 3. Gọi hàm update trong DAO
             boolean success = dao.updateTechnicalRequest(updatedRequest, devices);
 
-            // Chuyển hướng về trang xem chi tiết sau khi cập nhật
-            response.sendRedirect("ticket?action=view&id=" + ticketId + "&update=" + (success ? "success" : "failed"));
+            // 4. Chuyển hướng về trang xem chi tiết
+            response.sendRedirect(request.getContextPath() + "/ticket?action=view&id=" + ticketId + "&update=" + (success ? "success" : "failed"));
 
         } catch (Exception e) {
             e.printStackTrace();
-            // Nếu có lỗi, chuyển về trang edit với thông báo lỗi
             String ticketId = request.getParameter("id");
-            response.sendRedirect("ticket?action=edit&id=" + ticketId + "&error=unknown");
+            response.sendRedirect(request.getContextPath() + "/ticket?action=edit&id=" + ticketId + "&error=unknown");
         }
     }
 
