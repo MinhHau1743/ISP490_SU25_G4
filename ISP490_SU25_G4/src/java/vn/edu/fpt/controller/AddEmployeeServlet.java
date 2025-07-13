@@ -28,9 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import vn.edu.fpt.service.EmailService;
-import vn.edu.fpt.strategy.EmailSender;
-import vn.edu.fpt.strategy.GmailSender;
+import vn.edu.fpt.common.EmailService;
+import vn.edu.fpt.common.EmailSender;
+import vn.edu.fpt.common.GmailSender;
 
 /**
  *

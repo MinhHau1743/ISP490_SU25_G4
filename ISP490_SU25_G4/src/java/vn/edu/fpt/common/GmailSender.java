@@ -2,8 +2,9 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package vn.edu.fpt.strategy;
+package vn.edu.fpt.common;
 
+import vn.edu.fpt.common.EmailSender;
 import java.util.Properties;
 import javax.mail.Authenticator;
 import javax.mail.Message;
