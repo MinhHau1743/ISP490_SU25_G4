@@ -17,13 +17,14 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Chi tiết giao dịch - ${transaction.transactionCode}</title>
+        <title>Chi tiết giao dịch - ${ticket.requestCode}</title>
 
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
         <%-- Tái sử dụng CSS từ file viewTransaction.css của bạn --%>
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/viewTransaction.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/viewTransaction.css?v=<%= System.currentTimeMillis()%>">
+
         <script src="https://unpkg.com/feather-icons"></script>
     </head>
     <body>
@@ -39,7 +40,8 @@
                         </a>
                         <div class="action-buttons" style="display: flex; gap: 8px;">
                             <%-- Các chức năng Sửa, In sẽ được phát triển sau --%>
-                            <a href="#" class="btn btn-secondary"><i data-feather="edit-2"></i>Sửa</a>
+
+                            <a href="${pageContext.request.contextPath}/ticket?action=edit&id=${ticket.id}" class="btn btn-primary"><i data-feather="edit-2"></i>Sửa</a>
                             <a href="#" class="btn btn-primary"><i data-feather="printer"></i>In Phiếu</a>
                         </div>
                     </div>
@@ -53,13 +55,14 @@
                                         <span class="label">Mã phiếu</span>
                                         <div class="value">${ticket.requestCode}</div>
                                     </div>
-                                    <div class="info-item">
-                                        <span class="label">Mã hợp đồng</span>
-                                        <div class="value">${not empty ticket.contractCode ? ticket.contractCode : 'Không có'}</div>
-                                    </div>
+
                                     <div class="info-item">
                                         <span class="label">Khách hàng</span>
                                         <div class="value">${ticket.enterpriseName}</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="label">Mã hợp đồng</span>
+                                        <div class="value">${not empty ticket.contractCode ? ticket.contractCode : 'Không có'}</div>
                                     </div>
                                     <div class="info-item">
                                         <span class="label">Loại phiếu</span>
@@ -82,18 +85,18 @@
                                     <table class="device-table">
                                         <thead>
                                             <tr>
-                                                <th>Tên thiết bị</th>
-                                                <th>Mã thiết bị</th>
-                                                <th>Mô tả sự cố</th>
+                                                <th class="col-device-name">Tên thiết bị</th>
+                                                <th class="col-serial">Mã thiết bị</th>
+                                                <th class="col-description">Mô tả sự cố</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <%-- SỬA LỖI Ở ĐÂY: Lặp qua "products" và hiển thị đúng thuộc tính --%>
                                             <c:forEach var="device" items="${ticket.devices}">
                                                 <tr>
-                                                    <td>${device.deviceName}</td>
-                                                    <td>${device.serialNumber}</td>
-                                                    <td>${device.problemDescription}</td>
+                                                    <td><div class="cell-content">${device.deviceName}</div></td>
+                                                    <td><div class="cell-content">${device.serialNumber}</div></td>
+                                                    <td><div class="cell-content">${device.problemDescription}</div></td>
                                                 </tr>
                                             </c:forEach>
                                         </tbody>
@@ -108,13 +111,13 @@
                                 <div class="info-item">
                                     <span class="label">Trạng thái</span>
                                     <span class="value">
-                                        <%-- Logic để hiển thị trạng thái với màu sắc --%>
                                         <c:choose>
                                             <c:when test="${ticket.status == 'new'}"><span class="status-pill status-new">Mới</span></c:when>
                                             <c:when test="${ticket.status == 'assigned'}"><span class="status-pill status-assigned">Đã giao</span></c:when>
                                             <c:when test="${ticket.status == 'in_progress'}"><span class="status-pill status-in-progress">Đang xử lý</span></c:when>
                                             <c:when test="${ticket.status == 'resolved'}"><span class="status-pill status-resolved">Đã xử lý</span></c:when>
                                             <c:when test="${ticket.status == 'closed'}"><span class="status-pill status-closed">Đã đóng</span></c:when>
+                                            <c:when test="${ticket.status == 'rejected'}"><span class="status-pill status-rejected">Từ chối</span></c:when>
                                             <c:otherwise><span class="status-pill">${ticket.status}</span></c:otherwise>
                                         </c:choose>
                                     </span>
@@ -123,9 +126,11 @@
                                     <span class="label">Mức độ ưu tiên</span>
                                     <span class="value">
                                         <c:choose>
-                                            <c:when test="${ticket.priority == 'high'}"><span class="priority-pill priority-high">Cao</span></c:when>
                                             <c:when test="${ticket.priority == 'critical'}"><span class="priority-pill priority-critical">Khẩn cấp</span></c:when>
-                                            <c:otherwise><span class="priority-pill priority-medium">Thông thường</span></c:otherwise>
+                                            <c:when test="${ticket.priority == 'high'}"><span class="priority-pill priority-high">Cao</span></c:when>
+                                            <c:when test="${ticket.priority == 'medium'}"><span class="priority-pill priority-medium">Thông thường</span></c:when>
+                                            <c:when test="${ticket.priority == 'low'}"><span class="priority-pill priority-low">Thấp</span></c:when>
+                                            <c:otherwise><span class="priority-pill">${ticket.priority}</span></c:otherwise>
                                         </c:choose>
                                     </span>
                                 </div>
@@ -146,7 +151,7 @@
                                     </span>
                                 </div>
                                 <div class="info-item">
-                                    <span class="label">Tính phí?</span>
+                                    <span class="label">Tính phí</span>
                                     <span class="value">${ticket.isBillable ? 'Có' : 'Không (Bảo hành)'}</span>
                                 </div>
                                 <c:if test="${ticket.isBillable}">
