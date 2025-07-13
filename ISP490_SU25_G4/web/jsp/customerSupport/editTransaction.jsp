@@ -19,7 +19,8 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/createTicket.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/createTicket.css?v=<%= System.currentTimeMillis()%>">
+        
         <script src="https://unpkg.com/feather-icons"></script>
     </head>
     <body>
@@ -62,19 +63,24 @@
                             <div class="detail-card">
                                 <h2 class="card-title">Các thiết bị liên quan</h2>
                                 <table class="device-table-edit">
-                                    <thead><tr><th>Tên thiết bị</th><th>Serial Number</th><th style="width: 40%;">Mô tả sự cố</th><th style="width: 50px;"></th></tr></thead>
+                                    <thead>
+                                        <tr>
+                                            <th>Tên thiết bị</th>
+                                            <th>Serial Number</th>
+                                            <th style="width: 40%;">Mô tả sự cố</th>
+                                            <th style="width: 50px;"></th>
+                                        </tr>
+                                    </thead>
+                                    <%-- Phần thân table sẽ được JS tự động điền vào --%>
                                     <tbody id="device-list">
-                                        <c:forEach var="device" items="${ticket.devices}" varStatus="loop">
-                                            <tr>
-                                                <td><input type="text" name="deviceName_${loop.count}" class="form-control-table" value="${device.deviceName}"></td>
-                                                <td><input type="text" name="deviceSerial_${loop.count}" class="form-control-table" value="${device.serialNumber}"></td>
-                                                <td><textarea name="deviceNote_${loop.count}" class="form-control-table" rows="1">${device.problemDescription}</textarea></td>
-                                                <td><button type="button" class="btn-remove-device" title="Xóa dòng"><i data-feather="x-circle"></i></button></td>
-                                            </tr>
-                                        </c:forEach>
                                     </tbody>
                                 </table>
-                                <div class="device-table-actions"><button type="button" id="addDeviceBtn" class="btn btn-secondary"><i data-feather="plus"></i>Thêm thiết bị</button></div>
+
+                                <div class="device-table-actions">
+                                    <button type="button" id="addDeviceBtn" class="btn btn-secondary">
+                                        <i data-feather="plus"></i>Thêm thiết bị
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <div class="sidebar-column">
@@ -92,10 +98,11 @@
                                 </div>
                                 <div class="sidebar-form-row"><label for="priority">Mức độ ưu tiên</label>
                                     <select id="priority" name="priority" class="form-control">
-                                        <option ${ticket.priority == 'critical' ? 'selected' : ''}>Khẩn cấp</option>
-                                        <option ${ticket.priority == 'high' ? 'selected' : ''}>Cao</option>
-                                        <option ${ticket.priority == 'medium' ? 'selected' : ''}>Thông thường</option>
-                                        <option ${ticket.priority == 'low' ? 'selected' : ''}>Thấp</option>
+                                        <%-- THÊM thuộc tính `value` cho mỗi option --%>
+                                        <option value="critical" ${ticket.priority == 'critical' ? 'selected' : ''}>Khẩn cấp</option>
+                                        <option value="high" ${ticket.priority == 'high' ? 'selected' : ''}>Cao</option>
+                                        <option value="medium" ${ticket.priority == 'medium' ? 'selected' : ''}>Thông thường</option>
+                                        <option value="low" ${ticket.priority == 'low' ? 'selected' : ''}>Thấp</option>
                                     </select>
                                 </div>
                                 <div class="sidebar-form-row"><label for="employeeId">Gán cho nhân viên (*)</label>
@@ -105,7 +112,7 @@
                                     </div>
                                     <div class="sidebar-form-row">
                                         <label>Ngày tạo</label>
-                                        <fmt:formatDate value="${ticket.createdAt}" pattern="HH:mm dd/MM/yyyy" var="formattedDate"/>
+                                    <fmt:formatDate value="${ticket.createdAt}" pattern="HH:mm dd/MM/yyyy" var="formattedDate"/>
                                     <input type="text" class="form-control" value="${formattedDate}" readonly>
                                 </div>
                                 <div class="sidebar-form-row"><label>Chi phí dự kiến</label><div class="radio-group"><label><input type="radio" name="isBillable" value="true" ${ticket.isBillable ? 'checked' : ''}> Có</label><label><input type="radio" name="isBillable" value="false" ${!ticket.isBillable ? 'checked' : ''}> Không</label></div></div>
@@ -117,39 +124,16 @@
             </main>
         </div>
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                feather.replace();
-                const addDeviceBtn = document.getElementById('addDeviceBtn');
-                const deviceList = document.getElementById('device-list');
-                let deviceIndex = ${not empty ticket.devices ? ticket.devices.size() + 1 : 1};
+            // Nhận chuỗi JSON từ Controller và để JavaScript tự phân tích
+            const allProducts = ${allProductsJson};
+            const existingDevices = ${existingDevicesJson};
 
-                addDeviceBtn.addEventListener('click', function () {
-                    const newRow = document.createElement('tr');
-                    newRow.innerHTML = `
-                        <td><input type="text" name="deviceName_${deviceIndex}" class="form-control-table"></td>
-                        <td><input type="text" name="deviceSerial_${deviceIndex}" class="form-control-table"></td>
-                        <td><textarea name="deviceNote_${deviceIndex}" class="form-control-table" rows="1"></textarea></td>
-                        <td><button type="button" class="btn-remove-device" title="Xóa dòng"><i data-feather="x-circle"></i></button></td>
-                    `;
-                    deviceList.appendChild(newRow);
-                    feather.replace();
-                    deviceIndex++;
-                });
-
-                deviceList.addEventListener('click', function (e) {
-                    const removeBtn = e.target.closest('.btn-remove-device');
-                    if (removeBtn) {
-                        removeBtn.closest('tr').remove();
-                    }
-                });
-
-                document.querySelectorAll('input[name="isBillable"]').forEach(radio => {
-                    radio.addEventListener('change', function () {
-                        document.getElementById('amount-group').style.display = this.value === 'true' ? 'block' : 'none';
-                    });
-                });
-            });
+            // Index bắt đầu cho các thiết bị mới sẽ được thêm vào
+            // Chúng ta có thể khởi tạo nó ở đây hoặc trong file JS
+            let deviceIndex = 1;
         </script>
+
+        <script src="${pageContext.request.contextPath}/js/editTransaction.js?v=<%= System.currentTimeMillis()%>"></script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>

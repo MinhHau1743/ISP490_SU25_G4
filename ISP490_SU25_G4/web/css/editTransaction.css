@@ -168,29 +168,56 @@ textarea.form-control {
 }
 
 /* CSS cho màu sắc của Select Box */
-select.status-completed {
-    background-color: var(--status-completed-bg, #EAF7E8);
-    color: var(--status-completed-text, #3E8635);
+select.new {
+    background-color: #e6f7ff;
+    color: #1890ff;
+    font-weight: 600;
 }
-select.status-processing {
-    background-color: var(--status-processing-bg, #FEF5E5);
-    color: var(--status-processing-text, #F2994A);
+select.assigned {
+    background-color: #d3adf7;
+    color: #531dab;
+    font-weight: 600;
 }
-select.status-pending {
-    background-color: var(--status-pending-bg, #FDEEEE);
-    color: var(--status-pending-text, #EB5757);
+select.in_progress {
+    background-color: #fffbe6;
+    color: #faad14;
+    font-weight: 600;
 }
-select.status-cancelled {
-    background-color: #f0f0f0;
-    color: #757575;
+select.resolved {
+    background-color: #f6ffed;
+    color: #52c41a;
+    font-weight: 600;
+}
+select.closed {
+    background-color: #f5f5f5;
+    color: #8c8c8c;
+    font-weight: 600;
+}
+select.rejected {
+    background-color: #fff1f0;
+    color: #cf1322;
+    font-weight: 600;
 }
 
-select.priority-urgent {
-    background-color: var(--priority-urgent-bg, #fdeeee);
-    color: var(--priority-urgent-text, #eb5757);
+/* --- Priority Colors --- */
+/* Tên class giờ đã khớp với value của option (vd: value="critical" -> class="critical") */
+select.critical {
+    background-color: #fff1f0;
+    color: #f5222d;
+    font-weight: 600;
 }
-select.priority-high {
-    background-color: var(--priority-high-bg, #fef5e5);
-    color: var(--priority-high-text, #f2994a);
+select.high {
+    background-color: #fff7e6;
+    color: #fa8c16;
+    font-weight: 600;
 }
-
+select.medium {
+    background-color: #e6f7ff;
+    color: #1890ff;
+    font-weight: 600;
+}
+select.low {
+    background-color: #f0f2f5;
+    color: #595959;
+    font-weight: 600;
+}
