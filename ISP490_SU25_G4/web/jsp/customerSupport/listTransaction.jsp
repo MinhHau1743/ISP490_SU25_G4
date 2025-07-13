@@ -20,7 +20,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/listTransaction.css"> 
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/listTransaction.css?v=<%= System.currentTimeMillis()%>"> 
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pagination.css">
     </head>
     <body>
@@ -71,6 +71,8 @@
                                             <c:when test="${tx.status == 'in_progress'}"><span class="status-pill status-in-progress">Đang xử lý</span></c:when>
                                             <c:when test="${tx.status == 'resolved'}"><span class="status-pill status-resolved">Đã xử lý</span></c:when>
                                             <c:when test="${tx.status == 'closed'}"><span class="status-pill status-closed">Đã đóng</span></c:when>
+                                            <c:when test="${tx.status == 'rejected'}"><span class="status-pill status-rejected">Từ chối</span></c:when>
+
                                             <c:otherwise><span class="status-pill">${tx.status}</span></c:otherwise>
                                         </c:choose>
                                     </div>
