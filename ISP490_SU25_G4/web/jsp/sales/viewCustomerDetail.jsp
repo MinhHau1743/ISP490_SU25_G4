@@ -37,8 +37,25 @@
 
                                 <%-- Các nút hành động được chuyển lên đây --%>
                                 <div class="header-actions">
-                                    <a href="${BASE_URL}/editCustomer?id=${customer.id}" class="btn btn-secondary"><i data-feather="edit-2"></i>Sửa</a>
-                                    <a href="#" class="btn btn-danger delete-trigger-btn" data-id="<c:out value='${customer.id}'/>" data-name="<c:out value='${customer.name}'/>"><i data-feather="trash-2"></i>Xóa</a>
+                                    <%-- Phân quyền nút Sửa --%>
+                                    <c:choose>
+                                        <c:when test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Kinh doanh'}">
+                                            <a href="${BASE_URL}/editCustomer?id=${customer.id}" class="btn btn-secondary"><i data-feather="edit-2"></i>Sửa</a>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <a href="#" class="btn btn-secondary disabled-action" data-error="Bạn không có quyền sửa khách hàng."><i data-feather="edit-2"></i>Sửa</a>
+                                        </c:otherwise>
+                                    </c:choose>
+
+                                    <%-- Phân quyền nút Xóa --%>
+                                    <c:choose>
+                                        <c:when test="${sessionScope.userRole == 'Admin'}">
+                                            <a href="#" class="btn btn-danger delete-trigger-btn" data-id="<c:out value='${customer.id}'/>" data-name="<c:out value='${customer.name}'/>"><i data-feather="trash-2"></i>Xóa</a>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <a href="#" class="btn btn-danger disabled-action" data-error="Bạn không có quyền xóa khách hàng."><i data-feather="trash-2"></i>Xóa</a>
+                                        </c:otherwise>
+                                    </c:choose>
                                 </div>
                             </div>
                             <%-- Customer details content --%>
@@ -119,10 +136,26 @@
                 </div>
             </div>
         </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                // Kích hoạt icon
+                feather.replace();
+
+                // Script xử lý click vào nút bị vô hiệu hóa
+                document.body.addEventListener('click', function (event) {
+                    const disabledLink = event.target.closest('.disabled-action');
+                    if (disabledLink) {
+                        event.preventDefault();
+                        const errorMessage = disabledLink.getAttribute('data-error') || 'Bạn không có quyền thực hiện chức năng này.';
+                        alert(errorMessage);
+                    }
+                });
+            });
+        </script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
         <script src="${pageContext.request.contextPath}/js/delete-modal-handler.js"></script>
         <script>
-            feather.replace();
+                            feather.replace();
         </script>
     </body>
 </html>
