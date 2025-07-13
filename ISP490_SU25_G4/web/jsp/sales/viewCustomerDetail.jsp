@@ -121,5 +121,8 @@
         </div>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
         <script src="${pageContext.request.contextPath}/js/delete-modal-handler.js"></script>
+        <script>
+            feather.replace();
+        </script>
     </body>
 </html>
