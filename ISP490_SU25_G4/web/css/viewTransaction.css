@@ -96,6 +96,8 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     font-weight: 500;
     color: var(--text-secondary);
 }
+
+/* Quy tắc chung cho tất cả các .value trong main-column.info-item */
 .main-column .info-item .value {
     font-size: 15px;
     font-weight: 500;
@@ -106,17 +108,34 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     padding: 10px 12px;
     min-height: 40px;
     box-sizing: border-box;
-    display: flex;
+    display: flex; /* Giữ display: flex cho các ô thông thường để căn chỉnh */
     align-items: center;
     line-height: 1.5;
+
+    /* Để xử lý tràn văn bản một dòng cho các ô KHÔNG PHẢI full-width */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
+
 .main-column .info-item.full-width {
     grid-column: 1 / -1;
 }
+
+/* QUY TẮC CỤ THỂ CHO "Mô tả chi tiết" (full-width) ĐỂ CÓ THANH CUỘN */
 .main-column .info-item.full-width .value {
-    min-height: 100px;
-    align-items: flex-start;
+    /* Ghi đè display: flex của quy tắc chung bằng display: block để overflow hoạt động */
+    display: block !important; /* Sử dụng !important để đảm bảo ghi đè */
+
+    min-height: 100px; /* Chiều cao tối thiểu của khung hiển thị */
+    max-height: 150px; /* Chiều cao tối đa trước khi thanh cuộn xuất hiện */
+    overflow-y: auto;  /* Tự động hiển thị thanh cuộn dọc khi nội dung tràn */
+    white-space: normal; /* Cho phép văn bản xuống dòng bình thường */
+    word-wrap: break-word; /* Ngắt từ nếu từ quá dài */
+    align-items: flex-start; /* Nội dung bắt đầu từ trên cùng */
+    /* Các thuộc tính khác (padding, border, bg-color...) đã được kế thừa từ quy tắc .main-column .info-item .value */
 }
+
 
 /* == BẮT ĐẦU CSS ĐÃ SỬA LẠI CHO KHUNG BÊN PHẢI == */
 .sidebar-column .detail-card {
@@ -149,78 +168,155 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
 }
 /* == KẾT THÚC CSS MỚI == */
 
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+/* --- Primary Button (Blue/Green) --- */
+.btn-primary {
+    background-color: var(--primary-color);
+    color: var(--bg-white);
+    border-color: var(--primary-color);
+}
+.btn-primary:hover {
+    opacity: 0.9;
+}
+
+/* --- Secondary Button (Gray) --- */
+.btn-secondary {
+    background-color: var(--bg-gray-light);
+    color: var(--text-secondary);
+    border-color: var(--border-color);
+}
+.btn-secondary:hover {
+    background-color: #e9ecef;
+}
+
+/* --- Base Pill Style --- */
 .status-pill, .priority-pill {
-    padding: 4px 12px;
+    padding: 5px 12px;
     border-radius: 16px;
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 600;
     display: inline-block;
+    line-height: 1;
+    text-align: center;
 }
-.status-completed {
-    background-color: var(--status-completed-bg);
-    color: var(--status-completed-text);
+
+/* --- Status Colors --- */
+.status-new {
+    background-color: #e6f7ff;
+    color: #1890ff;
 }
-.status-processing {
-    background-color: var(--status-processing-bg);
-    color: var(--status-processing-text);
+.status-assigned {
+    background-color: #d3adf7;
+    color: #531dab;
 }
-.status-pending {
-    background-color: var(--status-pending-bg);
-    color: var(--status-pending-text);
+.status-in-progress {
+    background-color: #fffbe6;
+    color: #faad14;
 }
-.priority-urgent {
-    background-color: var(--priority-urgent-bg);
-    color: var(--priority-urgent-text);
+.status-resolved, .status-completed {
+    background-color: #f6ffed;
+    color: #52c41a;
+}
+.status-closed, .status-rejected {
+    background-color: #f5f5f5;
+    color: #8c8c8c;
+}
+
+/* --- Priority Colors --- */
+.priority-critical {
+    background-color: #fff1f0;
+    color: #f5222d;
 }
 .priority-high {
-    background-color: var(--priority-high-bg);
-    color: var(--priority-high-text);
+    background-color: #fff7e6;
+    color: #fa8c16;
+}
+.priority-medium {
+    background-color: #e6f7ff;
+    color: #1890ff;
+}
+.priority-low {
+    background-color: #f0f2f5;
+    color: #595959;
 }
 
+/* == BẢNG CÁC THIẾT BỊ LIÊN QUAN == */
 .device-table {
     width: 100%;
-    border-collapse: collapse;
-}
-.device-table th, .device-table td {
-    text-align: left;
-    padding: 12px;
-    border-bottom: 1px solid var(--border-color);
-}
-.device-table thead {
-    background-color: var(--bg-gray-light);
+    border-collapse: separate; /* Chuyển sang chế độ separate để tạo khoảng cách */
+    border-spacing: 0 8px; /* Khoảng cách giữa các hàng là 8px */
+    margin-top: 16px;
+    table-layout: fixed; /* Giúp các cột có chiều rộng cố định */
 }
 
-.history-list {
-    list-style: none;
-    padding: 0;
-}
-.history-item {
-    position: relative;
-    padding-left: 24px;
-    padding-bottom: 16px;
-    border-left: 2px solid var(--border-color);
-}
-.history-item:before {
-    content: '';
-    position: absolute;
-    left: -7px;
-    top: 0;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: var(--bg-white);
-    border: 2px solid var(--primary-color);
-}
-.history-item:last-child {
-    border-left: 2px solid transparent;
-}
-.history-time {
-    font-size: 12px;
-    color: var(--text-tertiary);
-}
-.history-action {
-    font-size: 14px;
-}
-.history-action strong {
+.device-table th {
+    text-align: left;
+    padding: 0 12px 8px 12px;
+    border-bottom: 1px solid var(--border-color);
     font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.device-table td {
+    padding: 0; /* Loại bỏ padding mặc định của td để kiểm soát tốt hơn với cell-content */
+    border: none;
+}
+
+/* Định dạng cho các ô "giả" bên trong td (chứa nội dung) */
+.device-table .cell-content {
+    background-color: var(--bg-gray-light);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 10px 12px;
+    min-height: 40px;
+    display: flex; /* Giữ flex để căn giữa nội dung theo chiều dọc nếu nội dung ngắn */
+    align-items: center;
+    font-weight: 500;
+
+    /* Mặc định xử lý nội dung dài trên một dòng cho Tên thiết bị và Mã thiết bị */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Khoảng cách giữa các cột (áp dụng cho tất cả trừ cột cuối cùng) */
+.device-table td:not(:last-child) .cell-content {
+    margin-right: 8px; /* Thêm khoảng cách 8px giữa các ô nội dung */
+}
+
+/* Thiết lập chiều rộng cho từng cột */
+.device-table .col-device-name {
+    width: 40%;
+}
+
+.device-table .col-serial {
+    width: 20%;
+}
+
+.device-table .col-description {
+    width: 40%;
+}
+
+/* QUY TẮC CỤ THỂ CHO "Mô tả sự cố" TRONG BẢNG ĐỂ CÓ THANH CUỘN VÀ XUỐNG DÒNG */
+.device-table .col-description .cell-content {
+    white-space: normal; /* Cho phép văn bản xuống dòng */
+    overflow-y: auto;    /* Tự động hiển thị thanh cuộn dọc */
+    max-height: 120px;   /* Chiều cao tối đa trước khi xuất hiện thanh cuộn */
+    min-height: 40px;
+    align-items: flex-start; /* Căn nội dung lên đầu (khi có nhiều dòng) */
+    word-wrap: break-word; /* Ngắt từ nếu từ quá dài để tránh tràn */
 }
