@@ -12,6 +12,7 @@ public class TechnicalRequestDevice {
 
     private int id;
     private int technicalRequestId;
+    private Integer productId; // THÊM: ID của sản phẩm được chọn từ dropdown
     private String deviceName;
     private String serialNumber;
     private String problemDescription;
@@ -20,7 +21,8 @@ public class TechnicalRequestDevice {
     public TechnicalRequestDevice() {
     }
 
-    public TechnicalRequestDevice(String deviceName, String serialNumber, String problemDescription) {
+    public TechnicalRequestDevice(Integer productId, String deviceName, String serialNumber, String problemDescription) {
+        this.productId = productId;
         this.deviceName = deviceName;
         this.serialNumber = serialNumber;
         this.problemDescription = problemDescription;
@@ -41,6 +43,15 @@ public class TechnicalRequestDevice {
 
     public void setTechnicalRequestId(int technicalRequestId) {
         this.technicalRequestId = technicalRequestId;
+    }
+
+    // THÊM: Getter và Setter cho productId
+    public Integer getProductId() {
+        return productId;
+    }
+
+    public void setProductId(Integer productId) {
+        this.productId = productId;
     }
 
     public String getDeviceName() {

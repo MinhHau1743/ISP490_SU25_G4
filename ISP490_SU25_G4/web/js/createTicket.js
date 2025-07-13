@@ -1,7 +1,3 @@
-/* 
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/JavaScript.js to edit this template
- */
 document.addEventListener('DOMContentLoaded', function () {
     // --- 1. KHAI BÁO & THIẾT LẬP BAN ĐẦU ---
     feather.replace();
@@ -11,13 +7,18 @@ document.addEventListener('DOMContentLoaded', function () {
     const deviceTBody = document.getElementById('device-tbody');
     const addDeviceBtn = document.getElementById('addDeviceBtn');
     let deviceIndex = 1;
+    let allProducts = []; // Biến để lưu danh sách tất cả sản phẩm
 
+    // Thiết lập các giá trị ban đầu cho form
     document.getElementById('createdDate').valueAsDate = new Date();
     document.querySelectorAll('input[name="isBillable"]').forEach(radio => {
         radio.addEventListener('change', function () {
             document.getElementById('amount-group').style.display = this.value === 'true' ? 'flex' : 'none';
         });
     });
+
+    // Tải danh sách sản phẩm ngay khi trang được mở
+    loadAllProducts();
 
     // --- 2. CÁC HÀM XỬ LÝ SỰ KIỆN ---
 
@@ -26,20 +27,11 @@ document.addEventListener('DOMContentLoaded', function () {
         resetContractSelect();
         resetDeviceList();
         if (!enterpriseId) {
-            appendDeviceFrame(); // Thêm dòng trống nếu bỏ chọn khách hàng
+            appendDeviceFrame();
             return;
         }
         loadContractsForEnterprise(enterpriseId);
-    });
-
-    contractSelect.addEventListener('change', function () {
-        const contractId = this.value;
-        resetDeviceList();
-        if (!contractId) {
-            appendDeviceFrame(); // Thêm dòng trống nếu bỏ chọn hợp đồng
-            return;
-        }
-        loadProductsForContract(contractId);
+        appendDeviceFrame();
     });
 
     addDeviceBtn.addEventListener('click', () => {
@@ -58,69 +50,72 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- 3. CÁC HÀM LOGIC ---
 
+    function loadAllProducts() {
+        const url = `${contextPath}/ticket?action=getProducts`;
+        fetch(url)
+            .then(handleFetchResponse)
+            .then(products => {
+                allProducts = products;
+                appendDeviceFrame();
+            })
+            .catch(error => {
+                console.error('Không thể tải danh sách sản phẩm:', error);
+                appendDeviceFrame();
+            });
+    }
+
     function loadContractsForEnterprise(enterpriseId) {
         contractSelect.disabled = true;
         contractSelect.innerHTML = '<option value="">Đang tải hợp đồng...</option>';
-            const url = `${contextPath}/ticket?action=getContracts&enterpriseId=${enterpriseId}`;
+        const url = `${contextPath}/ticket?action=getContracts&enterpriseId=${enterpriseId}`;
 
         fetch(url)
-                .then(handleFetchResponse)
-                .then(contracts => {
-                    populateDropdown(contractSelect, contracts, 'hợp đồng');
-                    contractSelect.disabled = false;
-                })
-                .catch(error => handleFetchError(contractSelect, error, 'hợp đồng'));
+            .then(handleFetchResponse)
+            .then(contracts => {
+                populateDropdown(contractSelect, contracts, 'hợp đồng');
+                contractSelect.disabled = false;
+            })
+            .catch(error => handleFetchError(contractSelect, error, 'hợp đồng'));
     }
 
-    function loadProductsForContract(contractId) {
-        const url = `${pageContext.request.contextPath}/ticket?action=getProducts&contractId=${contractId}`;
-        fetch(url)
-                .then(handleFetchResponse)
-                .then(products => {
-                    if (products && products.length > 0) {
-                        products.forEach(product => {
-                            appendDeviceFrame(product.productName, product.serialNumber, `Số lượng: ${product.quantity}`);
-                        });
-                    } else {
-                        appendDeviceFrame();
-                    }
-                })
-                .catch(error => {
-                    console.error('Lỗi khi lấy sản phẩm:', error);
-                    appendDeviceFrame();
-                });
-    }
-
-    function appendDeviceFrame(name, serial, note) {
+    // *** HÀM ĐÃ ĐƯỢC SỬA LỖI ***
+    // Hàm này giờ sẽ tạo thẳng thẻ <select> bằng HTML string, đảm bảo hoạt động.
+    function appendDeviceFrame() {
         const row = document.createElement('tr');
+        const currentDeviceIndex = deviceIndex++;
 
-        // Sử dụng 'placeholder' để hiển thị ví dụ gợi ý
-        // và để trống giá trị 'value' khi thêm dòng mới
+        // 1. Tạo chuỗi HTML cho các thẻ <option>
+        let optionsHTML = '<option value="" selected>-- Chọn thiết bị --</option>';
+        if (allProducts && allProducts.length > 0) {
+            allProducts.forEach(product => {
+                // Chú ý: Dùng `product.name` cho cả value và text hiển thị
+                optionsHTML += `<option value="${product.name}">${product.name}</option>`;
+            });
+        }
+
+        // 2. Tạo toàn bộ HTML cho một hàng của bảng
         row.innerHTML = `
-        <td>
-            <input type="text" name="deviceName_${deviceIndex}" class="form-control-table" 
-                   value="${name || ''}" 
-                   placeholder="VD: Điều hòa Daikin">
-        </td>
-        <td>
-            <input type="text" name="deviceSerial_${deviceIndex}" class="form-control-table" 
-                   value="${serial || ''}" 
-                   placeholder="VD: DKN-12345">
-        </td>
-        <td>
-            <textarea name="deviceNote_${deviceIndex}" class="form-control-table" rows="1" 
-                      placeholder="VD: Không lạnh, chảy nước">${note || ''}</textarea>
-        </td>
-        <td class="action-col">
-            <button type="button" class="btn-remove-device" title="Xóa thiết bị">
-                <i data-feather="x"></i>
-            </button>
-        </td>
-    `;
+            <td>
+                <select name="deviceName_${currentDeviceIndex}" class="form-control-table">
+                    ${optionsHTML}
+                </select>
+            </td>
+            <td>
+                <input type="text" name="deviceSerial_${currentDeviceIndex}" class="form-control-table" placeholder="VD: DKN-12345">
+            </td>
+            <td>
+                <textarea name="deviceNote_${currentDeviceIndex}" class="form-control-table" rows="1" placeholder="VD: Không lạnh, chảy nước"></textarea>
+            </td>
+            <td class="action-col">
+                <button type="button" class="btn-remove-device" title="Xóa thiết bị">
+                    <i data-feather="x"></i>
+                </button>
+            </td>
+        `;
 
+        // 3. Thêm hàng vào bảng và cập nhật icon
         deviceTBody.appendChild(row);
-        feather.replace(); // Cập nhật icon X
-        deviceIndex++;
+        feather.replace();
     }
 
 
@@ -143,6 +138,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         return response.json();
     }
+    
     function populateDropdown(selectElement, items, itemName) {
         selectElement.innerHTML = '';
         selectElement.add(new Option(`-- Chọn ${itemName} (nếu có) --`, ''));
@@ -154,15 +150,11 @@ document.addEventListener('DOMContentLoaded', function () {
             selectElement.options[0].text = `-- Không có ${itemName} nào --`;
         }
     }
+
     function handleFetchError(selectElement, error, itemName) {
         console.error(`Lỗi khi tải ${itemName}:`, error);
         selectElement.innerHTML = '';
         selectElement.add(new Option(`Lỗi tải ${itemName}`, ''));
         selectElement.disabled = true;
     }
-
-  
-    appendDeviceFrame();
-
 });
-

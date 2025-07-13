@@ -6,6 +6,7 @@ import vn.edu.fpt.model.Service;
 import vn.edu.fpt.model.TechnicalRequest;
 import vn.edu.fpt.model.TechnicalRequestDevice;
 import vn.edu.fpt.model.User;
+import vn.edu.fpt.model.Product;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -174,7 +175,6 @@ public class TechnicalRequestDAO {
         return contracts;
     }
 
-
     public boolean createTechnicalRequest(TechnicalRequest request, List<TechnicalRequestDevice> devices) {
         Connection conn = null;
         String sqlRequest = "INSERT INTO TechnicalRequests (request_code, enterprise_id, contract_id, service_id, title, description, priority, status, reporter_id, assigned_to_id, is_billable, estimated_cost, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -271,5 +271,82 @@ public class TechnicalRequestDAO {
         }
         return contracts;
     }
-     
+
+    public boolean updateTechnicalRequest(TechnicalRequest request, List<TechnicalRequestDevice> devices) throws SQLException {
+        String sqlUpdateTicket = "UPDATE TechnicalRequests SET enterprise_id=?, service_id=?, assigned_to_id=?, title=?, description=?, priority=? WHERE id=?";
+        String sqlDeleteDevices = "DELETE FROM TechnicalRequestDevices WHERE technical_request_id = ?";
+        String sqlInsertDevice = "INSERT INTO TechnicalRequestDevices (technical_request_id, device_name, serial_number, problem_description) VALUES (?, ?, ?, ?)";
+
+        Connection conn = null;
+        try {
+            conn = new DBContext().getConnection();
+            conn.setAutoCommit(false); // Bắt đầu Transaction
+
+            // 1. Cập nhật thông tin phiếu chính
+            try (PreparedStatement psUpdate = conn.prepareStatement(sqlUpdateTicket)) {
+                psUpdate.setInt(1, request.getEnterpriseId());
+                psUpdate.setInt(2, request.getServiceId());
+                psUpdate.setInt(3, request.getAssignedToId());
+                psUpdate.setString(4, request.getTitle());
+                psUpdate.setString(5, request.getDescription());
+                psUpdate.setString(6, request.getPriority());
+                psUpdate.setInt(7, request.getId()); // ID của ticket cần update
+                psUpdate.executeUpdate();
+            }
+
+            // 2. Xóa tất cả thiết bị cũ của phiếu này
+            try (PreparedStatement psDelete = conn.prepareStatement(sqlDeleteDevices)) {
+                psDelete.setInt(1, request.getId());
+                psDelete.executeUpdate();
+            }
+
+            // 3. Thêm lại danh sách thiết bị mới (nếu có)
+            if (devices != null && !devices.isEmpty()) {
+                try (PreparedStatement psInsert = conn.prepareStatement(sqlInsertDevice)) {
+                    for (TechnicalRequestDevice device : devices) {
+                        psInsert.setInt(1, request.getId()); // Dùng lại ID của ticket
+                        psInsert.setString(2, device.getDeviceName());
+                        psInsert.setString(3, device.getSerialNumber());
+                        psInsert.setString(4, device.getProblemDescription());
+                        psInsert.addBatch();
+                    }
+                    psInsert.executeBatch();
+                }
+            }
+
+            conn.commit(); // Hoàn tất transaction
+            return true;
+
+        } catch (Exception e) {
+            if (conn != null) {
+                conn.rollback(); // Hoàn tác nếu có lỗi
+            }
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (conn != null) {
+                conn.setAutoCommit(true);
+                conn.close();
+            }
+        }
+    }
+    public List<Product> getAllProducts() throws SQLException {
+        List<Product> productList = new ArrayList<>();
+        // Câu lệnh SQL giả định bảng sản phẩm của bạn tên là 'products'
+        String sql = "SELECT id, name FROM products WHERE is_deleted = 0 ORDER BY name ASC";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                Product product = new Product();
+                product.setId(rs.getInt("id"));
+                product.setName(rs.getString("name"));
+                productList.add(product);
+            }
+        }
+        return productList;
+    }
+
 }

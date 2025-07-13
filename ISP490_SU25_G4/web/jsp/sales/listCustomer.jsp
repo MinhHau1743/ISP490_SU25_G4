@@ -70,7 +70,16 @@
 
                         <%-- Class "toolbar-actions" với "margin-left: auto" sẽ tự động đẩy nút này sang phải --%>
                         <div class="toolbar-actions">
-                            <a href="${BASE_URL}/createCustomer" class="btn btn-primary"><i data-feather="plus"></i>Thêm Khách hàng</a>
+                            <c:choose>
+                                <c:when test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Kinh doanh'}">
+                                    <%-- Người dùng có quyền: Giữ nguyên code gốc --%>
+                                    <a href="${BASE_URL}/createCustomer" class="btn btn-primary"><i data-feather="plus"></i>Thêm Khách hàng</a>
+                                </c:when>
+                                <c:otherwise>
+                                    <%-- Người dùng không có quyền: Vô hiệu hóa link --%>
+                                    <a href="#" class="btn btn-primary disabled-action" data-error="Bạn không có quyền thêm khách hàng mới."><i data-feather="plus"></i>Thêm Khách hàng</a>
+                                </c:otherwise>
+                            </c:choose>
                         </div>
                     </div>
 
@@ -187,6 +196,19 @@
                 // ===================================================================
                 // <<< KẾT THÚC: LOGIC GỢI Ý TÌM KIẾM >>>
                 // ===================================================================
+            });
+        </script>
+        <script>
+            // Script này chỉ cần thêm một lần vào trang layout chính hoặc vào từng trang cần thiết
+            document.addEventListener('DOMContentLoaded', function () {
+                document.body.addEventListener('click', function (event) {
+                    const disabledLink = event.target.closest('.disabled-action');
+                    if (disabledLink) {
+                        event.preventDefault();
+                        const errorMessage = disabledLink.getAttribute('data-error') || 'Bạn không có quyền thực hiện chức năng này.';
+                        alert(errorMessage);
+                    }
+                });
             });
         </script>
         <script src="${pageContext.request.contextPath}/js/delete-modal-handler.js"></script>

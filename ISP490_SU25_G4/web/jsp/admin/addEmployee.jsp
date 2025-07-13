@@ -26,6 +26,7 @@
         <link rel="stylesheet" href="../../css/addEmployee.css">
     </head>
     <body>
+
         <div class="app-container">
             <jsp:include page="../../menu.jsp"/>
             <main class="main-content">
@@ -83,42 +84,60 @@
                                     <div class="form-card-grid">
                                         <div class="form-group">
                                             <label for="departmentId">Phòng làm việc</label>
-                                            <select id="departmentId" name="departmentId" ><option value="1">Bộ phận kinh doanh</option></select>
-                                        </div> 
+                                            <select id="departmentId" name="departmentId" required>
+                                                <c:if test="${empty departmentList}">
+                                                    <option value="">Không có phòng ban nào</option>
+                                                </c:if>
+                                                <c:forEach var="department" items="${departmentList}">
+                                                    <option value="${department.id}">${department.name}</option>
+                                                </c:forEach>
+                                            </select>
+                                        </div>
+                                        
+                                        
                                         <div class="form-group">
                                             <label for="position">Chức vụ</label>
-                                            <select id="position" name="positionId"><option value="1">Quản lý</option></select>
-                                        </div>                                                                                
-                                    </div>
-                                    <div class="form-group full-width" style="margin-top: 20px;">
-                                        <label for="notes">Ghi chú</label>
-                                        <textarea id="notes" name="notes" rows="3" placeholder="Thêm ghi chú về công việc..."></textarea>
-                                    </div>
+                                            <select id="position" name="positionId" required>
+                                                <c:if test="${empty positionList}">
+                                                    <option value="">Không có chức vụ</option>
+                                                </c:if>
+                                                <c:forEach var="position" items="${positionList}">
+                                                    <option value="${position.id}">${position.name}</option>
+                                                </c:forEach>
+                                            </select>
+                                        </div>
+
+                                                                                                             
                                 </div>
-
-                                <div class="form-card">
-                                    <h3 class="form-card-title">Thông tin cá nhân</h3>
-                                    <div class="form-card-grid">
-                                        <div class="form-group">
-                                            <label for="idCard">Số CMND/CCCD</label>
-                                            <input type="text" id="idCard" name="idCard">
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="dob">Ngày sinh</label>
-                                            <input type="date" id="dob" name="dob">
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Giới tính</label>
-                                            <div class="radio-group">
-                                                <label class="radio-option"><input type="radio" name="gender" value="male" checked> Nam</label>
-                                                <label class="radio-option"><input type="radio" name="gender" value="female"> Nữ</label>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div class="form-group full-width" style="margin-top: 20px;">
+                                    <label for="notes">Ghi chú</label>
+                                    <textarea id="notes" name="notes" rows="3" placeholder="Thêm ghi chú về công việc..."></textarea>
                                 </div>
-
-
                             </div>
+
+                            <div class="form-card">
+                                <h3 class="form-card-title">Thông tin cá nhân</h3>
+                                <div class="form-card-grid">
+                                    <div class="form-group">
+                                        <label for="idCard">Số CMND/CCCD</label>
+                                        <input type="text" id="idCard" name="idCard">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="dob">Ngày sinh</label>
+                                        <input type="date" id="dob" name="dob">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Giới tính</label>
+                                        <div class="radio-group">
+                                            <label class="radio-option"><input type="radio" name="gender" value="male" checked> Nam</label>
+                                            <label class="radio-option"><input type="radio" name="gender" value="female"> Nữ</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        </div>
                         </div>
                     </section>
 

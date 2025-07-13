@@ -10,6 +10,7 @@ import vn.edu.fpt.dao.TechnicalRequestDAO;
 import vn.edu.fpt.model.Contract;
 import vn.edu.fpt.model.TechnicalRequest;
 import vn.edu.fpt.model.TechnicalRequestDevice;
+import vn.edu.fpt.model.Product;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -54,7 +55,9 @@ public class TicketController extends HttpServlet {
                 case "getContracts":
                     getContracts(request, response);
                     break;
-                
+                case "getProducts":
+                    getProducts(request, response);
+                    break;
                 case "list":
                 default:
                     listTickets(request, response);
@@ -97,7 +100,7 @@ public class TicketController extends HttpServlet {
             TechnicalRequest ticket = dao.getTechnicalRequestById(id);
             if (ticket != null) {
                 request.setAttribute("ticket", ticket);
-                request.getRequestDispatcher("/jsp/customerSupport/viewTicket.jsp").forward(request, response);
+                request.getRequestDispatcher("/jsp/customerSupport/viewTransaction.jsp").forward(request, response);
             } else {
                 response.sendRedirect("ticket?action=list&error=notFound");
             }
@@ -113,15 +116,70 @@ public class TicketController extends HttpServlet {
 
             if (existingTicket != null) {
                 request.setAttribute("ticket", existingTicket);
+                // Gửi kèm các danh sách cần thiết cho dropdowns
                 request.setAttribute("customerList", dao.getAllEnterprises());
                 request.setAttribute("employeeList", dao.getAllTechnicians());
                 request.setAttribute("serviceList", dao.getAllServices());
-                request.getRequestDispatcher("/jsp/customerSupport/editTicket.jsp").forward(request, response);
+                request.getRequestDispatcher("/jsp/customerSupport/editTransaction.jsp").forward(request, response);
             } else {
                 response.sendRedirect("ticket?action=list&error=notFound");
             }
         } catch (NumberFormatException e) {
             response.sendRedirect("ticket?action=list&error=invalidId");
+        }
+    }
+
+// 2. Thêm phương thức mới để xử lý việc cập nhật (POST)
+    private void updateTicket(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        try {
+            // Lấy ID của ticket cần cập nhật từ hidden input
+            int ticketId = Integer.parseInt(request.getParameter("id"));
+
+            TechnicalRequest updatedRequest = new TechnicalRequest();
+            updatedRequest.setId(ticketId); // Quan trọng: Đặt ID cho ticket
+
+            // Lấy toàn bộ thông tin từ form, tương tự như hàm createTicket
+            updatedRequest.setEnterpriseId(Integer.parseInt(request.getParameter("enterpriseId")));
+            updatedRequest.setServiceId(Integer.parseInt(request.getParameter("serviceId")));
+            updatedRequest.setAssignedToId(Integer.parseInt(request.getParameter("employeeId")));
+
+            // ... (Lấy các thông tin khác như description, priority, isBillable, amount...)
+            // Đoạn code này tương tự trong hàm createTicket của bạn, bạn có thể copy qua
+            // Ví dụ:
+            String description = request.getParameter("description");
+            updatedRequest.setDescription(description);
+            updatedRequest.setTitle(description.length() > 100 ? description.substring(0, 100) + "..." : description);
+            updatedRequest.setPriority(request.getParameter("priority"));
+            // ...v...v...
+
+            // Xử lý danh sách thiết bị
+            List<TechnicalRequestDevice> devices = new ArrayList<>();
+            int i = 1;
+            String deviceName;
+            while ((deviceName = request.getParameter("deviceName_" + i)) != null) {
+                if (!deviceName.trim().isEmpty()) {
+                    String serial = request.getParameter("deviceSerial_" + i);
+                    String note = request.getParameter("deviceNote_" + i);
+                    TechnicalRequestDevice device = new TechnicalRequestDevice();
+                    device.setDeviceName(deviceName);
+                    device.setSerialNumber(serial);
+                    device.setProblemDescription(note);
+                    devices.add(device);
+                }
+                i++;
+            }
+
+            // Gọi hàm update trong DAO
+            boolean success = dao.updateTechnicalRequest(updatedRequest, devices);
+
+            // Chuyển hướng về trang xem chi tiết sau khi cập nhật
+            response.sendRedirect("ticket?action=view&id=" + ticketId + "&update=" + (success ? "success" : "failed"));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Nếu có lỗi, chuyển về trang edit với thông báo lỗi
+            String ticketId = request.getParameter("id");
+            response.sendRedirect("ticket?action=edit&id=" + ticketId + "&error=unknown");
         }
     }
 
@@ -209,11 +267,6 @@ public class TicketController extends HttpServlet {
         }
     }
 
-    private void updateTicket(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // Placeholder for update logic
-        response.sendRedirect("ticket?action=list");
-    }
-
     private void getContracts(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
@@ -228,4 +281,16 @@ public class TicketController extends HttpServlet {
         }
     }
 
+    private void getProducts(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        try {
+            List<Product> products = dao.getAllProducts();
+            response.getWriter().write(gson.toJson(products));
+        } catch (SQLException e) {
+            e.printStackTrace();
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write("{\"error\":\"Lỗi khi truy vấn danh sách sản phẩm.\"}");
+        }
+    }
 }

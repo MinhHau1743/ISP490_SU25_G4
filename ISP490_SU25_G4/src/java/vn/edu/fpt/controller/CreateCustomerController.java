@@ -7,6 +7,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 import java.io.File;
 import vn.edu.fpt.dao.*;
@@ -41,6 +42,13 @@ public class CreateCustomerController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        HttpSession session = request.getSession(false); // Lấy session hiện tại, không tạo mới
+        if (session == null || session.getAttribute("user") == null) {
+            // Nếu chưa đăng nhập, chuyển hướng về trang login
+            response.sendRedirect("login.jsp");
+            return; // Dừng xử lý tiếp theo
+        }
+
         // Only load data for dropdowns if we are not showing a success message.
         // This prevents unnecessary database queries when forwarding just to show the overlay.
         if (request.getAttribute("successMessage") == null) {
@@ -72,6 +80,14 @@ public class CreateCustomerController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
+        HttpSession session = request.getSession(false); // Lấy session hiện tại, không tạo mới
+        if (session == null || session.getAttribute("user") == null) {
+            // Nếu chưa đăng nhập, trả về lỗi hoặc chuyển hướng
+            // Chuyển hướng là tốt nhất để người dùng có thể đăng nhập lại
+            response.sendRedirect("login.jsp");
+            return; // Dừng xử lý tiếp theo
+        }
         request.setCharacterEncoding("UTF-8");
 
         Connection conn = null;
@@ -110,7 +126,7 @@ public class CreateCustomerController extends HttpServlet {
 
             // Get other form parameters
             String fullName = request.getParameter("fullName");
-            String position = request.getParameter("position");           
+            String position = request.getParameter("position");
             String phone = request.getParameter("phone");
             String email = request.getParameter("email");
             String taxCode = request.getParameter("taxCode");

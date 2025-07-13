@@ -28,9 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import vn.edu.fpt.service.EmailService;
-import vn.edu.fpt.strategy.EmailSender;
-import vn.edu.fpt.strategy.GmailSender;
+import vn.edu.fpt.common.EmailService;
+import vn.edu.fpt.common.EmailSender;
+import vn.edu.fpt.common.GmailSender;
 
 /**
  *
@@ -145,7 +145,7 @@ public class AddEmployeeServlet extends HttpServlet {
                         + "<p>Thông tin đăng nhập:</p>"
                         + "<ul>"
                         + "<li>Email: " + newUser.getEmail() + "</li>"
-                        + "<li>Mật khẩu mặc định: Fpt@12345</li>"
+                        + "<li>Mật khẩu mặc định: DPCRM@12345</li>"
                         + "</ul>"
                         + "<p>Vui lòng đổi mật khẩu sau khi đăng nhập.</p>";
 

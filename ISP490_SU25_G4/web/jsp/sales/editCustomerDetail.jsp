@@ -44,7 +44,14 @@
                     <div class="detail-header">
                         <a href="${BASE_URL}/viewCustomer?id=${customer.id}" class="back-link"><i data-feather="arrow-left"></i><span>Hủy</span></a>
                         <div class="action-buttons">
-                            <button type="submit" class="btn btn-primary"><i data-feather="save"></i>Lưu thay đổi</button>
+                            <c:choose>
+                                <c:when test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Kinh doanh'}">
+                                    <button type="submit" class="btn btn-primary"><i data-feather="save"></i>Lưu thay đổi</button>
+                                </c:when>
+                                <c:otherwise>
+                                    <button type="button" class="btn btn-primary disabled-action" data-error="Bạn không có quyền sửa khách hàng."><i data-feather="save"></i>Lưu thay đổi</button>
+                                </c:otherwise>
+                            </c:choose>
                         </div>
                     </div>
 
@@ -214,6 +221,19 @@
                                     });
                                     wardSelect.disabled = false;
                                 });
+                    }
+                });
+            });
+        </script>
+        <script>
+            // Script này chỉ cần thêm một lần vào trang layout chính hoặc vào từng trang cần thiết
+            document.addEventListener('DOMContentLoaded', function () {
+                document.body.addEventListener('click', function (event) {
+                    const disabledLink = event.target.closest('.disabled-action');
+                    if (disabledLink) {
+                        event.preventDefault();
+                        const errorMessage = disabledLink.getAttribute('data-error') || 'Bạn không có quyền thực hiện chức năng này.';
+                        alert(errorMessage);
                     }
                 });
             });

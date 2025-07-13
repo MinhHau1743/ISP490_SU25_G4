@@ -7,6 +7,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 import vn.edu.fpt.dao.*;
 import vn.edu.fpt.model.*;
@@ -31,6 +32,13 @@ public class EditCustomerController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        HttpSession session = request.getSession(false); // Lấy session hiện tại, không tạo mới
+        if (session == null || session.getAttribute("user") == null) {
+            // Nếu chưa đăng nhập, trả về lỗi hoặc chuyển hướng
+            // Chuyển hướng là tốt nhất để người dùng có thể đăng nhập lại
+            response.sendRedirect("login.jsp");
+            return; // Dừng xử lý tiếp theo
+        }
         String idStr = request.getParameter("id");
         if (idStr == null) {
             response.sendRedirect("listCustomer");
@@ -63,6 +71,14 @@ public class EditCustomerController extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+        HttpSession session = request.getSession(false); // Lấy session hiện tại, không tạo mới
+        if (session == null || session.getAttribute("user") == null) {
+            // Nếu chưa đăng nhập, trả về lỗi hoặc chuyển hướng
+            // Chuyển hướng là tốt nhất để người dùng có thể đăng nhập lại
+            response.sendRedirect("login.jsp");
+            return; // Dừng xử lý tiếp theo
+        }
         request.setCharacterEncoding("UTF-8");
 
         Connection conn = null;

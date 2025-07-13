@@ -42,14 +42,34 @@
 
                             <div class="action-buttons" style="display: flex; gap: 8px;">
                                 <a href="#" class="btn btn-secondary"><i data-feather="printer"></i>In hợp đồng</a>
-                                <%-- SỬA: Trỏ về servlet sửa với ID --%>
-                                <a href="${pageContext.request.contextPath}/editContract?id=${contract.id}" class="btn btn-primary"><i data-feather="edit-2"></i>Sửa</a>
-                                <button type="button" class="btn btn-danger delete-trigger-btn" 
-                                        data-id="${contract.id}" 
-                                        data-name="${contract.contractCode}"
-                                        data-delete-url="${pageContext.request.contextPath}/deleteContract">
-                                    <i data-feather="trash-2"></i>Xóa
-                                </button>
+                                <%-- ===== Bắt đầu phân quyền nút Sửa ===== --%>
+                                <c:choose>
+                                    <c:when test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Chánh văn phòng'}">
+                                        <a href="${pageContext.request.contextPath}/editContract?id=${contract.id}" class="btn btn-primary"><i data-feather="edit-2"></i>Sửa</a>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <a href="#" class="btn btn-primary disabled-action" data-error="Bạn không có quyền sửa hợp đồng."><i data-feather="edit-2"></i>Sửa</a>
+                                    </c:otherwise>
+                                </c:choose>
+                                <%-- ===== Kết thúc phân quyền nút Sửa ===== --%>
+
+                                <%-- ===== Bắt đầu phân quyền nút Xóa ===== --%>
+                                <c:choose>
+                                    <c:when test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Chánh văn phòng'}">
+                                        <button type="button" class="btn btn-danger delete-trigger-btn" 
+                                                data-id="${contract.id}" 
+                                                data-name="${contract.contractCode}"
+                                                data-delete-url="${pageContext.request.contextPath}/deleteContract">
+                                            <i data-feather="trash-2"></i>Xóa
+                                        </button>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <button type="button" class="btn btn-danger disabled-action" data-error="Bạn không có quyền xóa hợp đồng.">
+                                            <i data-feather="trash-2"></i>Xóa
+                                        </button>
+                                    </c:otherwise>
+                                </c:choose>
+                                <%-- ===== Kết thúc phân quyền nút Xóa ===== --%>
                             </div>
                         </div>
 
@@ -171,7 +191,22 @@
                 </div>
             </div>
         </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                // Kích hoạt các icon
+                feather.replace();
 
+                // Script xử lý click vào nút bị vô hiệu hóa
+                document.body.addEventListener('click', function (event) {
+                    const disabledAction = event.target.closest('.disabled-action');
+                    if (disabledAction) {
+                        event.preventDefault(); // Ngăn hành động mặc định
+                        const errorMessage = disabledAction.getAttribute('data-error') || 'Bạn không có quyền thực hiện chức năng này.';
+                        alert(errorMessage); // Hiển thị thông báo
+                    }
+                });
+            });
+        </script>
         <script src="${pageContext.request.contextPath}/js/viewContractDetail.js"></script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
         <script>

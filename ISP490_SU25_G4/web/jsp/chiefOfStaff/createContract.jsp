@@ -40,9 +40,20 @@
                             <i data-feather="arrow-left"></i><span>Hủy</span>
                         </a>
                         <div class="action-buttons">
-                            <button type="submit" class="btn btn-primary">
-                                <i data-feather="plus-circle"></i>Tạo Hợp đồng
-                            </button>
+                            <%-- ===== Bắt đầu phân quyền nút Tạo Hợp đồng ===== --%>
+                            <c:choose>
+                                <c:when test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Chánh văn phòng'}">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i data-feather="plus-circle"></i>Tạo Hợp đồng
+                                    </button>
+                                </c:when>
+                                <c:otherwise>
+                                    <button type="button" class="btn btn-primary disabled-action" data-error="Bạn không có quyền tạo hợp đồng mới.">
+                                        <i data-feather="plus-circle"></i>Tạo Hợp đồng
+                                    </button>
+                                </c:otherwise>
+                            </c:choose>
+                            <%-- ===== Kết thúc phân quyền nút Tạo Hợp đồng ===== --%>
                         </div>
                     </div>
 
@@ -178,7 +189,22 @@
                 </div>
             </div>
         </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                // Kích hoạt các icon
+                feather.replace();
 
+                // Script xử lý click vào nút bị vô hiệu hóa
+                document.body.addEventListener('click', function (event) {
+                    const disabledAction = event.target.closest('.disabled-action');
+                    if (disabledAction) {
+                        event.preventDefault(); // Ngăn hành động mặc định
+                        const errorMessage = disabledAction.getAttribute('data-error') || 'Bạn không có quyền thực hiện chức năng này.';
+                        alert(errorMessage); // Hiển thị thông báo
+                    }
+                });
+            });
+        </script>
         <script src="${pageContext.request.contextPath}/js/createContract.js"></script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
