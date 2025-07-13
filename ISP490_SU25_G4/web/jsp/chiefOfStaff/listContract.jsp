@@ -71,7 +71,18 @@
                                 </div>
                                 <button type="button" class="filter-button" id="filterBtn"><i data-feather="filter"></i><span>Bộ lọc</span></button>
                                 <div class="toolbar-actions">
-                                    <a href="${pageContext.request.contextPath}/createContract" class="btn btn-primary"><i data-feather="plus"></i>Tạo Hợp đồng</a>
+                                    <%-- ========================================================== --%>
+                                    <%-- Bắt đầu phân quyền nút "Tạo Hợp đồng" --%>
+                                    <c:choose>
+                                        <c:when test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Chánh văn phòng'}">
+                                            <a href="${pageContext.request.contextPath}/createContract" class="btn btn-primary"><i data-feather="plus"></i>Tạo Hợp đồng</a>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <a href="#" class="btn btn-primary disabled-action" data-error="Bạn không có quyền tạo hợp đồng mới."><i data-feather="plus"></i>Tạo Hợp đồng</a>
+                                        </c:otherwise>
+                                    </c:choose>
+                                    <%-- Kết thúc phân quyền nút "Tạo Hợp đồng" --%>
+                                    <%-- ========================================================== --%>
                                 </div>
                             </div>
 
@@ -128,7 +139,19 @@
                                     <%-- SỬA LỖI: Thêm các thẻ <c:if> để kiểm tra giá trị null trước khi định dạng --%>
                                     <c:forEach var="contract" items="${contractList}">
                                         <tr>
-                                            <td><a href="listContract?action=view&id=${contract.id}" class="contract-code">${contract.contractCode}</a></td>
+                                            <td><%-- ========================================================== --%>
+                                                <%-- Bắt đầu phân quyền link "Mã Hợp đồng" --%>
+                                                <c:choose>
+                                                    <c:when test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Chánh văn phòng'}">
+                                                        <a href="listContract?action=view&id=${contract.id}" class="contract-code">${contract.contractCode}</a>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <span class="contract-code">${contract.contractCode}</span>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                                <%-- Kết thúc phân quyền link "Mã Hợp đồng" --%>
+                                                <%-- ========================================================== --%>
+                                            </td>
                                             <td>${contract.contractName}</td>
                                             <td class="customer-name">${contract.enterpriseName}</td>
                                             <td>
@@ -157,16 +180,43 @@
                                                 </c:choose>
                                             </td>
                                             <td class="table-actions">
-                                                <a href="${pageContext.request.contextPath}/viewContract?id=${contract.id}" title="Xem"><i data-feather="eye"></i></a>
-                                                <a href="${pageContext.request.contextPath}/editContract?id=${contract.id}" title="Sửa"><i data-feather="edit-2"></i></a>
+                                                <%-- ========================================================== --%>
+                                                <%-- Bắt đầu phân quyền các nút hành động --%>
+                                                <c:choose>
+                                                    <c:when test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Chánh văn phòng'}">
+                                                        <a href="${pageContext.request.contextPath}/viewContract?id=${contract.id}" title="Xem"><i data-feather="eye"></i></a>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                        <a href="#" class="disabled-action" data-error="Bạn không có quyền xem chi tiết hợp đồng." title="Xem"><i data-feather="eye"></i></a>
+                                                        </c:otherwise>
+                                                    </c:choose>
 
-                                                <%-- Sửa link xóa thành button với data attributes --%>
-                                                <button type="button" class="delete-btn" 
-                                                        data-id="${contract.id}" 
-                                                        data-name="${contract.contractCode}" 
-                                                        title="Xóa">
-                                                    <i data-feather="trash-2"></i>
-                                                </button>
+                                                <c:choose>
+                                                    <c:when test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Chánh văn phòng'}">
+                                                        <a href="${pageContext.request.contextPath}/editContract?id=${contract.id}" title="Sửa"><i data-feather="edit-2"></i></a>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                        <a href="#" class="disabled-action" data-error="Bạn không có quyền sửa hợp đồng." title="Sửa"><i data-feather="edit-2"></i></a>
+                                                        </c:otherwise>
+                                                    </c:choose>
+
+                                                <c:choose>
+                                                    <c:when test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Chánh văn phòng'}">
+                                                        <button type="button" class="delete-btn" 
+                                                                data-id="${contract.id}" 
+                                                                data-name="${contract.contractCode}" 
+                                                                title="Xóa">
+                                                            <i data-feather="trash-2"></i>
+                                                        </button>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <button type="button" class="disabled-action" data-error="Bạn không có quyền xóa hợp đồng." title="Xóa">
+                                                            <i data-feather="trash-2"></i>
+                                                        </button>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                                <%-- Kết thúc phân quyền các nút hành động --%>
+                                                <%-- ========================================================== --%>
                                             </td>
                                         </tr>
                                     </c:forEach>
@@ -202,6 +252,22 @@
         <script>
             feather.replace();
         </script>
+        <%-- ========================================================== --%>
+        <%-- Thêm Script xử lý thông báo lỗi (chỉ cần thêm 1 lần) --%>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                document.body.addEventListener('click', function (event) {
+                    // Tìm phần tử cha gần nhất có class 'disabled-action'
+                    const disabledAction = event.target.closest('.disabled-action');
+                    if (disabledAction) {
+                        event.preventDefault(); // Ngăn hành động mặc định
+                        const errorMessage = disabledAction.getAttribute('data-error') || 'Bạn không có quyền thực hiện chức năng này.';
+                        alert(errorMessage); // Hiển thị thông báo
+                    }
+                });
+            });
+        </script>
+        <%-- ========================================================== --%>
         <script src="${pageContext.request.contextPath}/js/listContract.js"></script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>

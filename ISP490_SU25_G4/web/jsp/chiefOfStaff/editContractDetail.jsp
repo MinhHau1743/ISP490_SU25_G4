@@ -38,9 +38,20 @@
                                 <i data-feather="arrow-left"></i><span>Hủy</span>
                             </a>
                             <div class="action-buttons">
-                                <button type="submit" class="btn btn-primary">
-                                    <i data-feather="save"></i>Lưu thay đổi
-                                </button>
+                                <%-- ===== Bắt đầu phân quyền nút Lưu thay đổi ===== --%>
+                                <c:choose>
+                                    <c:when test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Chánh văn phòng'}">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i data-feather="save"></i>Lưu thay đổi
+                                        </button>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <button type="button" class="btn btn-primary disabled-action" data-error="Bạn không có quyền sửa hợp đồng.">
+                                            <i data-feather="save"></i>Lưu thay đổi
+                                        </button>
+                                    </c:otherwise>
+                                </c:choose>
+                                <%-- ===== Kết thúc phân quyền nút Lưu thay đổi ===== --%>
                             </div>
                         </div>
 
@@ -208,10 +219,25 @@
                 </div>
             </div>
         </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                // Kích hoạt các icon
+                feather.replace();
 
+                // Script xử lý click vào nút bị vô hiệu hóa
+                document.body.addEventListener('click', function (event) {
+                    const disabledAction = event.target.closest('.disabled-action');
+                    if (disabledAction) {
+                        event.preventDefault(); // Ngăn hành động mặc định
+                        const errorMessage = disabledAction.getAttribute('data-error') || 'Bạn không có quyền thực hiện chức năng này.';
+                        alert(errorMessage); // Hiển thị thông báo
+                    }
+                });
+            });
+        </script>
         <script src="${pageContext.request.contextPath}/js/editContractDetail.js"></script>
         <script>
-            feather.replace();
+               feather.replace();
         </script>
     </body>
 </html>
