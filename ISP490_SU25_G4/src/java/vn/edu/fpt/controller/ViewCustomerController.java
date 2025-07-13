@@ -6,6 +6,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import vn.edu.fpt.dao.EnterpriseDAO;
 import vn.edu.fpt.model.Enterprise;
 
@@ -17,6 +18,14 @@ public class ViewCustomerController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
+        HttpSession session = request.getSession(false); // Lấy session hiện tại, không tạo mới
+        if (session == null || session.getAttribute("user") == null) {
+            // Nếu chưa đăng nhập, trả về lỗi hoặc chuyển hướng
+            // Chuyển hướng là tốt nhất để người dùng có thể đăng nhập lại
+            response.sendRedirect("login.jsp");
+            return; // Dừng xử lý tiếp theo
+        }
         String idStr = request.getParameter("id");
         if (idStr == null || idStr.isEmpty()) {
             response.sendRedirect("listCustomer"); // Redirect if no ID is provided
@@ -32,7 +41,7 @@ public class ViewCustomerController extends HttpServlet {
                 // Customer not found, set an error message and forward
                 request.setAttribute("errorMessage", "Không tìm thấy khách hàng với ID cung cấp.");
             }
-            
+
             request.setAttribute("customer", customer);
 
         } catch (NumberFormatException e) {
