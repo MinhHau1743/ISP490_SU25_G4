@@ -23,36 +23,36 @@ import vn.edu.fpt.model.User;
  *
  * @author minhh
  */
-@WebServlet(name = "ViewEmployeeServlet", urlPatterns = {"/admin/employees/view"})
+@WebServlet(name = "ViewEmployeeServlet", urlPatterns = {"/viewEmployee"})
 public class ViewEmployeeServlet extends HttpServlet {
 
-     @Override
+    @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         String idStr = request.getParameter("id");
-        
+
         try {
             int employeeId = Integer.parseInt(idStr);
             UserDAO userDAO = new UserDAO();
-            
+
             // Giả sử bạn có hàm getUserById trong UserDAO
-            User employee = userDAO.getUserById(employeeId); 
-            
+            User employee = userDAO.getUserById(employeeId);
+
             if (employee != null) {
                 // Đặt đối tượng employee vào request, JSP sẽ dùng tên "employee"
                 request.setAttribute("employee", employee);
-                
+
                 // Chuyển đến trang JSP xem chi tiết
                 request.getRequestDispatcher("/jsp/admin/viewEmployee.jsp").forward(request, response);
             } else {
                 response.getWriter().println("Không tìm thấy nhân viên.");
             }
-            
+
         } catch (Exception e) {
             e.printStackTrace();
             // Xử lý lỗi (ví dụ: chuyển hướng về trang danh sách)
-            response.sendRedirect(request.getContextPath() + "/admin/employees/list?error=true");
+            response.sendRedirect(request.getContextPath() + "/listEmployee?error=true");
         }
     }
 

@@ -12,25 +12,25 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Servlet để xử lý việc hiển thị danh sách nhân viên Chăm sóc khách hàng.
+ * Servlet để xử lý việc hiển thị danh sách nhân viên.
  */
-// Đặt một URL rõ ràng cho servlet này
-@WebServlet(name = "ListAllEmployeesServlet", urlPatterns = {"/admin/employees/list"})
+// Chỉ sửa đổi urlPatterns để khớp với link "/listEmployee" trong sidebar
+@WebServlet(name = "ListAllEmployeesServlet", urlPatterns = {"/listEmployee"})
 public class ListAllEmployeesServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         UserDAO userDAO = new UserDAO();
 
-        // Gọi phương thức mới để lấy TẤT CẢ nhân viên
+        // Giữ nguyên tên phương thức gốc của bạn
         List<User> allEmployeesList = userDAO.getAllEmployeesRole();
 
         // Đặt danh sách vào request với tên là "employeeList" để JSP sử dụng
         request.setAttribute("employeeList", allEmployeesList);
 
-        // Chuyển tiếp tới một file JSP chung (bạn sẽ tạo ở bước 3)
+        // Giữ nguyên đường dẫn file JSP của bạn
         request.getRequestDispatcher("/jsp/admin/listAllEmployees.jsp").forward(request, response);
     }
 }

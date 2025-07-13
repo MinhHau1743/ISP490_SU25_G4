@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Filter.java to edit this template
- */
 package vn.edu.fpt.common;
 
 import jakarta.servlet.*;
@@ -11,37 +7,52 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-@WebFilter("/*") // Áp dụng filter cho tất cả các URL
+/**
+ * Filter này kiểm tra quyền truy cập của người dùng cho mọi yêu cầu. Nó sử dụng
+ * một cấu trúc Map để quản lý quyền một cách tập trung, giúp code sạch sẽ và dễ
+ * mở rộng hơn.
+ */
+@WebFilter("/*")
 public class AuthorizationFilter implements Filter {
 
-    // Danh sách các URL mà vai trò "Kinh doanh" ĐƯỢC PHÉP truy cập
-    private static final List<String> KINH_DOANH_ALLOWED_URLS = Arrays.asList(
-            "/listCustomer",
-            "/createCustomer",
-            "/editCustomer",
-            "/deleteCustomer",
-            "/viewCustomer",
-            "/searchSuggestions",
-            "/getDistricts",
-            "/getWards",
-            "/dashboard.jsp",
-            "/resetPassword.jsp",
-            "/viewProfile",
-            "/changePassword.jsp",
-            "/logout.jsp"
-    );
+    // Một Map để lưu trữ danh sách các URL được phép cho mỗi vai trò.
+    private static final Map<String, List<String>> rolePermissions = new HashMap<>();
 
-    // Danh sách quyền cho vai trò CHÁNH VĂN PHÒNG
-    private static final List<String> CHANH_VAN_PHONG_ALLOWED_URLS = Arrays.asList(
-            // Quyền giống Kinh doanh
-            "/listCustomer", "/viewCustomerDetail",
-            "/searchSuggestions", "/getDistricts", "/getWards",
-            "/dashboard.jsp", "/resetPassword.jsp", "/viewProfile", "/changePassword.jsp", "/logout.jsp",
-            // Thêm quyền quản lý Hợp đồng
-            "/listContract", "/createContract", "/editContract", "/deleteContract", "/viewContract"
-    );
+    /**
+     * Phương thức init() được gọi một lần khi filter được khởi tạo. Chúng ta
+     * định nghĩa tất cả các quyền ở đây.
+     */
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException {
+        // --- CẤU HÌNH QUYỀN TRUY CẬP TẬP TRUNG ---
+
+        // Quyền cho vai trò "Kinh doanh"
+        rolePermissions.put("Kinh doanh", Arrays.asList(
+                "/listCustomer", "/createCustomer", "/editCustomer", "/deleteCustomer",
+                "/viewCustomer", "/searchSuggestions", "/getDistricts", "/getWards",
+                "/dashboard.jsp", "/resetPassword.jsp", "/viewProfile", "/changePassword.jsp", "/logout"
+        ));
+
+        // Quyền cho vai trò "Chánh văn phòng"
+        rolePermissions.put("Chánh văn phòng", Arrays.asList(
+                "/listCustomer", "/viewCustomerDetail", "/searchSuggestions", "/getDistricts", "/getWards",
+                "/dashboard.jsp", "/resetPassword.jsp", "/viewProfile", "/changePassword.jsp", "/logout",
+                // Thêm quyền quản lý Hợp đồng
+                "/listContract", "/createContract", "/editContract", "/deleteContract", "/viewContract"
+        ));
+
+        // Quyền cho vai trò "Kỹ thuật" (Ví dụ)
+        rolePermissions.put("Kỹ thuật", Arrays.asList(
+                "/dashboard.jsp", "/viewProfile", "/changePassword.jsp", "/logout",
+                "/listTechnicalRequest" // Giả sử có trang quản lý yêu cầu kỹ thuật
+        ));
+
+        // Thêm các vai trò khác ở đây...
+    }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -49,56 +60,54 @@ public class AuthorizationFilter implements Filter {
 
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
-        HttpSession session = httpRequest.getSession(false);
 
-        String requestURI = httpRequest.getRequestURI();
         String contextPath = httpRequest.getContextPath();
-        String path = requestURI.substring(contextPath.length());
+        String path = httpRequest.getRequestURI().substring(contextPath.length());
 
-        // Bỏ qua filter cho các tài nguyên tĩnh (CSS, JS, images) và trang login
-        if (path.startsWith("/css/") || path.startsWith("/js/")
-                || path.startsWith("/image/") || path.equals("/LoginController") || path.equals("/login.jsp")) {
+        // 1. Bỏ qua filter cho các tài nguyên công khai (public)
+        if (path.startsWith("/css/") || path.startsWith("/js/") || path.startsWith("/image/")
+                || path.equals("/LoginController") || path.equals("/login.jsp")
+                || path.equals("/access-denied.jsp")) {
             chain.doFilter(request, response);
             return;
         }
 
-        // Nếu chưa đăng nhập, chuyển về trang login
+        HttpSession session = httpRequest.getSession(false);
+
+        // 2. Nếu chưa đăng nhập (không có session hoặc user), chuyển về trang login
         if (session == null || session.getAttribute("user") == null) {
             httpResponse.sendRedirect(contextPath + "/login.jsp");
             return;
         }
 
+        // 3. Xử lý phân quyền dựa trên vai trò
         String userRole = (String) session.getAttribute("userRole");
 
-        // Vai trò "Admin" được truy cập mọi nơi
+        // Admin có toàn quyền truy cập
         if ("Admin".equals(userRole)) {
             chain.doFilter(request, response);
             return;
         }
 
-        // Kiểm tra quyền cho vai trò "Chánh văn phòng"
-        if ("Chánh văn phòng".equals(userRole)) {
-            boolean allowed = CHANH_VAN_PHONG_ALLOWED_URLS.stream().anyMatch(path::startsWith);
-            if (allowed) {
-                chain.doFilter(request, response);
-            } else {
-                httpResponse.sendRedirect(contextPath + "/access-denied.jsp");
-            }
-            return; // Dừng tại đây sau khi xử lý
+        // Lấy danh sách các URL được phép của vai trò hiện tại
+        List<String> allowedUrls = rolePermissions.get(userRole);
+        boolean isAllowed = false;
+
+        if (allowedUrls != null) {
+            // Kiểm tra xem path hiện tại có nằm trong danh sách được phép không
+            isAllowed = allowedUrls.stream().anyMatch(url -> path.startsWith(url));
         }
 
-        // Kiểm tra quyền cho vai trò "Kinh doanh"
-        if ("Kinh doanh".equals(userRole)) {
-            boolean allowed = KINH_DOANH_ALLOWED_URLS.stream().anyMatch(path::startsWith);
-            if (allowed) {
-                chain.doFilter(request, response);
-            } else {
-                httpResponse.sendRedirect(contextPath + "/access-denied.jsp");
-            }
-            return; // Dừng tại đây sau khi xử lý
+        // 4. Cho phép hoặc từ chối truy cập
+        if (isAllowed) {
+            chain.doFilter(request, response);
+        } else {
+            httpResponse.sendRedirect(contextPath + "/access-denied.jsp");
         }
+    }
 
-        // Mặc định, nếu vai trò không được xử lý ở trên, từ chối truy cập
-        httpResponse.sendRedirect(contextPath + "/access-denied.jsp");
+    @Override
+    public void destroy() {
+        // Có thể dọn dẹp tài nguyên ở đây nếu cần
     }
 }

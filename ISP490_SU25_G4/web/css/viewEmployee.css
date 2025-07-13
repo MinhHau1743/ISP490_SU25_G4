@@ -1,0 +1,112 @@
+/*
+    File: viewEmployee.css
+    Description: Stylesheet for the "View Employee Details" page.
+*/
+
+/* ----- BỐ CỤC CHÍNH (QUAN TRỌNG) ----- */
+.view-employee-page {
+    display: flex; /* Dùng Flexbox để chia 2 cột */
+    gap: 32px;
+    align-items: flex-start; /* Căn các cột theo lề trên */
+}
+
+/* ----- CỘT BÊN TRÁI (AVATAR) ----- */
+.avatar-panel {
+    flex: 0 0 200px; /* Chiều rộng cố định 200px */
+    position: sticky; /* Dính lại khi cuộn trang */
+    top: 24px;
+}
+
+.avatar-display-box {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%; /* Bo tròn ảnh đại diện */
+    overflow: hidden;
+    border: 3px solid #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.avatar-display-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Đảm bảo ảnh vừa vặn */
+}
+
+/* ----- CỘT BÊN PHẢI (THÔNG TIN) ----- */
+.info-panel {
+    flex-grow: 1; /* Chiếm hết phần không gian còn lại */
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.info-card {
+    background-color: #ffffff;
+    padding: 24px 32px;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.info-card-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.info-card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Chia 2 cột đều nhau */
+    gap: 20px 30px;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1; /* Chiếm toàn bộ chiều rộng grid */
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group label {
+    font-weight: 500;
+    color: #6c757d; /* Màu chữ phụ */
+    font-size: 14px;
+}
+
+/* STYLE CHO CÁC Ô BỊ VÔ HIỆU HÓA ĐỂ TRÔNG NHƯ VĂN BẢN */
+.form-group input[disabled],
+.form-group textarea[disabled] {
+    padding: 2px 0; /* Bỏ padding ngang, chỉ giữ trên dưới */
+    border: none;
+    background-color: transparent;
+    font-size: 16px;
+    font-family: inherit;
+    color: #212529; /* Màu chữ chính */
+    font-weight: 500;
+    cursor: text;
+    height: auto;
+    resize: none;
+}
+.form-group textarea[disabled] {
+    padding-top: 2px;
+}
+
+/* ----- FOOTER VỚI NÚT BẤM ----- */
+.page-actions-footer {
+    padding: 16px 24px;
+    background-color: #fff;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    justify-content: flex-end; /* Căn phải các nút */
+    gap: 12px;
+    position: sticky;
+    bottom: 0;
+    left: 256px; /* Để né sidebar */
+    right: 0;
+    z-index: 10;
+}

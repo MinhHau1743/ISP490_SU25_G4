@@ -14,7 +14,7 @@ public class PasswordHasher {
 
     public static void main(String[] args) {
         // Bạn có thể đổi mật khẩu ở đây nếu muốn
-        String matKhauCanBam = "admin123";
+        String matKhauCanBam = "123456";
 
         // Dòng này sẽ tạo ra một chuỗi hash mới mỗi lần chạy
         String hashMoi = BCrypt.hashpw(matKhauCanBam, BCrypt.gensalt());

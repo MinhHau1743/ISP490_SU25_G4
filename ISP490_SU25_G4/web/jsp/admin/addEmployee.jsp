@@ -1,7 +1,7 @@
-<%-- 
-    Document   : addEmployeeSales
-    Created on : Jun 16, 2025, 9:46:14 PM
-    Author     : NGUYEN MINH
+<%--
+    Document    : addEmployee
+    Created on  : Jun 16, 2025, 9:46:14 PM
+    Author      : NGUYEN MINH
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
@@ -12,35 +12,34 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Thêm nhân viên kinh doanh</title>
+        <title>Thêm nhân viên</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-        <script src="https://unpkg.com/feather-icons"></script>
-        <link rel="stylesheet" href="../../css/style.css">
-        <link rel="stylesheet" href="../../css/header.css">
-        <link rel="stylesheet" href="../../css/menu.css">
-        <link rel="stylesheet" href="../../css/pagination.css">
-        <link rel="stylesheet" href="../../css/profile.css">
-        <link rel="stylesheet" href="../../css/dataTable.css">     
-        <link rel="stylesheet" href="../../css/addEmployee.css">
+        
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/menu.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/addEmployee.css">
     </head>
     <body>
 
         <div class="app-container">
-            <jsp:include page="../../menu.jsp"/>
+            <%-- SỬA LỖI: Include đúng file mainMenu.jsp --%>
+            <jsp:include page="/mainMenu.jsp"/>
+
             <main class="main-content">
                 <header class="main-top-bar">
                     <div class="page-title">Thêm nhân viên</div>
                 </header>
 
                 <c:if test="${not empty errorMessage}">
-                    <div class="alert alert-danger" style="color: red; background-color: #fdd; padding: 10px; margin: 10px 0; border: 1px solid red; border-radius: 5px;">
+                    <div class="alert alert-danger">
                         ${errorMessage}
                     </div>
                 </c:if>
 
-                <form action="/ISP490_SU25_G4/admin/employees/add" method="POST" enctype="multipart/form-data">
+                <form action="${pageContext.request.contextPath}/addEmployee" method="POST" enctype="multipart/form-data">
                     <section class="content-body">
                         <div class="add-employee-page">
 
@@ -54,9 +53,7 @@
                                 </button>
                             </div>
 
-
                             <div class="form-panel">
-
                                 <div class="form-card">
                                     <h3 class="form-card-title">Thông tin khởi tạo</h3>
                                     <div class="form-card-grid">
@@ -86,15 +83,13 @@
                                             <label for="departmentId">Phòng làm việc</label>
                                             <select id="departmentId" name="departmentId" required>
                                                 <c:if test="${empty departmentList}">
-                                                    <option value="">Không có phòng ban nào</option>
+                                                    <option value="">Không có phòng ban</option>
                                                 </c:if>
                                                 <c:forEach var="department" items="${departmentList}">
                                                     <option value="${department.id}">${department.name}</option>
                                                 </c:forEach>
                                             </select>
                                         </div>
-                                        
-                                        
                                         <div class="form-group">
                                             <label for="position">Chức vụ</label>
                                             <select id="position" name="positionId" required>
@@ -106,51 +101,50 @@
                                                 </c:forEach>
                                             </select>
                                         </div>
-
-                                                                                                             
-                                </div>
-                                <div class="form-group full-width" style="margin-top: 20px;">
-                                    <label for="notes">Ghi chú</label>
-                                    <textarea id="notes" name="notes" rows="3" placeholder="Thêm ghi chú về công việc..."></textarea>
-                                </div>
-                            </div>
-
-                            <div class="form-card">
-                                <h3 class="form-card-title">Thông tin cá nhân</h3>
-                                <div class="form-card-grid">
-                                    <div class="form-group">
-                                        <label for="idCard">Số CMND/CCCD</label>
-                                        <input type="text" id="idCard" name="idCard">
                                     </div>
-                                    <div class="form-group">
-                                        <label for="dob">Ngày sinh</label>
-                                        <input type="date" id="dob" name="dob">
+                                    <div class="form-group full-width" style="margin-top: 20px;">
+                                        <label for="notes">Ghi chú</label>
+                                        <textarea id="notes" name="notes" rows="3" placeholder="Thêm ghi chú về công việc..."></textarea>
                                     </div>
-                                    <div class="form-group">
-                                        <label>Giới tính</label>
-                                        <div class="radio-group">
-                                            <label class="radio-option"><input type="radio" name="gender" value="male" checked> Nam</label>
-                                            <label class="radio-option"><input type="radio" name="gender" value="female"> Nữ</label>
+                                </div>
+
+                                <div class="form-card">
+                                    <h3 class="form-card-title">Thông tin cá nhân</h3>
+                                    <div class="form-card-grid">
+                                        <div class="form-group">
+                                            <label for="idCard">Số CMND/CCCD</label>
+                                            <input type="text" id="idCard" name="idCard">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="dob">Ngày sinh</label>
+                                            <input type="date" id="dob" name="dob">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Giới tính</label>
+                                            <div class="radio-group">
+                                                <label class="radio-option"><input type="radio" name="gender" value="male" checked> Nam</label>
+                                                <label class="radio-option"><input type="radio" name="gender" value="female"> Nữ</label>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-
-
-                        </div>
                         </div>
                     </section>
 
                     <footer class="page-actions-footer">
-                        <a href="../admin/listEmployeeSales.jsp" class="btn btn-secondary" role="button">Hủy</a>
+                        <a href="${pageContext.request.contextPath}/listEmployee" class="btn btn-secondary" role="button">Hủy</a>
                         <button type="submit" class="btn btn-primary">Lưu nhân viên</button>
                     </footer>
                 </form>
             </main>
         </div>
 
+        <script src="https://unpkg.com/feather-icons"></script>
         <script>
             feather.replace();
+
+            // Script preview avatar
             const avatarUploadInput = document.getElementById('avatar-upload');
             const avatarPreviewContainer = document.getElementById('avatar-preview-container');
             avatarUploadInput.addEventListener('change', function (event) {
@@ -158,12 +152,12 @@
                 if (file) {
                     const reader = new FileReader();
                     reader.onload = function (e) {
-                        avatarPreviewContainer.innerHTML = `<img src="${e.target.result}" alt="Avatar Preview">`;
+                        avatarPreviewContainer.innerHTML = `<img src="${e.target.result}" alt="Avatar Preview" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">`;
                     }
                     reader.readAsDataURL(file);
                 }
             });
         </script>
-        <script src="../../js/mainMenu.js"></script>
+        <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>
