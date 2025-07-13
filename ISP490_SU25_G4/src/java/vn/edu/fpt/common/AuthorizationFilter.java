@@ -33,6 +33,16 @@ public class AuthorizationFilter implements Filter {
             "/logout.jsp"
     );
 
+    // Danh sách quyền cho vai trò CHÁNH VĂN PHÒNG
+    private static final List<String> CHANH_VAN_PHONG_ALLOWED_URLS = Arrays.asList(
+            // Quyền giống Kinh doanh
+            "/listCustomer", "/viewCustomerDetail",
+            "/searchSuggestions", "/getDistricts", "/getWards",
+            "/dashboard.jsp", "/resetPassword.jsp", "/viewProfile", "/changePassword.jsp", "/logout.jsp",
+            // Thêm quyền quản lý Hợp đồng
+            "/listContract", "/createContract", "/editContract", "/deleteContract", "/viewContract"
+    );
+
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
@@ -66,20 +76,29 @@ public class AuthorizationFilter implements Filter {
             return;
         }
 
-        // Xử lý riêng cho vai trò "Kinh doanh"
-        if ("Kinh doanh".equals(userRole)) {
-            boolean allowed = KINH_DOANH_ALLOWED_URLS.stream().anyMatch(url -> path.startsWith(url));
+        // Kiểm tra quyền cho vai trò "Chánh văn phòng"
+        if ("Chánh văn phòng".equals(userRole)) {
+            boolean allowed = CHANH_VAN_PHONG_ALLOWED_URLS.stream().anyMatch(path::startsWith);
             if (allowed) {
-                chain.doFilter(request, response); // Cho phép truy cập
+                chain.doFilter(request, response);
             } else {
-                // Chuyển hướng tới trang báo lỗi nếu truy cập URL không được phép
                 httpResponse.sendRedirect(contextPath + "/access-denied.jsp");
             }
-            return;
+            return; // Dừng tại đây sau khi xử lý
         }
 
-        // Xử lý cho các vai trò khác ở đây...
-        // Mặc định, nếu không phải Admin và không có xử lý đặc biệt, cứ cho qua
-        chain.doFilter(request, response);
+        // Kiểm tra quyền cho vai trò "Kinh doanh"
+        if ("Kinh doanh".equals(userRole)) {
+            boolean allowed = KINH_DOANH_ALLOWED_URLS.stream().anyMatch(path::startsWith);
+            if (allowed) {
+                chain.doFilter(request, response);
+            } else {
+                httpResponse.sendRedirect(contextPath + "/access-denied.jsp");
+            }
+            return; // Dừng tại đây sau khi xử lý
+        }
+
+        // Mặc định, nếu vai trò không được xử lý ở trên, từ chối truy cập
+        httpResponse.sendRedirect(contextPath + "/access-denied.jsp");
     }
 }
