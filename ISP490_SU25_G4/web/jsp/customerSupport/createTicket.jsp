@@ -96,7 +96,7 @@
             </div>
 
         <script>const contextPath = '${pageContext.request.contextPath}';</script>    
-        <script src="${pageContext.request.contextPath}/js/createTicket.js"></script>
+<script src="${pageContext.request.contextPath}/js/createTicket.js?v=<%= System.currentTimeMillis() %>"></script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
         
     </body>
