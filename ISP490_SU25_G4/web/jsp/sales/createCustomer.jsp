@@ -86,9 +86,17 @@
                             <i data-feather="arrow-left"></i><span>Hủy</span>
                         </a>
                         <div class="action-buttons">
-                            <button type="submit" class="btn btn-primary">
-                                <i data-feather="plus-circle"></i>Tạo Khách hàng
-                            </button>
+                            <c:choose>
+                                <c:when test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Kinh doanh'}">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i data-feather="plus-circle"></i>Tạo Khách hàng
+                                    </button>
+                                </c:when>
+                                <c:otherwise>
+                                    <button type="button" class="btn btn-primary disabled-action" data-error="Bạn không có quyền tạo khách hàng mới.">
+                                        <i data-feather="plus-circle"></i>Tạo Khách hàng
+                                    </c:otherwise>
+                                </c:choose>
                         </div>
                     </div>
 
@@ -106,7 +114,7 @@
                                             <label for="customerName">Tên doanh nghiệp (*)</label>
                                             <input type="text" id="customerName" name="customerName" class="form-control" placeholder="Nhập tên công ty hoặc cá nhân" required>
                                         </div>
-                                        
+
                                     </div>
                                 </div>
                             </div>
@@ -291,6 +299,19 @@
                         window.location.href = redirectUrl;
                     }, 3000); // 3000 milliseconds = 3 seconds
                 }
+            });
+        </script>
+        <script>
+            // Script này chỉ cần thêm một lần vào trang layout chính hoặc vào từng trang cần thiết
+            document.addEventListener('DOMContentLoaded', function () {
+                document.body.addEventListener('click', function (event) {
+                    const disabledLink = event.target.closest('.disabled-action');
+                    if (disabledLink) {
+                        event.preventDefault();
+                        const errorMessage = disabledLink.getAttribute('data-error') || 'Bạn không có quyền thực hiện chức năng này.';
+                        alert(errorMessage);
+                    }
+                });
             });
         </script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>

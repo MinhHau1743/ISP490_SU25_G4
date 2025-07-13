@@ -84,12 +84,23 @@ public class LoginController extends HttpServlet {
         if (user != null) {
             HttpSession session = request.getSession();
             session.setAttribute("user", user);
+
+            String roleName = user.getRoleName();
+            if (roleName == null || roleName.isEmpty()) {
+                // Dừng lại và báo lỗi nếu vai trò không hợp lệ
+                request.setAttribute("error", "Lỗi: Vai trò của người dùng không xác định. Vui lòng liên hệ quản trị viên.");
+                request.getRequestDispatcher("login.jsp").forward(request, response);
+                return;
+            }
+            // Lưu vai trò vào session để các trang khác và Filter sử dụng
+            session.setAttribute("userRole", roleName);
+
             int num = user.isRequireChangePassword();  // Giả sử phương thức này trả về int (0/1); nếu là boolean, thay bằng if (user.isRequireChangePassword())
             if (num == 1) {
                 // Nếu là lần đầu đăng nhập, chuyển đến trang đổi mật khẩu
                 session.setAttribute("ProductController", true);  // Có vẻ như key này là typo? Có thể là "fromLogin" hoặc tương tự
                 session.setAttribute("email", email);
-                int userId = user.getId();  
+                int userId = user.getId();
                 session.setAttribute("userID", userId);
                 response.sendRedirect("resetPassword.jsp");  // Gửi userId qua URL query string
             } else {
