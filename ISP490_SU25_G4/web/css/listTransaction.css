@@ -1,4 +1,3 @@
-
 :root {
     --primary-color: #298E94;
     --primary-bg-light: #F1FEFF;
@@ -11,12 +10,26 @@
     --bg-gray: #F2F2F2;
     --error-color: #EB3B31;
 
+    /* Existing status colors */
     --status-completed-bg: #EAF7E8;
     --status-completed-text: #3E8635;
     --status-processing-bg: #FEF5E5;
     --status-processing-text: #F2994A;
     --status-pending-bg: #FDEEEE;
     --status-pending-text: #EB5757;
+
+    /* New status colors for 'new', 'assigned' */
+    --status-new-bg: #e0f2f7; /* Lighter shade of primary color */
+    --status-new-text: #298E94; /* Primary color */
+
+    --status-assigned-bg: #e6f7ff; /* Light blue */
+    --status-assigned-text: #1890ff; /* Deeper blue */
+
+    --status-closed-bg: #f0f0f0; /* Light grey */
+    --status-closed-text: #8c8c8c; /* Darker grey */
+
+    --status-rejected-bg: #fdeeee; /* Light red */
+    --status-rejected-text: #eb5757; /* Dark red */
 }
 
 
@@ -265,25 +278,41 @@
     color: var(--error-color);
 }
 
-/* Trạng thái */
+/* Trạng thái - GENERAL PILL STYLE */
 .status-pill {
     padding: 4px 10px;
-    border-radius: 16px;
+    border-radius: 16px; /* Makes it pill-shaped */
     font-size: 12px;
     font-weight: 500;
+    white-space: nowrap; /* Prevents text from wrapping */
 }
-.status-completed {
-    background-color: var(--status-completed-bg);
-    color: var(--status-completed-text);
+
+/* Specific status colors */
+.status-new {
+    background-color: var(--status-new-bg);
+    color: var(--status-new-text);
 }
-.status-processing {
-    background-color: var(--status-processing-bg);
+.status-assigned {
+    background-color: var(--status-assigned-bg);
+    color: var(--status-assigned-text);
+}
+.status-in-progress {
+    background-color: var(--status-processing-bg); /* Reusing processing colors */
     color: var(--status-processing-text);
 }
-.status-pending {
-    background-color: var(--status-pending-bg);
-    color: var(--status-pending-text);
+.status-resolved {
+    background-color: var(--status-completed-bg); /* Reusing completed colors */
+    color: var(--status-completed-text);
 }
+.status-closed {
+    background-color: var(--status-closed-bg);
+    color: var(--status-closed-text);
+}
+.status-rejected {
+    background-color: var(--status-rejected-bg);
+    color: var(--status-rejected-text);
+}
+
 .transaction-code-link {
     text-decoration: none; /* Bỏ gạch chân mặc định của thẻ a */
     color: inherit; /* Kế thừa màu từ class .transaction-code */
