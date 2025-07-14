@@ -19,40 +19,35 @@ import java.util.Map;
 @WebFilter("/*")
 public class AuthorizationFilter implements Filter {
 
-    // Một Map để lưu trữ danh sách các URL được phép cho mỗi vai trò.
-    private static final Map<String, List<String>> rolePermissions = new HashMap<>();
+    // Danh sách các URL mà vai trò "Kinh doanh" ĐƯỢC PHÉP truy cập
+    private static final List<String> KINH_DOANH_ALLOWED_URLS = Arrays.asList(
+            "/listCustomer",
+            "/createCustomer",
+            "/editCustomer",
+            "/deleteCustomer",
+            "/viewCustomer",
+            "/searchSuggestions",
+            "/getDistricts",
+            "/getWards",
+            "/dashboard.jsp",
+            "/resetPassword.jsp",
+            "/viewProfile",
+            "/changePassword.jsp",
+            "/listContract",
+            "/viewContract",
+            "/logout.jsp"
+    );
 
-    /**
-     * Phương thức init() được gọi một lần khi filter được khởi tạo. Chúng ta
-     * định nghĩa tất cả các quyền ở đây.
-     */
-    @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
-        // --- CẤU HÌNH QUYỀN TRUY CẬP TẬP TRUNG ---
+    // Danh sách quyền cho vai trò CHÁNH VĂN PHÒNG
+    private static final List<String> CHANH_VAN_PHONG_ALLOWED_URLS = Arrays.asList(
+            // Quyền giống Kinh doanh
+            "/listCustomer", "/viewCustomerDetail",
+            "/searchSuggestions", "/getDistricts", "/getWards",
+            "/dashboard.jsp", "/resetPassword.jsp", "/viewProfile", "/changePassword.jsp", "/logout.jsp",
+            // Thêm quyền quản lý Hợp đồng
+            "/listContract", "/createContract", "/editContract", "/deleteContract", "/viewContract"
+    );
 
-        // Quyền cho vai trò "Kinh doanh"
-        rolePermissions.put("Kinh doanh", Arrays.asList(
-                "/listCustomer", "/createCustomer", "/editCustomer", "/deleteCustomer",
-                "/viewCustomer", "/searchSuggestions", "/getDistricts", "/getWards",
-                "/dashboard.jsp", "/resetPassword.jsp", "/viewProfile", "/changePassword.jsp", "/logout"
-        ));
-
-        // Quyền cho vai trò "Chánh văn phòng"
-        rolePermissions.put("Chánh văn phòng", Arrays.asList(
-                "/listCustomer", "/viewCustomerDetail", "/searchSuggestions", "/getDistricts", "/getWards",
-                "/dashboard.jsp", "/resetPassword.jsp", "/viewProfile", "/changePassword.jsp", "/logout",
-                // Thêm quyền quản lý Hợp đồng
-                "/listContract", "/createContract", "/editContract", "/deleteContract", "/viewContract"
-        ));
-
-        // Quyền cho vai trò "Kỹ thuật" (Ví dụ)
-        rolePermissions.put("Kỹ thuật", Arrays.asList(
-                "/dashboard.jsp", "/viewProfile", "/changePassword.jsp", "/logout",
-                "/listTechnicalRequest" // Giả sử có trang quản lý yêu cầu kỹ thuật
-        ));
-
-        // Thêm các vai trò khác ở đây...
-    }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
