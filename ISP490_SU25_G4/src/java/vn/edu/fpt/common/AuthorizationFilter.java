@@ -30,6 +30,8 @@ public class AuthorizationFilter implements Filter {
             "/resetPassword.jsp",
             "/viewProfile",
             "/changePassword.jsp",
+            "/listContract",
+            "/viewContract",
             "/logout.jsp"
     );
 
