@@ -139,29 +139,13 @@
                             <div class="card-body">
                                 <h2>Thông tin liên hệ</h2>
                                 <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="diaChi">Địa chỉ</label>
-                                        <input type="text" id="diaChi" name="diaChi" value="${nhanVien.diaChi}">
-                                    </div>
+                                    
                                     <div class="form-group">
                                         <label for="email">Email</label>
                                         <input type="email" id="email" name="email" value="${nhanVien.email}">
                                     </div>
                                 </div>
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="tinhThanh">Tỉnh/Thành phố</label>
-                                        <input type="text" id="tinhThanh" name="tinhThanh" value="${nhanVien.tinhThanh}">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="quanHuyen">Quận/Huyện</label>
-                                        <input type="text" id="quanHuyen" name="quanHuyen" value="${nhanVien.quanHuyen}">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="phuongXa">Phường/Xã</label>
-                                        <input type="text" id="phuongXa" name="phuongXa" value="${nhanVien.phuongXa}">
-                                    </div>
-                                </div>
+
 
                             </div>
                         </div>
