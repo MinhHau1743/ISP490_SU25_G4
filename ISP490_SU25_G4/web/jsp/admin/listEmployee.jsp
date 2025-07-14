@@ -87,12 +87,19 @@
                                             <td>${employee.department}</td>
 
                                             <%-- PHẦN 3: ĐẶT 3 NÚT HÀNH ĐỘNG VÀO ĐÚNG VỊ TRÍ --%>
+                                            
                                             <td class="col-actions">
                                                 <div class="action-buttons">
                                                     <a href="${pageContext.request.contextPath}/admin/employees/view?id=${employee.id}" title="Xem chi tiết">
                                                         <i data-feather="eye"></i>
                                                     </a>
-                                                    <a href="editEmployee?id=${employee.id}" title="Sửa"><i data-feather="edit-2"></i></a>
+                                                        
+                                                        
+                                                    <a href="${pageContext.request.contextPath}/admin/employees/edit?id=${employee.id}" title="Sửa thông tin">
+                                                        <i data-feather="edit-2"></i>
+                                                    </a>
+                                                        
+                                                        
                                                     <a href="deleteEmployee?id=${employee.id}" title="Xóa" onclick="return confirm('Bạn có chắc chắn muốn xóa nhân viên ${employee.employeeName} không?');">
                                                         <i data-feather="trash-2"></i>
                                                     </a>
