@@ -19,7 +19,7 @@
         
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/menu.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/addEmployee.css">
     </head>
     <body>

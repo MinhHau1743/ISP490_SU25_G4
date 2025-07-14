@@ -27,7 +27,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pagination.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dataTable.css">
+  
     </head>
     <body>
         <div class="app-container">

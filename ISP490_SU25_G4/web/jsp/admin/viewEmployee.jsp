@@ -16,7 +16,7 @@
         <title>Thông tin chi tiết nhân viên</title>
 
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/menu.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <%-- Link đến file CSS mới cho trang này --%>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/viewEmployee.css">

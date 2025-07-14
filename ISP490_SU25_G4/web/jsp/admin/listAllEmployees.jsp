@@ -25,9 +25,8 @@
         <%-- SỬA LỖI 1: Chuẩn hóa tất cả các đường dẫn CSS --%>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/menu.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pagination.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dataTable.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/employeeCard.css">
     </head>
     <body>
