@@ -77,7 +77,6 @@ public class AuthorizationFilter implements Filter {
 
         // 3. Xử lý phân quyền dựa trên vai trò
         String userRole = (String) session.getAttribute("userRole");
-
         // Admin có toàn quyền truy cập
         if ("Admin".equals(userRole)) {
             chain.doFilter(request, response);
