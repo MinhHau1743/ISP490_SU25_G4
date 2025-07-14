@@ -36,7 +36,7 @@ import vn.edu.fpt.common.GmailSender;
  *
  * @author minhh
  */
-@WebServlet(name = "AddEmployeeServlet", urlPatterns = {"/admin/employees/add"})
+@WebServlet(name = "AddEmployeeServlet", urlPatterns = {"/addEmployee"})
 @MultipartConfig(
         fileSizeThreshold = 1024 * 1024 * 1,
         maxFileSize = 1024 * 1024 * 10,
