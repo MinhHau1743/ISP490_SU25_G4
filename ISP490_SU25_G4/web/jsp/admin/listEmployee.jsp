@@ -88,9 +88,58 @@
                                             </div>
                                         </td>
                                     </tr>
+
                                 </c:forEach>
                             </tbody>
                         </table>
+
+                                </thead>
+                                <tbody>
+                                    <c:forEach var="employee" items="${employeeList}">
+                                        <%-- Để nút "Xem" hoạt động, thẻ <tr> cần các thuộc tính data-* này --%>
+                                        <tr data-id="${employee.id}"
+                                            data-code="${employee.employeeCode}"
+                                            data-name="${employee.employeeName}"
+                                            data-phone="${employee.phone}"
+                                            data-idcard="${employee.idCard}"
+                                            data-position="${employee.position}"
+                                            data-department="${employee.department}">
+
+                                            <td class="col-checkbox"><input type="checkbox" name="employeeId" value="${employee.id}" /></td>
+
+
+                                            <td>${employee.employeeCode}</td>
+                                            <td>${employee.employeeName}</td>
+                                            <td>${employee.phone}</td>
+                                            <td>${employee.idCard}</td>
+                                            <td>${employee.position}</td>
+                                            <td>${employee.department}</td>
+
+                                            <%-- PHẦN 3: ĐẶT 3 NÚT HÀNH ĐỘNG VÀO ĐÚNG VỊ TRÍ --%>
+                                            
+                                            <td class="col-actions">
+                                                <div class="action-buttons">
+                                                    <a href="${pageContext.request.contextPath}/admin/employees/view?id=${employee.id}" title="Xem chi tiết">
+                                                        <i data-feather="eye"></i>
+                                                    </a>
+                                                        
+                                                        
+                                                    <a href="${pageContext.request.contextPath}/admin/employees/edit?id=${employee.id}" title="Sửa thông tin">
+                                                        <i data-feather="edit-2"></i>
+                                                    </a>
+                                                        
+                                                        
+                                                    <a href="deleteEmployee?id=${employee.id}" title="Xóa" onclick="return confirm('Bạn có chắc chắn muốn xóa nhân viên ${employee.employeeName} không?');">
+                                                        <i data-feather="trash-2"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </c:forEach>
+                                </tbody>
+                            </table>
+                        </div>
+
                     </div>
 
                     <jsp:include page="/pagination.jsp"/>

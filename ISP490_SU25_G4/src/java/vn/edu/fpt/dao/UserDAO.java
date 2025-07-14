@@ -630,6 +630,7 @@ public class UserDAO {
         }
     }
 
+
     public boolean setRequireChangePasswordByEmail(String email) {
         String sql = "UPDATE Users SET require_change_password = 0 WHERE email = ?";
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -679,4 +680,42 @@ public class UserDAO {
             System.out.println("No user found with ID: " + testUserId);
         }
     }
+
+    public boolean updateEmployee(User user, int departmentId, int positionId) {
+    // Câu lệnh UPDATE chỉ cập nhật những trường cho phép sửa
+    String sql = "UPDATE users SET " +
+                 "last_name = ?, middle_name = ?, first_name = ?, phone_number = ?, email = ?, " +
+                 "department_id = ?, position_id = ?, notes = ?, identity_card_number = ?, " +
+                 "date_of_birth = ?, gender = ?, updated_at = CURRENT_TIMESTAMP " +
+                 "WHERE id = ?";
+                 
+    try (Connection conn = DBContext.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+
+        // Giả sử bạn đã có logic tách fullName thành last/middle/first
+        ps.setString(1, user.getLastName());
+        ps.setString(2, user.getMiddleName());
+        ps.setString(3, user.getFirstName());
+        ps.setString(4, user.getPhoneNumber());
+        ps.setString(5, user.getEmail());
+        ps.setInt(6, departmentId);
+        ps.setInt(7, positionId);
+        ps.setString(8, user.getNotes());
+        ps.setString(9, user.getIdentityCardNumber());
+        ps.setDate(10, java.sql.Date.valueOf(user.getDateOfBirth()));
+        ps.setString(11, user.getGender());
+        
+        // ID cho điều kiện WHERE
+        ps.setInt(12, user.getId());
+
+        int rowsAffected = ps.executeUpdate();
+        return rowsAffected > 0;
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        return false;
+    }
+}
+
+
 }
