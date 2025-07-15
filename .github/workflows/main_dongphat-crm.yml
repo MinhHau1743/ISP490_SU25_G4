@@ -30,8 +30,8 @@ jobs:
           mkdir -p .libs
           # Thư viện cho j2ee.platform.classpath
           curl -L -o .libs/jakarta.servlet-api-6.0.0.jar https://repo1.maven.org/maven2/jakarta/servlet/jakarta.servlet-api/6.0.0/jakarta.servlet-api-6.0.0.jar
-          # Thư viện cho libs.CopyLibs.classpath
-          curl -L -o .libs/copylibstask.jar https://repo1.maven.org/maven2/org/netbeans/api/org-netbeans-modules-java-j2seproject-copylibstask/RELEASE210/org-netbeans-modules-java-j2seproject-copylibstask-RELEASE210.jar
+          # SỬA LỖI: Tải một phiên bản khác của thư viện CopyLibs
+          curl -L -o .libs/copylibstask.jar https://repo1.maven.org/maven2/org/netbeans/api/org-netbeans-modules-java-j2seproject-copylibstask/RELEASE190/org-netbeans-modules-java-j2seproject-copylibstask-RELEASE190.jar
 
       # SỬA LỖI: Cung cấp cả hai classpath cần thiết cho Ant build
       - name: Build with Ant
