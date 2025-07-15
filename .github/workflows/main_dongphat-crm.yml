@@ -24,21 +24,21 @@ jobs:
       - name: Install Ant
         run: sudo apt-get update && sudo apt-get install -y ant
 
-      # SỬA LỖI: Tải tất cả các thư viện cần thiết cho việc biên dịch
+      # Tải tất cả các thư viện cần thiết cho việc biên dịch
       - name: Download Required Build Libraries
         run: |
           mkdir -p .libs
           # Thư viện cho j2ee.platform.classpath
           curl -L -o .libs/jakarta.servlet-api-6.0.0.jar https://repo1.maven.org/maven2/jakarta/servlet/jakarta.servlet-api/6.0.0/jakarta.servlet-api-6.0.0.jar
-          # SỬA LỖI: Tải một phiên bản khác của thư viện CopyLibs
+          # Thư viện cho libs.CopyLibs.classpath
           curl -L -o .libs/copylibstask.jar https://repo1.maven.org/maven2/org/netbeans/api/org-netbeans-modules-java-j2seproject-copylibstask/RELEASE190/org-netbeans-modules-java-j2seproject-copylibstask-RELEASE190.jar
 
-      # SỬA LỖI: Cung cấp cả hai classpath cần thiết cho Ant build
+      # SỬA LỖI: Cung cấp đường dẫn tuyệt đối cho các classpath
       - name: Build with Ant
         run: >
           ant 
-          -Dlibs.CopyLibs.classpath=../.libs/copylibstask.jar 
-          -Dj2ee.platform.classpath=../.libs/jakarta.servlet-api-6.0.0.jar 
+          -Dlibs.CopyLibs.classpath=${{ github.workspace }}/.libs/copylibstask.jar 
+          -Dj2ee.platform.classpath=${{ github.workspace }}/.libs/jakarta.servlet-api-6.0.0.jar 
           dist
         working-directory: ./ISP490_SU25_G4
 
