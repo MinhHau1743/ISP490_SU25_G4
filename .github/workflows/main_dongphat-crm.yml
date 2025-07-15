@@ -99,7 +99,7 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          # Tên đầy đủ của App Service trên Azure
+          # Tên App Service phải khớp với "msdeploySite" trong publish profile
           app-name: 'dongphat-crm'
           # Gói cần deploy, tìm file .war trong thư mục hiện tại
           package: '*.war'
