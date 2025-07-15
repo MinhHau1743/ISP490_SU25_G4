@@ -101,3 +101,5 @@ jobs:
           package: '*.war'
           # Sử dụng publish profile đã lưu trong GitHub Secrets
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          # Thêm dòng này để chỉ định deploy vào slot mong muốn
+          slot-name: 'staging'
