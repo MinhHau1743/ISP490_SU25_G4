@@ -100,7 +100,7 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           # Tên đầy đủ của App Service trên Azure
-          app-name: 'dongphat-crm-gaaffxexandpcxd3'
+          app-name: 'dongphat-crm'
           # Gói cần deploy, tìm file .war trong thư mục hiện tại
           package: '*.war'
           # Sử dụng publish profile đã lưu trong GitHub Secrets
