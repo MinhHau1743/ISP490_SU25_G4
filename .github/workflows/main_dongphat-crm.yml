@@ -24,9 +24,15 @@ jobs:
       - name: Install Ant
         run: sudo apt-get update && sudo apt-get install -y ant
 
-      # SỬA LỖI: Chỉ định thư mục làm việc cho lệnh build
+      # SỬA LỖI: Tải thư viện Servlet API cần thiết cho việc biên dịch
+      - name: Download Jakarta Servlet API
+        run: |
+          mkdir -p .libs
+          curl -L -o .libs/jakarta.servlet-api-6.0.0.jar https://repo1.maven.org/maven2/jakarta/servlet/jakarta.servlet-api/6.0.0/jakarta.servlet-api-6.0.0.jar
+
+      # SỬA LỖI: Cung cấp classpath cho Ant build
       - name: Build with Ant
-        run: ant dist
+        run: ant -Dj2ee.platform.classpath=../.libs/jakarta.servlet-api-6.0.0.jar dist
         working-directory: ./ISP490_SU25_G4
 
       - name: Upload artifact for deployment
