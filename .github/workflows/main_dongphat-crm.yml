@@ -95,13 +95,10 @@ jobs:
           name: java-webapp
 
       # Bước 2: Deploy lên Azure Web App
-      - name: Deploy to Azure Web App
+   - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          # Tên của App Service trên Azure
-          app-name: 'dongphat-crm'
-          # Gói cần deploy, tìm file .war trong thư mục hiện tại
+          app-name: 'dongphat-crm-gaaffxexandpcxd3' # Sửa thành tên này
           package: '*.war'
-          # Sử dụng publish profile đã lưu trong GitHub Secrets
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
