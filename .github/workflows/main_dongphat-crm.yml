@@ -24,45 +24,46 @@ jobs:
       - name: Install Ant
         run: sudo apt-get update && sudo apt-get install -y ant
 
-      # SỬA LỖI: Tải và cài đặt thư viện CopyLibs Task của NetBeans cho Ant
-      - name: Download and Install NetBeans CopyLibs Task
-        run: |
-          curl -L -o copylibstask.jar https://repo1.maven.org/maven2/org/netbeans/api/org-netbeans-modules-java-j2seproject-copylibstask/RELEASE190/org-netbeans-modules-java-j2seproject-copylibstask-RELEASE190.jar
-          sudo cp copylibstask.jar /usr/share/ant/lib/
-
-      # SỬA LỖI: Tải các thư viện của dự án và tạo file cấu hình để ghi đè đường dẫn
-      - name: Prepare Project Libraries and Properties
+      # Tải tất cả các thư viện cần thiết
+      - name: Prepare Build Environment
         run: |
           mkdir -p .libs
-          # Tạo file build.properties để ghi đè các đường dẫn local trong project.properties
-          # Đồng thời tải các file jar cần thiết
-          echo "j2ee.platform.classpath=" >> build.properties
-          echo "file.reference.commons-logging-1.2.jar=${{ github.workspace }}/.libs/commons-logging-1.2.jar" >> build.properties
+          # Thư viện cho libs.CopyLibs.classpath
+          curl -L -o .libs/copylibstask.jar https://repo1.maven.org/maven2/org/netbeans/api/org-netbeans-modules-java-j2seproject-copylibstask/RELEASE190/org-netbeans-modules-java-j2seproject-copylibstask-RELEASE190.jar
+          
+          # Tải các thư viện của dự án
           curl -L -o .libs/commons-logging-1.2.jar https://repo1.maven.org/maven2/commons-logging/commons-logging/1.2/commons-logging-1.2.jar
-          echo "file.reference.fluent-hc-4.5.5.jar=${{ github.workspace }}/.libs/fluent-hc-4.5.5.jar" >> build.properties
           curl -L -o .libs/fluent-hc-4.5.5.jar https://repo1.maven.org/maven2/org/apache/httpcomponents/fluent-hc/4.5.5/fluent-hc-4.5.5.jar
-          echo "file.reference.gson-2.8.2.jar=${{ github.workspace }}/.libs/gson-2.8.2.jar" >> build.properties
           curl -L -o .libs/gson-2.8.2.jar https://repo1.maven.org/maven2/com/google/code/gson/gson/2.8.2/gson-2.8.2.jar
-          echo "file.reference.httpclient-4.5.5.jar=${{ github.workspace }}/.libs/httpclient-4.5.5.jar" >> build.properties
           curl -L -o .libs/httpclient-4.5.5.jar https://repo1.maven.org/maven2/org/apache/httpcomponents/httpclient/4.5.5/httpclient-4.5.5.jar
-          echo "file.reference.httpcore-4.4.9.jar=${{ github.workspace }}/.libs/httpcore-4.4.9.jar" >> build.properties
           curl -L -o .libs/httpcore-4.4.9.jar https://repo1.maven.org/maven2/org/apache/httpcomponents/httpcore/4.4.9/httpcore-4.4.9.jar
-          echo "file.reference.jakarta.servlet.jsp.jstl-3.0.0.jar=${{ github.workspace }}/.libs/jakarta.servlet.jsp.jstl-3.0.0.jar" >> build.properties
           curl -L -o .libs/jakarta.servlet.jsp.jstl-3.0.0.jar https://repo1.maven.org/maven2/org/glassfish/web/jakarta.servlet.jsp.jstl/3.0.0/jakarta.servlet.jsp.jstl-3.0.0.jar
-          echo "file.reference.jakarta.servlet.jsp.jstl-api-3.0.2.jar=${{ github.workspace }}/.libs/jakarta.servlet.jsp.jstl-api-3.0.2.jar" >> build.properties
           curl -L -o .libs/jakarta.servlet.jsp.jstl-api-3.0.2.jar https://repo1.maven.org/maven2/jakarta/servlet/jsp/jstl/jakarta.servlet.jsp.jstl-api/3.0.2/jakarta.servlet.jsp.jstl-api-3.0.2.jar
-          echo "file.reference.javaee-endorsed-api-7.0.jar=${{ github.workspace }}/.libs/javaee-endorsed-api-7.0.jar" >> build.properties
           curl -L -o .libs/javaee-endorsed-api-7.0.jar https://repo1.maven.org/maven2/org/glassfish/main/javaee-api/javaee-endorsed-api/7.0/javaee-endorsed-api-7.0.jar
-          echo "file.reference.javax.mail.jar=${{ github.workspace }}/.libs/javax.mail.jar" >> build.properties
           curl -L -o .libs/javax.mail.jar https://repo1.maven.org/maven2/com/sun/mail/javax.mail/1.6.2/javax.mail-1.6.2.jar
-          echo "file.reference.jbcrypt-0.4.jar=${{ github.workspace }}/.libs/jbcrypt-0.4.jar" >> build.properties
           curl -L -o .libs/jbcrypt-0.4.jar https://repo1.maven.org/maven2/org/mindrot/jbcrypt/0.4/jbcrypt-0.4.jar
-          echo "file.reference.mysql-connector-j-9.3.0.jar=${{ github.workspace }}/.libs/mysql-connector-j-9.3.0.jar" >> build.properties
           curl -L -o .libs/mysql-connector-j-9.3.0.jar https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/9.3.0/mysql-connector-j-9.3.0.jar
           
-      # SỬA LỖI: Build với file properties đã tạo để ghi đè các đường dẫn local
+          # Tạo file build.properties để ghi đè các đường dẫn local
+          echo "file.reference.commons-logging-1.2.jar=${{ github.workspace }}/.libs/commons-logging-1.2.jar" > build.properties
+          echo "file.reference.fluent-hc-4.5.5.jar=${{ github.workspace }}/.libs/fluent-hc-4.5.5.jar" >> build.properties
+          echo "file.reference.gson-2.8.2.jar=${{ github.workspace }}/.libs/gson-2.8.2.jar" >> build.properties
+          echo "file.reference.httpclient-4.5.5.jar=${{ github.workspace }}/.libs/httpclient-4.5.5.jar" >> build.properties
+          echo "file.reference.httpcore-4.4.9.jar=${{ github.workspace }}/.libs/httpcore-4.4.9.jar" >> build.properties
+          echo "file.reference.jakarta.servlet.jsp.jstl-3.0.0.jar=${{ github.workspace }}/.libs/jakarta.servlet.jsp.jstl-3.0.0.jar" >> build.properties
+          echo "file.reference.jakarta.servlet.jsp.jstl-api-3.0.2.jar=${{ github.workspace }}/.libs/jakarta.servlet.jsp.jstl-api-3.0.2.jar" >> build.properties
+          echo "file.reference.javaee-endorsed-api-7.0.jar=${{ github.workspace }}/.libs/javaee-endorsed-api-7.0.jar" >> build.properties
+          echo "file.reference.javax.mail.jar=${{ github.workspace }}/.libs/javax.mail.jar" >> build.properties
+          echo "file.reference.jbcrypt-0.4.jar=${{ github.workspace }}/.libs/jbcrypt-0.4.jar" >> build.properties
+          echo "file.reference.mysql-connector-j-9.3.0.jar=${{ github.workspace }}/.libs/mysql-connector-j-9.3.0.jar" >> build.properties
+
+      # SỬA LỖI: Build với file properties và cung cấp classpath cho CopyLibs
       - name: Build with Ant
-        run: ant -propertyfile ../build.properties dist
+        run: >
+          ant 
+          -propertyfile ../build.properties
+          -Dlibs.CopyLibs.classpath=${{ github.workspace }}/.libs/copylibstask.jar
+          dist
         working-directory: ./ISP490_SU25_G4
 
       - name: Upload artifact for deployment
