@@ -38,8 +38,8 @@ jobs:
           curl -L -o build/webapp/WEB-INF/lib/httpclient-4.5.5.jar https://repo1.maven.org/maven2/org/apache/httpcomponents/httpclient/4.5.5/httpclient-4.5.5.jar
           curl -L -o build/webapp/WEB-INF/lib/httpcore-4.4.9.jar https://repo1.maven.org/maven2/org/apache/httpcomponents/httpcore/4.4.9/httpcore-4.4.9.jar
           curl -L -o build/webapp/WEB-INF/lib/jakarta.servlet.jsp.jstl-3.0.0.jar https://repo1.maven.org/maven2/org/glassfish/web/jakarta.servlet.jsp.jstl/3.0.0/jakarta.servlet.jsp.jstl-3.0.0.jar
-          curl -L -o build/webapp/WEB-INF/lib/jakarta.servlet.jsp.jstl-api-3.0.2.jar https://repo1.maven.org/maven2/jakarta/servlet/jsp/jstl/jakarta.servlet.jsp.jstl-api/3.0.2.jar
-          # ĐÃ XÓA DÒNG TẢI THƯ VIỆN GÂY LỖI: javaee-endorsed-api-7.0.jar
+          # SỬA LỖI: Thay đổi phiên bản của thư viện JSTL API để đảm bảo tương thích và tránh lỗi tải file
+          curl -L -o build/webapp/WEB-INF/lib/jakarta.servlet.jsp.jstl-api-3.0.1.jar https://repo1.maven.org/maven2/jakarta/servlet/jsp/jstl/jakarta.servlet.jsp.jstl-api/3.0.1/jakarta.servlet.jsp.jstl-api-3.0.1.jar
           curl -L -o build/webapp/WEB-INF/lib/javax.mail.jar https://repo1.maven.org/maven2/com/sun/mail/javax.mail/1.6.2/javax.mail-1.6.2.jar
           curl -L -o build/webapp/WEB-INF/lib/jbcrypt-0.4.jar https://repo1.maven.org/maven2/org/mindrot/jbcrypt/0.4/jbcrypt-0.4.jar
           curl -L -o build/webapp/WEB-INF/lib/mysql-connector-j-9.3.0.jar https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/9.3.0/mysql-connector-j-9.3.0.jar
