@@ -51,4 +51,4 @@ jobs:
         with:
           app-name: 'dongphat-crm' # <-- Tên App Service của bạn
           package: '*.war'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_... }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
