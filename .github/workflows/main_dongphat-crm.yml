@@ -24,19 +24,43 @@ jobs:
       - name: Install Ant
         run: sudo apt-get update && sudo apt-get install -y ant
 
-      # Tải tất cả các thư viện cần thiết cho việc biên dịch
-      - name: Download Required Build Libraries
+      # SỬA LỖI: Tải tất cả các thư viện cần thiết cho dự án và quy trình build
+      - name: Prepare Build Environment
         run: |
           mkdir -p .libs
-          # Thư viện cho j2ee.platform.classpath
-          curl -L -o .libs/jakarta.servlet-api-6.0.0.jar https://repo1.maven.org/maven2/jakarta/servlet/jakarta.servlet-api/6.0.0/jakarta.servlet-api-6.0.0.jar
-          # Thư viện cho libs.CopyLibs.classpath
+          # Tải thư viện cho quá trình build
           curl -L -o .libs/copylibstask.jar https://repo1.maven.org/maven2/org/netbeans/api/org-netbeans-modules-java-j2seproject-copylibstask/RELEASE190/org-netbeans-modules-java-j2seproject-copylibstask-RELEASE190.jar
+          curl -L -o .libs/jakarta.servlet-api-6.0.0.jar https://repo1.maven.org/maven2/jakarta/servlet/jakarta.servlet-api/6.0.0/jakarta.servlet-api-6.0.0.jar
+          # Tải các thư viện của dự án
+          curl -L -o .libs/commons-logging-1.2.jar https://repo1.maven.org/maven2/commons-logging/commons-logging/1.2/commons-logging-1.2.jar
+          curl -L -o .libs/fluent-hc-4.5.5.jar https://repo1.maven.org/maven2/org/apache/httpcomponents/fluent-hc/4.5.5/fluent-hc-4.5.5.jar
+          curl -L -o .libs/gson-2.8.2.jar https://repo1.maven.org/maven2/com/google/code/gson/gson/2.8.2/gson-2.8.2.jar
+          curl -L -o .libs/httpclient-4.5.5.jar https://repo1.maven.org/maven2/org/apache/httpcomponents/httpclient/4.5.5/httpclient-4.5.5.jar
+          curl -L -o .libs/httpcore-4.4.9.jar https://repo1.maven.org/maven2/org/apache/httpcomponents/httpcore/4.4.9/httpcore-4.4.9.jar
+          curl -L -o .libs/jakarta.servlet.jsp.jstl-3.0.0.jar https://repo1.maven.org/maven2/org/glassfish/web/jakarta.servlet.jsp.jstl/3.0.0/jakarta.servlet.jsp.jstl-3.0.0.jar
+          curl -L -o .libs/jakarta.servlet.jsp.jstl-api-3.0.2.jar https://repo1.maven.org/maven2/jakarta/servlet/jsp/jstl/jakarta.servlet.jsp.jstl-api/3.0.2/jakarta.servlet.jsp.jstl-api-3.0.2.jar
+          curl -L -o .libs/javaee-endorsed-api-7.0.jar https://repo1.maven.org/maven2/org/glassfish/main/javaee-api/javaee-endorsed-api/7.0/javaee-endorsed-api-7.0.jar
+          curl -L -o .libs/javax.mail.jar https://repo1.maven.org/maven2/com/sun/mail/javax.mail/1.6.2/javax.mail-1.6.2.jar
+          curl -L -o .libs/jbcrypt-0.4.jar https://repo1.maven.org/maven2/org/mindrot/jbcrypt/0.4/jbcrypt-0.4.jar
+          curl -L -o .libs/mysql-connector-j-9.3.0.jar https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/9.3.0/mysql-connector-j-9.3.0.jar
+          # Tạo file properties để ghi đè đường dẫn local
+          echo "file.reference.commons-logging-1.2.jar=${{ github.workspace }}/.libs/commons-logging-1.2.jar" > build.properties
+          echo "file.reference.fluent-hc-4.5.5.jar=${{ github.workspace }}/.libs/fluent-hc-4.5.5.jar" >> build.properties
+          echo "file.reference.gson-2.8.2.jar=${{ github.workspace }}/.libs/gson-2.8.2.jar" >> build.properties
+          echo "file.reference.httpclient-4.5.5.jar=${{ github.workspace }}/.libs/httpclient-4.5.5.jar" >> build.properties
+          echo "file.reference.httpcore-4.4.9.jar=${{ github.workspace }}/.libs/httpcore-4.4.9.jar" >> build.properties
+          echo "file.reference.jakarta.servlet.jsp.jstl-3.0.0.jar=${{ github.workspace }}/.libs/jakarta.servlet.jsp.jstl-3.0.0.jar" >> build.properties
+          echo "file.reference.jakarta.servlet.jsp.jstl-api-3.0.2.jar=${{ github.workspace }}/.libs/jakarta.servlet.jsp.jstl-api-3.0.2.jar" >> build.properties
+          echo "file.reference.javaee-endorsed-api-7.0.jar=${{ github.workspace }}/.libs/javaee-endorsed-api-7.0.jar" >> build.properties
+          echo "file.reference.javax.mail.jar=${{ github.workspace }}/.libs/javax.mail.jar" >> build.properties
+          echo "file.reference.jbcrypt-0.4.jar=${{ github.workspace }}/.libs/jbcrypt-0.4.jar" >> build.properties
+          echo "file.reference.mysql-connector-j-9.3.0.jar=${{ github.workspace }}/.libs/mysql-connector-j-9.3.0.jar" >> build.properties
 
-      # SỬA LỖI: Cung cấp đường dẫn tuyệt đối cho các classpath
+      # SỬA LỖI: Sử dụng file properties vừa tạo để build
       - name: Build with Ant
         run: >
           ant 
+          -propertyfile ../build.properties
           -Dlibs.CopyLibs.classpath=${{ github.workspace }}/.libs/copylibstask.jar 
           -Dj2ee.platform.classpath=${{ github.workspace }}/.libs/jakarta.servlet-api-6.0.0.jar 
           dist
@@ -46,7 +70,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: java-webapp
-          # Cập nhật lại đường dẫn tới file .war
           path: '${{ github.workspace }}/ISP490_SU25_G4/dist/*.war'
 
   deploy:
