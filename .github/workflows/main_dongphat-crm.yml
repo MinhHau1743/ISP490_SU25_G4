@@ -21,8 +21,9 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Set up Ant
-        uses: s4u/setup-ant@v1 # <-- SỬA LỖI: Sử dụng một action cài đặt Ant khác
+      # SỬA LỖI: Cài đặt Ant trực tiếp bằng command line
+      - name: Install Ant
+        run: sudo apt-get update && sudo apt-get install -y ant
 
       - name: Build with Ant
         run: ant dist
