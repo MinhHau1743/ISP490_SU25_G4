@@ -21,18 +21,20 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      # SỬA LỖI: Cài đặt Ant trực tiếp bằng command line
       - name: Install Ant
         run: sudo apt-get update && sudo apt-get install -y ant
 
+      # SỬA LỖI: Chỉ định thư mục làm việc cho lệnh build
       - name: Build with Ant
         run: ant dist
+        working-directory: ./ISP490_SU25_G4
 
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
         with:
           name: java-webapp
-          path: '${{ github.workspace }}/dist/*.war'
+          # Cập nhật lại đường dẫn tới file .war
+          path: '${{ github.workspace }}/ISP490_SU25_G4/dist/*.war'
 
   deploy:
     runs-on: ubuntu-latest
