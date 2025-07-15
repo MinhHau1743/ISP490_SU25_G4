@@ -82,30 +82,16 @@ jobs:
     runs-on: ubuntu-latest
     # Phụ thuộc vào job `build`, chỉ chạy khi `build` thành công
     needs: build
-    # Cấu hình môi trường deploy (dùng cho GitHub Environments)
-    environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+    # ĐÃ XÓA KHỐI 'environment' ĐỂ TRÁNH XUNG ĐỘT
 
     steps:
-      # Bước 1: Checkout code để có thể truy cập file workflow
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      # Bước 2: Tải xuống artifact đã được build ở job trước
+      # Bước 1: Tải xuống artifact đã được build ở job trước
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: java-webapp
 
-      # Bước 3: In nội dung file workflow để chẩn đoán
-      - name: Display workflow file content for debugging
-        run: |
-          echo "--- Displaying .github/workflows/main_dongphat-crm.yml ---"
-          cat .github/workflows/main_dongphat-crm.yml
-          echo "--------------------------------------------------------"
-
-      # Bước 4: Deploy lên Azure Web App
+      # Bước 2: Deploy lên Azure Web App
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
