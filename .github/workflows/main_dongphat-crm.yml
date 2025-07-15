@@ -1,64 +1,54 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-name: Build and deploy WAR app to Azure Web App - dongphat-crm
+# GitHub Actions workflow
+name: Build and Deploy ISP490_SU25_G4 to Azure App Service
 
 on:
   push:
     branches:
-      - main
+      - main  # Chạy khi có push code lên nhánh main
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read #This is required for actions/checkout
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-      - name: Set up Java version
-        uses: actions/setup-java@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v1
         with:
           java-version: '21'
-          distribution: 'microsoft'
 
-      - name: Build with Maven
-        run: mvn clean install
+      - name: Set up Ant
+        uses: ant-actions/setup-ant@v2
 
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v4
+      - name: Build with Ant
+        run: ant dist
+
+      - name: Upload artifact for deployment
+        uses: actions/upload-artifact@v2
         with:
-          name: java-app
-          path: '${{ github.workspace }}/target/*.war'
+          name: java-webapp
+          path: '${{ github.workspace }}/dist/*.war'
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    
-    permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+    environment:
+      name: 'Production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
       - name: Download artifact from build job
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v2
         with:
-          name: java-app
-      
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_D1B152BF4C2C4ECD8326BB0C0272E1F7 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_4B70D2A4761543C6B9F669A10759706F }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_6EA310140AD240F5A4C7B14AF5741A58 }}
+          name: java-webapp
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
-        uses: azure/webapps-deploy@v3
+        uses: azure/webapps-deploy@v2
         with:
-          app-name: 'dongphat-crm'
-          slot-name: 'Production'
+          app-name: 'dongphat-crm' # <-- Tên App Service của bạn
           package: '*.war'
-          
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_... }}
