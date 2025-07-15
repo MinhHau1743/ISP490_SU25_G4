@@ -82,7 +82,6 @@ jobs:
     runs-on: ubuntu-latest
     # Phụ thuộc vào job `build`, chỉ chạy khi `build` thành công
     needs: build
-    # ĐÃ XÓA KHỐI 'environment' ĐỂ TRÁNH XUNG ĐỘT
 
     steps:
       # Bước 1: Tải xuống artifact đã được build ở job trước
@@ -96,9 +95,11 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          # Tên App Service phải khớp với "msdeploySite" trong publish profile
-          app-name: 'dongphat-crm'
+          # Sử dụng tên đầy đủ của App Service
+          app-name: 'dongphat-crm-gaaffxexandpcxd3'
           # Gói cần deploy, tìm file .war trong thư mục hiện tại
           package: '*.war'
           # Sử dụng publish profile đã lưu trong GitHub Secrets
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          # Thêm dòng này để tường minh ghi đè slot-name
+          slot-name: ''
