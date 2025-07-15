@@ -13,12 +13,13 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4 # <-- Đã nâng cấp lên v4
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v4 # <-- Đã nâng cấp lên v4
         with:
           java-version: '21'
+          distribution: 'temurin'
 
       - name: Set up Ant
         uses: ant-actions/setup-ant@v2
@@ -27,7 +28,7 @@ jobs:
         run: ant dist
 
       - name: Upload artifact for deployment
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4 # <-- Đã nâng cấp lên v4
         with:
           name: java-webapp
           path: '${{ github.workspace }}/dist/*.war'
@@ -41,14 +42,14 @@ jobs:
 
     steps:
       - name: Download artifact from build job
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4 # <-- Đã nâng cấp lên v4
         with:
           name: java-webapp
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
-        uses: azure/webapps-deploy@v2
+        uses: azure/webapps-deploy@v3 # <-- Đã nâng cấp lên v3
         with:
-          app-name: 'dongphat-crm' # <-- Tên App Service của bạn
+          app-name: 'dongphat-crm'
           package: '*.war'
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
