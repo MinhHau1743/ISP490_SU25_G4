@@ -151,9 +151,12 @@
                                                     <div class="card-info-row"><i data-feather="refresh-cw"></i><span>Cập nhật: ${p.updatedAt}</span></div>
                                                 </div>
                                                 <div class="card-footer">
-                                                    <div class="product-price-footer">
-                                                        <span><fmt:formatNumber value="${p.price}" type="currency" currencyCode="VND"/></span>
+                                                    <div class="product-price-footer price-ellipsis">
+                                                        <span>
+                                                            <fmt:formatNumber value="${p.price}" type="currency" currencyCode="VND" minFractionDigits="0" maxFractionDigits="0"/>
+                                                        </span>
                                                     </div>
+
                                                     <div class="action-buttons">
                                                         <a href="getProductById?id=${p.id}" title="Xem">
                                                             <i data-feather="eye" style="stroke: #17a2b8;"></i> <!-- màu xanh info -->
