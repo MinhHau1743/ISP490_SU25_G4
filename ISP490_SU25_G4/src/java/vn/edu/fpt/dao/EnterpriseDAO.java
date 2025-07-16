@@ -207,6 +207,9 @@ public class EnterpriseDAO extends DBContext {
                     enterprise.setAvatarUrl(rs.getString("avatar_url"));
                     enterprise.setCustomerTypeId(rs.getInt("customer_type_id"));
                     enterprise.setAddressId(rs.getInt("address_id"));
+                    
+                    enterprise.setBusinessEmail(rs.getString("business_email"));
+                    enterprise.setFax(rs.getString("fax"));
 
                     // Set joined fields
                     enterprise.setCustomerTypeName(rs.getString("customer_type_name"));
@@ -249,14 +252,16 @@ public class EnterpriseDAO extends DBContext {
     }
 
     public boolean updateEnterprise(Connection conn, Enterprise enterprise) throws SQLException {
-        String sql = "UPDATE Enterprises SET name = ?, tax_code = ?, bank_number = ?, customer_type_id = ?, avatar_url = ? WHERE id = ?";
+        String sql = "UPDATE Enterprises SET name = ?, business_email = ?, tax_code = ?, fax = ?, bank_number = ?, customer_type_id = ?, avatar_url = ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, enterprise.getName());
-            ps.setString(2, enterprise.getTaxCode());
-            ps.setString(3, enterprise.getBankNumber());
-            ps.setInt(4, enterprise.getCustomerTypeId());
-            ps.setString(5, enterprise.getAvatarUrl()); // Thêm avatar_url
-            ps.setInt(6, enterprise.getId());
+            ps.setString(2, enterprise.getBusinessEmail());
+            ps.setString(3, enterprise.getTaxCode());
+            ps.setString(4, enterprise.getFax());
+            ps.setString(5, enterprise.getBankNumber());
+            ps.setInt(6, enterprise.getCustomerTypeId());
+            ps.setString(7, enterprise.getAvatarUrl()); // Thêm avatar_url
+            ps.setInt(8, enterprise.getId());
             return ps.executeUpdate() > 0;
         }
     }
