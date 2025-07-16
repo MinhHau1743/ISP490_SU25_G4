@@ -24,22 +24,23 @@ import vn.edu.fpt.model.User;
 public class EnterpriseDAO extends DBContext {
 
     // Phương thức này nhận Connection để có thể tham gia vào transaction
-    public int insertEnterprise(Connection conn, String name, int customerTypeId, int addressId, String taxCode, String bankNumber, String avatarUrl) throws SQLException {
+    public int insertEnterprise(Connection conn, String name, String businessEmail, String hotline, int customerTypeId, int addressId, String taxCode, String bankNumber, String avatarUrl) throws SQLException {
         // Tạo mã khách hàng duy nhất, ví dụ: KH-timestamp
         String enterpriseCode = "KH-" + System.currentTimeMillis();
 
         // Theo DB schema, fax và bank_number là NOT NULL, ta sẽ để giá trị tạm thời
-        String sql = "INSERT INTO Enterprises (enterprise_code, name, fax, bank_number, tax_code, customer_type_id, address_id, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Enterprises (enterprise_code, name, business_email, fax, bank_number, tax_code, customer_type_id, address_id, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, enterpriseCode);
             ps.setString(2, name);
-            ps.setString(3, "N/A"); // Giá trị tạm
-            ps.setString(4, bankNumber);
-            ps.setString(5, taxCode);
-            ps.setInt(6, customerTypeId);
-            ps.setInt(7, addressId);
-            ps.setString(8, avatarUrl);
+            ps.setString(3, businessEmail);
+            ps.setString(4, hotline); // Giá trị tạm
+            ps.setString(5, bankNumber);
+            ps.setString(6, taxCode);
+            ps.setInt(7, customerTypeId);
+            ps.setInt(8, addressId);
+            ps.setString(9, avatarUrl);
             ps.executeUpdate();
 
             try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
