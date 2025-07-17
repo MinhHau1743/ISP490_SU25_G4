@@ -717,5 +717,71 @@ public class UserDAO {
     }
 }
 
+   /**
+     * Cập nhật thông tin của một nhân viên trong cơ sở dữ liệu.
+     * Phương thức này sử dụng SQL động để chỉ cập nhật trường avatar_url
+     * nếu một đường dẫn mới được cung cấp trong đối tượng User.
+     *
+     * @param user Đối tượng User chứa thông tin mới. ID của user phải được set.
+     * @return true nếu cập nhật thành công, false nếu thất bại.
+     */
+    public boolean updateEmployee(User user) {
+        // Xây dựng câu lệnh SQL động để không cập nhật avatar nếu không có file mới
+        StringBuilder sqlBuilder = new StringBuilder("UPDATE Users SET ");
+        sqlBuilder.append("last_name = ?, middle_name = ?, first_name = ?, phone_number = ?, ");
+        sqlBuilder.append("date_of_birth = ?, gender = ?, identity_card_number = ?, notes = ?, ");
+        sqlBuilder.append("position_id = ?, department_id = ?, updated_at = CURRENT_TIMESTAMP");
+
+        // Chỉ thêm phần cập nhật avatar nếu có URL mới và không rỗng
+        if (user.getAvatarUrl() != null && !user.getAvatarUrl().isEmpty()) {
+            sqlBuilder.append(", avatar_url = ?");
+        }
+        
+        // Mệnh đề WHERE là quan trọng nhất để cập nhật đúng người dùng
+        sqlBuilder.append(" WHERE id = ?");
+
+        String sql = sqlBuilder.toString();
+        System.out.println("Executing SQL: " + sql); // In ra để kiểm tra câu lệnh SQL
+
+        try (Connection conn = new DBContext().getConnection(); // Thay DBContext bằng lớp kết nối của bạn
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            int paramIndex = 1; // Biến đếm vị trí tham số '?'
+
+            // Set các tham số theo đúng thứ tự trong câu lệnh SQL
+            ps.setString(paramIndex++, user.getLastName());
+            ps.setString(paramIndex++, user.getMiddleName());
+            ps.setString(paramIndex++, user.getFirstName());
+            ps.setString(paramIndex++, user.getPhoneNumber());
+            
+            // Chuyển đổi từ java.time.LocalDate sang java.sql.Date
+            ps.setDate(paramIndex++, java.sql.Date.valueOf(user.getDateOfBirth()));
+            
+            ps.setString(paramIndex++, user.getGender());
+            ps.setString(paramIndex++, user.getIdentityCardNumber());
+            ps.setString(paramIndex++, user.getNotes());
+            ps.setInt(paramIndex++, user.getPositionId());
+            ps.setInt(paramIndex++, user.getDepartmentId());
+
+            // Set tham số cho avatar nếu có
+            if (user.getAvatarUrl() != null && !user.getAvatarUrl().isEmpty()) {
+                ps.setString(paramIndex++, user.getAvatarUrl());
+            }
+
+            // Set tham số cuối cùng cho ID trong mệnh đề WHERE
+            ps.setInt(paramIndex++, user.getId());
+
+            // Thực thi câu lệnh UPDATE và kiểm tra số dòng bị ảnh hưởng
+            int result = ps.executeUpdate();
+            
+            // Nếu result > 0, có nghĩa là có ít nhất 1 dòng đã được cập nhật thành công
+            return result > 0;
+
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi cập nhật nhân viên trong DAO: " + e.getMessage());
+            e.printStackTrace();
+            return false; // Trả về false nếu có lỗi xảy ra
+        }
+    }
 
 }
