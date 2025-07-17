@@ -207,9 +207,12 @@ public class EnterpriseDAO extends DBContext {
                     enterprise.setAvatarUrl(rs.getString("avatar_url"));
                     enterprise.setCustomerTypeId(rs.getInt("customer_type_id"));
                     enterprise.setAddressId(rs.getInt("address_id"));
-                    
+
                     enterprise.setBusinessEmail(rs.getString("business_email"));
                     enterprise.setFax(rs.getString("fax"));
+
+                    // === DÒNG QUAN TRỌNG BỊ THIẾU ===
+                    enterprise.setCreatedAt(rs.getTimestamp("created_at"));
 
                     // Set joined fields
                     enterprise.setCustomerTypeName(rs.getString("customer_type_name"));
@@ -303,12 +306,11 @@ public class EnterpriseDAO extends DBContext {
         }
         return suggestions;
     }
+
     public List<Enterprise> getAllActiveEnterprisesSimple() throws Exception {
         List<Enterprise> enterpriseList = new ArrayList<>();
         String sql = "SELECT id, name FROM Enterprises WHERE is_deleted = 0 ORDER BY name";
-        try (Connection conn = new DBContext().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 Enterprise enterprise = new Enterprise();
                 enterprise.setId(rs.getInt("id"));
@@ -318,5 +320,5 @@ public class EnterpriseDAO extends DBContext {
         }
         return enterpriseList;
     }
-    
+
 }

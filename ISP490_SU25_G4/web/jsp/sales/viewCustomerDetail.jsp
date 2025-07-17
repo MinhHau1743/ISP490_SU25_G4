@@ -119,7 +119,7 @@
                                             </div>
                                             <div class="info-item">
                                                 <span class="label">Ngày tham gia</span>
-                                                <span class="value"><fmt:formatDate value="${customer.createdAt.time}" pattern="dd/MM/yyyy"/></span>
+                                                <span class="value"><fmt:formatDate value="${customer.createdAt}" pattern="dd/MM/yyyy"/></span>
                                             </div>
                                         </div>
                                     </div>
