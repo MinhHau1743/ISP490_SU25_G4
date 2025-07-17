@@ -7,9 +7,9 @@ import java.sql.SQLException;
 public class DBContext {
 
     // Các thông số kết nối CSDL đã được cập nhật
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/datn";
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/isp490_su25_gr4";
     private static final String DB_USER_NAME = "root";
-    private static final String DB_PASSWORD = "1234";
+    private static final String DB_PASSWORD = "123456";
 
     /**
      * Phương thức static để lấy một kết nối mới tới CSDL.
