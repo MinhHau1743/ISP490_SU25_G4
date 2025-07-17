@@ -163,7 +163,7 @@
                                         <div class="form-group">
                                             <label for="joinDate">Ngày tham gia</label>
                                         <%-- Hiển thị ngày tham gia, không cho sửa --%>
-                                        <input type="date" id="joinDate" name="joinDate" class="form-control" value="<fmt:formatDate value='${customer.createdAt.time}' pattern='yyyy-MM-dd' />" readonly>
+                                        <span class="value"><fmt:formatDate value="${customer.createdAt}" pattern="dd/MM/yyyy"/></span>
                                     </div>
                                 </div>
                             </div>
