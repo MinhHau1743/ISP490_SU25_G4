@@ -6,6 +6,7 @@
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %> 
 <c:set var="currentPage" value="listEmployee" />
 
 <!DOCTYPE html>
@@ -34,7 +35,7 @@
                     <c:if test="${not empty employee}">
                         <%-- Container chính sử dụng Flexbox --%>
                         <div class="view-employee-page">
-                            
+
                             <%-- Panel bên trái cho ảnh đại diện --%>
                             <div class="avatar-panel">
                                 <div class="avatar-display-box">
@@ -45,7 +46,7 @@
                                     <img src="${pageContext.request.contextPath}${avatarUrl}" alt="Ảnh đại diện">
                                 </div>
                             </div>
-                            
+
                             <%-- Panel bên phải chứa các card thông tin --%>
                             <div class="info-panel">
                                 <div class="info-card">
@@ -55,6 +56,11 @@
                                         <div class="form-group"><label>Tên nhân viên</label><input type="text" value="${employee.lastName} ${employee.middleName} ${employee.firstName}" disabled></div>
                                         <div class="form-group"><label>Số điện thoại</label><input type="text" value="${employee.phoneNumber}" disabled></div>
                                         <div class="form-group"><label>Email</label><input type="text" value="${employee.email}" disabled></div>
+
+                                        <div class="form-group">
+                                            <label>Thời gian tạo</label>
+                                            <input type="text" value="<fmt:formatDate value="${employee.createdAt}" pattern="HH:mm:ss dd/MM/yyyy" />" disabled>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="info-card">
@@ -76,13 +82,13 @@
                             </div>
                         </div>
                     </c:if>
-                    
+
                     <c:if test="${empty employee}">
-                         <p>Không tìm thấy thông tin nhân viên.</p>
+                        <p>Không tìm thấy thông tin nhân viên.</p>
                     </c:if>
                 </section>
-                
-                 <footer class="page-actions-footer">
+
+                <footer class="page-actions-footer">
                     <button type="button" class="btn btn-secondary" onclick="window.history.back()">Đóng</button>
                     <a href="${pageContext.request.contextPath}/editEmployee?id=${employee.id}" class="btn btn-primary" role="button">Sửa thông tin</a>
                 </footer>
