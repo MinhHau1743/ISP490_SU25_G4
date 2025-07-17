@@ -58,6 +58,9 @@ public class TicketController extends HttpServlet {
                 case "getProducts":
                     getProducts(request, response);
                     break;
+                case "delete": // <-- THÊM CASE NÀY
+                    deleteTicket(request, response);
+                    break;
                 case "list":
                 default:
                     listTickets(request, response);
@@ -82,8 +85,33 @@ public class TicketController extends HttpServlet {
     }
 
     private void listTickets(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
-        List<TechnicalRequest> transactionList = dao.getAllTechnicalRequests();
+        // 1. Xác định trang hiện tại
+        int page = 1;
+        final int LIMIT = 12; // Số lượng thẻ mỗi trang
+        String pageStr = request.getParameter("page");
+        if (pageStr != null) {
+            try {
+                page = Integer.parseInt(pageStr);
+            } catch (NumberFormatException e) {
+                // Bỏ qua nếu tham số trang không hợp lệ, giữ nguyên page = 1
+            }
+        }
+
+        // 2. Tính toán tổng số trang
+        int totalItems = dao.getTotalTechnicalRequestCount();
+        int totalPages = (int) Math.ceil((double) totalItems / LIMIT);
+
+        // 3. Tính offset để truy vấn CSDL
+        int offset = (page - 1) * LIMIT;
+
+        // 4. Lấy danh sách giao dịch cho trang hiện tại
+        List<TechnicalRequest> transactionList = dao.getAllTechnicalRequests(LIMIT, offset);
+
+        // 5. Gửi dữ liệu phân trang sang JSP
         request.setAttribute("transactions", transactionList);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("currentPage", page);
+
         request.getRequestDispatcher("/jsp/customerSupport/listTransaction.jsp").forward(request, response);
     }
 
@@ -311,6 +339,19 @@ public class TicketController extends HttpServlet {
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write("{\"error\":\"Lỗi khi truy vấn danh sách sản phẩm.\"}");
+        }
+    }
+
+    private void deleteTicket(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            boolean success = dao.deleteTechnicalRequest(id);
+            // Chuyển hướng về trang danh sách với tham số báo kết quả
+            response.sendRedirect(request.getContextPath() + "/ticket?action=list&delete=" + (success ? "success" : "failed"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Nếu có lỗi, cũng chuyển hướng về trang danh sách với thông báo lỗi
+            response.sendRedirect(request.getContextPath() + "/ticket?action=list&error=deleteFailed");
         }
     }
 }
