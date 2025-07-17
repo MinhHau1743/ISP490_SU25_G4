@@ -24,22 +24,23 @@ import vn.edu.fpt.model.User;
 public class EnterpriseDAO extends DBContext {
 
     // Phương thức này nhận Connection để có thể tham gia vào transaction
-    public int insertEnterprise(Connection conn, String name, int customerTypeId, int addressId, String taxCode, String bankNumber, String avatarUrl) throws SQLException {
+    public int insertEnterprise(Connection conn, String name, String businessEmail, String hotline, int customerTypeId, int addressId, String taxCode, String bankNumber, String avatarUrl) throws SQLException {
         // Tạo mã khách hàng duy nhất, ví dụ: KH-timestamp
         String enterpriseCode = "KH-" + System.currentTimeMillis();
 
         // Theo DB schema, fax và bank_number là NOT NULL, ta sẽ để giá trị tạm thời
-        String sql = "INSERT INTO Enterprises (enterprise_code, name, fax, bank_number, tax_code, customer_type_id, address_id, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Enterprises (enterprise_code, name, business_email, fax, bank_number, tax_code, customer_type_id, address_id, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, enterpriseCode);
             ps.setString(2, name);
-            ps.setString(3, "N/A"); // Giá trị tạm
-            ps.setString(4, bankNumber);
-            ps.setString(5, taxCode);
-            ps.setInt(6, customerTypeId);
-            ps.setInt(7, addressId);
-            ps.setString(8, avatarUrl);
+            ps.setString(3, businessEmail);
+            ps.setString(4, hotline); // Giá trị tạm
+            ps.setString(5, bankNumber);
+            ps.setString(6, taxCode);
+            ps.setInt(7, customerTypeId);
+            ps.setInt(8, addressId);
+            ps.setString(9, avatarUrl);
             ps.executeUpdate();
 
             try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
@@ -206,6 +207,9 @@ public class EnterpriseDAO extends DBContext {
                     enterprise.setAvatarUrl(rs.getString("avatar_url"));
                     enterprise.setCustomerTypeId(rs.getInt("customer_type_id"));
                     enterprise.setAddressId(rs.getInt("address_id"));
+                    
+                    enterprise.setBusinessEmail(rs.getString("business_email"));
+                    enterprise.setFax(rs.getString("fax"));
 
                     // Set joined fields
                     enterprise.setCustomerTypeName(rs.getString("customer_type_name"));
@@ -248,14 +252,16 @@ public class EnterpriseDAO extends DBContext {
     }
 
     public boolean updateEnterprise(Connection conn, Enterprise enterprise) throws SQLException {
-        String sql = "UPDATE Enterprises SET name = ?, tax_code = ?, bank_number = ?, customer_type_id = ?, avatar_url = ? WHERE id = ?";
+        String sql = "UPDATE Enterprises SET name = ?, business_email = ?, tax_code = ?, fax = ?, bank_number = ?, customer_type_id = ?, avatar_url = ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, enterprise.getName());
-            ps.setString(2, enterprise.getTaxCode());
-            ps.setString(3, enterprise.getBankNumber());
-            ps.setInt(4, enterprise.getCustomerTypeId());
-            ps.setString(5, enterprise.getAvatarUrl()); // Thêm avatar_url
-            ps.setInt(6, enterprise.getId());
+            ps.setString(2, enterprise.getBusinessEmail());
+            ps.setString(3, enterprise.getTaxCode());
+            ps.setString(4, enterprise.getFax());
+            ps.setString(5, enterprise.getBankNumber());
+            ps.setInt(6, enterprise.getCustomerTypeId());
+            ps.setString(7, enterprise.getAvatarUrl()); // Thêm avatar_url
+            ps.setInt(8, enterprise.getId());
             return ps.executeUpdate() > 0;
         }
     }

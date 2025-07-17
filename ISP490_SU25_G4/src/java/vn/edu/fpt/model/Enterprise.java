@@ -18,6 +18,7 @@ public class Enterprise {
     private String enterpriseCode;
     private String name;
     private String taxCode;
+    private String businessEmail;
     private String fax;
     private String bankNumber;
 
@@ -53,10 +54,11 @@ public class Enterprise {
         this.contacts = new ArrayList<>();
     }
 
-    public Enterprise(int id, String enterpriseCode, String name, String taxCode, String fax, String bankNumber, int industryId, int customerTypeId, int areaId, int addressId, String avatarUrl, boolean isDeleted, Timestamp createdAt, Timestamp updatedAt) {
+    public Enterprise(int id, String enterpriseCode, String name, String businessEmail, String taxCode, String fax, String bankNumber, int industryId, int customerTypeId, int areaId, int addressId, String avatarUrl, boolean isDeleted, Timestamp createdAt, Timestamp updatedAt) {
         this.id = id;
         this.enterpriseCode = enterpriseCode;
         this.name = name;
+        this.businessEmail = businessEmail;
         this.taxCode = taxCode;
         this.fax = fax;
         this.bankNumber = bankNumber;
@@ -69,6 +71,17 @@ public class Enterprise {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
+    
+    
+
+    public String getBusinessEmail() {
+        return businessEmail;
+    }
+
+    public void setBusinessEmail(String businessEmail) {
+        this.businessEmail = businessEmail;
+    }
+    
 
     public int getProvinceId() {
         return provinceId;

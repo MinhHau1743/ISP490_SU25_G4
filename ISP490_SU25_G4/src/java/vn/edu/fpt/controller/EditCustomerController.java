@@ -101,14 +101,16 @@ public class EditCustomerController extends HttpServlet {
             }
 
             // 2. Get all form data
-            String customerName = request.getParameter("name");
+            String customerName = request.getParameter("customerName");
+            String hotline = request.getParameter("hotline");
+            String businessEmail = request.getParameter("businessEmail");
             String taxCode = request.getParameter("taxCode");
             String bankNumber = request.getParameter("bankNumber");
             String fullName = request.getParameter("fullName");
             String position = request.getParameter("position");
             String phone = request.getParameter("phone");
             String email = request.getParameter("email");
-            int customerTypeId = Integer.parseInt(request.getParameter("customerTypeId"));
+            int customerGroupId = Integer.parseInt(request.getParameter("customerGroup"));
             int employeeId = Integer.parseInt(request.getParameter("employeeId"));
 
             String streetAddress = request.getParameter("streetAddress");
@@ -125,9 +127,11 @@ public class EditCustomerController extends HttpServlet {
             Enterprise enterpriseToUpdate = new Enterprise();
             enterpriseToUpdate.setId(enterpriseId);
             enterpriseToUpdate.setName(customerName);
+            enterpriseToUpdate.setBusinessEmail(businessEmail);
+            enterpriseToUpdate.setFax(hotline);
             enterpriseToUpdate.setTaxCode(taxCode);
             enterpriseToUpdate.setBankNumber(bankNumber);
-            enterpriseToUpdate.setCustomerTypeId(customerTypeId);
+            enterpriseToUpdate.setCustomerTypeId(customerGroupId);
             enterpriseToUpdate.setAvatarUrl(avatarDbPath); // Gán đường dẫn ảnh mới (hoặc cũ)
 
             new EnterpriseDAO().updateEnterprise(conn, enterpriseToUpdate);
