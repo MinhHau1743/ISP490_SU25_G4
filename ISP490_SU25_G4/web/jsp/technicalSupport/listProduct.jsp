@@ -128,7 +128,6 @@
                             </div>
                         </form>
 
-
                         <div class="product-grid">
                             <div class="view-mode-container">
                                 <!-- Dạng lưới -->
@@ -149,6 +148,8 @@
                                                     <div class="card-info-row"><i data-feather="align-left"></i><span>Mô tả: ${p.description}</span></div>
                                                     <div class="card-info-row"><i data-feather="calendar"></i><span>Ngày tạo: ${p.createdAt}</span></div>
                                                     <div class="card-info-row"><i data-feather="refresh-cw"></i><span>Cập nhật: ${p.updatedAt}</span></div>
+                                                    <div class="card-info-row"><i data-feather="user-plus"></i><span>Người tạo: ${p.created_by}</span></div>
+                                                    <div class="card-info-row"><i data-feather="edit"></i><span>Người cập nhật: ${p.updated_by}</span></div>
                                                 </div>
                                                 <div class="card-footer">
                                                     <div class="product-price-footer price-ellipsis">
@@ -158,16 +159,17 @@
                                                     </div>
 
                                                     <div class="action-buttons">
-                                                        <a href="getProductById?id=${p.id}" title="Xem">
-                                                            <i data-feather="eye" style="stroke: #17a2b8;"></i> <!-- màu xanh info -->
+                                                        <a href="getProductById?id=${p.id}" title="Xem chi tiết" class="action-view">
+                                                            <i data-feather="eye" style="stroke: #17a2b8;"></i>
                                                         </a>
-                                                        <a href="editProduct?id=${p.id}" title="Sửa">
-                                                            <i data-feather="edit-2" style="stroke: #ffc107;"></i> <!-- màu vàng warning -->
+                                                        <a href="editProduct?id=${p.id}" title="Chỉnh sửa" class="action-edit">
+                                                            <i data-feather="edit-2" style="stroke: #ffc107;"></i>
                                                         </a>
-                                                        <a href="deleteProduct" class="delete-trigger-btn" data-id="${p.id}" data-name="${p.name}" title="Xóa">
-                                                            <i data-feather="trash-2" style="stroke: #dc3545;"></i> <!-- màu đỏ danger -->
+                                                        <a href="deleteProduct" data-id="${p.id}" data-name="${p.name}" title="Xóa" class="action-delete delete-trigger-btn">
+                                                            <i data-feather="trash-2" style="stroke: #dc3545;"></i>
                                                         </a>
                                                     </div>
+
                                                 </div>
                                             </div>
                                         </div>
@@ -189,6 +191,8 @@
                                                 <th>Giá</th>
                                                 <th>Ngày tạo</th>
                                                 <th>Cập nhật</th>
+                                                <th>Người tạo</th>
+                                                <th>Người cập nhật</th>
                                                 <th>Hành động</th>
                                             </tr>
                                         </thead>
@@ -202,6 +206,8 @@
                                                     <td><fmt:formatNumber value="${p.price}" type="currency" currencyCode="VND"/></td>
                                                     <td>${p.createdAt}</td>
                                                     <td>${p.updatedAt}</td>
+                                                    <td>${p.updated_by}</td>
+                                                    <td>${p.updated_by}</td>
                                                     <td class="text-center">
                                                         <div class="btn-group" role="group" aria-label="Hành động sản phẩm">
                                                             <!-- Xem -->
