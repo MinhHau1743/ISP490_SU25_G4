@@ -5,13 +5,13 @@
 package vn.edu.fpt.controller;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 import java.io.File;
 import java.nio.file.Files;
@@ -21,7 +21,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import vn.edu.fpt.dao.ProductCategoriesDAO;
 import vn.edu.fpt.dao.ProductDAO;
 import vn.edu.fpt.model.Product;
@@ -49,6 +48,7 @@ public class ProductCreateServlet extends HttpServlet {
             throws ServletException, IOException {
         try {
             ProductDAO dao = new ProductDAO();
+            HttpSession session = request.getSession();
             List<String> errors = new ArrayList<>();
             String name = request.getParameter("name");
             String productCode = request.getParameter("productCode");
@@ -57,7 +57,7 @@ public class ProductCreateServlet extends HttpServlet {
             String description = request.getParameter("description");
             String categoryIdRaw = request.getParameter("categoryId");
             Part filePart = request.getPart("image");
-
+            String userName = (String) session.getAttribute("userName");
             double price = 0;
             int categoryId = 0;
 
@@ -126,7 +126,7 @@ public class ProductCreateServlet extends HttpServlet {
             p.setIsDeleted(false);
             p.setCreatedAt(createdAt);
             p.setUpdatedAt(null);
-
+            p.setCreated_by(userName);
             int newId = dao.insertProduct(p);
 
             // ==== XỬ LÝ ẢNH ====

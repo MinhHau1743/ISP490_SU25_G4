@@ -26,20 +26,21 @@ public class ProductDAO extends DBContext {
         String query = "UPDATE Products SET "
                 + "name = ?, "
                 + "product_code = ?, "
-                + "image = ?, " // Thêm dòng này
+                + "image = ?, "
                 + "origin = ?, "
                 + "price = ?, "
                 + "description = ?, "
                 + "category_id = ?, "
                 + "is_deleted = ?, "
                 + "created_at = ?, "
-                + "updated_at = ? "
+                + "updated_at = ?, "
+                + "updated_by = ? "
                 + "WHERE id = ?";
         try {
             PreparedStatement st = conn.prepareStatement(query);
             st.setString(1, p.getName());
             st.setString(2, p.getProductCode());
-            st.setString(3, p.getImage());        // Thêm dòng này
+            st.setString(3, p.getImage());
             st.setString(4, p.getOrigin());
             st.setDouble(5, p.getPrice());
             st.setString(6, p.getDescription());
@@ -47,7 +48,8 @@ public class ProductDAO extends DBContext {
             st.setBoolean(8, p.isIsDeleted());
             st.setString(9, p.getCreatedAt());
             st.setString(10, p.getUpdatedAt());
-            st.setInt(11, p.getId());
+            st.setString(11, p.getUpdated_by());
+            st.setInt(12, p.getId()); // Giá trị cuối cùng là id WHERE
             int rows = st.executeUpdate();
             return rows > 0;
         } catch (SQLException e) {
@@ -117,8 +119,8 @@ public class ProductDAO extends DBContext {
 
     public int insertProduct(Product p) {
         String sql = "INSERT INTO Products "
-                + "(name, category_id, product_code, image, origin, price, description, is_deleted, created_at, updated_at) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "(name, category_id, product_code, image, origin, price, description, is_deleted, created_at, updated_at, created_by) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try {
             PreparedStatement st = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
             st.setString(1, p.getName());
@@ -131,12 +133,12 @@ public class ProductDAO extends DBContext {
             st.setBoolean(8, p.isIsDeleted());
             st.setString(9, p.getCreatedAt());
             st.setString(10, p.getUpdatedAt());
+            st.setString(11, p.getCreated_by());
 
             int rows = st.executeUpdate();
             if (rows == 0) {
                 throw new SQLException("Creating product failed, no rows affected.");
             }
-
             try (ResultSet generatedKeys = st.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     return generatedKeys.getInt(1);
@@ -147,7 +149,6 @@ public class ProductDAO extends DBContext {
         } catch (SQLException e) {
             System.out.println("Lỗi khi truy vấn dữ liệu: " + e.getMessage());
         }
-        // Trả về -1 nếu thất bại
         return -1;
     }
 
@@ -310,6 +311,8 @@ public class ProductDAO extends DBContext {
                 p.setIsDeleted(rs.getBoolean("is_deleted"));
                 p.setCreatedAt(rs.getString("created_at"));
                 p.setUpdatedAt(rs.getString("updated_at"));
+                p.setCreated_by(rs.getString("created_by"));
+                p.setUpdated_by(rs.getString("updated_by"));
                 products.add(p);
             }
         } catch (SQLException e) {
