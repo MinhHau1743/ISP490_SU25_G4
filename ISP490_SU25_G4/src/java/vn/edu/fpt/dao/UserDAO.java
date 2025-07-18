@@ -73,11 +73,11 @@ public class UserDAO {
                 if (rs.next()) {
                     System.out.println("DAO: Tim thay user '" + email + "' trong CSDL.");
 
-                    if (!"active".equalsIgnoreCase(rs.getString("status")) || rs.getBoolean("is_deleted")) {
-                        System.err.println("DAO: User bi khoa hoac da xoa.");
-                        return null; // Không cho đăng nhập nếu tài khoản không hoạt động
+                    // Kiểm tra xem tài khoản có bị xóa không
+                    if (rs.getInt("is_deleted") == 1) {
+                        System.err.println("DAO: Tài khoản này đã ngừng hoạt động hoặc đã bị xóa.");
+                        return null; // Không cho đăng nhập
                     }
-
                     String hashedPassword = rs.getString("password_hash");
                     System.out.println("DAO: Kiem tra mat khau...");
 
@@ -100,7 +100,7 @@ public class UserDAO {
                         user.setGender(rs.getString("gender"));
                         user.setIdentityCardNumber(rs.getString("identity_card_number"));
                         user.setNotes(rs.getString("notes"));
-                        user.setStatus(rs.getString("status"));
+                        user.setIsDeleted(rs.getInt("is_deleted"));
                         user.setCreatedAt(rs.getTimestamp("created_at"));
                         user.setUpdatedAt(rs.getTimestamp("updated_at"));
 
@@ -371,7 +371,7 @@ public class UserDAO {
         String query = "SELECT "
                 + "u.id, u.email, u.last_name, u.middle_name, u.first_name, "
                 + "u.avatar_url, u.employee_code, u.phone_number, u.date_of_birth, u.gender, "
-                + "u.identity_card_number, u.notes, u.status, u.created_at, u.updated_at, u.department_id, "
+                + "u.identity_card_number, u.notes, u.created_at, u.updated_at, u.department_id, "
                 + "p.name AS position_name, "
                 + "d.name AS department_name, "
                 + "r.name AS role_name, "
@@ -417,7 +417,7 @@ public class UserDAO {
                 user.setGender(rs.getString("gender"));
                 user.setIdentityCardNumber(rs.getString("identity_card_number"));
                 user.setNotes(rs.getString("notes"));
-                user.setStatus(rs.getString("status"));
+                
                 user.setCreatedAt(rs.getTimestamp("created_at"));
                 user.setUpdatedAt(rs.getTimestamp("updated_at"));
 
@@ -566,7 +566,8 @@ public class UserDAO {
                 user.setAvatarUrl(rs.getString("avatar_url"));
                 user.setEmployeeCode(rs.getString("employee_code"));
                 user.setPhoneNumber(rs.getString("phone_number"));
-                user.setStatus(rs.getString("status"));
+                
+                user.setIsDeleted(rs.getInt("is_deleted"));
 
                 // Gán các trường lấy từ bảng JOIN
                 user.setRoleName(rs.getString("role_name"));
@@ -630,7 +631,6 @@ public class UserDAO {
         }
     }
 
-
     public boolean setRequireChangePasswordByEmail(String email) {
         String sql = "UPDATE Users SET require_change_password = 0 WHERE email = ?";
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -682,45 +682,44 @@ public class UserDAO {
     }
 
     public boolean updateEmployee(User user, int departmentId, int positionId) {
-    // Câu lệnh UPDATE chỉ cập nhật những trường cho phép sửa
-    String sql = "UPDATE users SET " +
-                 "last_name = ?, middle_name = ?, first_name = ?, phone_number = ?, email = ?, " +
-                 "department_id = ?, position_id = ?, notes = ?, identity_card_number = ?, " +
-                 "date_of_birth = ?, gender = ?, updated_at = CURRENT_TIMESTAMP " +
-                 "WHERE id = ?";
-                 
-    try (Connection conn = DBContext.getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql)) {
+        // Câu lệnh UPDATE chỉ cập nhật những trường cho phép sửa
+        String sql = "UPDATE users SET "
+                + "last_name = ?, middle_name = ?, first_name = ?, phone_number = ?, email = ?, "
+                + "department_id = ?, position_id = ?, notes = ?, identity_card_number = ?, "
+                + "date_of_birth = ?, gender = ?, updated_at = CURRENT_TIMESTAMP "
+                + "WHERE id = ?";
 
-        // Giả sử bạn đã có logic tách fullName thành last/middle/first
-        ps.setString(1, user.getLastName());
-        ps.setString(2, user.getMiddleName());
-        ps.setString(3, user.getFirstName());
-        ps.setString(4, user.getPhoneNumber());
-        ps.setString(5, user.getEmail());
-        ps.setInt(6, departmentId);
-        ps.setInt(7, positionId);
-        ps.setString(8, user.getNotes());
-        ps.setString(9, user.getIdentityCardNumber());
-        ps.setDate(10, java.sql.Date.valueOf(user.getDateOfBirth()));
-        ps.setString(11, user.getGender());
-        
-        // ID cho điều kiện WHERE
-        ps.setInt(12, user.getId());
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
-        int rowsAffected = ps.executeUpdate();
-        return rowsAffected > 0;
+            // Giả sử bạn đã có logic tách fullName thành last/middle/first
+            ps.setString(1, user.getLastName());
+            ps.setString(2, user.getMiddleName());
+            ps.setString(3, user.getFirstName());
+            ps.setString(4, user.getPhoneNumber());
+            ps.setString(5, user.getEmail());
+            ps.setInt(6, departmentId);
+            ps.setInt(7, positionId);
+            ps.setString(8, user.getNotes());
+            ps.setString(9, user.getIdentityCardNumber());
+            ps.setDate(10, java.sql.Date.valueOf(user.getDateOfBirth()));
+            ps.setString(11, user.getGender());
 
-    } catch (Exception e) {
-        e.printStackTrace();
-        return false;
+            // ID cho điều kiện WHERE
+            ps.setInt(12, user.getId());
+
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
-}
 
-   /**
-     * Cập nhật thông tin của một nhân viên trong cơ sở dữ liệu.
-     * Phương thức này sử dụng SQL động để chỉ cập nhật trường avatar_url
-     * nếu một đường dẫn mới được cung cấp trong đối tượng User.
+    /**
+     * Cập nhật thông tin của một nhân viên trong cơ sở dữ liệu. Phương thức này
+     * sử dụng SQL động để chỉ cập nhật trường avatar_url nếu một đường dẫn mới
+     * được cung cấp trong đối tượng User.
      *
      * @param user Đối tượng User chứa thông tin mới. ID của user phải được set.
      * @return true nếu cập nhật thành công, false nếu thất bại.
@@ -736,7 +735,7 @@ public class UserDAO {
         if (user.getAvatarUrl() != null && !user.getAvatarUrl().isEmpty()) {
             sqlBuilder.append(", avatar_url = ?");
         }
-        
+
         // Mệnh đề WHERE là quan trọng nhất để cập nhật đúng người dùng
         sqlBuilder.append(" WHERE id = ?");
 
@@ -744,7 +743,7 @@ public class UserDAO {
         System.out.println("Executing SQL: " + sql); // In ra để kiểm tra câu lệnh SQL
 
         try (Connection conn = new DBContext().getConnection(); // Thay DBContext bằng lớp kết nối của bạn
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
 
             int paramIndex = 1; // Biến đếm vị trí tham số '?'
 
@@ -753,10 +752,10 @@ public class UserDAO {
             ps.setString(paramIndex++, user.getMiddleName());
             ps.setString(paramIndex++, user.getFirstName());
             ps.setString(paramIndex++, user.getPhoneNumber());
-            
+
             // Chuyển đổi từ java.time.LocalDate sang java.sql.Date
             ps.setDate(paramIndex++, java.sql.Date.valueOf(user.getDateOfBirth()));
-            
+
             ps.setString(paramIndex++, user.getGender());
             ps.setString(paramIndex++, user.getIdentityCardNumber());
             ps.setString(paramIndex++, user.getNotes());
@@ -773,7 +772,7 @@ public class UserDAO {
 
             // Thực thi câu lệnh UPDATE và kiểm tra số dòng bị ảnh hưởng
             int result = ps.executeUpdate();
-            
+
             // Nếu result > 0, có nghĩa là có ít nhất 1 dòng đã được cập nhật thành công
             return result > 0;
 
