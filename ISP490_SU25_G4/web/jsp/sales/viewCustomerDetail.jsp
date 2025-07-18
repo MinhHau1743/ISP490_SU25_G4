@@ -102,6 +102,41 @@
                                             <div class="info-item"><span class="label"><i data-feather="mail"></i>Email</span><span class="value"><a href="mailto:<c:out value='${primaryContact.email}'/>"><c:out value="${not empty primaryContact.email ? primaryContact.email : 'N/A'}"/></a></span></div>
                                         </div>
                                     </div>
+
+                                    <div class="detail-card">
+                                        <h3 class="card-title">Hợp đồng đã ký kết</h3>
+                                        <div class="card-body" style="padding: 0;">
+                                            <table class="contract-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Mã Hợp đồng</th>
+                                                        <th>Tên Hợp đồng</th>
+                                                        <th>Ngày ký</th>
+                                                        <th>Giá trị</th>
+                                                        <th>Trạng thái</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td><a href="#" class="contract-code">HD-2024-150</a></td>
+                                                        <td>Hợp đồng bảo trì hệ thống điều hòa 2024-2025</td>
+                                                        <td>15/01/2024</td>
+                                                        <td><fmt:formatNumber value="120000000" type="currency" currencyCode="VND"/></td>
+                                                        <td><span class="status-pill status-active">Còn hiệu lực</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><a href="#" class="contract-code">HD-2023-088</a></td>
+                                                        <td>Hợp đồng cung cấp vật tư 2023</td>
+                                                        <td>20/07/2023</td>
+                                                        <td><fmt:formatNumber value="85000000" type="currency" currencyCode="VND"/></td>
+                                                        <td><span class="status-pill status-expired">Đã hết hạn</span></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+
                                 </div>
 
                                 <div class="sidebar-column">
@@ -122,6 +157,23 @@
                                                 <span class="value"><fmt:formatDate value="${customer.createdAt}" pattern="dd/MM/yyyy"/></span>
                                             </div>
                                         </div>
+                                    </div>      
+                                    <div class="detail-card">
+                                        <h3 class="card-title">Giao dịch gần đây</h3>
+                                        <ul class="transaction-history-list">
+                                            <li class="transaction-item">
+                                                <div class="transaction-info"><a href="#" class="code">GD-2025-028</a><p class="type">Hỗ trợ sự cố</p></div>
+                                                <span class="status-pill status-processing">Đang xử lý</span>
+                                            </li>
+                                            <li class="transaction-item">
+                                                <div class="transaction-info"><a href="#" class="code">GD-2025-015</a><p class="type">Lắp đặt mới</p></div>
+                                                <span class="status-pill status-completed">Hoàn thành</span>
+                                            </li>
+                                            <li class="transaction-item">
+                                                <div class="transaction-info"><a href="#" class="code">GD-2025-001</a><p class="type">Sửa chữa định kỳ</p></div>
+                                                <span class="status-pill status-completed">Hoàn thành</span>
+                                            </li>
+                                        </ul>
                                     </div>
                                 </div>
                             </div>
