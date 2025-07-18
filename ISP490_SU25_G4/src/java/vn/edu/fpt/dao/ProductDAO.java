@@ -48,7 +48,7 @@ public class ProductDAO extends DBContext {
             st.setBoolean(8, p.isIsDeleted());
             st.setString(9, p.getCreatedAt());
             st.setString(10, p.getUpdatedAt());
-            st.setString(11, p.getUpdated_by());
+            st.setString(11, p.getUpdatedBy());
             st.setInt(12, p.getId()); // Giá trị cuối cùng là id WHERE
             int rows = st.executeUpdate();
             return rows > 0;
@@ -77,6 +77,8 @@ public class ProductDAO extends DBContext {
                 p.setIsDeleted(rs.getBoolean("is_deleted"));
                 p.setCreatedAt(rs.getString("created_at"));
                 p.setUpdatedAt(rs.getString("updated_at"));
+                p.setCreatedBy(rs.getString("Created_by"));
+                p.setUpdatedBy(rs.getString("updated_by"));
                 return p;
             }
         } catch (SQLException e) {
@@ -133,7 +135,7 @@ public class ProductDAO extends DBContext {
             st.setBoolean(8, p.isIsDeleted());
             st.setString(9, p.getCreatedAt());
             st.setString(10, p.getUpdatedAt());
-            st.setString(11, p.getCreated_by());
+            st.setString(11, p.getCreatedBy());
 
             int rows = st.executeUpdate();
             if (rows == 0) {
@@ -311,8 +313,8 @@ public class ProductDAO extends DBContext {
                 p.setIsDeleted(rs.getBoolean("is_deleted"));
                 p.setCreatedAt(rs.getString("created_at"));
                 p.setUpdatedAt(rs.getString("updated_at"));
-                p.setCreated_by(rs.getString("created_by"));
-                p.setUpdated_by(rs.getString("updated_by"));
+                p.setCreatedBy(rs.getString("created_by"));
+                p.setUpdatedBy(rs.getString("updated_by"));
                 products.add(p);
             }
         } catch (SQLException e) {

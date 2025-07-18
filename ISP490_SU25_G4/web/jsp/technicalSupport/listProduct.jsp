@@ -148,8 +148,8 @@
                                                     <div class="card-info-row"><i data-feather="align-left"></i><span>Mô tả: ${p.description}</span></div>
                                                     <div class="card-info-row"><i data-feather="calendar"></i><span>Ngày tạo: ${p.createdAt}</span></div>
                                                     <div class="card-info-row"><i data-feather="refresh-cw"></i><span>Cập nhật: ${p.updatedAt}</span></div>
-                                                    <div class="card-info-row"><i data-feather="user-plus"></i><span>Người tạo: ${p.created_by}</span></div>
-                                                    <div class="card-info-row"><i data-feather="edit"></i><span>Người cập nhật: ${p.updated_by}</span></div>
+                                                    <div class="card-info-row"><i data-feather="user-plus"></i><span>Người tạo: ${p.createdBy}</span></div>
+                                                    <div class="card-info-row"><i data-feather="edit"></i><span>Người cập nhật: ${p.updatedBy}</span></div>
                                                 </div>
                                                 <div class="card-footer">
                                                     <div class="product-price-footer price-ellipsis">
@@ -206,8 +206,8 @@
                                                     <td><fmt:formatNumber value="${p.price}" type="currency" currencyCode="VND"/></td>
                                                     <td>${p.createdAt}</td>
                                                     <td>${p.updatedAt}</td>
-                                                    <td>${p.updated_by}</td>
-                                                    <td>${p.updated_by}</td>
+                                                    <td>${p.updatedBy}</td>
+                                                    <td>${p.updatedBy}</td>
                                                     <td class="text-center">
                                                         <div class="btn-group" role="group" aria-label="Hành động sản phẩm">
                                                             <!-- Xem -->

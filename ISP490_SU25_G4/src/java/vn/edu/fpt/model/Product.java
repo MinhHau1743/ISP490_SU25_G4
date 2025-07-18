@@ -20,13 +20,13 @@ public class Product {
     private boolean isDeleted;
     private String createdAt;
     private String updatedAt;
-    private String created_by;
-    private String updated_by;
+    private String createdBy;
+    private String updatedBy;
     
     public Product() {
     }
 
-    public Product(int id, String name, String productCode, String image, String origin, double price, String description, int categoryId, boolean isDeleted, String createdAt, String updatedAt, String created_by, String updated_by) {
+    public Product(int id, String name, String productCode, String image, String origin, double price, String description, int categoryId, boolean isDeleted, String createdAt, String updatedAt, String createdBy, String updatedBy) {
         this.id = id;
         this.name = name;
         this.productCode = productCode;
@@ -38,8 +38,8 @@ public class Product {
         this.isDeleted = isDeleted;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-        this.created_by = created_by;
-        this.updated_by = updated_by;
+        this.createdBy = createdBy;
+        this.updatedBy = updatedBy;
     }
 
     
@@ -132,20 +132,20 @@ public class Product {
         this.updatedAt = updatedAt;
     }
 
-    public String getCreated_by() {
-        return created_by;
+    public String getCreatedBy() {
+        return createdBy;
     }
 
-    public void setCreated_by(String created_by) {
-        this.created_by = created_by;
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
     }
 
-    public String getUpdated_by() {
-        return updated_by;
+    public String getUpdatedBy() {
+        return updatedBy;
     }
 
-    public void setUpdated_by(String updated_by) {
-        this.updated_by = updated_by;
+    public void setUpdatedBy(String updatedBy) {
+        this.updatedBy = updatedBy;
     }
    
 }

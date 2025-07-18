@@ -198,7 +198,7 @@ public class ProductEditController extends HttpServlet {
             p.setIsDeleted(isDeleted);
             p.setCreatedAt(createdAt);
             p.setUpdatedAt(LocalDateTime.now().format(dtf));
-            p.setUpdated_by(userName);
+            p.setUpdatedBy(userName);
             boolean success = dao.editProduct(p);
 
             if (success && !filesToDelete.isEmpty()) {

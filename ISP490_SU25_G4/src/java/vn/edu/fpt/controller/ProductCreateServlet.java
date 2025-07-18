@@ -126,7 +126,7 @@ public class ProductCreateServlet extends HttpServlet {
             p.setIsDeleted(false);
             p.setCreatedAt(createdAt);
             p.setUpdatedAt(null);
-            p.setCreated_by(userName);
+            p.setCreatedBy(userName);
             int newId = dao.insertProduct(p);
 
             // ==== XỬ LÝ ẢNH ====
