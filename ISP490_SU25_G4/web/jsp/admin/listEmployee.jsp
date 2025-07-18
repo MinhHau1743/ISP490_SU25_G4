@@ -27,7 +27,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pagination.css">
-  
+
     </head>
     <body>
         <div class="app-container">
@@ -61,6 +61,7 @@
                                     <th class="col-phone">Số điện thoại</th>
                                     <th class="col-department">Phòng ban</th>
                                     <th class="col-position">Chức vụ</th>
+                                    <th class="col-status">Trạng thái</th>
                                     <th class="col-actions">Hành động</th>
                                 </tr>
                             </thead>
@@ -73,23 +74,35 @@
                                         <td>${employee.phoneNumber}</td>
                                         <td>${not empty employee.departmentName ? employee.departmentName : 'N/A'}</td>
                                         <td>${not empty employee.positionName ? employee.positionName : 'N/A'}</td>
-                                        <td class="col-actions">
-                                            <div class="action-buttons">
-                                                <a href="${pageContext.request.contextPath}/viewEmployee?id=${employee.id}" title="Xem chi tiết">
-                                                    <i data-feather="eye"></i>
-                                                </a>
-                                                <a href="${pageContext.request.contextPath}/editEmployee?id=${employee.id}" title="Sửa">
-                                                    <i data-feather="edit-2"></i>
-                                                </a>
-                                                <a href="${pageContext.request.contextPath}/deleteEmployee?id=${employee.id}" title="Xóa" 
-                                                   onclick="return confirm('Xóa nhân viên ${employee.lastName} ${employee.firstName}?');">
-                                                    <i data-feather="trash-2"></i>
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
 
-                                </c:forEach>
+                                <div class="status-container" style="margin-top: 8px; margin-bottom: 8px;">
+                                    <c:choose>
+                                        <c:when test="${employee.isDeleted == 0}">
+                                            <span class="status-badge status--active">Hoạt động</span>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <span class="status-badge status--inactive">Ngừng hoạt động</span>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </div>
+                                <td class="col-actions">
+                                    <div class="action-buttons">
+
+                                        <a href="${pageContext.request.contextPath}/viewEmployee?id=${employee.id}" title="Xem chi tiết">
+                                            <i data-feather="eye"></i>
+                                        </a>
+                                        <a href="${pageContext.request.contextPath}/editEmployee?id=${employee.id}" title="Sửa">
+                                            <i data-feather="edit-2"></i>
+                                        </a>
+                                        <a href="${pageContext.request.contextPath}/deleteEmployee?id=${employee.id}" title="Xóa" 
+                                           onclick="return confirm('Xóa nhân viên ${employee.lastName} ${employee.firstName}?');">
+                                            <i data-feather="trash-2"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                                </tr>
+
+                            </c:forEach>
                             </tbody>
                         </table>
                     </div>
