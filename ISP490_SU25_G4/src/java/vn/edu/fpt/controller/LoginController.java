@@ -94,7 +94,7 @@ public class LoginController extends HttpServlet {
             }
             // Lưu vai trò vào session để các trang khác và Filter sử dụng
             session.setAttribute("userRole", roleName);
-
+            session.setAttribute("userName", user.getFullName());
             int num = user.isRequireChangePassword();  // Giả sử phương thức này trả về int (0/1); nếu là boolean, thay bằng if (user.isRequireChangePassword())
             if (num == 1) {
                 // Nếu là lần đầu đăng nhập, chuyển đến trang đổi mật khẩu
