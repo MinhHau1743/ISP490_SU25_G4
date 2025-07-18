@@ -43,7 +43,7 @@
                     <div class="table-toolbar">
                         <div class="search-bar">
                             <i data-feather="search"></i>
-                            <input type="text" placeholder="Tìm kiếm nhân viên...">
+                            <input type="text" placeholder="Tìm kiếm theo tên nhân viên...">
                         </div>
                         <a href="${pageContext.request.contextPath}/addEmployee" class="btn btn-primary">
                             <i data-feather="plus"></i>
@@ -75,34 +75,33 @@
                                         <td>${not empty employee.departmentName ? employee.departmentName : 'N/A'}</td>
                                         <td>${not empty employee.positionName ? employee.positionName : 'N/A'}</td>
 
-                                <div class="status-container" style="margin-top: 8px; margin-bottom: 8px;">
-                                    <c:choose>
-                                        <c:when test="${employee.isDeleted == 0}">
-                                            <span class="status-badge status--active">Hoạt động</span>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <span class="status-badge status--inactive">Ngừng hoạt động</span>
-                                        </c:otherwise>
-                                    </c:choose>
-                                </div>
-                                <td class="col-actions">
-                                    <div class="action-buttons">
+                                        <td class="col-status">
+                                            <c:choose>
+                                                <c:when test="${employee.isDeleted == 0}">
+                                                    <span class="status-badge status--active">Hoạt động</span>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <span class="status-badge status--inactive">Ngừng hoạt động</span>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </td>
+                                        <td class="col-actions">
+                                            <div class="action-buttons">
+                                                <a href="${pageContext.request.contextPath}/viewEmployee?id=${employee.id}" title="Xem chi tiết">
+                                                    <i data-feather="eye"></i>
+                                                </a>
+                                                <a href="${pageContext.request.contextPath}/editEmployee?id=${employee.id}" title="Sửa">
+                                                    <i data-feather="edit-2"></i>
+                                                </a>
+                                                <a href="${pageContext.request.contextPath}/deleteEmployee?id=${employee.id}" title="Xóa"
+                                                   onclick="return confirm('Xóa nhân viên ${employee.lastName} ${employee.firstName}?');">
+                                                    <i data-feather="trash-2"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
 
-                                        <a href="${pageContext.request.contextPath}/viewEmployee?id=${employee.id}" title="Xem chi tiết">
-                                            <i data-feather="eye"></i>
-                                        </a>
-                                        <a href="${pageContext.request.contextPath}/editEmployee?id=${employee.id}" title="Sửa">
-                                            <i data-feather="edit-2"></i>
-                                        </a>
-                                        <a href="${pageContext.request.contextPath}/deleteEmployee?id=${employee.id}" title="Xóa" 
-                                           onclick="return confirm('Xóa nhân viên ${employee.lastName} ${employee.firstName}?');">
-                                            <i data-feather="trash-2"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                                </tr>
-
-                            </c:forEach>
+                                </c:forEach>
                             </tbody>
                         </table>
                     </div>
