@@ -52,15 +52,14 @@ public class TicketController extends HttpServlet {
                 case "edit":
                     showEditForm(request, response);
                     break;
-                case "getContracts":
-                    getContracts(request, response);
-                    break;
+
                 case "getProducts":
                     getProducts(request, response);
                     break;
                 case "delete": // <-- THÊM CASE NÀY
                     deleteTicket(request, response);
                     break;
+
                 case "list":
                 default:
                     listTickets(request, response);
@@ -111,6 +110,7 @@ public class TicketController extends HttpServlet {
         request.setAttribute("transactions", transactionList);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("currentPage", page);
+        request.setAttribute("activeMenu", "ticket");
 
         request.getRequestDispatcher("/jsp/customerSupport/listTransaction.jsp").forward(request, response);
     }
@@ -119,6 +119,9 @@ public class TicketController extends HttpServlet {
         request.setAttribute("customerList", dao.getAllEnterprises());
         request.setAttribute("employeeList", dao.getAllTechnicians());
         request.setAttribute("serviceList", dao.getAllServices());
+        request.setAttribute("contractList", dao.getAllActiveContracts()); // <--- THÊM DÒNG NÀY
+
+        request.setAttribute("activeMenu", "createTicket");
         request.getRequestDispatcher("/jsp/customerSupport/createTicket.jsp").forward(request, response);
     }
 
