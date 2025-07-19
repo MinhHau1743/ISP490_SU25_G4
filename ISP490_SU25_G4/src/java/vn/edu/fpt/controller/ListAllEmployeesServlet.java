@@ -24,13 +24,13 @@ public class ListAllEmployeesServlet extends HttpServlet {
 
         UserDAO userDAO = new UserDAO();
 
-        // Giữ nguyên tên phương thức gốc của bạn
+        // Giữ nguyên tên phương thức gốc
         List<User> allEmployeesList = userDAO.getAllEmployeesRole();
 
         // Đặt danh sách vào request với tên là "employeeList" để JSP sử dụng
         request.setAttribute("employeeList", allEmployeesList);
 
-        // Giữ nguyên đường dẫn file JSP của bạn
+        // Giữ nguyên đường dẫn file JSP 
         request.getRequestDispatcher("/jsp/admin/listAllEmployees.jsp").forward(request, response);
     }
 }

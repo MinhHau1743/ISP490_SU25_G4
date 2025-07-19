@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.mail.MessagingException;
 import vn.edu.fpt.common.EmailService;
 import vn.edu.fpt.common.EmailSender;
 import vn.edu.fpt.common.GmailSender;
@@ -149,9 +150,13 @@ public class AddEmployeeServlet extends HttpServlet {
                         + "</ul>"
                         + "<p>Vui lòng đổi mật khẩu sau khi đăng nhập.</p>";
 
-                emailService.sendEmailAsync(newUser.getEmail(), subject, message);
+                try {
+                    emailService.sendEmail(newUser.getEmail(), subject, message);
+                } catch (MessagingException ex) {
+                    Logger.getLogger(AddEmployeeServlet.class.getName()).log(Level.SEVERE, null, ex);
+                }
 
-                response.sendRedirect(request.getContextPath() + "/admin/employees/list?add=success");
+                response.sendRedirect("listEmployee");
             } else {
                 try {
                     throw new Exception("Lỗi khi thực hiện thêm nhân viên.");
