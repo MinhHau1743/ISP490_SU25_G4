@@ -54,7 +54,7 @@
                 <header class="page-header">
                     <div class="title-section">
                         <h1 class="title">Danh sách Hợp đồng</h1>
-                        <div class="breadcrumb">Hợp đồng<span>/</span><span>Danh sách</span></div>
+                        
                     </div>
                     <div class="header-actions">
                         <button class="notification-btn"><i data-feather="bell"></i></button>

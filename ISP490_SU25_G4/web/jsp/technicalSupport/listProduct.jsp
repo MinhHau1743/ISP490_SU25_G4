@@ -36,7 +36,7 @@
                 <header class="page-header mb-4">
                     <div class="title-section">
                         <div class="title">Danh sách Sản phẩm</div>
-                        <div class="breadcrumb">Sản phẩm / <span>Danh sách</span></div>
+                        
 
                     </div>
                     <button class="notification-btn"><i data-feather="bell"></i><span class="notification-badge"></span></button>
