@@ -417,7 +417,7 @@ public class UserDAO {
                 user.setGender(rs.getString("gender"));
                 user.setIdentityCardNumber(rs.getString("identity_card_number"));
                 user.setNotes(rs.getString("notes"));
-                
+
                 user.setCreatedAt(rs.getTimestamp("created_at"));
                 user.setUpdatedAt(rs.getTimestamp("updated_at"));
 
@@ -566,7 +566,7 @@ public class UserDAO {
                 user.setAvatarUrl(rs.getString("avatar_url"));
                 user.setEmployeeCode(rs.getString("employee_code"));
                 user.setPhoneNumber(rs.getString("phone_number"));
-                
+
                 user.setIsDeleted(rs.getInt("is_deleted"));
 
                 // Gán các trường lấy từ bảng JOIN
@@ -590,25 +590,24 @@ public class UserDAO {
         // Tạo mã nhân viên duy nhất
         String employeeCode = "NV" + System.currentTimeMillis() % 100000;
 
-        String sql = "INSERT INTO users (last_name, middle_name, first_name, email, password_hash, "
-                + "phone_number, avatar_url, employee_code, date_of_birth, gender, "
-                + "identity_card_number, notes, status, department_id, position_id, role_id, "
-                + "created_at, updated_at, is_deleted) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)";
+        String sql = "INSERT INTO users (email, password_hash, last_name, middle_name, first_name, "
+                + "avatar_url, employee_code, phone_number, date_of_birth, gender, "
+                + "identity_card_number, notes, address_id, position_id, department_id, role_id, "
+                + "is_deleted, created_at, updated_at, require_change_password) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)";
 
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, user.getLastName());
-            ps.setString(2, user.getMiddleName());
-            ps.setString(3, user.getFirstName());
-            ps.setString(4, user.getEmail());
-            ps.setString(5, hashedPassword);
-            ps.setString(6, user.getPhoneNumber());
-            ps.setString(7, user.getAvatarUrl());
-            ps.setString(8, employeeCode);
+            ps.setString(1, user.getEmail());
+            ps.setString(2, hashedPassword);
+            ps.setString(3, user.getLastName());
+            ps.setString(4, user.getMiddleName());
+            ps.setString(5, user.getFirstName());
+            ps.setString(6, user.getAvatarUrl());
+            ps.setString(7, employeeCode);
+            ps.setString(8, user.getPhoneNumber());
 
-            // Ngày sinh có thể null
             if (user.getDateOfBirth() != null) {
-                ps.setString(9, user.getDateOfBirth().toString());
+                ps.setDate(9, java.sql.Date.valueOf(user.getDateOfBirth()));
             } else {
                 ps.setNull(9, java.sql.Types.DATE);
             }
@@ -617,9 +616,16 @@ public class UserDAO {
             ps.setString(11, user.getIdentityCardNumber());
             ps.setString(12, user.getNotes());
 
-            ps.setInt(13, departmentId);
+            // Address ID có thể null
+            if (user.getAddressId() > 0) {
+                ps.setInt(13, user.getAddressId());
+            } else {
+                ps.setNull(13, java.sql.Types.INTEGER);
+            }
+
             ps.setInt(14, positionId);
-            ps.setInt(15, roleId);
+            ps.setInt(15, departmentId);
+            ps.setInt(16, roleId);
 
             int rowsAffected = ps.executeUpdate();
             return rowsAffected > 0;
