@@ -59,7 +59,7 @@
                 </a>
                 <ul class="sub-menu">
                     <li><a href="${pageContext.request.contextPath}/ticket" class="${currentPage == 'ticket' ? 'active' : ''}">Danh sách Phiếu</a></li>
-                    <li><a href="${pageContext.request.contextPath}/createTicket" class="${currentPage == 'createTicket' ? 'active' : ''}">Tạo Phiếu mới</a></li>
+                    <li><a href="${pageContext.request.contextPath}/ticket?action=create" class="${currentPage == 'createTicket' ? 'active' : ''}">Tạo Phiếu mới</a></li>
                 </ul>
             </li>
 
