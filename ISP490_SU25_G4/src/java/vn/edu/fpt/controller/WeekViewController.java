@@ -28,11 +28,27 @@ public class WeekViewController extends HttpServlet {
         }
 
         List<String> days = Arrays.asList("sun", "mon", "tue", "wed", "thu", "fri", "sat");
-        List<String> dayHeaders = Arrays.asList("SUN 13/07", "MON 14/07", "TUE 15/07", "WED 16/07", "THU 17/07", "FRI 18/07", "SAT 19/07");
+
+        LocalDate today = LocalDate.now();
+        int daysFromSunday = today.getDayOfWeek().getValue() % 7;
+        LocalDate sunday = today.minusDays(daysFromSunday);
+        if (today.getDayOfWeek() == DayOfWeek.SUNDAY) {
+            sunday = sunday.minusWeeks(1);
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM");
+        List<String> dayHeaders = new ArrayList<>();
+        for (int i = 0; i < 7; i++) {
+            LocalDate day = sunday.plusDays(i);
+            String dayOfWeek = day.getDayOfWeek().toString().substring(0, 3);
+            String formattedDate = day.format(formatter);
+            dayHeaders.add(dayOfWeek + " " + formattedDate);
+        }
 
         request.setAttribute("hours", hours);
         request.setAttribute("days", days);
         request.setAttribute("dayHeaders", dayHeaders);
+        request.setAttribute("today", today); // Có thể truyền sang JSP để highlight ngày hiện tại
         request.getRequestDispatcher("/jsp/customerSupport/listSchedule.jsp").forward(request, response);
     }
 
