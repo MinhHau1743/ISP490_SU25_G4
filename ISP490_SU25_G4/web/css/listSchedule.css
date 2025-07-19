@@ -1,0 +1,402 @@
+/*
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
+*/
+/* 
+    Created on : Jul 16, 2025, 10:51:49 PM
+    Author     : NGUYEN MINH
+*/
+html, body {
+    height: 100%;
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+}
+.content-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    overflow: hidden;
+}
+.main-content-body {
+    position: relative;
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 24px 32px;
+}
+
+/* ======================================================== */
+/* 1. CSS CHUNG & TOOLBAR                                   */
+/* ======================================================== */
+.calendar-toolbar {
+    display: flex;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+.calendar-toolbar .title {
+    font-size: 22px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+    margin-right: 20px;
+}
+.view-toggle {
+    display: flex;
+    background-color: #f0f0f0;
+    border-radius: 8px;
+    padding: 4px;
+}
+.view-toggle .btn-toggle {
+    padding: 8px 16px;
+    border: none;
+    background-color: transparent;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    color: #555;
+    transition: all 0.2s ease-in-out;
+}
+.view-toggle .btn-toggle.active {
+    background-color: #fff;
+    color: #8B4513;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.week-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 4px;
+}
+.week-nav .date-range {
+    font-weight: 500;
+    padding: 0 12px;
+    font-size: 14px;
+    color: #333;
+}
+.week-nav .btn-nav {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background-color: transparent;
+    cursor: pointer;
+}
+.week-nav .btn-nav:hover {
+    background-color: #f0f0f0;
+}
+.toolbar-spacer {
+    flex-grow: 1;
+}
+.btn-primary {
+    background-color: #8B4513;
+    color: white;
+    border: 1px solid #8B4513;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    font-weight: 500;
+}
+.btn-primary:hover {
+    background-color: #6a360f;
+}
+.calendar-view {
+    display: none;
+}
+.calendar-view.active {
+    display: block;
+}
+
+/* ======================================================== */
+/* 2. CSS CHO LỊCH THEO TUẦN (WEEK VIEW)                    */
+/* ======================================================== */
+#week-view .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 12px;
+    height: calc(100vh - 230px);
+}
+#week-view .calendar-day {
+    background-color: #fdfdfd;
+    border: 1px solid #f0f0f0;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+#week-view .day-header {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid #f0f0f0;
+    background-color: #f9f9f9;
+}
+#week-view .day-header h3 {
+    margin: 0 0 4px 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+#week-view .day-header p {
+    margin: 0;
+    font-size: 12px;
+    color: #777;
+}
+#week-view .day-body {
+    padding: 12px;
+    flex-grow: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.maintenance-card {
+    background-color: white;
+    border-radius: 6px;
+    padding: 12px;
+    border-left: 5px solid #ccc;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    position: relative;
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+}
+.maintenance-card:hover {
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.card-content .title {
+    font-weight: 600;
+    font-size: 14px;
+    margin: 0 0 6px 0;
+    color: #333;
+}
+.card-content .info {
+    font-size: 12px;
+    color: #666;
+    margin: 3px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.maintenance-card.status-upcoming {
+    border-color: #ffa000;
+}
+.maintenance-card.status-inprogress {
+    border-color: #1565c0;
+}
+.maintenance-card.status-completed {
+    border-color: #2e7d32;
+}
+.maintenance-card.status-cancelled {
+    border-color: #9E9E9E;
+}
+.card-actions {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 6px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.maintenance-card:hover .card-actions {
+    opacity: 1;
+}
+.card-actions a {
+    color: #555;
+    background-color: rgba(245, 245, 245, 0.9);
+    padding: 5px;
+    border-radius: 50%;
+    display: flex;
+    border: 1px solid #eee;
+    cursor: pointer;
+}
+.card-actions .feather {
+    width: 14px;
+    height: 14px;
+}
+
+/* ======================================================== */
+/* 3. CSS CHO LỊCH THEO THÁNG (MONTH VIEW)                  */
+/* ======================================================== */
+#month-view .month-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    border-left: 1px solid #e5e5e5;
+    border-top: 1px solid #e5e5e5;
+}
+#month-view .month-grid-header {
+    padding: 10px 8px;
+    font-weight: 600;
+    font-size: 13px;
+    text-align: center;
+    background-color: #f9f9f9;
+    border-right: 1px solid #e5e5e5;
+    border-bottom: 1px solid #e5e5e5;
+}
+#month-view .month-day {
+    border-right: 1px solid #e5e5e5;
+    border-bottom: 1px solid #e5e5e5;
+    min-height: 120px;
+    padding: 8px;
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+#month-view .month-day.other-month {
+    background-color: #fafafa;
+    color: #aaa;
+}
+#month-view .day-number {
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+#month-view .tasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+#month-view .task-item {
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.task-item.status-upcoming {
+    background-color: #fff3e0;
+    color: #e65100;
+}
+.task-item.status-inprogress {
+    background-color: #e3f2fd;
+    color: #0d47a1;
+}
+.task-item.status-completed {
+    background-color: #e8f5e9;
+    color: #1b5e20;
+}
+
+/* ======================================================== */
+/* 4. CSS CHO POPOVER & MODAL XÓA                          */
+/* ======================================================== */
+#month-task-popover {
+    display: none;
+    position: absolute;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1010;
+    padding: 6px;
+    width: 180px;
+}
+.popover-action {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    text-decoration: none;
+    color: #333;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+.popover-action:hover {
+    background-color: #f5f5f5;
+}
+.popover-action.delete {
+    color: #c81e1e;
+}
+.popover-action.delete:hover {
+    background-color: #fbebeb;
+}
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+.modal-content {
+    background-color: white;
+    border-radius: 12px;
+    width: 420px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    overflow: hidden;
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid #eee;
+}
+.modal-header h3 {
+    font-size: 18px;
+    margin: 0;
+}
+.modal-close-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    color: #888;
+}
+.modal-body {
+    padding: 32px 24px;
+    text-align: center;
+}
+.modal-body .warning-icon {
+    color: #f59e0b;
+    margin-bottom: 16px;
+}
+.modal-body p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.6;
+    color: #444;
+}
+.modal-footer {
+    display: flex;
+    gap: 12px;
+    padding: 16px 24px;
+    background-color: #f9fafb;
+}
+.modal-footer .btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    font-size: 14px;
+}
+.modal-footer .btn-cancel {
+    background-color: #fff;
+}
+.modal-footer .btn-cancel:hover {
+    background-color: #f5f5f5;
+}
+.modal-footer .btn-confirm-delete {
+    background-color: #ef4444;
+    color: white;
+    border-color: #ef4444;
+}
+.modal-footer .btn-confirm-delete:hover {
+    background-color: #dc2626;
+}

@@ -960,3 +960,13 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     align-items: center;
     justify-content: center;
 }
+.price-ellipsis {
+    max-width: 140px;      /* hoặc giá trị phù hợp theo giao diện của bạn */
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: clip;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+

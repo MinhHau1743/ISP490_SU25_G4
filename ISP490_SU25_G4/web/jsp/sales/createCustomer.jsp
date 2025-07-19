@@ -119,14 +119,16 @@
                                 </div>
                             </div>
 
+                            <%-- ======================================================= --%>
+                            <%-- BẮT ĐẦU KHỐI CODE MỚI THAY THẾ --%>
+                            <%-- ======================================================= --%>
+
                             <div class="detail-card">
-                                <h3 class="card-title">Thông tin liên hệ</h3>
+                                <h3 class="card-title">Thông tin doanh nghiệp</h3>
                                 <div class="card-body">
                                     <div class="info-grid">
-                                        <div class="form-group"><label for="fullName">Người đại diện (*)</label><input type="text" id="fullName" name="fullName" class="form-control" required></div>
-                                        <div class="form-group"><label for="position">Chức vụ (*)</label><input type="text" id="position" name="position" class="form-control" required></div>
-                                        <div class="form-group"><label for="phone">Số điện thoại (*)</label><input type="tel" id="phone" name="phone" class="form-control" required></div>
-                                        <div class="form-group"><label for="email">Email</label><input type="email" id="email" name="email" class="form-control"></div>
+                                        <div class="form-group"><label for="hotline">Fax/Hotline</label><input type="tel" id="hotline" name="hotline" class="form-control"></div>
+                                        <div class="form-group"><label for="businessEmail">Email doanh nghiệp</label><input type="email" id="businessEmail" name="businessEmail" class="form-control"></div>
                                         <div class="form-group"><label for="taxCode">Mã số thuế</label><input type="text" id="taxCode" name="taxCode" class="form-control"></div>
                                         <div class="form-group"><label for="bankNumber">Số tài khoản ngân hàng</label><input type="text" id="bankNumber" name="bankNumber" class="form-control"></div>
                                     </div>
@@ -162,6 +164,22 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="detail-card">
+                                <h3 class="card-title">Thông tin người đại diện</h3>
+                                <div class="card-body">
+                                    <div class="info-grid">
+                                        <div class="form-group"><label for="fullName">Họ và tên (*)</label><input type="text" id="fullName" name="fullName" class="form-control" required></div>
+                                        <div class="form-group"><label for="position">Chức vụ (*)</label><input type="text" id="position" name="position" class="form-control" required></div>
+                                        <div class="form-group"><label for="phone">Số điện thoại (*)</label><input type="tel" id="phone" name="phone" class="form-control" required></div>
+                                        <div class="form-group"><label for="email">Email</label><input type="email" id="email" name="email" class="form-control"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <%-- ======================================================= --%>
+                            <%-- KẾT THÚC KHỐI CODE MỚI THAY THẾ --%>
+                            <%-- ======================================================= --%>
                         </div>
 
                         <div class="sidebar-column">

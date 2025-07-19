@@ -49,8 +49,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         gridViewBtn.addEventListener("click", () => setActiveButton("grid"));
         tableViewBtn.addEventListener("click", () => setActiveButton("table"));
-
-        const savedView = localStorage.getItem("productViewMode") || "table";
+//  Đặt mặc định là "grid"
+        const savedView = localStorage.getItem("productViewMode") || "grid";
         setActiveButton(savedView);
     }
 
