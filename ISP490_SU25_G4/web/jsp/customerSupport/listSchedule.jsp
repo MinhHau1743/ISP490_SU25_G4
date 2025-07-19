@@ -18,10 +18,21 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pagination.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/listSchedule.css">
         <style>
+            .time-slot {
+                min-height: 60px; /* Giữ min height gốc để slot không nhỏ hơn */
+                height: auto; /* Cho phép giãn theo content */
+                border-bottom: 1px solid #eee;
+                border-left: 1px solid #eee;
+                position: relative; /* Giữ để event có thể position nếu cần */
+                display: flex; /* Flex để stack events vertically */
+                flex-direction: column; /* Stack dọc */
+                padding: 5px; /* Thêm padding để event không sát biên */
+            }
             .time-grid {
                 display: grid;
                 border-top: 1px solid #ddd;
                 position: relative;
+                grid-auto-flow: dense;
             }
             #day-view .time-grid {
                 grid-template-columns: auto 1fr;
@@ -40,38 +51,49 @@
                 border-bottom: 1px solid #eee;
             }
             .time-slot {
-                height: 60px;
+                min-height: 60px; /* Minimum for empty slots */
+                height: auto; /* Allow expansion for multiple events */
                 border-bottom: 1px solid #eee;
                 border-left: 1px solid #eee;
                 position: relative;
+                display: flex;
+                flex-direction: column;
+                padding: 5px;
             }
             .all-day-slot {
-                height: 40px;
+                min-height: 40px;
                 background: #f9f9f9;
                 border-bottom: 1px solid #ddd;
                 position: relative;
                 border-left: 1px solid #eee;
+                flex-direction: column;
+                display: flex;
+                padding: 5px;  /* Padding để tránh sát biên */
+                height: auto;
             }
             .event {
-                position: absolute;
-                left: 5px;
-                right: 5px;
+                position: relative;
+                left: 0;  /* Remove unnecessary left/right offsets */
+                right: 0;
                 background: teal;
                 color: white;
                 padding: 5px;
                 border-radius: 4px;
                 font-size: 14px;
                 cursor: pointer;
-                top: 5px;
-                height: 50px;
+                top: 0; /* Remove top:5px shift to avoid unnecessary offsets in stacks */
+                height: auto; /* Allow event height to fit content naturally */
+                margin-bottom: 5px;
+                margin: 5px 5px 5px 5px;
+                width: calc(100% - 10px);
             }
             .event.all-day {
-                grid-row: 1; /* hàng đầu tiên */
-                grid-column: 2 / span 7; /* span toàn bộ các cột ngày */
                 position: relative;
                 height: auto;
                 top: 0;
-                grid-column: auto;
+                margin: 5px 0;  /* Tăng margin dọc để tách events khi stack */
+                width: 100%;  /* Full width trong slot */
+                box-sizing: border-box;  /* Bao gồm padding trong width */
             }
             .event-time {
                 font-weight: bold;
@@ -104,12 +126,17 @@
                 overflow-y: auto;
             }
             .event-details {
+                display: none;
                 width: 350px;
                 border-left: 1px solid #ddd;
                 padding: 20px;
                 background: #fff;
-                display: none;
                 box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+                position: sticky;     /* GIỮ CỐ ĐỊNH */
+                top: 0;                /* Cố định từ top 0 */
+                align-self: flex-start; /* Chặn bị stretch khi dùng flex */
+                height: fit-content;
+                z-index: 10;
             }
             .event-details.show {
                 display: block;
@@ -182,6 +209,9 @@
                 background: purple;
                 margin-right: 10px;
             }
+            .event:last-child {
+                margin-bottom: 0; /* Không margin cho event cuối */
+            }
             .maintenance-card, .task-item {
                 cursor: pointer;
             }
@@ -200,8 +230,207 @@
             #week-view .time-grid {
                 display: grid;
                 grid-template-columns: auto repeat(7, 1fr); /* auto: label | 7 days */
+                grid-auto-rows: minmax(60px, auto);
             }
-
+            .time-slot {
+                min-height: 60px; 
+                height: auto; 
+                border-bottom: 1px solid #eee;
+                border-left: 1px solid #eee;
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                padding: 5px;
+                }
+                .time-grid {
+                display: grid;
+                border-top: 1px solid #ddd;
+                position: relative;
+                grid-auto-flow: dense;
+                }
+                #day-view .time-grid {
+                grid-template-columns: auto 1fr;
+                }
+                #week-view .time-grid {
+                grid-template-columns: auto repeat(7, 1fr);
+                grid-auto-rows: minmax(60px, auto);
+                }
+                .time-label {
+                text-align: right;
+                padding-right: 10px;
+                color: #666;
+                font-size: 12px;
+                height: 60px;
+                line-height: 60px;
+                border-bottom: 1px solid #eee;
+                }
+                
+            .all-day-event-container {
+                grid-row: 1;
+                grid-column: 2 / -1;
+                display: flex;
+                flex-direction: column;
+                min-height: 40px;
+                height: auto;
+                padding: 5px;
+                background: #f9f9f9;
+                z-index: 1;
+                position: relative;
+                border-bottom: 1px solid #ddd;
+            }
+            .event {
+                position: relative;
+                left: 0;
+                right: 0;
+                background: teal;
+                color: white;
+                padding: 5px;
+                border-radius: 4px;
+                font-size: 14px;
+                cursor: pointer;
+                top: 0;
+                height: auto;
+                margin: 5px 0;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .event.all-day {
+                position: relative;
+                height: auto;
+                top: 0;
+                margin: 5px 0;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .event-time {
+                font-weight: bold;
+            }
+            .day-nav {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 10px;
+            }
+            .date {
+                margin: 0 10px;
+                font-weight: bold;
+            }
+            .calendar-toolbar .view-toggle button {
+                background: #eee;
+                border: none;
+                padding: 5px 10px;
+                margin: 0 2px;
+                border-radius: 4px;
+            }
+            .calendar-toolbar .view-toggle button.active {
+                background: #ddd;
+            }
+            .calendar-content {
+                display: flex;
+            }
+            .calendar-left {
+                flex: 1;
+                overflow-y: auto;
+            }
+            .event-details {
+                display: none;
+                width: 350px;
+                border-left: 1px solid #ddd;
+                padding: 20px;
+                background: #fff;
+                box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+                position: sticky;
+                top: 0;
+                align-self: flex-start;
+                height: fit-content;
+                z-index: 10;
+            }
+            .event-details.show {
+                display: block;
+            }
+            .event-details .header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+            .event-details .actions {
+                display: flex;
+                gap: 10px;
+            }
+            .event-details .actions a {
+                color: #666;
+                cursor: pointer;
+            }
+            .event-details .event-time-detail {
+                font-weight: bold;
+                color: #666;
+                margin-right: 10px;
+            }
+            .event-details .event-title {
+                font-size: 18px;
+                font-weight: bold;
+            }
+            .event-details .event-type {
+                color: #666;
+                margin-left: 10px;
+            }
+            .event-details .event-info {
+                display: flex;
+                align-items: center;
+                margin-bottom: 10px;
+                color: #333;
+            }
+            .event-details .event-info i {
+                margin-right: 10px;
+                color: #666;
+            }
+            .event-details .event-guests {
+                margin-top: 20px;
+            }
+            .event-details .guests-list {
+                display: flex;
+                gap: 10px;
+            }
+            .event-details .guest {
+                display: flex;
+                align-items: center;
+                background: #e6f7ff;
+                padding: 5px 10px;
+                border-radius: 20px;
+            }
+            .event-details .guest img {
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                margin-right: 5px;
+            }
+            .event-details .event-description {
+                margin-top: 20px;
+                color: #333;
+            }
+            .event-details .dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                background: purple;
+                margin-right: 10px;
+            }
+            .event:last-child {
+                margin-bottom: 0;
+            }
+            .maintenance-card, .task-item {
+                cursor: pointer;
+            }
+            .day-header-row {
+                display: grid;
+                grid-template-columns: auto repeat(7, 1fr);
+                text-align: center;
+            }
+            .day-header-cell {
+                font-weight: bold;
+                padding: 10px;
+            }
         </style>
     </head>
     <body>
@@ -279,7 +508,7 @@
                                     <div class="time-slot" data-start-time="9:00" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
                                     <div class="time-label"></div>
                                     <div class="time-slot" data-start-time="9:30" ondragover="allowDrop(event)" ondrop="drop(event)">
-                                        <div class="event" id="event1" draggable="true" ondragstart="drag(event)" onclick="showDetails(this)">
+                                        <div class="event" id="event1" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" onclick="showDetails(this)">
                                             <span class="event-time">9:30</span><br>Follow-up call with client
                                         </div>
                                     </div>
@@ -290,7 +519,11 @@
                                     <div class="time-label">11:00 am</div>
                                     <div class="time-slot" data-start-time="11:00" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
                                     <div class="time-label"></div>
-                                    <div class="time-slot" data-start-time="11:30" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
+                                    <div class="time-slot" data-start-time="11:30" ondragover="allowDrop(event)" ondrop="drop(event)">
+                                        <div class="event" id="event2" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" onclick="showDetails(this)">
+                                            <span class="event-time">11:30</span><br>Follow-up call with client
+                                        </div>
+                                    </div>
                                     <div class="time-label">12:00 pm</div>
                                     <div class="time-slot" data-start-time="12:00" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
                                     <div class="time-label"></div>
@@ -356,10 +589,18 @@
                                 <div class="time-grid">
                                     <!-- All-day row -->
                                     <!-- Dòng all-day -->
-                                    <div class="time-label">all-day</div>
-                                    <c:forEach var="day" items="${days}">
-                                        <div class="time-slot all-day-slot" data-day="${day}" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
-                                    </c:forEach>
+                                    <div class="time-label">all-week</div>
+                                    <div class="all-day-event-container" ondragover="allowDrop(event)" ondrop="drop(event)">
+                                        <%-- Nếu có event all-day, in ra tại đây và loại bỏ logic per-day, giả sử full week --%>
+                                        <c:if test="${not empty event}">
+                                            <div class="event all-day"
+                                                 draggable="true"
+                                                 ondragstart="drag(event)"
+                                                 onclick="showDetails(this)">
+                                                Grocery Day
+                                            </div>
+                                        </c:if>
+                                    </div>
 
                                     <!-- Time slots per hour -->
                                     <c:forEach var="hour" items="${hours}">
@@ -368,7 +609,7 @@
                                             <div class="time-slot" data-start-time="${hour}" data-day="${day}" ondragover="allowDrop(event)" ondrop="drop(event)">
                                                 <%-- Nếu có event khớp giờ & ngày thì in ra tại đây --%>
                                                 <c:if test="${hour == '03:00' && day == 'fri'}">
-                                                    <div class="event" id="grocery-event" draggable="true" ondragstart="drag(event)" onclick="showDetails(this)">
+                                                    <div class="event" id="grocery-event" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" onclick="showDetails(this)">
                                                         <span class="event-time">${hour}</span><br/>Grocery Day
                                                     </div>
                                                 </c:if>
@@ -579,54 +820,76 @@
                 const data = ev.dataTransfer.getData("text");
                 const eventElement = document.getElementById(data);
 
-                // Nếu drop vào all-day
-                if (ev.target.classList.contains('all-day-slot')) {
-                    const grid = ev.target.closest('.time-grid');
-                    eventElement.classList.add('all-day');
+                let slot = ev.target.closest('.time-slot') || ev.target.closest('.all-day-slot') || ev.target.closest('.all-day-event-container');
 
-                    // Append trực tiếp vào .time-grid, không phải .time-slot
-                    grid.appendChild(eventElement);
+                if (slot) {
+                    let view = slot.closest('.calendar-view').id;  // 'day-view' or 'week-view'
 
-                    // Kéo dài full hàng bằng grid-column
-                    eventElement.style.gridColumn = '2 / span 7';
-                    eventElement.style.gridRow = '1';
-                    eventElement.style.top = '0';
-                    eventElement.style.height = '40px';
+                    if (slot.classList.contains('all-day-slot') || slot.classList.contains('all-day-event-container')) {
+                        eventElement.classList.add('all-day');
+                        const timeText = eventElement.querySelector('.event-time');
+                        if (timeText)
+                            timeText.textContent = '';  // Remove time for all-day
 
-                    const timeText = eventElement.querySelector('.event-time');
-                    if (timeText)
-                        timeText.textContent = ''; // không cần giờ
-                } else {
-                    // Trường hợp kéo vào time-slot bình thường
-                    ev.target.appendChild(eventElement);
-                    eventElement.classList.remove('all-day');
-                    eventElement.style.gridColumn = '';
-                    eventElement.style.gridRow = '';
-                    eventElement.style.height = '50px';
-                    eventElement.style.top = '5px';
-
-                    const timeText = eventElement.querySelector('.event-time');
-                    const time = ev.target.getAttribute('data-start-time');
-                    if (timeText && time)
-                        timeText.textContent = time;
+                        if (view === 'day-view') {
+                            // Append to slot for day view (no spanning)
+                            slot.appendChild(eventElement);
+                            eventElement.style.gridColumn = '';
+                            eventElement.style.gridRow = '';
+                            eventElement.style.height = 'auto';
+                            eventElement.style.top = '0';
+                            eventElement.style.width = '100%';
+                        } else {
+                            // For week-view, append to all-day-event-container and span full week
+                            const container = document.querySelector('#week-view .all-day-event-container');
+                            if (container) {
+                                container.appendChild(eventElement);
+                            } else {
+                                slot.appendChild(eventElement);
+                            }
+                            eventElement.style.gridColumn = '';
+                            eventElement.style.gridRow = '';
+                            eventElement.style.height = 'auto';
+                            eventElement.style.top = '0';
+                            eventElement.style.width = '100%';
+                        }
+                    } else {
+                        // Normal time slot handling
+                        slot.appendChild(eventElement);
+                        eventElement.classList.remove('all-day');
+                        eventElement.style.gridColumn = '';
+                        eventElement.style.gridRow = '';
+                        eventElement.style.height = 'auto';
+                        eventElement.style.top = '0';
+                        eventElement.style.width = '';
+                        const time = slot.getAttribute('data-start-time');
+                        const timeText = eventElement.querySelector('.event-time');
+                        if (timeText && time)
+                            timeText.textContent = time;
+                    }
                 }
             }
-
-
-
             function showDetails(element) {
-                var detailsPanel = document.getElementById('event-details-panel');
-                var timeDetail = detailsPanel.querySelector('.event-time-detail');
-                var time = element.querySelector('.event-time') ? element.querySelector('.event-time').textContent : '';
-                var title = element.textContent.replace(time, '').trim() || 'Event';
-                timeDetail.textContent = time ? time + ' AM - 8:00 PM' : '9:30 AM - 8:00 PM';
+                const detailsPanel = document.getElementById('event-details-panel');
+
+                // (Optional) custom info filling
+                const time = element.querySelector('.event-time')?.textContent || '';
+                const title = element.querySelector('.title')?.textContent || element.textContent.trim();
+
+                detailsPanel.querySelector('.event-time-detail').textContent = time;
                 detailsPanel.querySelector('.event-title').textContent = title;
+
                 detailsPanel.classList.add('show');
             }
 
+
             function closeDetails() {
-                document.getElementById('event-details-panel').classList.remove('show');
+                const detailsPanel = document.getElementById('event-details-panel');
+                if (detailsPanel) {
+                    detailsPanel.classList.remove('show');
+                }
             }
+
 
             function editEvent() {
                 alert('Edit event');
