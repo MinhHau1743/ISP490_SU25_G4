@@ -7,7 +7,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
-<c:set var="currentPage" value="listEmployee" />
+<c:set var="menuHighlight" value="listEmployee" />
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -322,7 +322,8 @@
                                             <c:choose>
                                                 <%-- Nhân viên bị vô hiệu hóa --%>
                                                 <c:when test="${user.isDeleted == 1}">
-                                                    <a href="updateStatus?id=${user.id}&status=0&page=${currentPage}&searchQuery=${searchQuery}" class="status-badge status-inactive" title="Kích hoạt lại"
+                                                    <%-- SỬA ĐỔI Ở ĐÂY: Thêm contextPath --%>
+                                                    <a href="${pageContext.request.contextPath}/updateStatus?id=${user.id}&status=0&page=${currentPage}&searchQuery=${searchQuery}" class="status-badge status-inactive" title="Kích hoạt lại"
                                                        onclick="return confirm('Bạn muốn kích hoạt lại nhân viên ${user.lastName} ${user.middleName} ${user.firstName}?');">
                                                         <i data-feather="toggle-right"></i>
                                                         <span>Vô hiệu hóa</span>
@@ -332,7 +333,8 @@
                                                 <c:otherwise>
                                                     <a href="${pageContext.request.contextPath}/viewEmployee?id=${user.id}" class="action-btn" title="Xem chi tiết"><i data-feather="eye"></i></a>
                                                     <a href="${pageContext.request.contextPath}/editEmployee?id=${user.id}" class="action-btn" title="Sửa"><i data-feather="edit-2"></i></a>
-                                                    <a href="updateStatus?id=${user.id}&status=1&page=${currentPage}&searchQuery=${searchQuery}" class="status-badge status-active" title="Vô hiệu hóa"
+                                                        <%-- SỬA ĐỔI Ở ĐÂY: Thêm contextPath --%>
+                                                    <a href="${pageContext.request.contextPath}/updateStatus?id=${user.id}&status=1&page=${currentPage}&searchQuery=${searchQuery}" class="status-badge status-active" title="Vô hiệu hóa"
                                                        onclick="return confirm('Bạn chắc chắn muốn vô hiệu hóa nhân viên ${user.lastName} ${user.middleName} ${user.firstName}?');">
                                                         <i data-feather="toggle-left"></i>
                                                         <span>Hoạt động</span>
