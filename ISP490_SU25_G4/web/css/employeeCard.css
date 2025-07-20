@@ -116,3 +116,32 @@
     height: 18px;
 }
 
+
+/* === BỔ SUNG: AVATAR NHỎ BÊN TRÁI TÊN === */
+
+.card-header-minimal {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    text-align: left; /* Căn chữ sang trái */
+}
+
+.card-avatar-minimal {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.card-avatar-minimal img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Ghi đè lại margin của card-main để nó hoạt động trong layout mới */
+.card-header-minimal .card-main {
+    margin-bottom: 0;
+}
