@@ -2,7 +2,6 @@
     Document   : listAllEmployees.jsp
     Created on : Jun 6, 2025
     Author     : NGUYEN MINH
-    Version    : Final
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
