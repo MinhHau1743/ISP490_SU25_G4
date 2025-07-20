@@ -1,12 +1,13 @@
 <%--
-    Document    : viewEmployee
+    Document   : viewEmployee
     Created on : Jun 14, 2025
-    Author      : NGUYEN MINH
+    Author     : NGUYEN MINH
+    
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %> 
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <c:set var="currentPage" value="listEmployee" />
 
 <!DOCTYPE html>
@@ -19,8 +20,9 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
-        <%-- Link đến file CSS mới cho trang này --%>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/viewEmployee.css">
+
+        <script src="https://unpkg.com/feather-icons"></script>
     </head>
     <body>
         <div class="app-container">
@@ -28,15 +30,13 @@
 
             <main class="main-content">
                 <header class="main-top-bar">
-                    <div class="page-title">Xem thông tin chi tiết</div>
+                    <div class="page-title">Thông tin chi tiết nhân viên</div>
                 </header>
 
                 <section class="content-body">
                     <c:if test="${not empty employee}">
-                        <%-- Container chính sử dụng Flexbox --%>
                         <div class="view-employee-page">
 
-                            <%-- Panel bên trái cho ảnh đại diện --%>
                             <div class="avatar-panel">
                                 <div class="avatar-display-box">
                                     <c:url var="avatarUrl" value="/images/default-avatar.png" />
@@ -45,39 +45,103 @@
                                     </c:if>
                                     <img src="${pageContext.request.contextPath}${avatarUrl}" alt="Ảnh đại diện">
                                 </div>
+                                <h2 class="employee-name-title">${employee.lastName} ${employee.middleName} ${employee.firstName}</h2>
+                                <p class="employee-code-title">Mã NV: ${employee.employeeCode}</p>
                             </div>
 
-                            <%-- Panel bên phải chứa các card thông tin --%>
                             <div class="info-panel">
+                                <%-- === CARD 1: THÔNG TIN CƠ BẢN (ĐÃ SẮP XẾP LẠI) === --%>
                                 <div class="info-card">
-                                    <h3 class="info-card-title">Thông tin khởi tạo</h3>
-                                    <div class="info-card-grid">
-                                        <div class="form-group"><label>Mã nhân viên</label><input type="text" value="${employee.employeeCode}" disabled></div>
-                                        <div class="form-group"><label>Tên nhân viên</label><input type="text" value="${employee.lastName} ${employee.middleName} ${employee.firstName}" disabled></div>
-                                        <div class="form-group"><label>Số điện thoại</label><input type="text" value="${employee.phoneNumber}" disabled></div>
-                                        <div class="form-group"><label>Email</label><input type="text" value="${employee.email}" disabled></div>
-
-                                        <div class="form-group">
-                                            <label>Thời gian tạo</label>
-                                            <input type="text" value="<fmt:formatDate value="${employee.createdAt}" pattern="HH:mm:ss dd/MM/yyyy" />" disabled>
+                                    <h3 class="info-card-title">Thông tin cơ bản</h3>
+                                    <div class="info-grid">
+                                        <div class="info-item">
+                                            <i data-feather="calendar"></i>
+                                            <div class="info-text">
+                                                <label>Ngày sinh</label>
+                                                <span><fmt:formatDate value="${employee.dateOfBirth}" pattern="dd/MM/yyyy" /></span>
+                                            </div>
+                                        </div>
+                                        <div class="info-item">
+                                            <i data-feather="users"></i>
+                                            <div class="info-text">
+                                                <label>Giới tính</label>
+                                                <c:set var="genderDisplay">
+                                                    <c:choose>
+                                                        <c:when test="${employee.gender == 'male'}">Nam</c:when>
+                                                        <c:when test="${employee.gender == 'female'}">Nữ</c:when>
+                                                        <c:when test="${employee.gender == 'other'}">Khác</c:when>
+                                                        <c:otherwise>Chưa cập nhật</c:otherwise>
+                                                    </c:choose>
+                                                </c:set>
+                                                <span>${genderDisplay}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
+
+                                <%-- === CARD 2: THÔNG TIN ĐỊNH DANH & LIÊN HỆ (ĐÃ SẮP XẾP LẠI) === --%>
+                                <div class="info-card">
+                                    <h3 class="info-card-title">Thông tin định danh & Liên hệ</h3>
+                                    <div class="info-grid">
+                                        <div class="info-item">
+                                            <i data-feather="mail"></i>
+                                            <div class="info-text">
+                                                <label>Email</label>
+                                                <span>${not empty employee.email ? employee.email : 'Chưa cập nhật'}</span>
+                                            </div>
+                                        </div>
+                                        <div class="info-item">
+                                            <i data-feather="phone"></i>
+                                            <div class="info-text">
+                                                <label>Số điện thoại</label>
+                                                <span>${not empty employee.phoneNumber ? employee.phoneNumber : 'Chưa cập nhật'}</span>
+                                            </div>
+                                        </div>
+                                        <div class="info-item full-width">
+                                            <i data-feather="credit-card"></i>
+                                            <div class="info-text">
+                                                <label>Số CMND/CCCD</label>
+                                                <span>${not empty employee.identityCardNumber ? employee.identityCardNumber : 'Chưa cập nhật'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <%-- === CARD 3: THÔNG TIN CÔNG VIỆC (ĐÃ SẮP XẾP LẠI) === --%>
+                                <%-- === CARD 3: THÔNG TIN CÔNG VIỆC (ĐÃ SẮP XẾP LẠI) === --%>
                                 <div class="info-card">
                                     <h3 class="info-card-title">Thông tin công việc</h3>
-                                    <div class="info-card-grid">
-                                        <div class="form-group"><label>Phòng làm việc</label><input type="text" value="${not empty employee.departmentName ? employee.departmentName : 'Chưa cập nhật'}" disabled></div>
-                                        <div class="form-group"><label>Chức vụ</label><input type="text" value="${not empty employee.positionName ? employee.positionName : 'Chưa cập nhật'}" disabled></div>
+                                    <div class="info-grid">
+                                        <div class="info-item">
+                                            <i data-feather="briefcase"></i>
+                                            <div class="info-text">
+                                                <label>Phòng làm việc</label>
+                                                <span>${not empty employee.departmentName ? employee.departmentName : 'Chưa cập nhật'}</span>
+                                            </div>
+                                        </div>
+                                        <div class="info-item">
+                                            <i data-feather="award"></i>
+                                            <div class="info-text">
+                                                <label>Chức vụ</label>
+                                                <span>${not empty employee.positionName ? employee.positionName : 'Chưa cập nhật'}</span>
+                                            </div>
+                                        </div>
+                                        <div class="info-item">
+                                            <i data-feather="clock"></i>
+                                            <div class="info-text">
+                                                <label>Thời gian tạo</label>
+                                                <span><fmt:formatDate value="${employee.createdAt}" pattern="HH:mm dd/MM/yyyy" /></span>
+                                            </div>
+                                        </div>
+                                        <%-- **THAY ĐỔI Ở ĐÂY**: Đã chuyển Ghi chú vào trong lưới --%>
+                                        <div class="info-item">
+                                            <i data-feather="file-text"></i>
+                                            <div class="info-text">
+                                                <label>Ghi chú</label>
+                                                <p>${not empty employee.notes ? employee.notes : 'Không có ghi chú.'}</p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="form-group full-width"><label>Ghi chú</label><textarea rows="3" disabled>${employee.notes}</textarea></div>
-                                </div>
-                                <div class="info-card">
-                                    <h3 class="info-card-title">Thông tin cá nhân</h3>
-                                    <div class="info-card-grid">
-                                        <div class="form-group"><label>Số CMND/CCCD</label><input type="text" value="${employee.identityCardNumber}" disabled></div>
-                                        <div class="form-group"><label>Ngày sinh</label><input type="text" value="${employee.dateOfBirth}" disabled></div>
-                                    </div>
-                                    <div class="form-group"><label>Giới tính</label><input type="text" value="${employee.gender == 'male' ? 'Nam' : 'Nữ'}" disabled></div>
                                 </div>
                             </div>
                         </div>
@@ -89,13 +153,14 @@
                 </section>
 
                 <footer class="page-actions-footer">
-                    <button type="button" class="btn btn-secondary" onclick="window.history.back()">Đóng</button>
+                    <button type="button" class="btn btn-secondary" onclick="window.location.href = '${pageContext.request.contextPath}/listEmployee'">Quay lại danh sách</button>
                     <a href="${pageContext.request.contextPath}/editEmployee?id=${employee.id}" class="btn btn-primary" role="button">Sửa thông tin</a>
                 </footer>
             </main>
         </div>
-        <script src="https://unpkg.com/feather-icons"></script>
-        <script>feather.replace()</script>
+        <script>
+            feather.replace();
+        </script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>
