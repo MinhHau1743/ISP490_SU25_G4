@@ -110,3 +110,322 @@
     right: 0;
     z-index: 10;
 }
+
+/* --- Layout chính của trang --- */
+.view-employee-page {
+    display: grid;
+    grid-template-columns: 300px 1fr; /* Cột trái cho ảnh, cột phải cho thông tin */
+    gap: 32px;
+    align-items: flex-start;
+}
+
+/* --- Panel bên trái (Ảnh đại diện và Tên) --- */
+.avatar-panel {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 32px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+    position: sticky; /* Giữ panel cố định khi cuộn */
+    top: 24px;
+}
+
+.avatar-display-box {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    margin: 0 auto 24px auto;
+    overflow: hidden;
+    border: 4px solid #ffffff;
+    box-shadow: 0 0 0 4px #3182ce; /* Viền màu xanh nổi bật */
+}
+
+.avatar-display-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.employee-name-title {
+    font-size: 1.5rem; /* 24px */
+    font-weight: 700;
+    color: #1a202c;
+    margin: 0;
+}
+
+.employee-code-title {
+    font-size: 1rem;
+    color: #718096;
+    margin-top: 4px;
+    font-family: monospace;
+}
+
+
+/* --- Panel bên phải (Các card thông tin) --- */
+.info-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 24px; /* Khoảng cách giữa các card */
+}
+
+.info-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+}
+
+.info-card-title {
+    font-size: 1.125rem; /* 18px */
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0 0 20px 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Lưới 2 cột */
+    gap: 20px;
+}
+
+.info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.info-item.full-width {
+    grid-column: 1 / -1; /* Trải dài toàn bộ lưới */
+}
+
+.info-item i {
+    width: 20px;
+    height: 20px;
+    color: #3182ce; /* Màu icon đồng bộ */
+    margin-top: 4px;
+}
+
+.info-item label {
+    font-size: 0.875rem; /* 14px */
+    color: #718096;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.info-item span {
+    font-size: 1rem; /* 16px */
+    color: #2d3748;
+    font-weight: 500;
+}
+
+.info-item p {
+    font-size: 1rem;
+    color: #4a5568;
+    margin: 0;
+    line-height: 1.6;
+    white-space: pre-wrap; /* Giữ các định dạng xuống dòng của ghi chú */
+}
+
+/* --- Footer chứa nút hành động --- */
+.page-actions-footer {
+    padding-top: 24px;
+    margin-top: 16px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end; /* Căn phải các nút */
+    gap: 12px;
+}
+
+/* --- Responsive cho màn hình nhỏ --- */
+@media (max-width: 992px) {
+    .view-employee-page {
+        grid-template-columns: 1fr; /* Chuyển thành 1 cột */
+    }
+    .avatar-panel {
+        position: static; /* Bỏ cố định panel */
+    }
+}
+
+/* === CSS CHO TRANG XEM & SỬA CHI TIẾT NHÂN VIÊN === */
+
+/* --- Font chữ chung --- */
+body {
+    font-family: 'Inter', sans-serif; /* Đảm bảo font chữ đồng bộ */
+}
+
+/* --- Layout chính của trang --- */
+.view-employee-page {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 32px;
+    align-items: flex-start;
+}
+
+/* --- Panel bên trái (Ảnh đại diện và Tên) --- */
+.avatar-panel {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 32px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+    position: sticky;
+    top: 24px;
+}
+.avatar-display-box {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    margin: 0 auto 24px auto;
+    overflow: hidden;
+    border: 4px solid #ffffff;
+    box-shadow: 0 0 0 4px #3182ce;
+}
+.avatar-display-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.employee-name-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a202c;
+    margin: 0;
+}
+.employee-code-title {
+    font-size: 1rem;
+    color: #718096;
+    margin-top: 4px;
+    font-family: monospace;
+}
+#btnChooseAvatar {
+    margin-top: 20px;
+    width: 100%;
+}
+
+
+/* --- Panel bên phải (Các card thông tin) --- */
+.info-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+.info-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+}
+.info-card-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0 0 20px 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e2e8f0;
+}
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+.info-item, .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+/* --- Styling cho các mục hiển thị (Trang View) --- */
+.info-item {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 16px;
+}
+.info-item i { width: 20px; height: 20px; color: #3182ce; margin-top: 4px; }
+.info-item label, .form-group label { font-size: 0.875rem; color: #4a5568; font-weight: 500; }
+.info-item span { font-size: 1rem; color: #2d3748; font-weight: 500; }
+.info-item p { font-size: 1rem; color: #4a5568; margin: 0; line-height: 1.6; white-space: pre-wrap; }
+
+
+/* --- STYLING MỚI CHO FORM INPUTS (Trang Edit) --- */
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="tel"],
+.form-group input[type="date"],
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background-color: #ffffff;
+    font-size: 1rem;
+    font-family: 'Inter', sans-serif;
+    color: #2d3748;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #3182ce;
+    box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.2);
+}
+.form-group textarea { resize: vertical; }
+
+/* Styling cho các trường bị khóa (readonly) và vô hiệu hóa (disabled) */
+.form-group input:read-only,
+.form-group input:disabled {
+    background-color: #f7fafc;
+    color: #718096;
+    cursor: not-allowed;
+    border-color: #e2e8f0;
+}
+
+/* Styling cho Radio button */
+.radio-group {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    padding-top: 8px;
+}
+.radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    cursor: pointer;
+}
+.radio-group input[type="radio"] {
+    width: 1.1em;
+    height: 1.1em;
+}
+
+/* --- Footer chứa nút hành động --- */
+.page-actions-footer {
+    padding-top: 24px;
+    margin-top: 16px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* --- Responsive cho màn hình nhỏ --- */
+@media (max-width: 992px) {
+    .view-employee-page { grid-template-columns: 1fr; }
+    .avatar-panel { position: static; }
+}
+@media (max-width: 768px) {
+    .info-grid { grid-template-columns: 1fr; }
+}
+
+

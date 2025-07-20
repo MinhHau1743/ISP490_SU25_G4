@@ -2,7 +2,7 @@
     Document   : editEmployee
     Created on : Jun 14, 2025
     Author     : NGUYEN MINH
-    Purpose    : Edit employee information, consistent with viewEmployee.jsp and database schema.
+   
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
@@ -17,12 +17,13 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Chỉnh sửa thông tin nhân viên</title>
 
-        <%-- Giữ các link CSS tương tự như trang view để giao diện đồng bộ --%>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
-        <%-- Sử dụng lại CSS của trang viewEmployee để có layout 2 cột --%>
+        <%-- Link tới file CSS đã được nâng cấp, chứa style cho cả trang view và edit --%>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/viewEmployee.css">
+        
+        <script src="https://unpkg.com/feather-icons"></script>
     </head>
     <body>
         <div class="app-container">
@@ -35,15 +36,12 @@
 
                 <section class="content-body">
                     <c:if test="${not empty employee}">
-                        <%-- Form sẽ bao bọc toàn bộ khu vực nội dung --%>
                         <form id="editEmployee" action="editEmployee" method="post" enctype="multipart/form-data">
-
-                            <%-- Gửi ID của nhân viên để server biết cập nhật đối tượng nào --%>
                             <input type="hidden" name="id" value="${employee.id}">
 
-                            <div class="view-employee-page"> <%-- Sử dụng lại layout của trang view --%>
-
-                                <%-- Panel bên trái cho ảnh đại diện --%>
+                            <div class="view-employee-page">
+                                
+                                <%-- === CẢI TIẾN: PANEL BÊN TRÁI GIỐNG HỆT TRANG VIEW === --%>
                                 <div class="avatar-panel">
                                     <div class="avatar-display-box">
                                         <c:url var="avatarUrl" value="/images/default-avatar.png" />
@@ -52,27 +50,67 @@
                                         </c:if>
                                         <img src="${pageContext.request.contextPath}${avatarUrl}" alt="Ảnh đại diện" id="avatarPreview">
                                     </div>
+                                    
+                                    <h2 class="employee-name-title">${employee.lastName} ${employee.middleName} ${employee.firstName}</h2>
+                                    <p class="employee-code-title">Mã NV: ${employee.employeeCode}</p>
+                                    
                                     <input type="file" name="avatar" id="avatarUpload" hidden accept="image/*">
                                     <button type="button" class="btn btn-secondary" id="btnChooseAvatar">Thay đổi ảnh</button>
                                 </div>
 
-                                <%-- Panel bên phải chứa các card thông tin --%>
                                 <div class="info-panel">
                                     <div class="info-card">
-                                        <h3 class="info-card-title">Thông tin khởi tạo</h3>
-                                        <div class="info-card-grid">
-                                            <div class="form-group"><label>Mã nhân viên</label><input type="text" value="${employee.employeeCode}" disabled></div>
-                                            <div class="form-group"><label for="lastName">Họ</label><input type="text" id="lastName" name="lastName" value="${employee.lastName}"></div>
-                                            <div class="form-group"><label for="middleName">Tên đệm</label><input type="text" id="middleName" name="middleName" value="${employee.middleName}"></div>
-                                            <div class="form-group"><label for="firstName">Tên</label><input type="text" id="firstName" name="firstName" value="${employee.firstName}"></div>
-                                            <div class="form-group"><label for="phoneNumber">Số điện thoại</label><input type="tel" id="phoneNumber" name="phoneNumber" value="${employee.phoneNumber}"></div>
-                                            <div class="form-group"><label for="email">Email</label><input type="email" id="email" name="email" value="${employee.email}" disabled></div>
+                                        <h3 class="info-card-title">Thông tin cơ bản</h3>
+                                        <div class="info-grid">
+                                            <div class="form-group">
+                                                <label for="lastName">Họ</label>
+                                                <input type="text" id="lastName" name="lastName" value="${employee.lastName}" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="firstName">Tên</label>
+                                                <input type="text" id="firstName" name="firstName" value="${employee.firstName}" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="middleName">Tên đệm</label>
+                                                <input type="text" id="middleName" name="middleName" value="${employee.middleName}">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="dateOfBirth">Ngày sinh</label>
+                                                <input type="date" id="dateOfBirth" name="dateOfBirth" value="${employee.dateOfBirth}" required>
+                                            </div>
+                                            <div class="form-group full-width">
+                                                <label>Giới tính</label>
+                                                <div class="radio-group">
+                                                    <label><input type="radio" name="gender" value="male" ${employee.gender == 'male' ? 'checked' : ''}> Nam</label>
+                                                    <label><input type="radio" name="gender" value="female" ${employee.gender == 'female' ? 'checked' : ''}> Nữ</label>
+                                                    <label><input type="radio" name="gender" value="other" ${employee.gender == 'other' ? 'checked' : ''}> Khác</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="info-card">
+                                        <h3 class="info-card-title">Thông tin định danh & Liên hệ</h3>
+                                        <div class="info-grid">
+                                            <%-- === YÊU CẦU: KHÓA CÁC TRƯỜNG NÀY === --%>
+                                            <div class="form-group">
+                                                <label for="email">Email</label>
+                                                <input type="email" id="email" name="email" value="${employee.email}" readonly>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="phoneNumber">Số điện thoại</label>
+                                                <input type="tel" id="phoneNumber" name="phoneNumber" value="${employee.phoneNumber}" readonly>
+                                            </div>
+                                            <div class="form-group full-width">
+                                                <label for="identityCardNumber">Số CMND/CCCD</label>
+                                                <input type="text" id="identityCardNumber" name="identityCardNumber" value="${employee.identityCardNumber}" readonly>
+                                            </div>
                                         </div>
                                     </div>
 
                                     <div class="info-card">
                                         <h3 class="info-card-title">Thông tin công việc</h3>
-                                        <div class="info-card-grid">
+                                        <div class="info-grid">
                                             <div class="form-group">
                                                 <label for="departmentId">Phòng làm việc</label>
                                                 <select id="departmentId" name="departmentId">
@@ -95,29 +133,6 @@
                                             <textarea id="notes" name="notes" rows="3">${employee.notes}</textarea>
                                         </div>
                                     </div>
-
-                                    <div class="info-card">
-                                        <h3 class="info-card-title">Thông tin cá nhân</h3>
-                                        <div class="info-card-grid">
-                                            <div class="form-group">
-                                                <label for="identityCardNumber">Số CMND/CCCD</label>
-                                                <input type="text" id="identityCardNumber" name="identityCardNumber" value="${employee.identityCardNumber}">
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="dateOfBirth">Ngày sinh</label>
-                                             
-                                                <input type="date" id="dateOfBirth" name="dateOfBirth" value="${employee.dateOfBirth}">
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Giới tính</label>
-                                            <div class="radio-group">
-                                                <label><input type="radio" name="gender" value="male" ${employee.gender == 'male' ? 'checked' : ''}> Nam</label>
-                                                <label><input type="radio" name="gender" value="female" ${employee.gender == 'female' ? 'checked' : ''}> Nữ</label>
-                                                <label><input type="radio" name="gender" value="other" ${employee.gender == 'other' ? 'checked' : ''}> Khác</label>
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
 
@@ -127,23 +142,16 @@
                             </footer>
                         </form>
                     </c:if>
-
-                    <c:if test="${empty employee}">
-                        <p>Không tìm thấy thông tin nhân viên để chỉnh sửa.</p>
-                    </c:if>
                 </section>
             </main>
         </div>
 
-        <script src="https://unpkg.com/feather-icons"></script>
         <script>feather.replace()</script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
         <script>
-            // JavaScript đơn giản để xử lý việc chọn ảnh
             document.getElementById('btnChooseAvatar').addEventListener('click', function () {
                 document.getElementById('avatarUpload').click();
             });
-
             document.getElementById('avatarUpload').addEventListener('change', function (event) {
                 const [file] = event.target.files;
                 if (file) {
