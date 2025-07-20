@@ -160,20 +160,33 @@
                                     </div>      
                                     <div class="detail-card">
                                         <h3 class="card-title">Giao dịch gần đây</h3>
-                                        <ul class="transaction-history-list">
-                                            <li class="transaction-item">
-                                                <div class="transaction-info"><a href="#" class="code">GD-2025-028</a><p class="type">Hỗ trợ sự cố</p></div>
-                                                <span class="status-pill status-processing">Đang xử lý</span>
-                                            </li>
-                                            <li class="transaction-item">
-                                                <div class="transaction-info"><a href="#" class="code">GD-2025-015</a><p class="type">Lắp đặt mới</p></div>
-                                                <span class="status-pill status-completed">Hoàn thành</span>
-                                            </li>
-                                            <li class="transaction-item">
-                                                <div class="transaction-info"><a href="#" class="code">GD-2025-001</a><p class="type">Sửa chữa định kỳ</p></div>
-                                                <span class="status-pill status-completed">Hoàn thành</span>
-                                            </li>
-                                        </ul>
+                                        <c:choose>
+                                            <c:when test="${not empty recentRequests}">
+                                                <ul class="transaction-history-list">
+                                                    <c:forEach var="r" items="${recentRequests}">
+                                                        <li class="transaction-item">
+                                                            <div class="transaction-info">
+                                                                <a href="${pageContext.request.contextPath}/ticket?action=view&id=${r.id}" class="code"><c:out value="${r.requestCode}"/></a>
+                                                                <p class="type"><c:out value="${r.serviceName}"/></p>
+                                                            </div>
+                                                            <c:choose>
+                                                                <c:when test="${r.status == 'new'}"><span class="status-pill status-new">Mới</span></c:when>
+                                                                <c:when test="${r.status == 'assigned'}"><span class="status-pill status-assigned">Đã giao</span></c:when>
+                                                                <c:when test="${r.status == 'in_progress'}"><span class="status-pill status-in-progress">Đang xử lý</span></c:when>
+                                                                <c:when test="${r.status == 'resolved'}"><span class="status-pill status-resolved">Đã xử lý</span></c:when>
+                                                                <c:when test="${r.status == 'closed'}"><span class="status-pill status-closed">Đã đóng</span></c:when>
+                                                                <c:when test="${r.status == 'rejected'}"><span class="status-pill status-rejected">Từ chối</span></c:when>
+
+                                                                <c:otherwise><span class="status-pill">${r.status}</span></c:otherwise>
+                                                            </c:choose>
+                                                        </li>
+                                                    </c:forEach>
+                                                </ul>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <p style="padding: 0 16px;">Không có giao dịch gần đây.</p>
+                                            </c:otherwise>
+                                        </c:choose>
                                     </div>
                                 </div>
                             </div>
