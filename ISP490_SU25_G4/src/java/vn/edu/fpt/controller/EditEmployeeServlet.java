@@ -1,22 +1,12 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package vn.edu.fpt.controller;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
 import vn.edu.fpt.dao.DepartmentDAO;
 import vn.edu.fpt.dao.PositionDAO;
 import vn.edu.fpt.dao.UserDAO;
@@ -24,81 +14,155 @@ import vn.edu.fpt.model.Department;
 import vn.edu.fpt.model.Position;
 import vn.edu.fpt.model.User;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
-
 
 /**
  *
  * @author minhh
  */
-@WebServlet(name = "EditEmployeeServlet", urlPatterns = {"/admin/employees/edit"})
-@MultipartConfig // sửa cả ảnh đại diện
+
+/**
+ * Servlet này xử lý việc hiển thị và cập nhật thông tin nhân viên.
+ */
+@WebServlet(name = "EditEmployeeServlet", urlPatterns = {"/editEmployee"})
+@MultipartConfig(
+        fileSizeThreshold = 1024 * 1024,      
+        maxFileSize = 1024 * 1024 * 10,     
+        maxRequestSize = 1024 * 1024 * 15   
+)
 public class EditEmployeeServlet extends HttpServlet {
 
-   // HIỂN THỊ FORM CHỈNH SỬA
+    private static final String UPLOAD_DIRECTORY = "uploads";
+
+    /**
+     * Hiển thị form chỉnh sửa thông tin nhân viên.
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
             int employeeId = Integer.parseInt(request.getParameter("id"));
-            
+
             UserDAO userDAO = new UserDAO();
             DepartmentDAO departmentDAO = new DepartmentDAO();
             PositionDAO positionDAO = new PositionDAO();
 
-            // Lấy thông tin của nhân viên cần sửa
             User employee = userDAO.getUserById(employeeId);
-            
-            // Lấy TẤT CẢ các phòng ban và chức vụ để đưa vào dropdown
+
+            if (employee == null) {
+                response.sendRedirect("listEmployee?error=notfound");
+                return;
+            }
+
             List<Department> departmentList = departmentDAO.getAllDepartments();
             List<Position> positionList = positionDAO.getAllPositions();
 
-            // Đặt tất cả vào request
             request.setAttribute("employee", employee);
-            request.setAttribute("departmentList", departmentList);
-            request.setAttribute("positionList", positionList);
-            
-            // Chuyển đến trang JSP
+            request.setAttribute("departments", departmentList);
+            request.setAttribute("positions", positionList);
+
             request.getRequestDispatcher("/jsp/admin/editEmployee.jsp").forward(request, response);
 
         } catch (Exception e) {
+            System.out.println(e.getMessage());
             e.printStackTrace();
-            // Xử lý lỗi
+            response.sendRedirect("errorPage.jsp");
         }
     }
 
-    // XỬ LÝ VIỆC LƯU THAY ĐỔI
+    /**
+     * Xử lý việc lưu các thay đổi và chuyển hướng về trang danh sách nhân viên.
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
+        String employeeIdStr = request.getParameter("id");
+
         try {
-            // Lấy tất cả dữ liệu từ form
-            int id = Integer.parseInt(request.getParameter("id"));
-            String fullName = request.getParameter("fullName");
-            String phone = request.getParameter("phone");
+            // 1. Lấy dữ liệu từ form
+            int id = Integer.parseInt(employeeIdStr);
+            String lastName = request.getParameter("lastName");
+            String middleName = request.getParameter("middleName");
+            String firstName = request.getParameter("firstName");
+            String phoneNumber = request.getParameter("phoneNumber");
             int departmentId = Integer.parseInt(request.getParameter("departmentId"));
             int positionId = Integer.parseInt(request.getParameter("positionId"));
-            
+            String notes = request.getParameter("notes");
+            String identityCardNumber = request.getParameter("identityCardNumber");
+            String gender = request.getParameter("gender");
+            LocalDate dateOfBirth = LocalDate.parse(request.getParameter("dateOfBirth"));
 
-            // Tạo đối tượng User với thông tin đã cập nhật
-            User userToUpdate = new User();
-            userToUpdate.setId(id);
-            userToUpdate.setFirstName(fullName); 
-            userToUpdate.setPhoneNumber(phone);
-            // set các trường khác...
+            // 2. Xử lý tải file avatar
+            String avatarUrl = saveAvatar(request);
 
+            // 3. Cập nhật đối tượng User
             UserDAO userDAO = new UserDAO();
-            // Gọi hàm cập nhật trong DAO (sẽ tạo ở bước 4)
-            boolean success = userDAO.updateEmployee(userToUpdate, departmentId, positionId);
+            User userToUpdate = userDAO.getUserById(id);
+
+            userToUpdate.setLastName(lastName);
+            userToUpdate.setMiddleName(middleName);
+            userToUpdate.setFirstName(firstName);
+            userToUpdate.setPhoneNumber(phoneNumber);
+            userToUpdate.setDepartmentId(departmentId);
+            userToUpdate.setPositionId(positionId);
+            userToUpdate.setNotes(notes);
+            userToUpdate.setIdentityCardNumber(identityCardNumber);
+            userToUpdate.setDateOfBirth(dateOfBirth);
+            userToUpdate.setGender(gender);
+
+            if (avatarUrl != null && !avatarUrl.isEmpty()) {
+                userToUpdate.setAvatarUrl(avatarUrl);
+            }
+
+            // 4. Gọi DAO để cập nhật CSDL
+            boolean success = userDAO.updateEmployee(userToUpdate);
+
+            // 5. Chuyển hướng về trang danh sách nhân viên (listEmployee)
+            // =================== DÒNG THAY ĐỔI QUAN TRỌNG ===================
+            String redirectURL = request.getContextPath() + "/listEmployee"; 
+            // ===============================================================
             
-            // Chuyển hướng về trang danh sách
-            response.sendRedirect(request.getContextPath() + "/admin/employees/list?update=" + (success ? "success" : "fail"));
+            if (success) {
+                redirectURL += "?update=success";
+            } else {
+                redirectURL += "?update=fail";
+            }
+            response.sendRedirect(redirectURL);
 
         } catch (Exception e) {
             e.printStackTrace();
-            // Xử lý lỗi
+            response.sendRedirect(request.getContextPath() + "/listEmployee?update=error");
         }
     }
 
+    /**
+     * Lưu file avatar và trả về đường dẫn tương đối.
+     */
+    private String saveAvatar(HttpServletRequest request) throws IOException, ServletException {
+        Part filePart = request.getPart("avatar");
+        String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+
+        if (fileName == null || fileName.isEmpty()) {
+            return null;
+        }
+
+        String applicationPath = request.getServletContext().getRealPath("");
+        String uploadFilePath = applicationPath + File.separator + UPLOAD_DIRECTORY + File.separator + "avatars";
+
+        File uploadDir = new File(uploadFilePath);
+        if (!uploadDir.exists()) {
+            uploadDir.mkdirs();
+        }
+
+        String uniqueFileName = System.currentTimeMillis() + "_" + fileName;
+        filePart.write(uploadFilePath + File.separator + uniqueFileName);
+
+        return UPLOAD_DIRECTORY + "/avatars/" + uniqueFileName;
+    }
 }

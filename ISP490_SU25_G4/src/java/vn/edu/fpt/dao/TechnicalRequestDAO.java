@@ -21,44 +21,43 @@ import vn.edu.fpt.model.ContractProduct;
 public class TechnicalRequestDAO {
 
     public List<TechnicalRequest> getAllTechnicalRequests(int limit, int offset) throws SQLException {
-    List<TechnicalRequest> requests = new ArrayList<>();
-    String sql = "SELECT tr.*, e.name as enterpriseName, c.contract_code as contractCode, s.name as serviceName, "
-               + "CONCAT(assignee.last_name, ' ', assignee.middle_name, ' ', assignee.first_name) as assignedToName "
-               + "FROM TechnicalRequests tr "
-               + "JOIN Enterprises e ON tr.enterprise_id = e.id "
-               + "JOIN Services s ON tr.service_id = s.id "
-               + "LEFT JOIN Contracts c ON tr.contract_id = c.id "
-               + "LEFT JOIN Users assignee ON tr.assigned_to_id = assignee.id "
-               + "WHERE tr.is_deleted = 0 "
-               + "ORDER BY tr.created_at DESC "
-               + "LIMIT ? OFFSET ?"; // <-- THÊM DÒNG NÀY
+        List<TechnicalRequest> requests = new ArrayList<>();
+        String sql = "SELECT tr.*, e.name as enterpriseName, c.contract_code as contractCode, s.name as serviceName, "
+                + "CONCAT(assignee.last_name, ' ', assignee.middle_name, ' ', assignee.first_name) as assignedToName "
+                + "FROM TechnicalRequests tr "
+                + "JOIN Enterprises e ON tr.enterprise_id = e.id "
+                + "JOIN Services s ON tr.service_id = s.id "
+                + "LEFT JOIN Contracts c ON tr.contract_id = c.id "
+                + "LEFT JOIN Users assignee ON tr.assigned_to_id = assignee.id "
+                + "WHERE tr.is_deleted = 0 "
+                + "ORDER BY tr.created_at DESC "
+                + "LIMIT ? OFFSET ?"; // <-- THÊM DÒNG NÀY
 
-    try (Connection conn = DBContext.getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
-        ps.setInt(1, limit);   // <-- THÊM DÒNG NÀY
-        ps.setInt(2, offset);  // <-- THÊM DÒNG NÀY
+            ps.setInt(1, limit);   // <-- THÊM DÒNG NÀY
+            ps.setInt(2, offset);  // <-- THÊM DÒNG NÀY
 
-        try (ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                TechnicalRequest req = new TechnicalRequest();
-                // ... phần code gán giá trị giữ nguyên ...
-                req.setId(rs.getInt("id"));
-                req.setRequestCode(rs.getString("request_code"));
-                req.setStatus(rs.getString("status"));
-                req.setIsBillable(rs.getBoolean("is_billable"));
-                req.setCreatedAt(rs.getTimestamp("created_at"));
-                req.setEnterpriseName(rs.getString("enterpriseName"));
-                req.setContractCode(rs.getString("contractCode"));
-                req.setServiceName(rs.getString("serviceName"));
-                req.setAssignedToName(rs.getString("assignedToName"));
-                req.setEstimatedCost(rs.getDouble("estimated_cost"));
-                requests.add(req);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    TechnicalRequest req = new TechnicalRequest();
+                    // ... phần code gán giá trị giữ nguyên ...
+                    req.setId(rs.getInt("id"));
+                    req.setRequestCode(rs.getString("request_code"));
+                    req.setStatus(rs.getString("status"));
+                    req.setIsBillable(rs.getBoolean("is_billable"));
+                    req.setCreatedAt(rs.getTimestamp("created_at"));
+                    req.setEnterpriseName(rs.getString("enterpriseName"));
+                    req.setContractCode(rs.getString("contractCode"));
+                    req.setServiceName(rs.getString("serviceName"));
+                    req.setAssignedToName(rs.getString("assignedToName"));
+                    req.setEstimatedCost(rs.getDouble("estimated_cost"));
+                    requests.add(req);
+                }
             }
         }
+        return requests;
     }
-    return requests;
-}
 
     public TechnicalRequest getTechnicalRequestById(int id) throws SQLException {
         TechnicalRequest req = null;
@@ -165,26 +164,6 @@ public class TechnicalRequestDAO {
         return services;
     }
 
-    public List<Contract> getActiveContractsByEnterpriseId(int enterpriseId) throws SQLException {
-        List<Contract> contracts = new ArrayList<>();
-        String sql = "SELECT id, contract_code FROM contracts WHERE enterprise_id = ? AND status = 'active' ORDER BY created_at DESC";
-
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, enterpriseId);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Contract c = new Contract();
-                    c.setId(rs.getInt("id"));
-                    c.setContractCode(rs.getString("contract_code"));
-                    contracts.add(c);
-                }
-            }
-        }
-        return contracts;
-    }
-
     public boolean createTechnicalRequest(TechnicalRequest request, List<TechnicalRequestDevice> devices) {
         Connection conn = null;
         String sqlRequest = "INSERT INTO TechnicalRequests (request_code, enterprise_id, contract_id, service_id, title, description, priority, status, reporter_id, assigned_to_id, is_billable, estimated_cost, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -277,6 +256,26 @@ public class TechnicalRequestDAO {
                 c.setId(rs.getInt("id"));
                 c.setContractCode(rs.getString("contract_code"));
                 contracts.add(c);
+            }
+        }
+        return contracts;
+    }
+
+    public List<Contract> getActiveContractsByEnterpriseId(int enterpriseId) throws SQLException {
+        List<Contract> contracts = new ArrayList<>();
+        String sql = "SELECT id, contract_code FROM contracts WHERE enterprise_id = ? AND status = 'active' ORDER BY created_at DESC";
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, enterpriseId); // Gán enterpriseId vào câu lệnh SQL
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Contract c = new Contract();
+                    c.setId(rs.getInt("id"));
+                    c.setContractCode(rs.getString("contract_code"));
+                    contracts.add(c);
+                }
             }
         }
         return contracts;
@@ -382,5 +381,50 @@ public class TechnicalRequestDAO {
         }
         return 0;
     }
+
+    public List<TechnicalRequest> getRecentRequestsByEnterprise(int enterpriseId, int limit) throws Exception {
+    List<TechnicalRequest> list = new ArrayList<>();
+
+    String sql = """
+        SELECT tr.id, tr.request_code, tr.enterprise_id, tr.service_id, tr.title, tr.description,
+               tr.priority, tr.status, tr.reporter_id, s.name AS service_name
+        FROM technicalrequests tr
+        JOIN services s ON tr.service_id = s.id
+        WHERE tr.enterprise_id = ?
+        ORDER BY tr.id DESC
+        LIMIT ?
+    """;
+
+    try (
+        Connection conn = DBContext.getConnection();
+        PreparedStatement stmt = conn.prepareStatement(sql)
+    ) {
+        stmt.setInt(1, enterpriseId);
+        stmt.setInt(2, limit);
+
+        ResultSet rs = stmt.executeQuery();
+        while (rs.next()) {
+            TechnicalRequest req = new TechnicalRequest();
+            req.setId(rs.getInt("id"));
+            req.setRequestCode(rs.getString("request_code"));
+            req.setEnterpriseId(rs.getInt("enterprise_id"));
+            req.setServiceId(rs.getInt("service_id"));
+            req.setTitle(rs.getString("title"));
+            req.setDescription(rs.getString("description"));
+            req.setPriority(rs.getString("priority"));
+            req.setStatus(rs.getString("status"));
+            req.setReporterId(rs.getInt("reporter_id"));
+            req.setServiceName(rs.getString("service_name")); // dùng JOIN lấy tên dịch vụ
+
+            list.add(req);
+        }
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        throw new Exception("Lỗi truy vấn recent requests: " + e.getMessage());
+    }
+
+    return list;
+}
 
 }

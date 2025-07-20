@@ -34,6 +34,7 @@ public class User {
     private int departmentId;
     private int positionId;
     private int addressId;
+    private int isDeleted;
 
     // Thêm các trường ID cho địa chỉ
     private Integer provinceId;
@@ -195,6 +196,14 @@ public class User {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+    
+    public int getIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(int isDeleted) {
+        this.isDeleted = isDeleted;
     }
 
     public Timestamp getUpdatedAt() {

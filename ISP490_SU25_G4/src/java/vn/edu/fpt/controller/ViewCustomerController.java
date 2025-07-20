@@ -9,8 +9,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import vn.edu.fpt.dao.EnterpriseDAO;
 import vn.edu.fpt.model.Enterprise;
+import vn.edu.fpt.dao.TechnicalRequestDAO;
+import vn.edu.fpt.model.TechnicalRequest;
 
 import java.io.IOException;
+import java.util.List;
 
 @WebServlet(name = "ViewCustomerController", urlPatterns = {"/viewCustomer"})
 public class ViewCustomerController extends HttpServlet {
@@ -19,27 +22,31 @@ public class ViewCustomerController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        HttpSession session = request.getSession(false); // Lấy session hiện tại, không tạo mới
+        HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("user") == null) {
-            // Nếu chưa đăng nhập, trả về lỗi hoặc chuyển hướng
-            // Chuyển hướng là tốt nhất để người dùng có thể đăng nhập lại
             response.sendRedirect("login.jsp");
-            return; // Dừng xử lý tiếp theo
+            return;
         }
+
         String idStr = request.getParameter("id");
         if (idStr == null || idStr.isEmpty()) {
-            response.sendRedirect("listCustomer"); // Redirect if no ID is provided
+            response.sendRedirect("listCustomer");
             return;
         }
 
         try {
             int enterpriseId = Integer.parseInt(idStr);
-            EnterpriseDAO dao = new EnterpriseDAO();
-            Enterprise customer = dao.getEnterpriseById(enterpriseId);
+            EnterpriseDAO enterpriseDAO = new EnterpriseDAO();
+            Enterprise customer = enterpriseDAO.getEnterpriseById(enterpriseId);
 
             if (customer == null) {
-                // Customer not found, set an error message and forward
                 request.setAttribute("errorMessage", "Không tìm thấy khách hàng với ID cung cấp.");
+            } else {
+                // Lấy 3 yêu cầu kỹ thuật gần nhất (có tên dịch vụ do JOIN)
+                TechnicalRequestDAO requestDAO = new TechnicalRequestDAO();
+                List<TechnicalRequest> recentRequests = requestDAO.getRecentRequestsByEnterprise(enterpriseId, 3);
+                
+                request.setAttribute("recentRequests", recentRequests);
             }
 
             request.setAttribute("customer", customer);
