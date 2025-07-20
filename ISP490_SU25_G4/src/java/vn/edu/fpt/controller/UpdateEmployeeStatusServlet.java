@@ -17,7 +17,7 @@ import vn.edu.fpt.dao.UserDAO;
  *
  * @author minhh
  */
-@WebServlet(name = "UpdateEmployeeStatusServlet", urlPatterns = {"/updateEmployeeStatus"})
+@WebServlet(name = "UpdateEmployeeStatusServlet", urlPatterns = {"/updateStatus"})
 public class UpdateEmployeeStatusServlet extends HttpServlet {
 
     @Override
