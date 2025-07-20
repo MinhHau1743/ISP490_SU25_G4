@@ -164,7 +164,6 @@ public class TechnicalRequestDAO {
         return services;
     }
 
-    
     public boolean createTechnicalRequest(TechnicalRequest request, List<TechnicalRequestDevice> devices) {
         Connection conn = null;
         String sqlRequest = "INSERT INTO TechnicalRequests (request_code, enterprise_id, contract_id, service_id, title, description, priority, status, reporter_id, assigned_to_id, is_billable, estimated_cost, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -382,5 +381,50 @@ public class TechnicalRequestDAO {
         }
         return 0;
     }
+
+    public List<TechnicalRequest> getRecentRequestsByEnterprise(int enterpriseId, int limit) throws Exception {
+    List<TechnicalRequest> list = new ArrayList<>();
+
+    String sql = """
+        SELECT tr.id, tr.request_code, tr.enterprise_id, tr.service_id, tr.title, tr.description,
+               tr.priority, tr.status, tr.reporter_id, s.name AS service_name
+        FROM technicalrequests tr
+        JOIN services s ON tr.service_id = s.id
+        WHERE tr.enterprise_id = ?
+        ORDER BY tr.id DESC
+        LIMIT ?
+    """;
+
+    try (
+        Connection conn = DBContext.getConnection();
+        PreparedStatement stmt = conn.prepareStatement(sql)
+    ) {
+        stmt.setInt(1, enterpriseId);
+        stmt.setInt(2, limit);
+
+        ResultSet rs = stmt.executeQuery();
+        while (rs.next()) {
+            TechnicalRequest req = new TechnicalRequest();
+            req.setId(rs.getInt("id"));
+            req.setRequestCode(rs.getString("request_code"));
+            req.setEnterpriseId(rs.getInt("enterprise_id"));
+            req.setServiceId(rs.getInt("service_id"));
+            req.setTitle(rs.getString("title"));
+            req.setDescription(rs.getString("description"));
+            req.setPriority(rs.getString("priority"));
+            req.setStatus(rs.getString("status"));
+            req.setReporterId(rs.getInt("reporter_id"));
+            req.setServiceName(rs.getString("service_name")); // dùng JOIN lấy tên dịch vụ
+
+            list.add(req);
+        }
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        throw new Exception("Lỗi truy vấn recent requests: " + e.getMessage());
+    }
+
+    return list;
+}
 
 }
