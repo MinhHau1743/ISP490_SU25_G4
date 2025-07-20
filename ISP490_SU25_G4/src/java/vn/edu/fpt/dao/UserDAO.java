@@ -788,5 +788,209 @@ public class UserDAO {
             return false; // Trả về false nếu có lỗi xảy ra
         }
     }
+    
+ /**
+     * === SỬA ĐỔI 1: TÌM KIẾM CẢ ADMIN ===
+     * Tìm kiếm nhân viên theo tên hoặc mã (không phân biệt hoa-thường).
+     * BỎ điều kiện lọc is_deleted để hiển thị cả nhân viên bị vô hiệu hóa.
+     * BỎ điều kiện lọc Admin.
+     */
+    public List<User> searchEmployeesByName(String keyword, int page, int pageSize) {
+        List<User> list = new ArrayList<>();
+        // Sửa SQL: Đã xóa "AND u.is_deleted = 0"
+        String sql = "SELECT u.*, d.name AS departmentName, p.name AS positionName, r.name AS roleName "
+                + "FROM Users u "
+                + "LEFT JOIN Departments d ON u.department_id = d.id "
+                + "LEFT JOIN Positions p ON u.position_id = p.id "
+                + "LEFT JOIN Roles r ON u.role_id = r.id "
+                + "WHERE (LOWER(CONCAT_WS(' ', u.last_name, u.middle_name, u.first_name)) LIKE ? "
+                + "OR LOWER(u.employee_code) LIKE ?) "
+                + "ORDER BY u.id " // Sắp xếp lại theo ID cho nhất quán
+                + "LIMIT ? OFFSET ?";
 
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            String searchKeyword = "%" + keyword.toLowerCase() + "%";
+            int offset = (page - 1) * pageSize;
+
+            ps.setString(1, searchKeyword);
+            ps.setString(2, searchKeyword);
+            ps.setInt(3, pageSize);
+            ps.setInt(4, offset);
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                User user = new User();
+                user.setId(rs.getInt("id"));
+                user.setFirstName(rs.getString("first_name"));
+                user.setMiddleName(rs.getString("middle_name"));
+                user.setLastName(rs.getString("last_name"));
+                user.setEmployeeCode(rs.getString("employee_code"));
+                user.setDepartmentName(rs.getString("departmentName"));
+                user.setPositionName(rs.getString("positionName"));
+                user.setRoleName(rs.getString("roleName"));
+                user.setIsDeleted(rs.getInt("is_deleted")); // Lấy trạng thái
+                list.add(user);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+    /**
+     * === SỬA ĐỔI 2: ĐẾM KẾT QUẢ TÌM KIẾM BAO GỒM CẢ ADMIN ===
+     * Đếm tổng số nhân viên khớp với từ khóa (không phân biệt hoa-thường).
+     */
+    public int countSearchedEmployees(String keyword) {
+        // Sửa SQL: Đã xóa "AND u.is_deleted = 0"
+        String sql = "SELECT COUNT(u.id) FROM Users u "
+                + "WHERE (LOWER(CONCAT_WS(' ', u.last_name, u.middle_name, u.first_name)) LIKE ? OR LOWER(u.employee_code) LIKE ?)";
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            String searchKeyword = "%" + keyword.toLowerCase() + "%";
+            ps.setString(1, searchKeyword);
+            ps.setString(2, searchKeyword);
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+   /**
+     * === SỬA ĐỔI 3: ĐẾM TỔNG SỐ NHÂN VIÊN BAO GỒM CẢ ADMIN ===
+     * Đếm tổng số nhân viên trong hệ thống.
+     */
+    public int getTotalEmployeeCount() {
+        // Sửa SQL: Xóa các điều kiện lọc
+        String sql = "SELECT COUNT(id) FROM Users";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+     /**
+     * === SỬA ĐỔI 4: LẤY DANH SÁCH BAO GỒM CẢ ADMIN ===
+     * Lấy danh sách tất cả nhân viên có phân trang.
+     */
+    public List<User> getAllEmployeesPaginated(int page, int pageSize) {
+        List<User> employeeList = new ArrayList<>();
+        // Sửa SQL: Đã xóa "WHERE r.name <> 'Admin' AND u.is_deleted = 0"
+        String sql = "SELECT u.*, r.name as role_name, p.name as position_name, d.name as department_name "
+                + "FROM users u "
+                + "JOIN roles r ON u.role_id = r.id "
+                + "LEFT JOIN positions p ON u.position_id = p.id "
+                + "LEFT JOIN departments d ON u.department_id = d.id "
+                + "ORDER BY u.id "
+                + "LIMIT ? OFFSET ?";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            int offset = (page - 1) * pageSize;
+
+            ps.setInt(1, pageSize);
+            ps.setInt(2, offset);
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                User user = new User();
+                user.setId(rs.getInt("id"));
+                user.setEmail(rs.getString("email"));
+                user.setLastName(rs.getString("last_name"));
+                user.setMiddleName(rs.getString("middle_name"));
+                user.setFirstName(rs.getString("first_name"));
+                user.setAvatarUrl(rs.getString("avatar_url"));
+                user.setEmployeeCode(rs.getString("employee_code"));
+                user.setPhoneNumber(rs.getString("phone_number"));
+                user.setIsDeleted(rs.getInt("is_deleted"));
+                user.setRoleName(rs.getString("role_name"));
+                user.setPositionName(rs.getString("position_name"));
+                user.setDepartmentName(rs.getString("department_name"));
+                employeeList.add(user);
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi khi lấy danh sách nhân viên phân trang: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return employeeList;
+    }
+
+/**
+ * Thực hiện xóa mềm một người dùng bằng cách cập nhật cột is_deleted = 1.
+ * @param userId ID của người dùng cần xóa.
+ * @return true nếu cập nhật thành công, false nếu thất bại.
+ */
+public boolean softDeleteUserById(int userId) {
+    String sql = "UPDATE Users SET is_deleted = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+    
+    try (Connection conn = getConnection(); // Sử dụng hàm getConnection() của bạn
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        
+        ps.setInt(1, userId);
+        
+        int rowsAffected = ps.executeUpdate();
+        return rowsAffected > 0; // Trả về true nếu có ít nhất 1 dòng được cập nhật
+        
+    } catch (Exception e) {
+        e.printStackTrace();
+        return false;
+    }
+}
+/**
+ * Cập nhật trạng thái xóa mềm (is_deleted) của một người dùng.
+ * @param userId ID của người dùng cần cập nhật.
+ * @param isDeleted Trạng thái mới (0: hoạt động, 1: vô hiệu hóa).
+ * @return true nếu cập nhật thành công, false nếu thất bại.
+ */
+public boolean updateSoftDeleteStatus(int userId, boolean isDeleted) {
+    String sql = "UPDATE Users SET is_deleted = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+    
+    try (Connection conn = getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        
+        ps.setBoolean(1, isDeleted);
+        ps.setInt(2, userId);
+        
+        int rowsAffected = ps.executeUpdate();
+        return rowsAffected > 0;
+        
+    } catch (Exception e) {
+        e.printStackTrace();
+        return false;
+    }
+}
+
+public boolean updateSoftDeleteStatus(int userId, int isDeleted) {
+    String sql = "UPDATE Users SET is_deleted = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+
+    try (Connection conn = getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+
+        ps.setInt(1, isDeleted);
+        ps.setInt(2, userId);
+
+        int rowsAffected = ps.executeUpdate();
+        return rowsAffected > 0;
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        return false;
+    }
+}
 }
