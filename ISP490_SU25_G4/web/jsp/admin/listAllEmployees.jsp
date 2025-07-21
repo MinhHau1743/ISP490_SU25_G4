@@ -26,238 +26,97 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/employeeCard.css">
 
-        <%-- TOÀN BỘ CSS ĐÃ ĐƯỢC DỌN DẸP, TỐI ƯU VÀ HỢP NHẤT --%>
         <style>
             /* === BIẾN MÀU SẮC TRUNG TÂM === */
             :root {
-                --role-color-cskh: #3b82f6;      /* Xanh dương */
-                --role-color-kinhdoanh: #16a34a;   /* Xanh lá */
-                --role-color-chanhvanphong: #f59e0b; /* Vàng */
-                --role-color-kythuat: #ea580c;  /* Cam */
-                --role-color-admin: #9333ea;      /* Tím đậm cho Admin */
-                --role-color-default: #64748b;  /* Xám */
+                --role-color-cskh: #3b82f6;
+                --role-color-kinhdoanh: #16a34a;
+                --role-color-chanhvanphong: #f59e0b;
+                --role-color-kythuat: #ea580c;
+                --role-color-admin: #9333ea;
+                --role-color-default: #64748b;
             }
 
             /* === CSS CHO FORM TÌM KIẾM === */
-            .search-form {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                flex-grow: 1;
-            }
-            .search-bar {
-                width: 100%;
-                max-width: 400px;
-                position: relative;
-            }
-            .btn-search {
-                padding-top: 9px;
-                padding-bottom: 9px;
-                flex-shrink: 0;
-            }
-
-            /* === CSS CHO PHÂN TRANG === */
-            .table-footer {
-                width: 100%;
-                display: flex;
-                justify-content: center;
-                margin-top: 32px;
-                margin-bottom: 32px;
-            }
-            .pagination {
-                display: flex;
-            }
-            .pagination .page-link {
-                color: #0d6efd;
-                text-decoration: none;
-                background-color: #fff;
-                border: 1px solid #dee2e6;
-                padding: 0.5rem 0.9rem;
-                font-size: 1rem;
-                font-weight: 500;
-                transition: all 0.15s ease-in-out;
-                white-space: nowrap;
-                margin-left: -1px;
-            }
-            .pagination .page-link:first-child {
-                border-top-left-radius: 0.375rem;
-                border-bottom-left-radius: 0.375rem;
-                margin-left: 0;
-            }
-            .pagination .page-link:last-child {
-                border-top-right-radius: 0.375rem;
-                border-bottom-right-radius: 0.375rem;
-            }
-            .pagination .page-link:not(.disabled):not(.active):hover {
-                z-index: 2;
-                background-color: #e9ecef;
-                border-color: #dee2e6;
-            }
-            .pagination .page-link.active {
-                z-index: 3;
-                color: #fff;
-                background-color: #0d6efd;
-                border-color: #0d6efd;
-                cursor: default;
-            }
-            .pagination .page-link.disabled {
-                color: #6c757d;
-                pointer-events: none;
-                background-color: #fff;
-                border-color: #dee2e6;
-            }
+            .search-form { display: flex; align-items: center; gap: 12px; flex-grow: 1; }
+            .search-bar { width: 100%; max-width: 400px; position: relative; }
+            .btn-search { padding-top: 9px; padding-bottom: 9px; flex-shrink: 0; }
 
             /* === CSS CHO THẺ NHÂN VIÊN === */
-            .employee-grid {
-                gap: 24px;
-            }
+            .employee-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
             .employee-card {
                 background-color: #ffffff;
-                border: 1px solid #e2e8f0;
+                border: 2px solid #e2e8f0;
                 border-radius: 12px;
                 box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
                 padding: 24px;
                 display: flex;
                 flex-direction: column;
-                text-align: center;
+                text-align: left;
                 transition: all 0.2s ease-in-out;
-                border-top: 5px solid; /* Bỏ màu cụ thể, sẽ được gán bởi class vai trò */
             }
-            .employee-card:hover {
-                transform: translateY(-4px);
-                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            .card-header-minimal {
+                display: flex;
+                align-items: center;
+                gap: 16px;
             }
-            .card-main {
-                margin-bottom: 16px;
+            .card-avatar-minimal img {
+                width: 48px;
+                height: 48px;
+                border-radius: 50%;
+                object-fit: cover;
             }
-            .employee-name {
-                color: #1a202c;
-                font-size: 1.125rem;
-                font-weight: 600;
-                margin: 0;
+            .employee-name { color: #1a202c; font-size: 1.125rem; font-weight: 600; margin: 0; }
+            .employee-code { color: #a0aec0; font-size: 0.875rem; margin-top: 4px; }
+
+            /* === SỬA ĐỔI: Đổi màu gạch sang đậm hơn để rõ nét hơn === */
+            .card-separator {
+                border: none;
+                border-top: 1px solid #cbd5e1; /* Màu xám đậm hơn */
+                margin: 16px 0;
             }
-            .employee-code {
-                color: #a0aec0;
-                font-size: 0.875rem;
-                margin-top: 4px;
-            }
+
             .card-secondary-info {
                 width: 100%;
                 text-align: left;
-                margin-bottom: 16px;
-                padding-top: 16px;
-                border-top: 1px solid #edf2f7;
             }
-            .info-row {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                margin-bottom: 10px;
-                color: #4a5568;
-                font-size: 0.875rem;
-            }
-            .info-row i {
-                color: #a0aec0;
-            }
-            .card-actions {
-                margin-top: auto;
-                display: flex;
-                gap: 16px;
-                align-items: center;
-                justify-content: center;
-                width: 100%;
-            }
-            .action-btn {
-                color: #718096;
-                transition: color 0.2s;
-            }
-            .action-btn:hover {
-                color: #2b6cb0;
-            }
+            .info-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; color: #4a5568; font-size: 0.875rem; }
+            .info-row i { color: #a0aec0; }
+            .card-actions { margin-top: auto; display: flex; gap: 16px; align-items: center; justify-content: center; width: 100%; padding-top: 16px; }
+            .action-btn { color: #718096; transition: color 0.2s; }
+            .action-btn:hover { color: #2b6cb0; }
 
-            /* === CSS CHO TÍNH NĂNG HOẠT ĐỘNG / VÔ HIỆU HÓA === */
-            .employee-card.inactive-card {
-                background-color: #f8fafc;
-                opacity: 0.7;
-            }
-            .status-badge {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                padding: 4px 12px;
-                border-radius: 9999px;
-                font-weight: 600;
-                font-size: 0.8rem;
-                text-decoration: none;
-                cursor: pointer;
-                transition: all 0.2s;
-            }
-            .status-badge i {
-                width: 20px;
-                height: 20px;
-            }
-            .status-badge.status-active {
-                background-color: #ecfdf5;
-                color: #16a34a;
-            }
-            .status-badge.status-active:hover {
-                background-color: #d1fae5;
-            }
-            .status-badge.status-inactive {
-                background-color: #fee2e2;
-                color: #ef4444;
-            }
-            .status-badge.status-inactive:hover {
-                background-color: #fecaca;
-            }
+            /* CSS CÁC PHẦN KHÁC */
+            .employee-card.inactive-card { background-color: #f8fafc; opacity: 0.7; }
+            .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 9999px; font-weight: 600; font-size: 0.8rem; text-decoration: none; cursor: pointer; transition: all 0.2s; }
+            .status-badge i { width: 20px; height: 20px; }
+            .status-badge.status-active { background-color: #ecfdf5; color: #16a34a; }
+            .status-badge.status-active:hover { background-color: #d1fae5; }
+            .status-badge.status-inactive { background-color: #fee2e2; color: #ef4444; }
+            .status-badge.status-inactive:hover { background-color: #fecaca; }
+            .role-text { font-weight: 600; }
+            .employee-card.role-default { border-color: var(--role-color-default); }
+            .employee-card.role-default .role-text { color: var(--role-color-default); }
+            .employee-card.role-admin { border-color: var(--role-color-admin); }
+            .employee-card.role-admin .role-text { color: var(--role-color-admin); }
+            .employee-card.role-cskh { border-color: var(--role-color-cskh); }
+            .employee-card.role-cskh .role-text { color: var(--role-color-cskh); }
+            .employee-card.role-kinhdoanh { border-color: var(--role-color-kinhdoanh); }
+            .employee-card.role-kinhdoanh .role-text { color: var(--role-color-kinhdoanh); }
+            .employee-card.role-chanhvanphong { border-color: var(--role-color-chanhvanphong); }
+            .employee-card.role-chanhvanphong .role-text { color: var(--role-color-chanhvanphong); }
+            .employee-card.role-kythuat { border-color: var(--role-color-kythuat); }
+            .employee-card.role-kythuat .role-text { color: var(--role-color-kythuat); }
 
-            /* === LOGIC MÀU SẮC THEO VAI TRÒ === */
-            .role-text {
-                font-weight: 600;
-            }
-
-            /* Gán màu cho từng vai trò (áp dụng cho cả viền và chữ) */
-            .employee-card.role-default {
-                border-top-color: var(--role-color-default);
-            }
-            .employee-card.role-default .role-text {
-                color: var(--role-color-default);
-            }
-
-            .employee-card.role-admin {
-                border-top-color: var(--role-color-admin);
-            }
-            .employee-card.role-admin .role-text {
-                color: var(--role-color-admin);
-            }
-
-            .employee-card.role-cskh {
-                border-top-color: var(--role-color-cskh);
-            }
-            .employee-card.role-cskh .role-text {
-                color: var(--role-color-cskh);
-            }
-
-            .employee-card.role-kinhdoanh {
-                border-top-color: var(--role-color-kinhdoanh);
-            }
-            .employee-card.role-kinhdoanh .role-text {
-                color: var(--role-color-kinhdoanh);
-            }
-
-            .employee-card.role-chanhvanphong {
-                border-top-color: var(--role-color-chanhvanphong);
-            }
-            .employee-card.role-chanhvanphong .role-text {
-                color: var(--role-color-chanhvanphong);
-            }
-
-            .employee-card.role-kythuat {
-                border-top-color: var(--role-color-kythuat);
-            }
-            .employee-card.role-kythuat .role-text {
-                color: var(--role-color-kythuat);
-            }
+            /* CSS PHÂN TRANG */
+            .table-footer { width: 100%; display: flex; justify-content: center; margin-top: 32px; margin-bottom: 32px; }
+            .pagination { display: flex; }
+            .pagination .page-link { color: #0d6efd; text-decoration: none; background-color: #fff; border: 1px solid #dee2e6; padding: 0.5rem 0.9rem; font-size: 1rem; font-weight: 500; transition: all 0.15s ease-in-out; white-space: nowrap; margin-left: -1px; }
+            .pagination .page-link:first-child { border-top-left-radius: 0.375rem; border-bottom-left-radius: 0.375rem; margin-left: 0; }
+            .pagination .page-link:last-child { border-top-right-radius: 0.375rem; border-bottom-right-radius: 0.375rem; }
+            .pagination .page-link:not(.disabled):not(.active):hover { z-index: 2; background-color: #e9ecef; border-color: #dee2e6; }
+            .pagination .page-link.active { z-index: 3; color: #fff; background-color: #0d6efd; border-color: #0d6efd; cursor: default; }
+            .pagination .page-link.disabled { color: #6c757d; pointer-events: none; background-color: #fff; border-color: #dee2e6; }
         </style>
     </head>
     <body>
@@ -290,21 +149,20 @@
                             <p>
                                 <c:if test="${not empty searchQuery}">Không tìm thấy nhân viên nào khớp với từ khóa "${searchQuery}".</c:if>
                                 <c:if test="${empty searchQuery}">Không có nhân viên nào để hiển thị.</c:if>
-                                </p>
+                            </p>
                         </c:if>
 
                         <c:forEach var="user" items="${employeeList}">
                             <c:set var="roleColorClass" value="role-default"/>
                             <c:choose>
-                                <c:when test="${user.roleName == 'Admin'}"><c:set var="roleColorClass" value="role-admin"/></c:when>
-                                <c:when test="${user.roleName == 'Chăm sóc khách hàng'}"><c:set var="roleColorClass" value="role-cskh"/></c:when>
-                                <c:when test="${user.roleName == 'Kinh doanh'}"><c:set var="roleColorClass" value="role-kinhdoanh"/></c:when>
-                                <c:when test="${user.roleName == 'Chánh văn phòng'}"><c:set var="roleColorClass" value="role-chanhvanphong"/></c:when>
-                                <c:when test="${user.roleName == 'Kỹ thuật'}"><c:set var="roleColorClass" value="role-kythuat"/></c:when>
+                                <c:when test="${user.positionName == 'Admin'}"><c:set var="roleColorClass" value="role-admin"/></c:when>
+                                <c:when test="${user.positionName == 'Chăm sóc khách hàng'}"><c:set var="roleColorClass" value="role-cskh"/></c:when>
+                                <c:when test="${user.positionName == 'Kinh doanh'}"><c:set var="roleColorClass" value="role-kinhdoanh"/></c:when>
+                                <c:when test="${user.positionName == 'Chánh văn phòng'}"><c:set var="roleColorClass" value="role-chanhvanphong"/></c:when>
+                                <c:when test="${user.positionName == 'Kỹ thuật'}"><c:set var="roleColorClass" value="role-kythuat"/></c:when>
                             </c:choose>
 
                             <div class="employee-card ${roleColorClass} ${user.isDeleted == 1 ? 'inactive-card' : ''}">
-                                <%-- === THAY ĐỔI Ở ĐÂY: Thêm avatar vào bên trái tên === --%>
                                 <div class="card-header-minimal">
                                     <div class="card-avatar-minimal">
                                         <c:url var="avatarUrl" value="/images/default-avatar.png" />
@@ -318,18 +176,21 @@
                                         <p class="employee-code">${user.employeeCode}</p>
                                     </div>
                                 </div>
+
+                                <hr class="card-separator">
+
                                 <div class="card-secondary-info">
                                     <div class="info-row">
-                                        <i data-feather="shield"></i>
-                                        <span class="role-text">${empty user.roleName ? 'Chưa có vai trò' : user.roleName}</span>
-                                    </div>
-                                    <div class="info-row">
-                                        <i data-feather="briefcase"></i>
-                                        <span>${empty user.departmentName ? 'Chưa có phòng ban' : user.departmentName}</span>
-                                    </div>
-                                    <div class="info-row">
                                         <i data-feather="award"></i>
-                                        <span class="position-badge">${empty user.positionName ? 'Nhân viên' : user.positionName}</span>
+                                        <span class="role-text">${empty user.departmentName ? 'Chưa có phòng làm việc' : user.departmentName}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <i data-feather="shield"></i>
+                                        <span class="role-text">${empty user.positionName ? 'Chưa có chức vụ' : user.positionName}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <i data-feather="mail"></i>
+                                        <span>${empty user.email ? 'Chưa có email' : user.email}</span>
                                     </div>
                                 </div>
 
