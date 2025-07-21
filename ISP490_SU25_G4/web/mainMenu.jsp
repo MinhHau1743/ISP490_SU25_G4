@@ -80,8 +80,10 @@
                     <i data-feather="pie-chart"></i><span>Báo cáo</span><i data-feather="chevron-down" class="dropdown-icon"></i>
                 </a>
                 <ul class="sub-menu">
+
                     <li><a href="${pageContext.request.contextPath}/dailyReport" class="${menuHighlight == 'dailyReport' ? 'active' : ''}">Báo cáo hàng ngày</a></li>
                     <li><a href="${pageContext.request.contextPath}/monthlyReport" class="${menuHighlight == 'monthlyReport' ? 'active' : ''}">Báo cáo hàng tháng</a></li>
+
                 </ul>
             </li>
 
