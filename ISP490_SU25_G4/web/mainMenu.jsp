@@ -1,13 +1,19 @@
 <%--
-    Document    : mainMenu.jsp
-    Description : Thanh điều hướng chính của ứng dụng (phiên bản tối ưu).
+    Document   : mainMenu.jsp
+    Description: Thanh điều hướng chính của ứng dụng (phiên bản tối ưu).
 --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %> <%-- Thêm taglib functions --%>
 
-<%-- Lấy tên của trang hoặc servlet hiện tại để làm nổi bật menu --%>
-<c:set var="rawPage" value="${pageContext.request.servletPath.substring(1)}" />
-<c:set var="currentPage" value="${rawPage.replace('.jsp', '')}" />
+<%-- 
+    Lấy biến 'menuHighlight' từ các trang con (nếu có).
+    Nếu không có, sẽ lấy tự động từ đường dẫn URL.
+--%>
+<c:if test="${empty menuHighlight}">
+    <c:set var="rawPage" value="${pageContext.request.servletPath.substring(1)}" />
+    <c:set var="menuHighlight" value="${fn:replace(rawPage, '.jsp', '')}" />
+</c:if>
 
 <aside class="sidebar">
     <div class="sidebar-header">
@@ -19,70 +25,77 @@
         <ul>
             <%-- ===== NHÓM CHỨC NĂNG CHÍNH ===== --%>
             <li>
-                <a href="${pageContext.request.contextPath}/dashboard.jsp" class="${currentPage == 'dashboard' ? 'active' : ''}">
+                <a href="${pageContext.request.contextPath}/dashboard.jsp" class="${menuHighlight == 'dashboard' ? 'active' : ''}">
                     <i data-feather="grid"></i><span>Tổng quan</span>
                 </a>
             </li>
 
             <%-- ===== NHÓM QUẢN LÝ ===== --%>
             <li>
-                <a href="${pageContext.request.contextPath}/listCustomer" class="${currentPage.contains('Customer') ? 'active' : ''}">
+                <a href="${pageContext.request.contextPath}/listCustomer" class="${fn:containsIgnoreCase(menuHighlight, 'Customer') ? 'active' : ''}">
                     <i data-feather="users"></i><span>Khách hàng</span>
                 </a>
             </li>
             <li>
-                <a href="${pageContext.request.contextPath}/listContract" class="${currentPage.contains('Contract') ? 'active' : ''}">
+                <a href="${pageContext.request.contextPath}/listContract" class="${fn:containsIgnoreCase(menuHighlight, 'Contract') ? 'active' : ''}">
                     <i data-feather="file-text"></i><span>Hợp đồng</span>
                 </a>
             </li>
             <li>
-                <a href="${pageContext.request.contextPath}/ProductController" class="${currentPage.contains('Product') ? 'active' : ''}">
+                <a href="${pageContext.request.contextPath}/ProductController" class="${fn:containsIgnoreCase(menuHighlight, 'Product') ? 'active' : ''}">
                     <i data-feather="box"></i><span>Hàng hóa</span>
                 </a>
             </li>
 
             <%-- ===== NHÓM QUẢN TRỊ (CHỈ ADMIN THẤY) ===== --%>
-            <c:if test="${sessionScope.userRole == 'Admin'}">
+            <c:if test="${sessionScope.user.roleName == 'Admin'}">
                 <li>
-                    <%-- Đảm bảo đường dẫn ở đây là "/listEmployee" --%>
-                    <a href="${pageContext.request.contextPath}/listEmployee" class="${currentPage.contains('Employee') ? 'active' : ''}">
+                    <%-- SỬA ĐỔI Ở ĐÂY: Kiểm tra biến 'menuHighlight' --%>
+                    <a href="${pageContext.request.contextPath}/listEmployee" class="${fn:containsIgnoreCase(menuHighlight, 'Employee') ? 'active' : ''}">
                         <i data-feather="briefcase"></i><span>Nhân viên</span>
                     </a>
                 </li>
             </c:if>
 
             <%-- ===== NHÓM NGHIỆP VỤ ===== --%>
-            <c:set var="isSupportSection" value="${currentPage == 'ticket' || currentPage == 'createTicket'}" />
+
+
+            <c:set var="isSupportSection" value="${fn:containsIgnoreCase(menuHighlight, 'Ticket')}" />
+
             <li class="nav-item-dropdown ${isSupportSection ? 'open' : ''}">
                 <a href="#" class="${isSupportSection ? 'active' : ''}">
                     <i data-feather="tool"></i><span>Hỗ trợ Kỹ thuật</span><i data-feather="chevron-down" class="dropdown-icon"></i>
                 </a>
                 <ul class="sub-menu">
-                    <li><a href="${pageContext.request.contextPath}/ticket" class="${currentPage == 'ticket' ? 'active' : ''}">Danh sách Phiếu</a></li>
-                    <li><a href="${pageContext.request.contextPath}/ticket?action=create" class="${currentPage == 'createTicket' ? 'active' : ''}">Tạo Phiếu mới</a></li>
+
+                    <li><a href="${pageContext.request.contextPath}/listTicket" class="${menuHighlight == 'listTicket' ? 'active' : ''}">Danh sách Phiếu</a></li>
+                    <li><a href="${pageContext.request.contextPath}/createTicket" class="${menuHighlight == 'createTicket' ? 'active' : ''}">Tạo Phiếu mới</a></li>
+
                 </ul>
             </li>
 
-            <c:set var="isReportSection" value="${currentPage == 'dailyReport' || currentPage == 'monthlyReport'}" />
+            <c:set var="isReportSection" value="${fn:containsIgnoreCase(menuHighlight, 'Report')}" />
             <li class="nav-item-dropdown ${isReportSection ? 'open' : ''}">
                 <a href="#" class="${isReportSection ? 'active' : ''}">
                     <i data-feather="pie-chart"></i><span>Báo cáo</span><i data-feather="chevron-down" class="dropdown-icon"></i>
                 </a>
                 <ul class="sub-menu">
-                    <li><a href="${pageContext.request.contextPath}/dailyReport" class="${currentPage == 'dailyReport' ? 'active' : ''}">Báo cáo hàng ngày</a></li>
-                    <li><a href="report.jsp" class="${currentPage == 'monthlyReport' ? 'active' : ''}">Báo cáo hàng tháng</a></li>
+
+                    <li><a href="${pageContext.request.contextPath}/dailyReport" class="${menuHighlight == 'dailyReport' ? 'active' : ''}">Báo cáo hàng ngày</a></li>
+                    <li><a href="${pageContext.request.contextPath}/monthlyReport" class="${menuHighlight == 'monthlyReport' ? 'active' : ''}">Báo cáo hàng tháng</a></li>
+
                 </ul>
             </li>
 
             <%-- ===== NHÓM HỆ THỐNG & TÀI KHOẢN ===== --%>
-            <c:set var="isProfileSection" value="${currentPage == 'viewProfile' || currentPage == 'changePassword'}" />
+            <c:set var="isProfileSection" value="${fn:containsIgnoreCase(menuHighlight, 'Profile') || fn:containsIgnoreCase(menuHighlight, 'Password')}" />
             <li class="nav-item-dropdown ${isProfileSection ? 'open' : ''}">
                 <a href="#" class="${isProfileSection ? 'active' : ''}">
                     <i data-feather="settings"></i><span>Tài khoản</span><i data-feather="chevron-down" class="dropdown-icon"></i>
                 </a>
                 <ul class="sub-menu">
-                    <li><a href="${pageContext.request.contextPath}/viewProfile" class="${currentPage == 'viewProfile' ? 'active' : ''}">Thông tin cá nhân</a></li>
-                    <li><a href="${pageContext.request.contextPath}/changePassword" class="${currentPage == 'changePassword' ? 'active' : ''}">Đổi mật khẩu</a></li>
+                    <li><a href="${pageContext.request.contextPath}/viewProfile" class="${menuHighlight == 'viewProfile' ? 'active' : ''}">Thông tin cá nhân</a></li>
+                    <li><a href="${pageContext.request.contextPath}/changePassword" class="${menuHighlight == 'changePassword' ? 'active' : ''}">Đổi mật khẩu</a></li>
                 </ul>
             </li>
 

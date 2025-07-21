@@ -73,11 +73,11 @@ public class UserDAO {
                 if (rs.next()) {
                     System.out.println("DAO: Tim thay user '" + email + "' trong CSDL.");
 
-                    if (!"active".equalsIgnoreCase(rs.getString("status")) || rs.getBoolean("is_deleted")) {
-                        System.err.println("DAO: User bi khoa hoac da xoa.");
-                        return null; // Không cho đăng nhập nếu tài khoản không hoạt động
+                    // Kiểm tra xem tài khoản có bị xóa không
+                    if (rs.getInt("is_deleted") == 1) {
+                        System.err.println("DAO: Tài khoản này đã ngừng hoạt động hoặc đã bị xóa.");
+                        return null; // Không cho đăng nhập
                     }
-
                     String hashedPassword = rs.getString("password_hash");
                     System.out.println("DAO: Kiem tra mat khau...");
 
@@ -100,7 +100,7 @@ public class UserDAO {
                         user.setGender(rs.getString("gender"));
                         user.setIdentityCardNumber(rs.getString("identity_card_number"));
                         user.setNotes(rs.getString("notes"));
-                        user.setStatus(rs.getString("status"));
+                        user.setIsDeleted(rs.getInt("is_deleted"));
                         user.setCreatedAt(rs.getTimestamp("created_at"));
                         user.setUpdatedAt(rs.getTimestamp("updated_at"));
 
@@ -363,42 +363,30 @@ public class UserDAO {
     }
 
     public User getUserById(int userId) {
-        Connection conn = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
+    // Sửa SQL: Đã bỏ "AND u.is_deleted = 0"
+    String query = "SELECT "
+            + "u.*, p.name AS position_name, d.name AS department_name, r.name AS role_name, "
+            + "a.street_address, w.name AS ward_name, dist.name AS district_name, prov.name AS province_name, "
+            + "a.ward_id, a.district_id, a.province_id, u.position_id "
+            + "FROM Users u "
+            + "LEFT JOIN Positions p ON u.position_id = p.id "
+            + "LEFT JOIN Departments d ON u.department_id = d.id "
+            + "LEFT JOIN Roles r ON u.role_id = r.id "
+            + "LEFT JOIN Addresses a ON u.address_id = a.id "
+            + "LEFT JOIN Wards w ON a.ward_id = w.id "
+            + "LEFT JOIN Districts dist ON a.district_id = dist.id "
+            + "LEFT JOIN Provinces prov ON a.province_id = prov.id "
+            + "WHERE u.id = ?";
 
-        // Câu lệnh SQL sử dụng LEFT JOIN để gom thông tin từ các bảng liên quan, bổ sung lấy ID địa chỉ
-        String query = "SELECT "
-                + "u.id, u.email, u.last_name, u.middle_name, u.first_name, "
-                + "u.avatar_url, u.employee_code, u.phone_number, u.date_of_birth, u.gender, "
-                + "u.identity_card_number, u.notes, u.status, u.created_at, u.updated_at, u.department_id, "
-                + "p.name AS position_name, "
-                + "d.name AS department_name, "
-                + "r.name AS role_name, "
-                + "a.street_address, a.ward_id, a.district_id, a.province_id, " // Thêm các trường ID địa chỉ
-                + "w.name AS ward_name, "
-                + "dist.name AS district_name, "
-                + "prov.name AS province_name "
-                + "FROM Users u "
-                + "LEFT JOIN Positions p ON u.position_id = p.id "
-                + "LEFT JOIN Departments d ON u.department_id = d.id "
-                + "LEFT JOIN Roles r ON u.role_id = r.id "
-                + "LEFT JOIN Addresses a ON u.address_id = a.id "
-                + "LEFT JOIN Wards w ON a.ward_id = w.id "
-                + "LEFT JOIN Districts dist ON a.district_id = dist.id "
-                + "LEFT JOIN Provinces prov ON a.province_id = prov.id "
-                + "WHERE u.id = ? AND u.is_deleted = 0";
+    // Tối ưu: Dùng try-with-resources để tự động đóng kết nối
+    try (Connection conn = DBContext.getConnection();
+         PreparedStatement ps = conn.prepareStatement(query)) {
 
-        try {
-            conn = new DBContext().getConnection();
-            ps = conn.prepareStatement(query);
-            ps.setInt(1, userId);
-            rs = ps.executeQuery();
-
+        ps.setInt(1, userId);
+        try (ResultSet rs = ps.executeQuery()) {
             if (rs.next()) {
                 User user = new User();
-
-                // === Gán các trường từ bảng Users ===
+                // Gán các trường từ bảng Users
                 user.setId(rs.getInt("id"));
                 user.setEmail(rs.getString("email"));
                 user.setLastName(rs.getString("last_name"));
@@ -408,7 +396,6 @@ public class UserDAO {
                 user.setEmployeeCode(rs.getString("employee_code"));
                 user.setPhoneNumber(rs.getString("phone_number"));
 
-                // Chuyển đổi java.sql.Date sang java.time.LocalDate
                 Date dobSql = rs.getDate("date_of_birth");
                 if (dobSql != null) {
                     user.setDateOfBirth(dobSql.toLocalDate());
@@ -417,17 +404,18 @@ public class UserDAO {
                 user.setGender(rs.getString("gender"));
                 user.setIdentityCardNumber(rs.getString("identity_card_number"));
                 user.setNotes(rs.getString("notes"));
-                user.setStatus(rs.getString("status"));
                 user.setCreatedAt(rs.getTimestamp("created_at"));
                 user.setUpdatedAt(rs.getTimestamp("updated_at"));
+                user.setIsDeleted(rs.getInt("is_deleted")); // Lấy cả trạng thái is_deleted
 
-                // === Gán các trường từ các bảng JOIN (DTO style) ===
+                // Gán các trường từ các bảng JOIN
                 user.setRoleName(rs.getString("role_name"));
                 user.setPositionName(rs.getString("position_name"));
                 user.setDepartmentName(rs.getString("department_name"));
                 user.setDepartmentId(rs.getInt("department_id"));
+                user.setPositionId(rs.getInt("position_id"));
 
-                // === Gán địa chỉ (cả ID và tên) ===
+                // Gán địa chỉ
                 user.setStreetAddress(rs.getString("street_address"));
                 user.setWardId(rs.getObject("ward_id") != null ? rs.getInt("ward_id") : null);
                 user.setDistrictId(rs.getObject("district_id") != null ? rs.getInt("district_id") : null);
@@ -438,26 +426,12 @@ public class UserDAO {
 
                 return user;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
-        return null;
+    } catch (Exception e) {
+        e.printStackTrace();
     }
-
+    return null; // Trả về null nếu không tìm thấy user hoặc có lỗi
+}
     // Lấy danh sách nhân viên để hiển thị trong dropdown
     public List<User> getAllEmployees() throws Exception {
         List<User> employees = new ArrayList<>();
@@ -566,7 +540,8 @@ public class UserDAO {
                 user.setAvatarUrl(rs.getString("avatar_url"));
                 user.setEmployeeCode(rs.getString("employee_code"));
                 user.setPhoneNumber(rs.getString("phone_number"));
-                user.setStatus(rs.getString("status"));
+
+                user.setIsDeleted(rs.getInt("is_deleted"));
 
                 // Gán các trường lấy từ bảng JOIN
                 user.setRoleName(rs.getString("role_name"));
@@ -589,25 +564,24 @@ public class UserDAO {
         // Tạo mã nhân viên duy nhất
         String employeeCode = "NV" + System.currentTimeMillis() % 100000;
 
-        String sql = "INSERT INTO users (last_name, middle_name, first_name, email, password_hash, "
-                + "phone_number, avatar_url, employee_code, date_of_birth, gender, "
-                + "identity_card_number, notes, status, department_id, position_id, role_id, "
-                + "created_at, updated_at, is_deleted) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)";
+        String sql = "INSERT INTO users (email, password_hash, last_name, middle_name, first_name, "
+                + "avatar_url, employee_code, phone_number, date_of_birth, gender, "
+                + "identity_card_number, notes, address_id, position_id, department_id, role_id, "
+                + "is_deleted, created_at, updated_at, require_change_password) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)";
 
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, user.getLastName());
-            ps.setString(2, user.getMiddleName());
-            ps.setString(3, user.getFirstName());
-            ps.setString(4, user.getEmail());
-            ps.setString(5, hashedPassword);
-            ps.setString(6, user.getPhoneNumber());
-            ps.setString(7, user.getAvatarUrl());
-            ps.setString(8, employeeCode);
+            ps.setString(1, user.getEmail());
+            ps.setString(2, hashedPassword);
+            ps.setString(3, user.getLastName());
+            ps.setString(4, user.getMiddleName());
+            ps.setString(5, user.getFirstName());
+            ps.setString(6, user.getAvatarUrl());
+            ps.setString(7, employeeCode);
+            ps.setString(8, user.getPhoneNumber());
 
-            // Ngày sinh có thể null
             if (user.getDateOfBirth() != null) {
-                ps.setString(9, user.getDateOfBirth().toString());
+                ps.setDate(9, java.sql.Date.valueOf(user.getDateOfBirth()));
             } else {
                 ps.setNull(9, java.sql.Types.DATE);
             }
@@ -616,9 +590,16 @@ public class UserDAO {
             ps.setString(11, user.getIdentityCardNumber());
             ps.setString(12, user.getNotes());
 
-            ps.setInt(13, departmentId);
+            // Address ID có thể null
+            if (user.getAddressId() > 0) {
+                ps.setInt(13, user.getAddressId());
+            } else {
+                ps.setNull(13, java.sql.Types.INTEGER);
+            }
+
             ps.setInt(14, positionId);
-            ps.setInt(15, roleId);
+            ps.setInt(15, departmentId);
+            ps.setInt(16, roleId);
 
             int rowsAffected = ps.executeUpdate();
             return rowsAffected > 0;
@@ -629,7 +610,6 @@ public class UserDAO {
             return false;
         }
     }
-
 
     public boolean setRequireChangePasswordByEmail(String email) {
         String sql = "UPDATE Users SET require_change_password = 0 WHERE email = ?";
@@ -682,31 +662,303 @@ public class UserDAO {
     }
 
     public boolean updateEmployee(User user, int departmentId, int positionId) {
-    // Câu lệnh UPDATE chỉ cập nhật những trường cho phép sửa
-    String sql = "UPDATE users SET " +
-                 "last_name = ?, middle_name = ?, first_name = ?, phone_number = ?, email = ?, " +
-                 "department_id = ?, position_id = ?, notes = ?, identity_card_number = ?, " +
-                 "date_of_birth = ?, gender = ?, updated_at = CURRENT_TIMESTAMP " +
-                 "WHERE id = ?";
-                 
-    try (Connection conn = DBContext.getConnection();
+        // Câu lệnh UPDATE chỉ cập nhật những trường cho phép sửa
+        String sql = "UPDATE users SET "
+                + "last_name = ?, middle_name = ?, first_name = ?, phone_number = ?, email = ?, "
+                + "department_id = ?, position_id = ?, notes = ?, identity_card_number = ?, "
+                + "date_of_birth = ?, gender = ?, updated_at = CURRENT_TIMESTAMP "
+                + "WHERE id = ?";
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            // Giả sử bạn đã có logic tách fullName thành last/middle/first
+            ps.setString(1, user.getLastName());
+            ps.setString(2, user.getMiddleName());
+            ps.setString(3, user.getFirstName());
+            ps.setString(4, user.getPhoneNumber());
+            ps.setString(5, user.getEmail());
+            ps.setInt(6, departmentId);
+            ps.setInt(7, positionId);
+            ps.setString(8, user.getNotes());
+            ps.setString(9, user.getIdentityCardNumber());
+            ps.setDate(10, java.sql.Date.valueOf(user.getDateOfBirth()));
+            ps.setString(11, user.getGender());
+
+            // ID cho điều kiện WHERE
+            ps.setInt(12, user.getId());
+
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Cập nhật thông tin của một nhân viên trong cơ sở dữ liệu. Phương thức này
+     * sử dụng SQL động để chỉ cập nhật trường avatar_url nếu một đường dẫn mới
+     * được cung cấp trong đối tượng User.
+     *
+     * @param user Đối tượng User chứa thông tin mới. ID của user phải được set.
+     * @return true nếu cập nhật thành công, false nếu thất bại.
+     */
+    public boolean updateEmployee(User user) {
+        // Xây dựng câu lệnh SQL động để không cập nhật avatar nếu không có file mới
+        StringBuilder sqlBuilder = new StringBuilder("UPDATE Users SET ");
+        sqlBuilder.append("last_name = ?, middle_name = ?, first_name = ?, phone_number = ?, ");
+        sqlBuilder.append("date_of_birth = ?, gender = ?, identity_card_number = ?, notes = ?, ");
+        sqlBuilder.append("position_id = ?, department_id = ?, updated_at = CURRENT_TIMESTAMP");
+
+        // Chỉ thêm phần cập nhật avatar nếu có URL mới và không rỗng
+        if (user.getAvatarUrl() != null && !user.getAvatarUrl().isEmpty()) {
+            sqlBuilder.append(", avatar_url = ?");
+        }
+
+        // Mệnh đề WHERE là quan trọng nhất để cập nhật đúng người dùng
+        sqlBuilder.append(" WHERE id = ?");
+
+        String sql = sqlBuilder.toString();
+        System.out.println("Executing SQL: " + sql); // In ra để kiểm tra câu lệnh SQL
+
+        try (Connection conn = new DBContext().getConnection(); // Thay DBContext bằng lớp kết nối của bạn
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            int paramIndex = 1; // Biến đếm vị trí tham số '?'
+
+            // Set các tham số theo đúng thứ tự trong câu lệnh SQL
+            ps.setString(paramIndex++, user.getLastName());
+            ps.setString(paramIndex++, user.getMiddleName());
+            ps.setString(paramIndex++, user.getFirstName());
+            ps.setString(paramIndex++, user.getPhoneNumber());
+
+            // Chuyển đổi từ java.time.LocalDate sang java.sql.Date
+            ps.setDate(paramIndex++, java.sql.Date.valueOf(user.getDateOfBirth()));
+
+            ps.setString(paramIndex++, user.getGender());
+            ps.setString(paramIndex++, user.getIdentityCardNumber());
+            ps.setString(paramIndex++, user.getNotes());
+            ps.setInt(paramIndex++, user.getPositionId());
+            ps.setInt(paramIndex++, user.getDepartmentId());
+
+            // Set tham số cho avatar nếu có
+            if (user.getAvatarUrl() != null && !user.getAvatarUrl().isEmpty()) {
+                ps.setString(paramIndex++, user.getAvatarUrl());
+            }
+
+            // Set tham số cuối cùng cho ID trong mệnh đề WHERE
+            ps.setInt(paramIndex++, user.getId());
+
+            // Thực thi câu lệnh UPDATE và kiểm tra số dòng bị ảnh hưởng
+            int result = ps.executeUpdate();
+
+            // Nếu result > 0, có nghĩa là có ít nhất 1 dòng đã được cập nhật thành công
+            return result > 0;
+
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi cập nhật nhân viên trong DAO: " + e.getMessage());
+            e.printStackTrace();
+            return false; // Trả về false nếu có lỗi xảy ra
+        }
+    }
+    
+ /**
+     * === SỬA ĐỔI 1: TÌM KIẾM CẢ ADMIN ===
+     * Tìm kiếm nhân viên theo tên hoặc mã (không phân biệt hoa-thường).
+     * BỎ điều kiện lọc is_deleted để hiển thị cả nhân viên bị vô hiệu hóa.
+     * BỎ điều kiện lọc Admin.
+     */
+    public List<User> searchEmployeesByName(String keyword, int page, int pageSize) {
+        List<User> list = new ArrayList<>();
+        // Sửa SQL: Đã xóa "AND u.is_deleted = 0"
+        String sql = "SELECT u.*, d.name AS departmentName, p.name AS positionName, r.name AS roleName "
+                + "FROM Users u "
+                + "LEFT JOIN Departments d ON u.department_id = d.id "
+                + "LEFT JOIN Positions p ON u.position_id = p.id "
+                + "LEFT JOIN Roles r ON u.role_id = r.id "
+                + "WHERE (LOWER(CONCAT_WS(' ', u.last_name, u.middle_name, u.first_name)) LIKE ? "
+                + "OR LOWER(u.employee_code) LIKE ?) "
+                + "ORDER BY u.id " // Sắp xếp lại theo ID cho nhất quán
+                + "LIMIT ? OFFSET ?";
+
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            String searchKeyword = "%" + keyword.toLowerCase() + "%";
+            int offset = (page - 1) * pageSize;
+
+            ps.setString(1, searchKeyword);
+            ps.setString(2, searchKeyword);
+            ps.setInt(3, pageSize);
+            ps.setInt(4, offset);
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                User user = new User();
+                user.setId(rs.getInt("id"));
+                user.setFirstName(rs.getString("first_name"));
+                user.setMiddleName(rs.getString("middle_name"));
+                user.setLastName(rs.getString("last_name"));
+                user.setEmployeeCode(rs.getString("employee_code"));
+                user.setDepartmentName(rs.getString("departmentName"));
+                user.setPositionName(rs.getString("positionName"));
+                user.setRoleName(rs.getString("roleName"));
+                user.setIsDeleted(rs.getInt("is_deleted")); // Lấy trạng thái
+                list.add(user);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+    /**
+     * === SỬA ĐỔI 2: ĐẾM KẾT QUẢ TÌM KIẾM BAO GỒM CẢ ADMIN ===
+     * Đếm tổng số nhân viên khớp với từ khóa (không phân biệt hoa-thường).
+     */
+    public int countSearchedEmployees(String keyword) {
+        // Sửa SQL: Đã xóa "AND u.is_deleted = 0"
+        String sql = "SELECT COUNT(u.id) FROM Users u "
+                + "WHERE (LOWER(CONCAT_WS(' ', u.last_name, u.middle_name, u.first_name)) LIKE ? OR LOWER(u.employee_code) LIKE ?)";
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            String searchKeyword = "%" + keyword.toLowerCase() + "%";
+            ps.setString(1, searchKeyword);
+            ps.setString(2, searchKeyword);
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+   /**
+     * === SỬA ĐỔI 3: ĐẾM TỔNG SỐ NHÂN VIÊN BAO GỒM CẢ ADMIN ===
+     * Đếm tổng số nhân viên trong hệ thống.
+     */
+    public int getTotalEmployeeCount() {
+        // Sửa SQL: Xóa các điều kiện lọc
+        String sql = "SELECT COUNT(id) FROM Users";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+     /**
+     * === SỬA ĐỔI 4: LẤY DANH SÁCH BAO GỒM CẢ ADMIN ===
+     * Lấy danh sách tất cả nhân viên có phân trang.
+     */
+    public List<User> getAllEmployeesPaginated(int page, int pageSize) {
+        List<User> employeeList = new ArrayList<>();
+        // Sửa SQL: Đã xóa "WHERE r.name <> 'Admin' AND u.is_deleted = 0"
+        String sql = "SELECT u.*, r.name as role_name, p.name as position_name, d.name as department_name "
+                + "FROM users u "
+                + "JOIN roles r ON u.role_id = r.id "
+                + "LEFT JOIN positions p ON u.position_id = p.id "
+                + "LEFT JOIN departments d ON u.department_id = d.id "
+                + "ORDER BY u.id "
+                + "LIMIT ? OFFSET ?";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            int offset = (page - 1) * pageSize;
+
+            ps.setInt(1, pageSize);
+            ps.setInt(2, offset);
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                User user = new User();
+                user.setId(rs.getInt("id"));
+                user.setEmail(rs.getString("email"));
+                user.setLastName(rs.getString("last_name"));
+                user.setMiddleName(rs.getString("middle_name"));
+                user.setFirstName(rs.getString("first_name"));
+                user.setAvatarUrl(rs.getString("avatar_url"));
+                user.setEmployeeCode(rs.getString("employee_code"));
+                user.setPhoneNumber(rs.getString("phone_number"));
+                user.setIsDeleted(rs.getInt("is_deleted"));
+                user.setRoleName(rs.getString("role_name"));
+                user.setPositionName(rs.getString("position_name"));
+                user.setDepartmentName(rs.getString("department_name"));
+                employeeList.add(user);
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi khi lấy danh sách nhân viên phân trang: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return employeeList;
+    }
+
+/**
+ * Thực hiện xóa mềm một người dùng bằng cách cập nhật cột is_deleted = 1.
+ * @param userId ID của người dùng cần xóa.
+ * @return true nếu cập nhật thành công, false nếu thất bại.
+ */
+public boolean softDeleteUserById(int userId) {
+    String sql = "UPDATE Users SET is_deleted = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+    
+    try (Connection conn = getConnection(); // Sử dụng hàm getConnection() của bạn
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        
+        ps.setInt(1, userId);
+        
+        int rowsAffected = ps.executeUpdate();
+        return rowsAffected > 0; // Trả về true nếu có ít nhất 1 dòng được cập nhật
+        
+    } catch (Exception e) {
+        e.printStackTrace();
+        return false;
+    }
+}
+/**
+ * Cập nhật trạng thái xóa mềm (is_deleted) của một người dùng.
+ * @param userId ID của người dùng cần cập nhật.
+ * @param isDeleted Trạng thái mới (0: hoạt động, 1: vô hiệu hóa).
+ * @return true nếu cập nhật thành công, false nếu thất bại.
+ */
+public boolean updateSoftDeleteStatus(int userId, boolean isDeleted) {
+    String sql = "UPDATE Users SET is_deleted = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+    
+    try (Connection conn = getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        
+        ps.setBoolean(1, isDeleted);
+        ps.setInt(2, userId);
+        
+        int rowsAffected = ps.executeUpdate();
+        return rowsAffected > 0;
+        
+    } catch (Exception e) {
+        e.printStackTrace();
+        return false;
+    }
+}
+
+public boolean updateSoftDeleteStatus(int userId, int isDeleted) {
+    String sql = "UPDATE Users SET is_deleted = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+
+    try (Connection conn = getConnection();
          PreparedStatement ps = conn.prepareStatement(sql)) {
 
-        // Giả sử bạn đã có logic tách fullName thành last/middle/first
-        ps.setString(1, user.getLastName());
-        ps.setString(2, user.getMiddleName());
-        ps.setString(3, user.getFirstName());
-        ps.setString(4, user.getPhoneNumber());
-        ps.setString(5, user.getEmail());
-        ps.setInt(6, departmentId);
-        ps.setInt(7, positionId);
-        ps.setString(8, user.getNotes());
-        ps.setString(9, user.getIdentityCardNumber());
-        ps.setDate(10, java.sql.Date.valueOf(user.getDateOfBirth()));
-        ps.setString(11, user.getGender());
-        
-        // ID cho điều kiện WHERE
-        ps.setInt(12, user.getId());
+        ps.setInt(1, isDeleted);
+        ps.setInt(2, userId);
 
         int rowsAffected = ps.executeUpdate();
         return rowsAffected > 0;
@@ -717,5 +969,26 @@ public class UserDAO {
     }
 }
 
+public User getUserByEmail(String email) {
+    String sql = "SELECT * FROM Users WHERE email = ?";
+    try (Connection conn = DBContext.getConnection(); 
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        
+        ps.setString(1, email);
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                User user = new User();
+                user.setId(rs.getInt("id"));
+                user.setEmail(rs.getString("email"));
+                user.setIsDeleted(rs.getInt("is_deleted"));
+                // Bạn có thể set thêm các thuộc tính khác nếu cần
+                return user;
+            }
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return null;
+}
 
 }

@@ -234,7 +234,7 @@
                             </div>
                         </div>
 
-                        <jsp:include page="../../pagination.jsp"/>
+                        <jsp:include page="/pagination.jsp"/>
                         <jsp:include page="../technicalSupport/createGroupProduct.jsp" />
                     </div>
                 </div>
