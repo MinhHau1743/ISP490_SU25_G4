@@ -510,14 +510,14 @@
                     <div class="calendar-toolbar">
                         <h1 class="title">Lịch bảo trì</h1>
                         <div class="view-toggle">
-                            <button id="view-day-btn" class="btn-toggle active" data-view="day-view">Day</button>
-                            <button id="view-week-btn" class="btn-toggle" data-view="week-view">Week</button>
-                            <button id="view-month-btn" class="btn-toggle" data-view="month-view">Month</button>
-                            <button id="view-list-btn" class="btn-toggle" data-view="list-view">List</button>
+                            <button id="view-day-btn" class="btn-toggle active" data-view="day-view">Ngày</button>
+                            <button id="view-week-btn" class="btn-toggle" data-view="week-view">Tuần</button>
+                            <button id="view-month-btn" class="btn-toggle" data-view="month-view">Tháng</button>
+                            <button id="view-list-btn" class="btn-toggle" data-view="list-view">Danh sách</button>
                         </div>
                         <div class="week-nav">
                             <button class="btn-nav"><i data-feather="chevron-left"></i></button>
-                            <span class="date-range">Today</span>
+                            <span class="date-range">Hôm nay</span>
                             <button class="btn-nav"><i data-feather="chevron-right"></i></button>
                         </div>
                         <div class="toolbar-spacer"></div>
@@ -540,17 +540,17 @@
                                         <c:set var="startTime" value="${dayStartTimes[status.index]}"/>
                                         <div class="${startTime == 'all-day' ? 'time-slot all-day-slot' : 'time-slot'}"
                                              <c:if test="${startTime != 'all-day'}">data-start-time="${startTime}"</c:if>
-                                             ondragover="allowDrop(event)" ondrop="drop(event)">
-                                            <c:if test="${startTime == '9:30'}">
-                                                <div class="event" id="event1" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" onclick="showDetails(this)">
-                                                    <span class="event-time">9:30</span><br>Follow-up call with client
-                                                </div>
-                                            </c:if>
-                                            <c:if test="${startTime == '11:30'}">
-                                                <div class="event" id="event2" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" onclick="showDetails(this)">
-                                                    <span class="event-time">11:30</span><br>Follow-up call with client
-                                                </div>
-                                            </c:if>
+                                                 ondragover="allowDrop(event)" ondrop="drop(event)">
+                                             <c:if test="${startTime == '9:30'}">
+                                                 <div class="event" id="event1" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" onclick="showDetails(this)">
+                                                     <span class="event-time">9:30</span><br>Follow-up call with client
+                                                 </div>
+                                             </c:if>
+                                             <c:if test="${startTime == '11:30'}">
+                                                 <div class="event" id="event2" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" onclick="showDetails(this)">
+                                                     <span class="event-time">11:30</span><br>Follow-up call with client
+                                                 </div>
+                                             </c:if>
                                         </div>
                                     </c:forEach>
                                 </div>
@@ -934,15 +934,36 @@
             }
 
             // View toggle functionality
-            document.querySelectorAll('.btn-toggle').forEach(button => {
-                button.addEventListener('click', () => {
-                    document.querySelectorAll('.calendar-view').forEach(view => view.classList.remove('active'));
-                    document.getElementById(button.getAttribute('data-view')).classList.add('active');
-                    document.querySelectorAll('.btn-toggle').forEach(btn => btn.classList.remove('active'));
-                    button.classList.add('active');
+            document.addEventListener('DOMContentLoaded', () => {
+                // Xử lý khôi phục view từ localStorage
+                const savedView = localStorage.getItem('selectedView') || 'day-view';
+
+                document.querySelectorAll('.calendar-view').forEach(view => {
+                    view.classList.remove('active');
+                });
+
+                const selectedViewElement = document.getElementById(savedView);
+                if (selectedViewElement) {
+                    selectedViewElement.classList.add('active');
+                }
+                document.querySelectorAll('.btn-toggle').forEach(button => {
+                    button.classList.remove('active');
+                    if (button.getAttribute('data-view') === savedView) {
+                        button.classList.add('active');
+                    }
                 });
             });
-
+// Gắn sự kiện lưu trạng thái
+            document.querySelectorAll('.btn-toggle').forEach(button => {
+                button.addEventListener('click', () => {
+                    const viewId = button.getAttribute('data-view');
+                    document.querySelectorAll('.calendar-view').forEach(view => view.classList.remove('active'));
+                    document.getElementById(viewId).classList.add('active');
+                    document.querySelectorAll('.btn-toggle').forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    localStorage.setItem('selectedView', viewId);
+                });
+            });
             // Initialize resize handles for existing all-day events
             document.addEventListener('DOMContentLoaded', () => {
                 document.querySelectorAll('#week-view .event.all-day').forEach(event => {

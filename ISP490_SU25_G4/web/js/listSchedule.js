@@ -6,19 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
     feather.replace();
 
     // --- 1. LOGIC CHUYỂN ĐỔI VIEW (TUẦN/THÁNG) ---
-    const toggleButtons = document.querySelectorAll('.btn-toggle');
-    const calendarViews = document.querySelectorAll('.calendar-view');
-    const weekNav = document.querySelector('.week-nav');
-    toggleButtons.forEach(button => {
-        button.addEventListener('click', function () {
-            toggleButtons.forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
-            const viewId = this.getAttribute('data-view');
-            calendarViews.forEach(view => view.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active');
-            weekNav.style.display = (viewId === 'week-view') ? 'flex' : 'none';
-        });
-    });
+    
 
     // --- 2. LOGIC POPOVER CHO LỊCH THÁNG ---
     const popover = document.getElementById('month-task-popover');
