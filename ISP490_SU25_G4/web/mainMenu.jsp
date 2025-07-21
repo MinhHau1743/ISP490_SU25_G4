@@ -75,16 +75,10 @@
             </li>
 
             <c:set var="isReportSection" value="${fn:containsIgnoreCase(menuHighlight, 'Report')}" />
-            <li class="nav-item-dropdown ${isReportSection ? 'open' : ''}">
-                <a href="#" class="${isReportSection ? 'active' : ''}">
-                    <i data-feather="pie-chart"></i><span>Báo cáo</span><i data-feather="chevron-down" class="dropdown-icon"></i>
+            <li class="nav-item ${currentPage == 'report' ? 'active' : ''}">
+                <a href="${pageContext.request.contextPath}/report" class="${currentPage == 'report' ? 'active' : ''}">
+                    <i data-feather="pie-chart"></i><span>Báo cáo</span>
                 </a>
-                <ul class="sub-menu">
-
-                    <li><a href="${pageContext.request.contextPath}/dailyReport" class="${menuHighlight == 'dailyReport' ? 'active' : ''}">Báo cáo hàng ngày</a></li>
-                    <li><a href="${pageContext.request.contextPath}/monthlyReport" class="${menuHighlight == 'monthlyReport' ? 'active' : ''}">Báo cáo hàng tháng</a></li>
-
-                </ul>
             </li>
 
             <%-- ===== NHÓM HỆ THỐNG & TÀI KHOẢN ===== --%>
