@@ -56,18 +56,21 @@ public class ReportDAO {
         return count;
     }
 
-    // 1. Lấy tổng doanh thu trong khoảng thời gian
+    // 1. Lấy tổng doanh thu
     public double getTotalRevenue(String startDate, String endDate) throws SQLException {
+        // THAY ĐỔI: Xóa điều kiện WHERE để tính tổng doanh thu của tất cả hợp đồng
         String query = "SELECT SUM(cp.quantity * cp.unit_price) "
                 + "FROM ContractProducts cp "
-                + "JOIN Contracts c ON cp.contract_id = c.id "
-                + "WHERE c.start_date BETWEEN ? AND ?";
+                + "JOIN Contracts c ON cp.contract_id = c.id";
+
         double total = 0;
         try {
             conn = new DBContext().getConnection();
             ps = conn.prepareStatement(query);
-            ps.setString(1, startDate);
-            ps.setString(2, endDate);
+
+            // XÓA: Không cần set tham số ngày tháng nữa
+            // ps.setString(1, startDate);
+            // ps.setString(2, endDate);
             rs = ps.executeQuery();
             if (rs.next()) {
                 total = rs.getDouble(1);
@@ -182,23 +185,26 @@ public class ReportDAO {
         return counts;
     }
 
-    // 5. Lấy danh sách sản phẩm bán chạy trong khoảng thời gian
+    // 5. Lấy danh sách sản phẩm bán chạy
     public List<Map<String, Object>> getTopProducts(String startDate, String endDate, int limit) throws SQLException {
+        // THAY ĐỔI: Xóa điều kiện "AND c.start_date BETWEEN ? AND ?"
         String query = "SELECT p.name, SUM(cp.quantity) as total_sold "
                 + "FROM ContractProducts cp "
                 + "JOIN Products p ON cp.product_id = p.id "
                 + "JOIN Contracts c ON cp.contract_id = c.id "
-                + "WHERE p.is_deleted = 0 AND c.start_date BETWEEN ? AND ? "
+                + "WHERE p.is_deleted = 0 "
                 + "GROUP BY p.id, p.name "
                 + "ORDER BY total_sold DESC "
                 + "LIMIT ?";
+
         List<Map<String, Object>> topProducts = new ArrayList<>();
         try {
             conn = new DBContext().getConnection();
             ps = conn.prepareStatement(query);
-            ps.setString(1, startDate);
-            ps.setString(2, endDate);
-            ps.setInt(3, limit);
+
+            // THAY ĐỔI: Chỉ cần set tham số "limit" ở vị trí số 1
+            ps.setInt(1, limit);
+
             rs = ps.executeQuery();
             while (rs.next()) {
                 Map<String, Object> product = new HashMap<>();
@@ -215,17 +221,21 @@ public class ReportDAO {
     // 6. Lấy xu hướng doanh thu theo ngày để vẽ biểu đồ
     public List<Map<String, Object>> getRevenueTrend(String startDate, String endDate) throws SQLException {
         List<Map<String, Object>> trendData = new ArrayList<>();
+
+        // THAY ĐỔI: Xóa điều kiện WHERE để lấy xu hướng từ tất cả hợp đồng
         String query = "SELECT DATE(c.start_date) as a_date, SUM(cp.quantity * cp.unit_price) as daily_revenue "
                 + "FROM ContractProducts cp "
                 + "JOIN Contracts c ON cp.contract_id = c.id "
-                + "WHERE c.start_date BETWEEN ? AND ? "
                 + "GROUP BY a_date "
                 + "ORDER BY a_date ASC";
+
         try {
             conn = new DBContext().getConnection();
             ps = conn.prepareStatement(query);
-            ps.setString(1, startDate);
-            ps.setString(2, endDate);
+
+            // XÓA: Không cần set tham số ngày tháng nữa
+            // ps.setString(1, startDate);
+            // ps.setString(2, endDate);
             rs = ps.executeQuery();
             while (rs.next()) {
                 Map<String, Object> dataPoint = new HashMap<>();
