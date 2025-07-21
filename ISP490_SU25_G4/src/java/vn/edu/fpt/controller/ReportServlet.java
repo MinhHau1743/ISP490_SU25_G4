@@ -67,7 +67,7 @@ public class ReportServlet extends HttpServlet {
 
                 // THÊM 2 CASE MỚI VÀO ĐÂY
                 case "hopdong":
-                    request.setAttribute("contractStatus", reportDAO.getContractStatusCounts());
+                    request.setAttribute("contractStatus", reportDAO.getContractStatusCounts(dateFromStr, dateToStr));
                     request.setAttribute("contractsList", reportDAO.getContractsList(dateFromStr, dateToStr));
                     break;
                 case "suachua":
@@ -81,7 +81,7 @@ public class ReportServlet extends HttpServlet {
                     request.setAttribute("newCustomers", reportDAO.getNewCustomerCount(dateFromStr, dateToStr));
                     request.setAttribute("totalCustomers", reportDAO.getTotalCustomerCount());
                     request.setAttribute("returningCustomers", reportDAO.getReturningCustomerCount(dateFromStr, dateToStr));
-                    request.setAttribute("contractStatus", reportDAO.getContractStatusCounts());
+                    request.setAttribute("contractStatus", reportDAO.getContractStatusCounts(dateFromStr, dateToStr));
                     request.setAttribute("requestStatus", reportDAO.getTechnicalRequestStatusCounts(dateFromStr, dateToStr));
                     request.setAttribute("topProducts", reportDAO.getTopProducts(dateFromStr, dateToStr, 3));
                     break;

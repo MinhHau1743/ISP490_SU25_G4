@@ -56,21 +56,18 @@ public class ReportDAO {
         return count;
     }
 
-    // 1. Lấy tổng doanh thu
+    // 1. Lấy tổng doanh thu trong khoảng thời gian
     public double getTotalRevenue(String startDate, String endDate) throws SQLException {
-        // THAY ĐỔI: Xóa điều kiện WHERE để tính tổng doanh thu của tất cả hợp đồng
         String query = "SELECT SUM(cp.quantity * cp.unit_price) "
                 + "FROM ContractProducts cp "
-                + "JOIN Contracts c ON cp.contract_id = c.id";
-
+                + "JOIN Contracts c ON cp.contract_id = c.id "
+                + "WHERE c.created_at BETWEEN ? AND ?"; // Lọc theo ngày tạo hợp đồng
         double total = 0;
         try {
             conn = new DBContext().getConnection();
             ps = conn.prepareStatement(query);
-
-            // XÓA: Không cần set tham số ngày tháng nữa
-            // ps.setString(1, startDate);
-            // ps.setString(2, endDate);
+            ps.setString(1, startDate);
+            ps.setString(2, endDate);
             rs = ps.executeQuery();
             if (rs.next()) {
                 total = rs.getDouble(1);
@@ -115,22 +112,33 @@ public class ReportDAO {
         return count;
     }
 
-    // 3. Lấy số lượng hợp đồng theo trạng thái
-    public Map<String, Integer> getContractStatusCounts() throws SQLException {
+    // Trong file: vn/edu/fpt/dao/ReportDAO.java
+// 3. Lấy số lượng hợp đồng theo trạng thái
+    public Map<String, Integer> getContractStatusCounts(String startDate, String endDate) throws SQLException {
+        // Thêm lại bộ lọc ngày tháng
         String query = "SELECT "
                 + "SUM(CASE WHEN status = 'active' AND end_date >= CURDATE() THEN 1 ELSE 0 END) as active, "
                 + "SUM(CASE WHEN status = 'active' AND end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY) THEN 1 ELSE 0 END) as expiring, "
                 + "SUM(CASE WHEN status = 'expired' OR end_date < CURDATE() THEN 1 ELSE 0 END) as expired "
-                + "FROM Contracts";
+                + "FROM Contracts c WHERE c.created_at BETWEEN ? AND ?"; // Lọc theo ngày tạo hợp đồng
+
         Map<String, Integer> counts = new HashMap<>();
         try {
             conn = new DBContext().getConnection();
             ps = conn.prepareStatement(query);
+            // Thêm lại tham số
+            ps.setString(1, startDate);
+            ps.setString(2, endDate);
             rs = ps.executeQuery();
             if (rs.next()) {
                 counts.put("active", rs.getInt("active"));
                 counts.put("expiring", rs.getInt("expiring"));
                 counts.put("expired", rs.getInt("expired"));
+            } else {
+                // Đảm bảo map không rỗng nếu không có kết quả
+                counts.put("active", 0);
+                counts.put("expiring", 0);
+                counts.put("expired", 0);
             }
         } finally {
             closeResources();
@@ -141,30 +149,26 @@ public class ReportDAO {
     // Trong file: vn/edu/fpt/dao/ReportDAO.java
 // 4. Lấy số lượng yêu cầu kỹ thuật theo trạng thái
     public Map<String, Integer> getTechnicalRequestStatusCounts(String startDate, String endDate) throws SQLException {
-        // THAY ĐỔI CÂU TRUY VẤN: Xóa điều kiện lọc theo ngày tháng
+        // THÊM LẠI BỘ LỌC NGÀY THÁNG
         String query = "SELECT status, COUNT(id) as count "
-                + "FROM TechnicalRequests WHERE is_deleted = 0 "
+                + "FROM TechnicalRequests "
+                + "WHERE created_at BETWEEN ? AND ? AND is_deleted = 0 "
                 + "GROUP BY status";
 
         Map<String, Integer> counts = new HashMap<>();
-        // Khởi tạo tất cả các giá trị để đảm bảo chúng luôn tồn tại
         counts.put("completed", 0);
         counts.put("in_progress", 0);
         counts.put("pending", 0);
-
         try {
             conn = new DBContext().getConnection();
             ps = conn.prepareStatement(query);
-
-            // XÓA 2 DÒNG NÀY: Không cần set tham số ngày tháng nữa
-            // ps.setString(1, startDate);
-            // ps.setString(2, endDate);
+            // THÊM LẠI THAM SỐ
+            ps.setString(1, startDate);
+            ps.setString(2, endDate);
             rs = ps.executeQuery();
             while (rs.next()) {
                 String status = rs.getString("status");
                 int count = rs.getInt("count");
-
-                // Logic gộp nhóm trạng thái
                 switch (status) {
                     case "resolved":
                     case "closed":
@@ -192,7 +196,7 @@ public class ReportDAO {
                 + "FROM ContractProducts cp "
                 + "JOIN Products p ON cp.product_id = p.id "
                 + "JOIN Contracts c ON cp.contract_id = c.id "
-                + "WHERE p.is_deleted = 0 "
+                + "WHERE p.is_deleted = 0 AND c.created_at BETWEEN ? AND ? " // Lọc theo ngày tạo hợp đồng
                 + "GROUP BY p.id, p.name "
                 + "ORDER BY total_sold DESC "
                 + "LIMIT ?";
@@ -202,8 +206,10 @@ public class ReportDAO {
             conn = new DBContext().getConnection();
             ps = conn.prepareStatement(query);
 
-            // THAY ĐỔI: Chỉ cần set tham số "limit" ở vị trí số 1
-            ps.setInt(1, limit);
+            ps.setString(1, startDate);
+            ps.setString(2, endDate);
+            ps.setInt(3, limit); // limit bây giờ là tham số thứ 3
+            rs = ps.executeQuery();
 
             rs = ps.executeQuery();
             while (rs.next()) {
@@ -223,9 +229,10 @@ public class ReportDAO {
         List<Map<String, Object>> trendData = new ArrayList<>();
 
         // THAY ĐỔI: Xóa điều kiện WHERE để lấy xu hướng từ tất cả hợp đồng
-        String query = "SELECT DATE(c.start_date) as a_date, SUM(cp.quantity * cp.unit_price) as daily_revenue "
+        String query = "SELECT DATE(c.created_at) as a_date, SUM(cp.quantity * cp.unit_price) as daily_revenue "
                 + "FROM ContractProducts cp "
                 + "JOIN Contracts c ON cp.contract_id = c.id "
+                + "WHERE c.created_at BETWEEN ? AND ? " // Lọc theo ngày tạo hợp đồng
                 + "GROUP BY a_date "
                 + "ORDER BY a_date ASC";
 
@@ -233,10 +240,10 @@ public class ReportDAO {
             conn = new DBContext().getConnection();
             ps = conn.prepareStatement(query);
 
-            // XÓA: Không cần set tham số ngày tháng nữa
-            // ps.setString(1, startDate);
-            // ps.setString(2, endDate);
+            ps.setString(1, startDate);
+            ps.setString(2, endDate);
             rs = ps.executeQuery();
+
             while (rs.next()) {
                 Map<String, Object> dataPoint = new HashMap<>();
                 dataPoint.put("date", rs.getString("a_date"));
@@ -276,23 +283,21 @@ public class ReportDAO {
     }
 
     // Trong file: vn/edu/fpt/dao/ReportDAO.java
-// 8. Lấy danh sách hợp đồng chi tiết
+// 8. Lấy danh sách hợp đồng chi tiết trong khoảng thời gian
     public List<Map<String, Object>> getContractsList(String startDate, String endDate) throws SQLException {
         List<Map<String, Object>> contracts = new ArrayList<>();
-
-        // THAY ĐỔI CÂU TRUY VẤN: Bỏ điều kiện WHERE để lấy tất cả hợp đồng
+        // THÊM LẠI BỘ LỌC NGÀY THÁNG
         String query = "SELECT c.contract_code, e.name as enterprise_name, c.start_date, c.end_date, c.status "
                 + "FROM Contracts c "
                 + "JOIN Enterprises e ON c.enterprise_id = e.id "
-                + "ORDER BY c.start_date DESC"; // Giữ lại sắp xếp để hiển thị hợp đồng mới nhất lên đầu
-
+                + "WHERE c.created_at BETWEEN ? AND ? " // Lọc theo ngày tạo hợp đồng
+                + "ORDER BY c.created_at DESC";
         try {
             conn = new DBContext().getConnection();
             ps = conn.prepareStatement(query);
-
-            // XÓA 2 DÒNG NÀY: Không cần set tham số ngày tháng nữa
-            // ps.setString(1, startDate);
-            // ps.setString(2, endDate);
+            // THÊM LẠI THAM SỐ
+            ps.setString(1, startDate);
+            ps.setString(2, endDate);
             rs = ps.executeQuery();
             while (rs.next()) {
                 Map<String, Object> contract = new HashMap<>();
@@ -322,7 +327,7 @@ public class ReportDAO {
                 + "FROM TechnicalRequests tr "
                 + "JOIN Enterprises e ON tr.enterprise_id = e.id "
                 + "LEFT JOIN Users u ON tr.assigned_to_id = u.id "
-                + "WHERE tr.is_deleted = 0 " // XÓA điều kiện "AND tr.created_at BETWEEN ? AND ?"
+                + "WHERE tr.is_deleted = 0 AND tr.created_at BETWEEN ? AND ? "
                 + "ORDER BY tr.created_at DESC";
 
         Connection conn = null;
@@ -337,9 +342,8 @@ public class ReportDAO {
             // 1. Truy vấn để lấy tất cả các Yêu cầu
             psRequests = conn.prepareStatement(requestsQuery);
 
-            // BƯỚC 2: XÓA 2 DÒNG SET PARAMETER NÀY
-            // psRequests.setString(1, startDate);
-            // psRequests.setString(2, endDate);
+            psRequests.setString(1, startDate);
+            psRequests.setString(2, endDate);
             rsRequests = psRequests.executeQuery();
 
             List<Integer> requestIds = new ArrayList<>();
