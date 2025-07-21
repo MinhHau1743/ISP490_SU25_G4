@@ -49,7 +49,8 @@ public class ReportServlet extends HttpServlet {
 
             ReportDAO reportDAO = new ReportDAO();
 
-            // Dựa vào loại báo cáo để lấy dữ liệu tương ứng
+            // Trong ReportServlet.java, cập nhật lại khối switch
+// Dựa vào loại báo cáo để lấy dữ liệu tương ứng
             switch (reportType) {
                 case "doanhthu":
                     request.setAttribute("totalRevenue", reportDAO.getTotalRevenue(dateFromStr, dateToStr));
@@ -61,9 +62,19 @@ public class ReportServlet extends HttpServlet {
                     request.setAttribute("newCustomersList", reportDAO.getNewCustomersList(dateFromStr, dateToStr));
                     break;
                 case "sanpham":
-                    // Lấy top 10 sản phẩm cho báo cáo chi tiết
                     request.setAttribute("topProducts", reportDAO.getTopProducts(dateFromStr, dateToStr, 10));
                     break;
+
+                // THÊM 2 CASE MỚI VÀO ĐÂY
+                case "hopdong":
+                    request.setAttribute("contractStatus", reportDAO.getContractStatusCounts());
+                    request.setAttribute("contractsList", reportDAO.getContractsList(dateFromStr, dateToStr));
+                    break;
+                case "suachua":
+                    request.setAttribute("requestStatus", reportDAO.getTechnicalRequestStatusCounts(dateFromStr, dateToStr));
+                    request.setAttribute("requestsList", reportDAO.getTechnicalRequestsList(dateFromStr, dateToStr));
+                    break;
+
                 default: // "tongquan"
                     request.setAttribute("totalRevenue", reportDAO.getTotalRevenue(dateFromStr, dateToStr));
                     request.setAttribute("newCustomers", reportDAO.getNewCustomerCount(dateFromStr, dateToStr));
@@ -71,7 +82,6 @@ public class ReportServlet extends HttpServlet {
                     request.setAttribute("returningCustomers", reportDAO.getReturningCustomerCount(dateFromStr, dateToStr));
                     request.setAttribute("contractStatus", reportDAO.getContractStatusCounts());
                     request.setAttribute("requestStatus", reportDAO.getTechnicalRequestStatusCounts(dateFromStr, dateToStr));
-                    // Lấy top 3 cho tổng quan
                     request.setAttribute("topProducts", reportDAO.getTopProducts(dateFromStr, dateToStr, 3));
                     break;
             }

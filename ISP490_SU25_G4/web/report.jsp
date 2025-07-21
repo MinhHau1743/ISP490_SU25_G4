@@ -7,6 +7,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 
 <%-- Đặt trang hiện tại là 'report' để active đúng mục trong mainMenu --%>
 <c:set var="currentPage" value="report" />
@@ -72,6 +73,28 @@
             .btn-primary:hover {
                 background-color: #0056b3;
             }
+            /* Thêm vào thẻ <style> trong report.jsp */
+            .status-badge {
+                padding: 3px 8px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: 500;
+                color: #fff;
+                text-transform: capitalize;
+            }
+            .status-active, .status-resolved, .status-closed {
+                background-color: #28a745;
+            } /* Xanh lá */
+            .status-expiring, .status-in_progress, .status-assigned {
+                background-color: #ffc107;
+                color: #212529;
+            } /* Vàng */
+            .status-expired, .status-rejected {
+                background-color: #dc3545;
+            } /* Đỏ */
+            .status-pending, .status-new {
+                background-color: #6c757d;
+            } /* Xám */
         </style>
     </head>
     <body>
@@ -96,6 +119,8 @@
                                 <option value="doanhthu" ${reportType == 'doanhthu' ? 'selected' : ''}>Doanh thu</option>
                                 <option value="khachhang" ${reportType == 'khachhang' ? 'selected' : ''}>Khách hàng</option>
                                 <option value="sanpham" ${reportType == 'sanpham' ? 'selected' : ''}>Sản phẩm</option>
+                                <option value="hopdong" ${reportType == 'hopdong' ? 'selected' : ''}>Hợp đồng</option>
+                                <option value="suachua" ${reportType == 'suachua' ? 'selected' : ''}>Sửa chữa</option>
                             </select>
                         </div>
                         <div class="filter-group">
@@ -200,6 +225,102 @@
                             </div>
                         </c:when>
 
+                        <%-- Thêm 2 khối <c:when> này vào trong thẻ <c:choose> trong file report.jsp --%>
+
+                        <%-- ======================= CASE 4: BÁO CÁO HỢP ĐỒNG ======================= --%>
+                        <c:when test="${reportType == 'hopdong'}">
+                            <div class="report-grid">
+                                <div class="report-card">
+                                    <div class="report-card-header"><i data-feather="check-square" class="icon"></i><h3>Đang hiệu lực</h3></div>
+                                    <div class="report-card-body"><p class="total-revenue"><fmt:formatNumber value="${contractStatus.active}"/></p></div>
+                                </div>
+                                <div class="report-card">
+                                    <div class="report-card-header"><i data-feather="alert-triangle" class="icon"></i><h3>Sắp hết hạn</h3></div>
+                                    <div class="report-card-body"><p class="total-revenue"><fmt:formatNumber value="${contractStatus.expiring}"/></p></div>
+                                </div>
+                                <div class="report-card">
+                                    <div class="report-card-header"><i data-feather="x-circle" class="icon"></i><h3>Đã hết hạn</h3></div>
+                                    <div class="report-card-body"><p class="total-revenue"><fmt:formatNumber value="${contractStatus.expired}"/></p></div>
+                                </div>
+                            </div>
+                            <div class="report-card" style="margin-top: 20px; width: 100%;">
+                                <div class="report-card-header"><h3>Danh sách hợp đồng</h3></div>
+                                <div class="report-card-body">
+                                    <table class="detail-table">
+                                        <thead><tr><th>Mã HĐ</th><th>Khách hàng</th><th>Ngày BĐ</th><th>Ngày KT</th><th>Trạng thái</th></tr></thead>
+                                        <tbody>
+                                            <c:forEach var="contract" items="${contractsList}">
+                                                <tr>
+                                                    <td><b><c:out value="${contract.code}"/></b></td>
+                                                    <td><c:out value="${contract.enterprise_name}"/></td>
+                                                    <td><fmt:formatDate value="${contract.start_date}" pattern="dd/MM/yyyy"/></td>
+                                                    <td><fmt:formatDate value="${contract.end_date}" pattern="dd/MM/yyyy"/></td>
+                                                    <td>
+                                                        <span class="status-badge status-${fn:toLowerCase(contract.status)}">
+                                                            <c:out value="${contract.status}"/>
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            </c:forEach>
+                                            <c:if test="${empty contractsList}">
+                                                <tr><td colspan="5" style="text-align: center;">Không có hợp đồng nào trong khoảng thời gian này.</td></tr>
+                                            </c:if>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </c:when>
+
+                        <%-- ======================= CASE 5: BÁO CÁO SỬA CHỮA ======================= --%>
+                        <c:when test="${reportType == 'suachua'}">
+                            <div class="report-grid">
+                                <div class="report-card">
+                                    <div class="report-card-header"><i data-feather="check-circle" class="icon"></i><h3>Đã hoàn thành</h3></div>
+                                    <div class="report-card-body"><p class="total-revenue"><fmt:formatNumber value="${requestStatus.completed}"/></p></div>
+                                </div>
+                                <div class="report-card">
+                                    <div class="report-card-header"><i data-feather="loader" class="icon"></i><h3>Đang tiến hành</h3></div>
+                                    <div class="report-card-body"><p class="total-revenue"><fmt:formatNumber value="${requestStatus.in_progress}"/></p></div>
+                                </div>
+                                <div class="report-card">
+                                    <div class="report-card-header"><i data-feather="inbox" class="icon"></i><h3>Chờ xử lý</h3></div>
+                                    <div class="report-card-body"><p class="total-revenue"><fmt:formatNumber value="${requestStatus.pending}"/></p></div>
+                                </div>
+                            </div>
+                            <div class="report-card" style="margin-top: 20px; width: 100%;">
+                                <div class="report-card-header"><h3>Danh sách yêu cầu sửa chữa</h3></div>
+                                <div class="report-card-body">
+                                    <table class="detail-table">
+                                        <thead><tr><th>Mã YC</th><th>Tiêu đề</th><th>Khách hàng</th><th>Nhân viên xử lý</th><th>Ngày tạo</th><th>Trạng thái</th></tr></thead>
+                                        <tbody>
+                                            <c:forEach var="req" items="${requestsList}">
+                                                <tr>
+                                                    <td><b><c:out value="${req.code}"/></b></td>
+                                                    <td><c:out value="${req.title}"/></td>
+                                                    <td><c:out value="${req.enterprise_name}"/></td>
+                                                    <td>
+                                                        <c:choose>
+                                                            <c:when test="${not empty req.assigned_to}"><c:out value="${req.assigned_to}"/></c:when>
+                                                            <c:otherwise><i style="color: #888;">Chưa phân công</i></c:otherwise>
+                                                        </c:choose>
+                                                    </td>
+                                                    <td><fmt:formatDate value="${req.created_at}" pattern="dd/MM/yyyy HH:mm"/></td>
+                                                    <td>
+                                                        <span class="status-badge status-${fn:replace(req.status, '_', '')}">
+                                                            <c:out value="${req.status}"/>
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            </c:forEach>
+                                            <c:if test="${empty requestsList}">
+                                                <tr><td colspan="6" style="text-align: center;">Không có yêu cầu nào trong khoảng thời gian này.</td></tr>
+                                            </c:if>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </c:when>
+
                         <%-- ======================= DEFAULT CASE: BÁO CÁO TỔNG QUAN ======================= --%>
                         <c:otherwise>
                             <div class="report-grid">
@@ -297,13 +418,13 @@
                                 tooltip: {
                                     callbacks: {
                                         label: context => `\${context.dataset.label || ''}: \${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(context.parsed.y)}`
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                    });
-                                                }
-                                            });
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            });
         </script>
         <script src="js/mainMenu.js"></script>
     </body>

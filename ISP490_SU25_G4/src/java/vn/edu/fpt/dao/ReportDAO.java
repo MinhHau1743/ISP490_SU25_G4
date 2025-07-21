@@ -256,4 +256,69 @@ public class ReportDAO {
         }
         return customers;
     }
+
+    // Thêm 2 phương thức này vào file ReportDAO.java
+// 8. Lấy danh sách hợp đồng chi tiết trong khoảng thời gian
+    public List<Map<String, Object>> getContractsList(String startDate, String endDate) throws SQLException {
+        List<Map<String, Object>> contracts = new ArrayList<>();
+        String query = "SELECT c.contract_code, e.name as enterprise_name, c.start_date, c.end_date, c.status "
+                + "FROM Contracts c "
+                + "JOIN Enterprises e ON c.enterprise_id = e.id "
+                + "WHERE c.start_date BETWEEN ? AND ? "
+                + "ORDER BY c.start_date DESC";
+        try {
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setString(1, startDate);
+            ps.setString(2, endDate);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                Map<String, Object> contract = new HashMap<>();
+                contract.put("code", rs.getString("contract_code"));
+                contract.put("enterprise_name", rs.getString("enterprise_name"));
+                contract.put("start_date", rs.getDate("start_date"));
+                contract.put("end_date", rs.getDate("end_date"));
+                contract.put("status", rs.getString("status"));
+                contracts.add(contract);
+            }
+        } finally {
+            closeResources();
+        }
+        return contracts;
+    }
+
+// 9. Lấy danh sách yêu cầu sửa chữa chi tiết trong khoảng thời gian
+    public List<Map<String, Object>> getTechnicalRequestsList(String startDate, String endDate) throws SQLException {
+        List<Map<String, Object>> requests = new ArrayList<>();
+        // CONCAT_WS để nối tên nhân viên, nếu chưa phân công (assigned_to_id is NULL) thì sẽ trả về NULL
+        String query = "SELECT tr.request_code, tr.title, e.name as enterprise_name, "
+                + "CONCAT_WS(' ', u.first_name, u.middle_name, u.last_name) as assigned_to_name, "
+                + "tr.created_at, tr.status "
+                + "FROM TechnicalRequests tr "
+                + "JOIN Enterprises e ON tr.enterprise_id = e.id "
+                + "LEFT JOIN Users u ON tr.assigned_to_id = u.id "
+                + // LEFT JOIN để lấy cả các yêu cầu chưa được phân công
+                "WHERE tr.created_at BETWEEN ? AND ? "
+                + "ORDER BY tr.created_at DESC";
+        try {
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setString(1, startDate);
+            ps.setString(2, endDate);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                Map<String, Object> request = new HashMap<>();
+                request.put("code", rs.getString("request_code"));
+                request.put("title", rs.getString("title"));
+                request.put("enterprise_name", rs.getString("enterprise_name"));
+                request.put("assigned_to", rs.getString("assigned_to_name"));
+                request.put("created_at", rs.getTimestamp("created_at"));
+                request.put("status", rs.getString("status"));
+                requests.add(request);
+            }
+        } finally {
+            closeResources();
+        }
+        return requests;
+    }
 }
