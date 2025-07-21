@@ -95,6 +95,23 @@
             .status-pending, .status-new {
                 background-color: #6c757d;
             } /* Xám */
+
+            /* Thêm vào thẻ <style> trong report.jsp */
+            .nested-table {
+                width: 100%;
+                margin-top: 10px;
+                background-color: #f8f9fa;
+                border: 1px solid #dee2e6;
+            }
+            .nested-table th {
+                background-color: #e9ecef;
+                font-size: 13px;
+                padding: 8px;
+            }
+            .nested-table td {
+                font-size: 13px;
+                padding: 8px;
+            }
         </style>
     </head>
     <body>
@@ -272,6 +289,7 @@
                         </c:when>
 
                         <%-- ======================= CASE 5: BÁO CÁO SỬA CHỮA ======================= --%>
+                        <%-- Trong report.jsp, THAY THẾ TOÀN BỘ khối <c:when test="${reportType == 'suachua'}"> bằng khối này --%>
                         <c:when test="${reportType == 'suachua'}">
                             <div class="report-grid">
                                 <div class="report-card">
@@ -290,29 +308,63 @@
                             <div class="report-card" style="margin-top: 20px; width: 100%;">
                                 <div class="report-card-header"><h3>Danh sách yêu cầu sửa chữa</h3></div>
                                 <div class="report-card-body">
+                                    <%-- Thêm dòng này vào trước thẻ table để kiểm tra --%>
+                                    <p style="color: red; font-size: 20px; font-weight: bold;">
+                                        Số yêu cầu tìm thấy: ${fn:length(requestsWithDevices)}
+                                    </p>
                                     <table class="detail-table">
-                                        <thead><tr><th>Mã YC</th><th>Tiêu đề</th><th>Khách hàng</th><th>Nhân viên xử lý</th><th>Ngày tạo</th><th>Trạng thái</th></tr></thead>
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 10%;">Mã YC</th>
+                                                <th style="width: 25%;">Tiêu đề / Khách hàng</th>
+                                                <th style="width: 15%;">Nhân viên xử lý</th>
+                                                <th style="width: 10%;">Ngày tạo</th>
+                                                <th style="width: 10%;">Trạng thái</th>
+                                                <th style="width: 30%;">Chi tiết thiết bị</th>
+                                            </tr>
+                                        </thead>
                                         <tbody>
-                                            <c:forEach var="req" items="${requestsList}">
+                                            <c:forEach var="req" items="${requestsWithDevices}">
                                                 <tr>
                                                     <td><b><c:out value="${req.code}"/></b></td>
-                                                    <td><c:out value="${req.title}"/></td>
-                                                    <td><c:out value="${req.enterprise_name}"/></td>
+                                                    <td>
+                                                        <div><c:out value="${req.title}"/></div>
+                                                        <div style="font-size: 12px; color: #6c757d;"><c:out value="${req.enterprise_name}"/></div>
+                                                    </td>
                                                     <td>
                                                         <c:choose>
                                                             <c:when test="${not empty req.assigned_to}"><c:out value="${req.assigned_to}"/></c:when>
                                                             <c:otherwise><i style="color: #888;">Chưa phân công</i></c:otherwise>
                                                         </c:choose>
                                                     </td>
-                                                    <td><fmt:formatDate value="${req.created_at}" pattern="dd/MM/yyyy HH:mm"/></td>
+                                                    <td><fmt:formatDate value="${req.created_at}" pattern="dd/MM/yyyy"/></td>
                                                     <td>
                                                         <span class="status-badge status-${fn:replace(req.status, '_', '')}">
                                                             <c:out value="${req.status}"/>
                                                         </span>
                                                     </td>
+                                                    <td>
+                                                        <c:if test="${not empty req.devices}">
+                                                            <table class="nested-table">
+                                                                <thead><tr><th>Tên thiết bị</th><th>Số Serial</th><th>Mô tả lỗi</th></tr></thead>
+                                                                <tbody>
+                                                                    <c:forEach var="device" items="${req.devices}">
+                                                                        <tr>
+                                                                            <td><c:out value="${device.device_name}"/></td>
+                                                                            <td><c:out value="${device.serial_number}"/></td>
+                                                                            <td><c:out value="${device.problem_description}"/></td>
+                                                                        </tr>
+                                                                    </c:forEach>
+                                                                </tbody>
+                                                            </table>
+                                                        </c:if>
+                                                        <c:if test="${empty req.devices}">
+                                                            <i style="color: #888; font-size: 13px;">Không có thông tin thiết bị.</i>
+                                                        </c:if>
+                                                    </td>
                                                 </tr>
                                             </c:forEach>
-                                            <c:if test="${empty requestsList}">
+                                            <c:if test="${empty requestsWithDevices}">
                                                 <tr><td colspan="6" style="text-align: center;">Không có yêu cầu nào trong khoảng thời gian này.</td></tr>
                                             </c:if>
                                         </tbody>

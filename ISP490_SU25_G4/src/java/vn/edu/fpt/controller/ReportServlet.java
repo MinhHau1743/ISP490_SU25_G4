@@ -72,7 +72,8 @@ public class ReportServlet extends HttpServlet {
                     break;
                 case "suachua":
                     request.setAttribute("requestStatus", reportDAO.getTechnicalRequestStatusCounts(dateFromStr, dateToStr));
-                    request.setAttribute("requestsList", reportDAO.getTechnicalRequestsList(dateFromStr, dateToStr));
+                    // THAY ĐỔI DÒNG NÀY:
+                    request.setAttribute("requestsWithDevices", reportDAO.getTechnicalRequestsWithDevices(dateFromStr, dateToStr));
                     break;
 
                 default: // "tongquan"

@@ -135,25 +135,33 @@ public class ReportDAO {
         return counts;
     }
 
-    // 4. Lấy số lượng yêu cầu kỹ thuật theo trạng thái
+    // Trong file: vn/edu/fpt/dao/ReportDAO.java
+// 4. Lấy số lượng yêu cầu kỹ thuật theo trạng thái
     public Map<String, Integer> getTechnicalRequestStatusCounts(String startDate, String endDate) throws SQLException {
+        // THAY ĐỔI CÂU TRUY VẤN: Xóa điều kiện lọc theo ngày tháng
         String query = "SELECT status, COUNT(id) as count "
-                + "FROM TechnicalRequests "
-                + "WHERE created_at BETWEEN ? AND ? "
+                + "FROM TechnicalRequests WHERE is_deleted = 0 "
                 + "GROUP BY status";
+
         Map<String, Integer> counts = new HashMap<>();
+        // Khởi tạo tất cả các giá trị để đảm bảo chúng luôn tồn tại
         counts.put("completed", 0);
         counts.put("in_progress", 0);
         counts.put("pending", 0);
+
         try {
             conn = new DBContext().getConnection();
             ps = conn.prepareStatement(query);
-            ps.setString(1, startDate);
-            ps.setString(2, endDate);
+
+            // XÓA 2 DÒNG NÀY: Không cần set tham số ngày tháng nữa
+            // ps.setString(1, startDate);
+            // ps.setString(2, endDate);
             rs = ps.executeQuery();
             while (rs.next()) {
                 String status = rs.getString("status");
                 int count = rs.getInt("count");
+
+                // Logic gộp nhóm trạng thái
                 switch (status) {
                     case "resolved":
                     case "closed":
@@ -257,20 +265,24 @@ public class ReportDAO {
         return customers;
     }
 
-    // Thêm 2 phương thức này vào file ReportDAO.java
-// 8. Lấy danh sách hợp đồng chi tiết trong khoảng thời gian
+    // Trong file: vn/edu/fpt/dao/ReportDAO.java
+// 8. Lấy danh sách hợp đồng chi tiết
     public List<Map<String, Object>> getContractsList(String startDate, String endDate) throws SQLException {
         List<Map<String, Object>> contracts = new ArrayList<>();
+
+        // THAY ĐỔI CÂU TRUY VẤN: Bỏ điều kiện WHERE để lấy tất cả hợp đồng
         String query = "SELECT c.contract_code, e.name as enterprise_name, c.start_date, c.end_date, c.status "
                 + "FROM Contracts c "
                 + "JOIN Enterprises e ON c.enterprise_id = e.id "
-                + "WHERE c.start_date BETWEEN ? AND ? "
-                + "ORDER BY c.start_date DESC";
+                + "ORDER BY c.start_date DESC"; // Giữ lại sắp xếp để hiển thị hợp đồng mới nhất lên đầu
+
         try {
             conn = new DBContext().getConnection();
             ps = conn.prepareStatement(query);
-            ps.setString(1, startDate);
-            ps.setString(2, endDate);
+
+            // XÓA 2 DÒNG NÀY: Không cần set tham số ngày tháng nữa
+            // ps.setString(1, startDate);
+            // ps.setString(2, endDate);
             rs = ps.executeQuery();
             while (rs.next()) {
                 Map<String, Object> contract = new HashMap<>();
@@ -287,38 +299,111 @@ public class ReportDAO {
         return contracts;
     }
 
-// 9. Lấy danh sách yêu cầu sửa chữa chi tiết trong khoảng thời gian
-    public List<Map<String, Object>> getTechnicalRequestsList(String startDate, String endDate) throws SQLException {
-        List<Map<String, Object>> requests = new ArrayList<>();
-        // CONCAT_WS để nối tên nhân viên, nếu chưa phân công (assigned_to_id is NULL) thì sẽ trả về NULL
-        String query = "SELECT tr.request_code, tr.title, e.name as enterprise_name, "
-                + "CONCAT_WS(' ', u.first_name, u.middle_name, u.last_name) as assigned_to_name, "
+    // Trong file: vn/edu/fpt/dao/ReportDAO.java
+// XÓA phương thức getTechnicalRequestsList() cũ và THAY BẰNG phương thức này.
+    public List<Map<String, Object>> getTechnicalRequestsWithDevices(String startDate, String endDate) throws SQLException {
+        // Sử dụng Map để dễ dàng tra cứu và gắn các thiết bị vào đúng yêu cầu của nó
+        Map<Integer, Map<String, Object>> requestMap = new HashMap<>();
+
+        // BƯỚC 1: SỬA LẠI CÂU TRUY VẤN NÀY
+        String requestsQuery = "SELECT tr.id, tr.request_code, tr.title, e.name as enterprise_name, "
+                + "CONCAT_WS(' ', u.first_name, u.last_name) as assigned_to_name, "
                 + "tr.created_at, tr.status "
                 + "FROM TechnicalRequests tr "
                 + "JOIN Enterprises e ON tr.enterprise_id = e.id "
                 + "LEFT JOIN Users u ON tr.assigned_to_id = u.id "
-                + // LEFT JOIN để lấy cả các yêu cầu chưa được phân công
-                "WHERE tr.created_at BETWEEN ? AND ? "
+                + "WHERE tr.is_deleted = 0 " // XÓA điều kiện "AND tr.created_at BETWEEN ? AND ?"
                 + "ORDER BY tr.created_at DESC";
+
+        Connection conn = null;
+        PreparedStatement psRequests = null;
+        ResultSet rsRequests = null;
+        PreparedStatement psDevices = null;
+        ResultSet rsDevices = null;
+
         try {
             conn = new DBContext().getConnection();
-            ps = conn.prepareStatement(query);
-            ps.setString(1, startDate);
-            ps.setString(2, endDate);
-            rs = ps.executeQuery();
-            while (rs.next()) {
+
+            // 1. Truy vấn để lấy tất cả các Yêu cầu
+            psRequests = conn.prepareStatement(requestsQuery);
+
+            // BƯỚC 2: XÓA 2 DÒNG SET PARAMETER NÀY
+            // psRequests.setString(1, startDate);
+            // psRequests.setString(2, endDate);
+            rsRequests = psRequests.executeQuery();
+
+            List<Integer> requestIds = new ArrayList<>();
+            while (rsRequests.next()) {
                 Map<String, Object> request = new HashMap<>();
-                request.put("code", rs.getString("request_code"));
-                request.put("title", rs.getString("title"));
-                request.put("enterprise_name", rs.getString("enterprise_name"));
-                request.put("assigned_to", rs.getString("assigned_to_name"));
-                request.put("created_at", rs.getTimestamp("created_at"));
-                request.put("status", rs.getString("status"));
-                requests.add(request);
+                int requestId = rsRequests.getInt("id");
+                request.put("id", requestId);
+                request.put("code", rsRequests.getString("request_code"));
+                request.put("title", rsRequests.getString("title"));
+                request.put("enterprise_name", rsRequests.getString("enterprise_name"));
+                request.put("assigned_to", rsRequests.getString("assigned_to_name"));
+                request.put("created_at", rsRequests.getTimestamp("created_at"));
+                request.put("status", rsRequests.getString("status"));
+                request.put("devices", new ArrayList<>()); // Chuẩn bị sẵn một list rỗng để chứa thiết bị
+
+                requestMap.put(requestId, request);
+                requestIds.add(requestId);
+            }
+
+            // 2. Nếu có yêu cầu nào, truy vấn để lấy tất cả thiết bị của các yêu cầu đó
+            if (!requestIds.isEmpty()) {
+                // Xây dựng chuỗi placeholder (?, ?, ...) cho mệnh đề IN
+                String devicesQuery = "SELECT technical_request_id, device_name, serial_number, problem_description "
+                        + "FROM TechnicalRequestDevices WHERE technical_request_id IN (";
+                StringBuilder placeholders = new StringBuilder();
+                for (int i = 0; i < requestIds.size(); i++) {
+                    placeholders.append("?");
+                    if (i < requestIds.size() - 1) {
+                        placeholders.append(",");
+                    }
+                }
+                devicesQuery += placeholders.toString() + ")";
+
+                psDevices = conn.prepareStatement(devicesQuery);
+                for (int i = 0; i < requestIds.size(); i++) {
+                    psDevices.setInt(i + 1, requestIds.get(i));
+                }
+
+                rsDevices = psDevices.executeQuery();
+
+                // 3. Gắn các thiết bị vào đúng yêu cầu
+                while (rsDevices.next()) {
+                    int technicalRequestId = rsDevices.getInt("technical_request_id");
+                    Map<String, Object> device = new HashMap<>();
+                    device.put("device_name", rsDevices.getString("device_name"));
+                    device.put("serial_number", rsDevices.getString("serial_number"));
+                    device.put("problem_description", rsDevices.getString("problem_description"));
+
+                    // Lấy ra request tương ứng từ Map và thêm device vào list của nó
+                    if (requestMap.containsKey(technicalRequestId)) {
+                        ((List<Map<String, Object>>) requestMap.get(technicalRequestId).get("devices")).add(device);
+                    }
+                }
             }
         } finally {
-            closeResources();
+            // Đóng tất cả các resource
+            if (rsDevices != null) {
+                rsDevices.close();
+            }
+            if (psDevices != null) {
+                psDevices.close();
+            }
+            if (rsRequests != null) {
+                rsRequests.close();
+            }
+            if (psRequests != null) {
+                psRequests.close();
+            }
+            if (conn != null) {
+                conn.close();
+            }
         }
-        return requests;
+
+        // Trả về danh sách các yêu cầu (đã chứa các thiết bị bên trong)
+        return new ArrayList<>(requestMap.values());
     }
 }
