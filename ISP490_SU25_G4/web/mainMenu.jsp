@@ -70,7 +70,7 @@
                 </a>
                 <ul class="sub-menu">
                     <li><a href="${pageContext.request.contextPath}/dailyReport" class="${currentPage == 'dailyReport' ? 'active' : ''}">Báo cáo hàng ngày</a></li>
-                    <li><a href="${pageContext.request.contextPath}/monthlyReport" class="${currentPage == 'monthlyReport' ? 'active' : ''}">Báo cáo hàng tháng</a></li>
+                    <li><a href="report.jsp" class="${currentPage == 'monthlyReport' ? 'active' : ''}">Báo cáo hàng tháng</a></li>
                 </ul>
             </li>
 
