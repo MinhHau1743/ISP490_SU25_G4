@@ -69,10 +69,9 @@
             .employee-name { color: #1a202c; font-size: 1.125rem; font-weight: 600; margin: 0; }
             .employee-code { color: #a0aec0; font-size: 0.875rem; margin-top: 4px; }
 
-            /* === SỬA ĐỔI: Đổi màu gạch sang đậm hơn để rõ nét hơn === */
             .card-separator {
                 border: none;
-                border-top: 1px solid #cbd5e1; /* Màu xám đậm hơn */
+                border-top: 1px solid #cbd5e1;
                 margin: 16px 0;
             }
 
@@ -94,7 +93,9 @@
             .status-badge.status-active:hover { background-color: #d1fae5; }
             .status-badge.status-inactive { background-color: #fee2e2; color: #ef4444; }
             .status-badge.status-inactive:hover { background-color: #fecaca; }
-            .role-text { font-weight: 600; }
+            .role-text {
+                font-weight: 600;
+            }
             .employee-card.role-default { border-color: var(--role-color-default); }
             .employee-card.role-default .role-text { color: var(--role-color-default); }
             .employee-card.role-admin { border-color: var(--role-color-admin); }
@@ -117,6 +118,12 @@
             .pagination .page-link:not(.disabled):not(.active):hover { z-index: 2; background-color: #e9ecef; border-color: #dee2e6; }
             .pagination .page-link.active { z-index: 3; color: #fff; background-color: #0d6efd; border-color: #0d6efd; cursor: default; }
             .pagination .page-link.disabled { color: #6c757d; pointer-events: none; background-color: #fff; border-color: #dee2e6; }
+            
+            <%-- === SỬA ĐỔI 1: THÊM CSS TÙY CHỈNH CHO POPUP === --%>
+            .custom-swal-container {
+                width: 480px !important;      /* Giảm chiều rộng của popup */
+                border-radius: 20px !important; /* Tăng độ bo tròn góc */
+            }
         </style>
     </head>
     <body>
@@ -204,17 +211,19 @@
                                         <c:otherwise>
                                             <c:choose>
                                                 <c:when test="${user.isDeleted == 1}">
-                                                    <a href="${pageContext.request.contextPath}/updateStatus?id=${user.id}&status=0&page=${currentPage}&searchQuery=${searchQuery}" class="status-badge status-inactive" title="Kích hoạt lại"
-                                                       onclick="return confirm('Bạn muốn kích hoạt lại nhân viên ${user.lastName} ${user.middleName} ${user.firstName}?');">
-                                                        <i data-feather="toggle-right"></i>
-                                                        <span>Vô hiệu hóa</span>
+                                                    <a href="javascript:void(0);"
+                                                       onclick="showReactivateConfirm('${pageContext.request.contextPath}/updateStatus?id=${user.id}&status=0&page=${currentPage}&searchQuery=${searchQuery}', '${user.lastName} ${user.middleName} ${user.firstName}')"
+                                                       class="status-badge status-inactive" title="Kích hoạt lại">
+                                                       <i data-feather="toggle-right"></i>
+                                                       <span>Vô hiệu hóa</span>
                                                     </a>
                                                 </c:when>
                                                 <c:otherwise>
                                                     <a href="${pageContext.request.contextPath}/viewEmployee?id=${user.id}" class="action-btn" title="Xem chi tiết"><i data-feather="eye"></i></a>
                                                     <a href="${pageContext.request.contextPath}/editEmployee?id=${user.id}" class="action-btn" title="Sửa"><i data-feather="edit-2"></i></a>
-                                                    <a href="${pageContext.request.contextPath}/updateStatus?id=${user.id}&status=1&page=${currentPage}&searchQuery=${searchQuery}" class="status-badge status-active" title="Vô hiệu hóa"
-                                                       onclick="return confirm('Bạn chắc chắn muốn vô hiệu hóa nhân viên ${user.lastName} ${user.middleName} ${user.firstName}?');">
+                                                    <a href="javascript:void(0);"
+                                                       onclick="showDeactivateConfirm('${pageContext.request.contextPath}/updateStatus?id=${user.id}&status=1&page=${currentPage}&searchQuery=${searchQuery}', '${user.lastName} ${user.middleName} ${user.firstName}')"
+                                                       class="status-badge status-active" title="Vô hiệu hóa">
                                                         <i data-feather="toggle-left"></i>
                                                         <span>Hoạt động</span>
                                                     </a>
@@ -240,5 +249,52 @@
             feather.replace();
         </script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
+        
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            // Hàm hiển thị popup xác nhận VÔ HIỆU HÓA
+            function showDeactivateConfirm(url, employeeName) {
+                Swal.fire({
+                    title: 'Bạn chắc chắn?',
+                    text: "Bạn sẽ vô hiệu hóa nhân viên " + employeeName + "!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Vô hiệu hóa',
+                    cancelButtonText: 'Hủy',
+                    // === SỬA ĐỔI 2: ÁP DỤNG CLASS TÙY CHỈNH ===
+                    customClass: {
+                        popup: 'custom-swal-container'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = url;
+                    }
+                });
+            }
+
+            // Hàm hiển thị popup xác nhận KÍCH HOẠT LẠI
+            function showReactivateConfirm(url, employeeName) {
+                Swal.fire({
+                    title: 'Bạn chắc chắn?',
+                    text: "Bạn sẽ kích hoạt lại nhân viên " + employeeName + "!",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Kích hoạt',
+                    cancelButtonText: 'Hủy',
+                    // === SỬA ĐỔI 2: ÁP DỤNG CLASS TÙY CHỈNH ===
+                    customClass: {
+                        popup: 'custom-swal-container'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = url;
+                    }
+                });
+            }
+        </script>
     </body>
 </html>
