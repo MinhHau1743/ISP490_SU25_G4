@@ -19,243 +19,223 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pagination.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/listSchedule.css">
         <style>
-            .time-slot {
-                min-height: 60px; /* Giữ min height gốc để slot không nhỏ hơn */
-                height: auto; /* Cho phép giãn theo content */
-                border-bottom: 1px solid #eee;
-                border-left: 1px solid #eee;
-                position: relative; /* Giữ để event có thể position nếu cần */
-                display: flex; /* Flex để stack events vertically */
-                flex-direction: column; /* Stack dọc */
-                padding: 5px; /* Thêm padding để event không sát biên */
+            body {
+                background: #fff;
+                margin: 0;
+                padding: 0;
             }
-            .time-grid {
-                display: grid;
-                border-top: 1px solid #ddd;
-                position: relative;
-                grid-auto-flow: dense;
+
+            /* Main app container with full-width white background */
+            .app-container {
+                background: #fff;
+                width: 100%;
+                min-height: 100vh; /* Ensures it covers the full viewport height */
+                box-sizing: border-box;
             }
-            #day-view .time-grid {
-                grid-template-columns: auto 1fr;
+
+            /* Content wrapper with full-width white background */
+            .content-wrapper {
+                background: #fff;
+                width: 100%;
+                box-sizing: border-box;
             }
-            #week-view .time-grid {
-                grid-template-columns: auto repeat(7, 1fr);
+
+            /* Header section with full-width white background */
+            .main-top-bar {
+                background: #fff;
+                padding: 10px 0; /* Add padding for spacing */
+                border-bottom: 1px solid #ddd; /* Optional: subtle separation */
+                width: 100%;
+                box-sizing: border-box;
             }
-            .time-label {
-                text-align: right;
-                padding-right: 10px;
-                color: #666;
-                font-size: 12px;
-                height: 30px;
-                height: 60px;
-                line-height: 60px;
-                border-bottom: 1px solid #eee;
-            }
-            .time-slot {
-                min-height: 60px; /* Minimum for empty slots */
-                height: auto; /* Allow expansion for multiple events */
-                border-bottom: 1px solid #eee;
-                border-left: 1px solid #eee;
-                position: relative;
-                display: flex;
-                flex-direction: column;
-                padding: 5px;
-            }
-            .all-day-slot {
-                min-height: 40px;
-                background: #f9f9f9;
-                border-bottom: 1px solid #ddd;
-                position: relative;
-                border-left: 1px solid #eee;
-                flex-direction: column;
-                display: flex;
-                padding: 5px;  /* Padding để tránh sát biên */
-                height: auto;
-            }
-            .event {
-                position: relative;
-                left: 0;  /* Remove unnecessary left/right offsets */
-                right: 0;
-                background: teal;
-                color: white;
-                padding: 5px;
-                border-radius: 4px;
-                font-size: 14px;
-                cursor: pointer;
-                top: 0; /* Remove top:5px shift to avoid unnecessary offsets in stacks */
-                height: auto; /* Allow event height to fit content naturally */
-                margin-bottom: 5px;
-                margin: 5px 5px 5px 5px;
-                width: calc(100% - 10px);
-            }
-            .event.all-day {
-                position: relative;
-                height: auto;
-                top: 0;
-                margin: 5px 0;  /* Tăng margin dọc để tách events khi stack */
-                width: 100%;  /* Full width trong slot */
-                box-sizing: border-box;  /* Bao gồm padding trong width */
-            }
-            .event-time {
-                font-weight: bold;
-            }
-            .day-nav {
+
+            /* Calendar toolbar with full-width white background, matching title section theme */
+            .calendar-toolbar {
+                background: #fff;
+                padding: 15px;
+                margin-bottom: 20px;
                 display: flex;
                 align-items: center;
-                justify-content: center;
-                margin-bottom: 10px;
+                flex-wrap: wrap;
+                gap: 10px;
+                width: 100%;
+                box-sizing: border-box;
+                position: sticky;
+                top: 0;
+                z-index: 1000;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+                /* Bổ sung dòng này để ::before định vị được */
+                position: sticky; /* vẫn cần */
             }
-            .date {
-                margin: 0 10px;
-                font-weight: bold;
+
+            /* Thêm vào cuối file */
+            .calendar-toolbar::before {
+                content: "";
+                position: absolute;
+                top: -30px; /* Chiều cao nền cần lấp lên phía trên */
+                left: 0;
+                right: 0;
+                height: 30px;
+                background: #fff;
+                z-index: -1; /* Đảm bảo nằm dưới nội dung chính */
             }
+
+            /* Cần khai báo lại position: relative để pseudo-element hoạt động đúng */
+            .calendar-toolbar {
+                position: sticky;
+            }
+
+
+            /* Title styling (aligned with .page-header .title-section .title) */
+            .calendar-toolbar .title {
+                margin: 0;
+                font-size: 20px; /* Matches the title font size */
+                font-weight: 700; /* Matches the title font weight */
+                color: var(--text-primary); /* Matches the title text color */
+                margin-bottom: 8px; /* Matches the title margin-bottom */
+            }
+
+            /* View toggle buttons */
             .calendar-toolbar .view-toggle button {
                 background: #eee;
                 border: none;
                 padding: 5px 10px;
                 margin: 0 2px;
-                border-radius: 4px;
+                border-radius: 8px; /* Increased for more rounded buttons */
+                cursor: pointer;
+                transition: background 0.3s;
+                color: var(--text-primary); /* Align with title text color */
             }
+
             .calendar-toolbar .view-toggle button.active {
                 background: #ddd;
             }
+
+            /* Week navigation */
+            .calendar-toolbar .week-nav {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .calendar-toolbar .week-nav .btn-nav {
+                background: none;
+                border: none;
+                cursor: pointer;
+                padding: 5px;
+                color: var(--text-primary); /* Align with title text color */
+            }
+
+            .calendar-toolbar .week-nav .date-range {
+                font-weight: bold;
+                color: var(--text-primary); /* Align with title text color */
+            }
+
+            /* Toolbar spacer */
+            .calendar-toolbar .toolbar-spacer {
+                flex-grow: 1; /* Pushes the button to the right */
+            }
+
+            /* Add schedule button */
+            .calendar-toolbar #add-schedule-btn {
+                background: #007bff;
+                color: white;
+                border: none;
+                padding: 8px 15px;
+                border-radius: 8px;
+                cursor: pointer;
+                transition: background 0.3s;
+            }
+
+            .calendar-toolbar #add-schedule-btn:hover {
+                background: #0056b3;
+            }
+
+            /* Calendar container with rounded edges and white background */
             .calendar-content {
                 display: flex;
-            }
-            .calendar-left {
-                flex: 1;
-                overflow-y: auto;
-            }
-            .event-details {
-                display: none;
-                width: 350px;
-                border-left: 1px solid #ddd;
-                padding: 20px;
                 background: #fff;
-                box-shadow: -2px 0 5px rgba(0,0,0,0.1);
-                position: sticky;     /* GIỮ CỐ ĐỊNH */
-                top: 0;                /* Cố định từ top 0 */
-                align-self: flex-start; /* Chặn bị stretch khi dùng flex */
-                height: fit-content;
-                z-index: 10;
+                border-radius: 16px; /* Increased for more rounded edges */
+                overflow: hidden; /* Ensures child elements respect rounded corners */
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Match toolbar shadow for consistency */
+                width: 100%; /* Full width */
+                box-sizing: border-box;
             }
-            .event-details.show {
-                display: block;
+
+            /* Individual calendar views with white background */
+            #day-view, #week-view, #month-view, #list-view {
+                background: #fff;
             }
-            .event-details .header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 20px;
+
+            /* Time grid, month grid, and list grid with white background */
+            .time-grid, .month-grid, .list-grid {
+                background: #fff;
             }
-            .event-details .actions {
-                display: flex;
-                gap: 10px;
-            }
-            .event-details .actions a {
-                color: #666;
-                cursor: pointer;
-            }
-            .event-details .event-time-detail {
-                font-weight: bold;
-                color: #666;
-                margin-right: 10px;
-            }
-            .event-details .event-title {
-                font-size: 18px;
-                font-weight: bold;
-            }
-            .event-details .event-type {
-                color: #666;
-                margin-left: 10px;
-            }
-            .event-details .event-info {
-                display: flex;
-                align-items: center;
-                margin-bottom: 10px;
-                color: #333;
-            }
-            .event-details .event-info i {
-                margin-right: 10px;
-                color: #666;
-            }
-            .event-details .event-guests {
-                margin-top: 20px;
-            }
-            .event-details .guests-list {
-                display: flex;
-                gap: 10px;
-            }
-            .event-details .guest {
-                display: flex;
-                align-items: center;
-                background: #e6f7ff;
-                padding: 5px 10px;
-                border-radius: 20px;
-            }
-            .event-details .guest img {
-                width: 20px;
-                height: 20px;
-                border-radius: 50%;
-                margin-right: 5px;
-            }
-            .event-details .event-description {
-                margin-top: 20px;
-                color: #333;
-            }
-            .event-details .dot {
-                width: 10px;
-                height: 10px;
-                border-radius: 50%;
-                background: purple;
-                margin-right: 10px;
-            }
-            .event:last-child {
-                margin-bottom: 0; /* Không margin cho event cuối */
-            }
-            .maintenance-card, .task-item {
-                cursor: pointer;
-            }
-            .day-header-row {
-                display: grid;
-                grid-template-columns: auto repeat(7, 1fr);
-                text-align: center;
-            }
-            .day-header-cell {
-                font-weight: bold;
-                padding: 10px;
-            }
-            .time-grid .all-day-slot + .all-day-slot {
-                border-left: none;
-            }
-            #week-view .time-grid {
-                display: grid;
-                grid-template-columns: auto repeat(7, 1fr); /* auto: label | 7 days */
-                grid-auto-rows: minmax(60px, auto);
-            }
+
+            /* Time slots with rounded edges and white background */
             .time-slot {
-                min-height: 60px;
-                height: auto;
+                min-height: 60px; /* Minimum for empty slots */
+                height: auto; /* Allow expansion for multiple events */
                 border-bottom: 1px solid #eee;
                 border-left: 1px solid #eee;
+                border-radius: 8px; /* Added for rounded edges */
                 position: relative;
                 display: flex;
                 flex-direction: column;
                 padding: 5px;
+                background: #fff;
             }
+
+            /* All-day slots with rounded edges and white background */
+            .all-day-slot {
+                min-height: 40px;
+                background: #fff; /* Changed from #f9f9f9 to match white background */
+                border-bottom: 1px solid #ddd;
+                border-left: 1px solid #eee;
+                border-radius: 8px; /* Added for rounded edges */
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                padding: 5px;
+                height: auto;
+            }
+
+            /* All-day event container with rounded edges */
+            .all-day-event-container {
+                grid-row: 1;
+                grid-column: 2 / -1;
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                min-height: 40px;
+                height: auto;
+                padding: 5px;
+                background: #fff; /* Changed from #f9f9f9 to match white background */
+                border-bottom: 1px solid #ddd;
+                border-radius: 8px; /* Added for rounded edges */
+                z-index: 1;
+                position: relative;
+            }
+
+            /* Time grid setup */
             .time-grid {
                 display: grid;
                 border-top: 1px solid #ddd;
                 position: relative;
                 grid-auto-flow: dense;
+                background: #fff;
             }
+
             #day-view .time-grid {
                 grid-template-columns: auto 1fr;
             }
+
             #week-view .time-grid {
                 grid-template-columns: auto repeat(7, 1fr);
                 grid-auto-rows: minmax(60px, auto);
             }
+
+            /* Time labels */
             .time-label {
                 text-align: right;
                 padding-right: 10px;
@@ -266,19 +246,7 @@
                 border-bottom: 1px solid #eee;
             }
 
-            .all-day-event-container {
-                grid-row: 1;
-                grid-column: 2 / -1;
-                display: grid;
-                grid-template-columns: repeat(7, 1fr);
-                min-height: 40px;
-                height: auto;
-                padding: 5px;
-                background: #f9f9f9;
-                z-index: 1;
-                position: relative;
-                border-bottom: 1px solid #ddd;
-            }
+            /* Events with more rounded edges */
             .event {
                 position: relative;
                 left: 0;
@@ -286,23 +254,27 @@
                 background: teal;
                 color: white;
                 padding: 5px;
-                border-radius: 4px;
+                border-radius: 10px; /* Increased from 4px/8px for more rounded edges */
                 font-size: 14px;
                 cursor: pointer;
                 top: 0;
                 height: auto;
-                margin: 5px 0;
-                width: 100%;
+                margin: 5px;
+                width: calc(100% - 10px);
                 box-sizing: border-box;
             }
+
+            /* All-day events with rounded edges */
             .event.all-day {
                 position: relative;
+                border-radius: 10px; /* Match .event for consistency */
                 height: auto;
                 top: 0;
                 margin: 5px 0;
                 width: 100%;
                 box-sizing: border-box;
             }
+
             .event.all-day .resize-handle {
                 position: absolute;
                 right: -2.5px;
@@ -312,36 +284,32 @@
                 cursor: ew-resize;
                 background: transparent;
             }
+
+            /* Event time text */
             .event-time {
                 font-weight: bold;
             }
+
+            /* Day navigation */
             .day-nav {
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 margin-bottom: 10px;
             }
+
             .date {
                 margin: 0 10px;
                 font-weight: bold;
             }
-            .calendar-toolbar .view-toggle button {
-                background: #eee;
-                border: none;
-                padding: 5px 10px;
-                margin: 0 2px;
-                border-radius: 4px;
-            }
-            .calendar-toolbar .view-toggle button.active {
-                background: #ddd;
-            }
-            .calendar-content {
-                display: flex;
-            }
+
+            /* Calendar left panel */
             .calendar-left {
                 flex: 1;
                 overflow-y: auto;
             }
+
+            /* Event details panel */
             .event-details {
                 display: none;
                 width: 350px;
@@ -354,71 +322,87 @@
                 align-self: flex-start;
                 height: fit-content;
                 z-index: 10;
+                border-radius: 12px; /* Added for rounded edges */
             }
+
             .event-details.show {
                 display: block;
             }
+
             .event-details .header {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 margin-bottom: 20px;
             }
+
             .event-details .actions {
                 display: flex;
                 gap: 10px;
             }
+
             .event-details .actions a {
                 color: #666;
                 cursor: pointer;
             }
+
             .event-details .event-time-detail {
                 font-weight: bold;
                 color: #666;
                 margin-right: 10px;
             }
+
             .event-details .event-title {
                 font-size: 18px;
                 font-weight: bold;
             }
+
             .event-details .event-type {
                 color: #666;
                 margin-left: 10px;
             }
+
             .event-details .event-info {
                 display: flex;
                 align-items: center;
                 margin-bottom: 10px;
                 color: #333;
             }
+
             .event-details .event-info i {
                 margin-right: 10px;
                 color: #666;
             }
+
             .event-details .event-guests {
                 margin-top: 20px;
             }
+
             .event-details .guests-list {
                 display: flex;
                 gap: 10px;
             }
+
             .event-details .guest {
                 display: flex;
                 align-items: center;
                 background: #e6f7ff;
                 padding: 5px 10px;
-                border-radius: 20px;
+                border-radius: 20px; /* Already rounded, kept as is */
             }
+
             .event-details .guest img {
                 width: 20px;
                 height: 20px;
                 border-radius: 50%;
                 margin-right: 5px;
             }
+
             .event-details .event-description {
                 margin-top: 20px;
                 color: #333;
             }
+
             .event-details .dot {
                 width: 10px;
                 height: 10px;
@@ -426,39 +410,65 @@
                 background: purple;
                 margin-right: 10px;
             }
+
+            /* Remove margin for last event */
             .event:last-child {
                 margin-bottom: 0;
             }
+
+            /* Maintenance cards and task items with rounded edges */
             .maintenance-card, .task-item {
+                background: #fff;
+                border-radius: 12px; /* Increased for more rounded edges */
                 cursor: pointer;
+                margin-bottom: 10px;
+                padding: 10px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
             }
+
+            /* Day header row */
             .day-header-row {
                 display: grid;
                 grid-template-columns: auto repeat(7, 1fr);
                 text-align: center;
             }
+
             .day-header-cell {
                 font-weight: bold;
                 padding: 10px;
             }
+
+            /* Remove redundant border for adjacent all-day slots */
+            .time-grid .all-day-slot + .all-day-slot {
+                border-left: none;
+            }
+
+            /* Month grid */
             .month-grid {
                 display: grid;
                 grid-template-columns: repeat(7, 1fr);
                 grid-auto-rows: minmax(100px, auto);
                 text-align: center;
+                background: #fff;
             }
+
             .month-grid-header {
                 font-weight: bold;
                 border: 1px solid #ddd;
                 padding: 5px;
+                border-radius: 8px; /* Added for rounded headers */
             }
+
             .month-day {
                 position: relative;
                 min-height: 100px;
                 height: auto;
                 border: 1px solid #ddd;
                 padding-top: 25px;
+                background: #fff;
+                border-radius: 8px; /* Added for rounded month-day cells */
             }
+
             .day-number {
                 position: absolute;
                 top: 5px;
@@ -466,27 +476,33 @@
                 font-size: 12px;
                 color: #666;
             }
+
             .tasks-list {
                 display: flex;
                 flex-direction: column;
             }
+
+            /* Month view events */
             #month-view .event {
                 background: teal;
                 color: white;
                 padding: 5px;
-                border-radius: 4px;
+                border-radius: 10px; /* Increased for more rounded edges */
                 font-size: 14px;
                 cursor: pointer;
                 margin: 2px;
                 width: calc(100% - 10px);
                 box-sizing: border-box;
             }
+
             #month-view .event.all-day {
                 height: 20px;
-                margin: 25px 0 2px 0; /* SỬA Ở ĐÂY: Thêm margin-top 25px để tránh che day-number */
+                margin: 25px 0 2px 0;
                 position: relative;
                 top: 0;
+                border-radius: 10px; /* Match .event for consistency */
             }
+
             .resize-handle {
                 position: absolute;
                 right: -2.5px;
@@ -501,11 +517,7 @@
     <body>
         <div class="app-container">
             <jsp:include page="../../mainMenu.jsp"/>
-
             <div class="content-wrapper">
-                <header class="main-top-bar">
-                </header>
-
                 <section class="main-content-body">
                     <div class="calendar-toolbar">
                         <h1 class="title">Lịch bảo trì</h1>
@@ -515,10 +527,22 @@
                             <button id="view-month-btn" class="btn-toggle" data-view="month-view">Tháng</button>
                             <button id="view-list-btn" class="btn-toggle" data-view="list-view">Danh sách</button>
                         </div>
+                        <!-- HIDDEN FORM TO SUBMIT NEXT/PREV DAY -->
+                        <form id="dayNavForm" method="get" action="listSchedule">
+                            <input type="hidden" name="controllerDay" id="controllerDay">
+                            <input type="hidden" name="currentDay" id="currentDay">
+                        </form>
+
+                        <!-- WEEK NAVIGATION -->
                         <div class="week-nav">
-                            <button class="btn-nav"><i data-feather="chevron-left"></i></button>
-                            <span class="date-range">Hôm nay</span>
-                            <button class="btn-nav"><i data-feather="chevron-right"></i></button>
+                            <button class="btn-nav" id="prevDayBtn"><i data-feather="chevron-left"></i></button>
+
+                            <span class="date-range" id="currentDate" data-date="${isoDayDate}">
+                                ${displayDate}
+                            </span>
+
+
+                            <button class="btn-nav" id="nextDayBtn"><i data-feather="chevron-right"></i></button>
                         </div>
                         <div class="toolbar-spacer"></div>
                         <button class="btn-primary" id="add-schedule-btn">
@@ -1001,6 +1025,36 @@
                     day.addEventListener('dragover', allowDrop);
                     day.addEventListener('drop', drop);
                 });
+            });
+            document.addEventListener("DOMContentLoaded", function () {
+                const form = document.getElementById("dayNavForm");
+                const controllerDayInput = document.getElementById("controllerDay");
+                const currentDayInput = document.getElementById("currentDay");
+
+                // Lấy ngày hiện tại đang hiển thị từ một span (có thể gán thêm attribute data-date="2025-07-21")
+                const currentDateElem = document.getElementById("currentDate");
+                const currentFullDate = currentDateElem.getAttribute("data-date");  // bạn truyền từ backend ra dạng yyyy-MM-dd
+                const realDate = parseDate(currentFullDate); // chuyển sang ISO nếu cần xử lý định dạng
+
+                // Bắt sự kiện nút << (prev)
+                document.getElementById("prevDayBtn").addEventListener("click", function () {
+                    controllerDayInput.value = "prev";
+                    currentDayInput.value = realDate;
+                    form.submit();
+                });
+
+                // Bắt sự kiện nút >> (next)
+                document.getElementById("nextDayBtn").addEventListener("click", function () {
+                    controllerDayInput.value = "next";
+                    currentDayInput.value = realDate;
+                    form.submit();
+                });
+
+                // Hàm parse nếu cần (giả sử date hiển thị là "July 22, 2025")
+                function parseDate(str) {
+                    // Nếu bạn đã truyền đúng ISO từ backend thì chỉ cần return str
+                    return str;
+                }
             });
         </script>
         <script src="${pageContext.request.contextPath}/js/listSchedule.js"></script>
