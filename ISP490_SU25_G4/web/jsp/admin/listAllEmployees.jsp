@@ -42,8 +42,7 @@
             .search-bar { width: 100%; max-width: 400px; position: relative; }
             .btn-search { padding-top: 9px; padding-bottom: 9px; flex-shrink: 0; }
 
-            /* === CSS CHO THẺ NHÂN VIÊN === */
-            .employee-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
+            /* === CSS CHO THẺ NHÂN VIÊN === */         
             .employee-card {
                 background-color: #ffffff;
                 border: 2px solid #e2e8f0;
@@ -129,13 +128,11 @@
     <body>
         <div class="app-container">
             <jsp:include page="/mainMenu.jsp"/>
-
             <main class="main-content">
                 <header class="main-top-bar">
                     <div class="page-title">Danh sách Nhân viên</div>
                     <button class="notification-btn"> <i data-feather="bell"></i> </button>
                 </header>
-
                 <section class="content-body">
                     <div class="table-toolbar">
                         <form action="${pageContext.request.contextPath}/listEmployee" method="get" class="search-form">
