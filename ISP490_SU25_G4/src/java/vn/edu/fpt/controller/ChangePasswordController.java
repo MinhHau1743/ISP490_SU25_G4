@@ -37,12 +37,18 @@ public class ChangePasswordController extends HttpServlet {
         // Chuyển người dùng đến trang có form đổi mật khẩu
         // Đảm bảo người dùng đã đăng nhập trước khi cho phép vào trang này
         HttpSession session = request.getSession(false);
-        String email = request.getParameter("email");
+        String email = null;
+
+        if (session != null) {
+            email = (String) session.getAttribute("email");
+        }
+
         if (session == null || email == null) {
-            // Nếu chưa đăng nhập, chuyển hướng về trang đăng nhập
-            response.sendRedirect(request.getContextPath() + "/login.jsp"); // Giả sử có trang login.jsp
+            // Chưa đăng nhập hoặc session hết hạn
+            response.sendRedirect(request.getContextPath() + "/login.jsp");
             return;
         }
+
         request.getRequestDispatcher("changePassword.jsp").forward(request, response);
     }
 
