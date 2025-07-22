@@ -44,8 +44,7 @@ import vn.edu.fpt.common.GmailSender;
         maxRequestSize = 1024 * 1024 * 15
 )
 public class AddEmployeeServlet extends HttpServlet {
-
-    private static final String UPLOAD_DIRECTORY = "uploads" + File.separator + "avatars";
+    
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -111,7 +110,7 @@ public class AddEmployeeServlet extends HttpServlet {
         try {
             // 1. Xử lý lưu file ảnh (giữ nguyên code cũ của bạn)
             String avatarUrl = null;
-            String uploadPath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIRECTORY;
+            String uploadPath = getServletContext().getRealPath("") + "../../web/image";
             File uploadDir = new File(uploadPath);
             if (!uploadDir.exists()) {
                 uploadDir.mkdirs();
@@ -123,7 +122,7 @@ public class AddEmployeeServlet extends HttpServlet {
                 if (fileName != null && !fileName.isEmpty()) {
                     String uniqueFileName = System.currentTimeMillis() + "_" + fileName;
                     filePart.write(uploadPath + File.separator + uniqueFileName);
-                    avatarUrl = UPLOAD_DIRECTORY.replace(File.separator, "/") + "/" + uniqueFileName;
+                      avatarUrl = "image/" + uniqueFileName;
                 }
             } catch (Exception e) {
                 request.setAttribute("errorMessage", "Lỗi khi tải ảnh lên: " + e.getMessage());
