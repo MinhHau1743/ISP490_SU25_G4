@@ -105,7 +105,8 @@ public class LoginController extends HttpServlet {
                 response.sendRedirect("resetPassword.jsp");  // Gửi userId qua URL query string
             } else {
                 // Đăng nhập bình thường
-                response.sendRedirect("dashboard.jsp");
+                // Trong LoginServlet, sau khi xác thực thành công
+                response.sendRedirect("dashboard"); // Chuyển hướng đến /dashboard, KHÔNG phải dashboard.jsp
             }
         } else {
             request.setAttribute("error", "Email hoặc mật khẩu không đúng!");
