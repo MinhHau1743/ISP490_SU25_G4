@@ -128,10 +128,11 @@
                         <p style="color: red; font-weight: bold;">${errorMessage}</p>
                     </c:if>
 
-                    <form action="report" method="GET" class="report-filters">
+                    <%-- Trong file report.jsp, thay thế toàn bộ form lọc cũ bằng form này --%>
+                    <form action="report" method="GET" class="report-filters" id="reportFilterForm">
                         <div class="filter-group">
                             <label for="report-type">Loại báo cáo</label>
-                            <select id="report-type" name="report-type">
+                            <select id="report-type" name="report-type" class="auto-submit-filter">
                                 <option value="tongquan" ${reportType == 'tongquan' ? 'selected' : ''}>Tổng quan</option>
                                 <option value="doanhthu" ${reportType == 'doanhthu' ? 'selected' : ''}>Doanh thu</option>
                                 <option value="khachhang" ${reportType == 'khachhang' ? 'selected' : ''}>Khách hàng</option>
@@ -142,15 +143,13 @@
                         </div>
                         <div class="filter-group">
                             <label for="date-from">Từ ngày</label>
-                            <input type="date" id="date-from" name="date-from" value="${selectedDateFrom}">
+                            <input type="date" id="date-from" name="date-from" value="${selectedDateFrom}" class="auto-submit-filter">
                         </div>
                         <div class="filter-group">
                             <label for="date-to">Đến ngày</label>
-                            <input type="date" id="date-to" name="date-to" value="${selectedDateTo}">
+                            <input type="date" id="date-to" name="date-to" value="${selectedDateTo}" class="auto-submit-filter">
                         </div>
-                        <div class="filter-group">
-                            <button type="submit" class="btn-primary">Xem báo cáo</button>
-                        </div>
+                        <%-- NÚT "XEM BÁO CÁO" ĐÃ ĐƯỢC XÓA --%>
                     </form>
 
                     <c:choose>
@@ -476,6 +475,24 @@
                         }
                     });
                 }
+            });
+            </script>
+        <%-- Thêm đoạn script này vào cuối file report.jsp, trước </body> --%>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                // Tìm đến form lọc bằng ID
+                const filterForm = document.getElementById('reportFilterForm');
+
+                // Tìm tất cả các input và select có class 'auto-submit-filter'
+                const filterInputs = document.querySelectorAll('.auto-submit-filter');
+
+                // Gắn sự kiện 'change' cho mỗi bộ lọc
+                filterInputs.forEach(function (input) {
+                    input.addEventListener('change', function () {
+                        // Khi giá trị của bất kỳ bộ lọc nào thay đổi, tự động gửi form
+                        filterForm.submit();
+                    });
+                });
             });
         </script>
         <script src="js/mainMenu.js"></script>

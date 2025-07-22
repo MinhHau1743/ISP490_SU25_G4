@@ -50,8 +50,9 @@ public class LoginController extends HttpServlet {
                 session.setAttribute("fromLogin", true); // dùng flag nếu cần
                 response.sendRedirect("resetPassword.jsp");
             } else {
-                // Đã đăng nhập thành công → chuyển đến dashboard
-                response.sendRedirect("dashboard.jsp");
+                // Đăng nhập bình thường
+                // Trong LoginServlet, sau khi xác thực thành công
+                response.sendRedirect("dashboard"); // Chuyển hướng đến /dashboard, KHÔNG phải dashboard.jsp
             }
         } else {
             // Sai email hoặc mật khẩu

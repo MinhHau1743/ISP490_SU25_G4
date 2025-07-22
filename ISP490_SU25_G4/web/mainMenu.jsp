@@ -19,7 +19,7 @@
         <ul>
             <%-- ===== NHÓM CHỨC NĂNG CHÍNH ===== --%>
             <li>
-                <a href="${pageContext.request.contextPath}/dashboard.jsp" class="${currentPage == 'dashboard' ? 'active' : ''}">
+                <a href="${pageContext.request.contextPath}/dashboard" class="${currentPage == 'dashboard' ? 'active' : ''}">
                     <i data-feather="grid"></i><span>Tổng quan</span>
                 </a>
             </li>
