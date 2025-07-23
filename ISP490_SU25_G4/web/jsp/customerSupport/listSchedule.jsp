@@ -1,6 +1,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <c:set var="currentPage" value="dashboard" />
 <c:set var="viewMode" value="${param.viewMode != null ? param.viewMode : 'day-view'}" />
 <!DOCTYPE html>
@@ -30,7 +31,7 @@
             .app-container {
                 background: #fff;
                 width: 100%;
-                min-height: 100vh; /* Ensures it covers the full viewport height */
+                min-height: 100vh;
                 box-sizing: border-box;
             }
 
@@ -44,8 +45,8 @@
             /* Header section with full-width white background */
             .main-top-bar {
                 background: #fff;
-                padding: 10px 0; /* Add padding for spacing */
-                border-bottom: 1px solid #ddd; /* Optional: subtle separation */
+                padding: 10px 0;
+                border-bottom: 1px solid #ddd;
                 width: 100%;
                 box-sizing: border-box;
             }
@@ -71,12 +72,12 @@
             .calendar-toolbar::before {
                 content: "";
                 position: absolute;
-                top: -30px; /* Height to cover above */
+                top: -30px;
                 left: 0;
                 right: 0;
                 height: 30px;
                 background: #fff;
-                z-index: -1; /* Ensure it stays behind content */
+                z-index: -1;
             }
 
             /* Title styling */
@@ -149,7 +150,7 @@
                 display: flex;
                 background: #fff;
                 border-radius: 16px;
-                overflow: visible; /* Changed from 'hidden' to 'visible' to prevent clipping of the sticky event-details panel and allow proper sticky behavior when scrolling the parent container or body */
+                overflow: visible;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                 width: 100%;
                 box-sizing: border-box;
@@ -300,7 +301,7 @@
                 flex: 1;
                 overflow-y: auto;
                 overflow-x: auto;
-                max-height: 80vh; /* Limits height to enable internal vertical scrolling for long calendars like day-view */
+                max-height: 80vh;
                 position: relative;
             }
 
@@ -313,11 +314,11 @@
                 background: #fff;
                 box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
                 position: sticky;
-                top: 5px; /* Tighter offset to stick closer to the top */
+                top: 5px;
                 align-self: flex-start;
-                height: fit-content; /* Expand based on content */
-                max-height: 80vh; /* Allow it to take up most of the viewport */
-                overflow-y: auto; /* Enable internal scrolling */
+                height: fit-content;
+                max-height: 80vh;
+                overflow-y: auto;
                 z-index: 10;
                 border-radius: 12px;
             }
@@ -329,10 +330,10 @@
             .event-details .header {
                 position: sticky;
                 top: 0;
-                background: #fff; /* Ensures background covers any scrolling content below */
-                z-index: 2; /* Higher than other elements in the panel */
-                padding: 10px 0; /* Adjust padding for better spacing */
-                border-bottom: 1px solid #ddd; /* Optional: Add a subtle separator */
+                background: #fff;
+                z-index: 2;
+                padding: 10px 0;
+                border-bottom: 1px solid #ddd;
             }
 
             .event-details .actions {
@@ -340,9 +341,8 @@
                 gap: 10px;
                 margin-bottom: 24px;
                 margin-top: 16px;
-                justify-content: flex-end; /* Thêm dòng này để căn phải */
+                justify-content: flex-end;
             }
-
 
             .event-details .actions a {
                 color: #666;
@@ -384,7 +384,7 @@
             .event-details .guests-list {
                 display: flex;
                 gap: 5px;
-                flex-wrap: wrap; /* Allow guests to wrap for longer lists */
+                flex-wrap: wrap;
             }
 
             .event-details .guest {
@@ -401,8 +401,9 @@
                 border-radius: 50%;
                 margin-right: 5px;
             }
+
             .event-header {
-                margin-bottom: 10px; /* Khoảng cách với phần dưới */
+                margin-bottom: 10px;
             }
 
             .event-details .event-description,
@@ -411,9 +412,9 @@
             .event-details .event-contacts,
             .event-details .event-agenda,
             .event-details .event-resources {
-                margin-top: 15px; /* Reduced margin from 20px to make sections tighter */
-                padding-bottom: 10px; /* Reduced padding to condense content */
-                font-size: 14px; /* Slightly smaller font size for denser text; optional, adjust for readability */
+                margin-top: 15px;
+                padding-bottom: 10px;
+                font-size: 14px;
             }
 
             .event-details .dot {
@@ -443,7 +444,7 @@
                 position: sticky;
                 top: 0;
                 background: #fff;
-                z-index: 2; /* Higher z-index to stay above time-labels and content */
+                z-index: 2;
                 display: grid;
                 grid-template-columns: auto repeat(7, 1fr);
                 text-align: center;
@@ -453,14 +454,14 @@
             .day-header-cell {
                 font-weight: bold;
                 padding: 10px;
-                border-right: 1px solid #eee; /* Optional: column separation */
+                border-right: 1px solid #eee;
             }
 
             .day-header-row .day-header-cell:first-child {
                 position: sticky;
                 left: 0;
                 background: #fff;
-                z-index: 3; /* Keep empty first cell (for time-label alignment) sticky */
+                z-index: 3;
                 border-right: 1px solid #eee;
             }
 
@@ -541,7 +542,7 @@
 
             .time-grid {
                 position: relative;
-                min-height: 0; /* Allows the grid to fit within the parent's max-height without overflow issues */
+                min-height: 0;
             }
 
             .time-label {
@@ -561,7 +562,7 @@
 
             .all-day-event-container {
                 position: sticky;
-                top: calc(0px + height of day-header-row if needed); /* If you want all-day to stick below headers; adjust or remove */
+                top: 0;
                 z-index: 1;
                 background: #fff;
             }
@@ -587,18 +588,18 @@
                             <button id="view-week-btn" class="btn-toggle <c:if test="${viewMode == 'week-view'}">active</c:if>" data-view="week-view">Tuần</button>
                             <button id="view-month-btn" class="btn-toggle <c:if test="${viewMode == 'month-view'}">active</c:if>" data-view="month-view">Tháng</button>
                             <button id="view-list-btn" class="btn-toggle <c:if test="${viewMode == 'list-view'}">active</c:if>" data-view="list-view">Danh sách</button>
-                            </div>
-                            <!-- HIDDEN FORM TO SUBMIT NEXT/PREV DAY -->
-                            <form id="dayNavForm" method="get" action="listSchedule">
-                                <input type="hidden" name="controllerDay" id="controllerDay">
-                                <input type="hidden" name="currentDay" id="currentDay">
-                                <input type="hidden" name="viewMode" id="viewMode">
-                            </form>
+                        </div>
+                        <!-- HIDDEN FORM TO SUBMIT NEXT/PREV DAY -->
+                        <form id="dayNavForm" method="get" action="listSchedule">
+                            <input type="hidden" name="controllerDay" id="controllerDay">
+                            <input type="hidden" name="currentDay" id="currentDay">
+                            <input type="hidden" name="viewMode" id="viewMode">
+                        </form>
 
-                            <!-- WEEK NAVIGATION -->
-                            <div class="week-nav">
-                                <button class="btn-nav" id="prevDayBtn"><i data-feather="chevron-left"></i></button>
-                                <span class="date-range" id="currentDate" data-date="${isoDayDate}">
+                        <!-- WEEK NAVIGATION -->
+                        <div class="week-nav">
+                            <button class="btn-nav" id="prevDayBtn"><i data-feather="chevron-left"></i></button>
+                            <span class="date-range" id="currentDate" data-date="${isoDayDate}">
                                 ${displayDate}
                             </span>
                             <button class="btn-nav" id="nextDayBtn"><i data-feather="chevron-right"></i></button>
@@ -613,32 +614,32 @@
                     <div class="calendar-content">
                         <div class="calendar-left">
                             <div id="day-view" class="calendar-view <c:if test="${viewMode == 'day-view'}">active</c:if>">
-                                    <div class="day-nav">
-                                        <span class="date">${dayDate}</span>
+                                <div class="day-nav">
+                                    <span class="date">${dayDate}</span>
                                 </div>
                                 <div class="day-header"><h3>${dayHeader}</h3></div>
                                 <div class="time-grid">
                                     <c:forEach var="label" items="${dayTimeLabels}" varStatus="status">
                                         <div class="time-label">${label}</div>
                                         <c:set var="startTime" value="${dayStartTimes[status.index]}"/>
-                                        <div class="${startTime == 'all-day' ? 'time-slot all-day-slot' : 'time-slot'}"
-                                             <c:if test="${startTime != 'all-day'}">data-start-time="${startTime}"</c:if>
-                                                 ondragover="allowDrop(event)" ondrop="drop(event)">
-                                             <c:forEach var="schedule" items="${schedules}">
-                                                 <c:if test="${schedule.scheduledDate.equals(today) && (startTime == 'all-day' ? schedule.startTime == null : (schedule.startTime != null && schedule.startTime.toString() == startTime))}">
-                                                     <div class="event" id="event-${schedule.id}" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" onclick="showDetails(this)">
-                                                         <span class="event-time">${schedule.startTime}</span><br>${schedule.title}
-                                                     </div>
-                                                 </c:if>
-                                             </c:forEach>
+                                        <div class="${startTime == '00:00' ? 'time-slot all-day-slot' : 'time-slot'}" data-date="${isoDayDate}"
+                                             <c:if test="${startTime != '00:00'}">data-start-time="${startTime}"</c:if>
+                                             ondragover="allowDrop(event)" ondrop="drop(event)">
+                                            <c:forEach var="schedule" items="${schedules}">
+                                                <c:if test="${schedule.scheduledDate.equals(today) && (startTime == '00:00' ? schedule.startTime == null : (schedule.startTime != null && schedule.startTime.toString() == startTime))}">
+                                                    <div class="event ${startTime == '00:00' ? 'all-day' : ''}" id="event-${schedule.id}" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" onclick="showDetails(this)">
+                                                        <span class="event-time">${schedule.startTime != null ? schedule.startTime : 'Cả ngày'}</span><br>${schedule.title}
+                                                    </div>
+                                                </c:if>
+                                            </c:forEach>
                                         </div>
                                     </c:forEach>
                                 </div>
                             </div>
 
                             <div id="week-view" class="calendar-view <c:if test="${viewMode == 'week-view'}">active</c:if>">
-                                    <div class="day-header-row">
-                                        <div class="day-header-cell"></div>
+                                <div class="day-header-row">
+                                    <div class="day-header-cell"></div>
                                     <c:forEach var="label" items="${dayHeaders}">
                                         <div class="day-header-cell">${label}</div>
                                     </c:forEach>
@@ -646,25 +647,34 @@
 
                                 <div class="time-grid">
                                     <!-- All-day row -->
-                                    <div class="time-label">all-day</div>
+                                    <div class="time-label">Cả ngày</div>
                                     <div class="all-day-event-container" ondragover="allowDrop(event)" ondrop="drop(event)">
-                                        <c:forEach var="event" items="${allDayEvents}">
-                                            <div class="event all-day" style="grid-column: ${event.startColumn} / ${event.endColumn};" draggable="true" ondragstart="drag(event)" onclick="showDetails(this)">
-                                                ${event.title}
-                                            </div>
+                                        <c:forEach var="schedule" items="${schedules}">
+                                            <c:if test="${schedule.startTime == null}">
+                                                <c:forEach var="weekDate" items="${weekDates}" varStatus="ws">
+                                                    <c:if test="${schedule.scheduledDate.equals(weekDate)}">
+                                                        <div class="event all-day" style="grid-column: ${ws.index + 1} / span 1;" draggable="true" ondragstart="drag(event)" onclick="showDetails(this)">
+                                                            ${schedule.title}
+                                                            <div class="resize-handle"></div>
+                                                        </div>
+                                                    </c:if>
+                                                </c:forEach>
+                                            </c:if>
                                         </c:forEach>
                                     </div>
 
                                     <!-- Time slots per hour -->
                                     <c:forEach var="hour" items="${hours}">
                                         <div class="time-label">${hour}</div>
-                                        <c:forEach var="day" items="${days}">
-                                            <div class="time-slot" data-start-time="${hour}" data-day="${day}" ondragover="allowDrop(event)" ondrop="drop(event)">
-                                                <c:if test="${hour == '03:00' && day == 'fri'}">
-                                                    <div class="event" id="grocery-event" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" onclick="showDetails(this)">
-                                                        <span class="event-time">${hour}</span><br/>Grocery Day
-                                                    </div>
-                                                </c:if>
+                                        <c:forEach var="day" items="${days}" varStatus="ds">
+                                            <div class="time-slot" data-start-time="${hour}" data-day="${day}" data-date="${weekDates[ds.index]}" ondragover="allowDrop(event)" ondrop="drop(event)">
+                                                <c:forEach var="schedule" items="${schedules}">
+                                                    <c:if test="${schedule.scheduledDate.equals(weekDates[ds.index]) && schedule.startTime != null && schedule.startTime.toString() == hour}">
+                                                        <div class="event" id="event-${schedule.id}" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" onclick="showDetails(this)">
+                                                            <span class="event-time">${hour}</span><br>${schedule.title}
+                                                        </div>
+                                                    </c:if>
+                                                </c:forEach>
                                             </div>
                                         </c:forEach>
                                     </c:forEach>
@@ -672,60 +682,48 @@
                             </div>
 
                             <div id="month-view" class="calendar-view <c:if test="${viewMode == 'month-view'}">active</c:if>">
-                                    <div class="month-grid">
-                                        <div class="month-grid-header">Thứ Hai</div><div class="month-grid-header">Thứ Ba</div><div class="month-grid-header">Thứ Tư</div><div class="month-grid-header">Thứ Năm</div><div class="month-grid-header">Thứ Sáu</div><div class="month-grid-header">Thứ Bảy</div><div class="month-grid-header">Chủ Nhật</div>
+                                <div class="month-grid">
+                                    <div class="month-grid-header">Thứ Hai</div><div class="month-grid-header">Thứ Ba</div><div class="month-grid-header">Thứ Tư</div><div class="month-grid-header">Thứ Năm</div><div class="month-grid-header">Thứ Sáu</div><div class="month-grid-header">Thứ Bảy</div><div class="month-grid-header">Chủ Nhật</div>
                                     <c:forEach var="dayNum" items="${dayNumbers}" varStatus="status">
-                                        <div class="month-day ${isCurrentMonths[status.index] ? '' : 'other-month'}">
+                                        <div class="month-day ${isCurrentMonths[status.index] ? '' : 'other-month'}" data-date="${monthDates[status.index]}">
                                             <div class="day-number">${dayNum}</div>
-                                            <c:if test="${dayNum == 16 && isCurrentMonths[status.index]}">
-                                                <div class="tasks-list">
-                                                    <div class="task-item status-inprogress" data-task-id="101" data-item-name="Kiểm tra hệ thống PCCC" title="Kiểm tra hệ thống PCCC" onclick="showDetails(this)">Kiểm tra PCCC</div>
-                                                </div>
-                                            </c:if>
-                                            <c:if test="${dayNum == 17 && isCurrentMonths[status.index]}">
-                                                <div class="tasks-list">
-                                                    <div class="task-item status-upcoming" data-task-id="102" data-item-name="Bảo trì điều hòa trung tâm" title="Bảo trì điều hòa trung tâm" onclick="showDetails(this)">Bảo trì điều hòa</div>
-                                                </div>
-                                            </c:if>
-                                            <c:if test="${dayNum == 19 && isCurrentMonths[status.index]}">
-                                                <div class="tasks-list">
-                                                    <div class="task-item status-completed" data-task-id="103" data-item-name="Bảo dưỡng thang máy" title="Bảo dưỡng thang máy" onclick="showDetails(this)">Bảo dưỡng thang máy</div>
-                                                </div>
-                                            </c:if>
+                                            <div class="tasks-list">
+                                                <c:forEach var="schedule" items="${schedules}">
+                                                    <c:if test="${schedule.scheduledDate.equals(monthDates[status.index])}">
+                                                        <div class="task-item status-${fn:toLowerCase(schedule.status)}" data-task-id="${schedule.id}" data-item-name="${schedule.title}" title="${schedule.title}" onclick="showDetails(this)" draggable="true" ondragstart="drag(event)">
+                                                            ${fn:substring(schedule.title, 0, 10)}...
+                                                        </div>
+                                                    </c:if>
+                                                </c:forEach>
+                                            </div>
                                         </div>
                                     </c:forEach>
                                 </div>
                             </div>
 
                             <div id="list-view" class="calendar-view <c:if test="${viewMode == 'list-view'}">active</c:if>">
-                                    <div class="list-grid">
-                                        <h2>Tất cả lịch bảo trì</h2>
-                                        <div class="maintenance-list">
-                                            <div class="maintenance-card status-inprogress" onclick="showDetails(this)">
-                                                <div class="card-content"><p class="title">Kiểm tra hệ thống PCCC</p><p class="info"><i data-feather="calendar"></i> 16/07/2025</p><p class="info"><i data-feather="briefcase"></i> Tòa nhà Keangnam</p><p class="info"><i data-feather="users"></i> Đội kỹ thuật số 1</p></div>
+                                <div class="list-grid">
+                                    <h2>Tất cả lịch bảo trì</h2>
+                                    <div class="maintenance-list">
+                                        <c:forEach var="schedule" items="${schedules}">
+                                            <div class="maintenance-card status-${fn:toLowerCase(schedule.status)}" onclick="showDetails(this)">
+                                                <div class="card-content">
+                                                    <p class="title">${schedule.title}</p>
+                                                    <p class="info">
+                                                        <i data-feather="calendar"></i>
+                                                        <fmt:parseDate value="${schedule.scheduledDate}" pattern="yyyy-MM-dd" var="parsedDate" type="date" />
+                                                        <fmt:formatDate pattern="dd/MM/yyyy" value="${parsedDate}" />
+                                                    </p>
+                                                    <p class="info"><i data-feather="briefcase"></i> ${schedule.location}</p>
+                                                    <p class="info"><i data-feather="users"></i> ${schedule.notes}</p>
+                                                </div>
                                                 <div class="card-actions">
                                                     <a href="#" title="Xem"><i data-feather="eye"></i></a>
                                                     <a href="#" title="Sửa"><i data-feather="edit-2"></i></a>
-                                                    <a href="#" class="delete-trigger" data-item-id="101" data-item-name="Kiểm tra hệ thống PCCC" title="Xóa"><i data-feather="trash-2"></i></a>
+                                                    <a href="#" class="delete-trigger" data-item-id="${schedule.id}" data-item-name="${schedule.title}" title="Xóa"><i data-feather="trash-2"></i></a>
                                                 </div>
                                             </div>
-                                            <div class="maintenance-card status-upcoming" onclick="showDetails(this)">
-                                                <div class="card-content"><p class="title">Bảo trì điều hòa trung tâm</p><p class="info"><i data-feather="calendar"></i> 17/07/2025</p><p class="info"><i data-feather="briefcase"></i> Công ty An Phát</p><p class="info"><i data-feather="user"></i> Nguyễn Văn An</p></div>
-                                                <div class="card-actions">
-                                                    <a href="#" title="Xem"><i data-feather="eye"></i></a>
-                                                    <a href="#" title="Sửa"><i data-feather="edit-2"></i></a>
-                                                    <a href="#" class="delete-trigger" data-item-id="102" data-item-name="Bảo trì điều hòa trung tâm" title="Xóa"><i data-feather="trash-2"></i></a>
-                                                </div>
-                                            </div>
-                                            <div class="maintenance-card status-completed" onclick="showDetails(this)">
-                                                <div class="card-content"><p class="title">Bảo dưỡng thang máy</p><p class="info"><i data-feather="calendar"></i> 19/07/2025</p><p class="info"><i data-feather="briefcase"></i> Khách sạn Grand Plaza</p><p class="info"><i data-feather="users"></i> Đội kỹ thuật số 2</p></div>
-                                                <div class="card-actions">
-                                                    <a href="#" title="Xem"><i data-feather="eye"></i></a>
-                                                    <a href="#" title="Sửa"><i data-feather="edit-2"></i></a>
-                                                    <a href="#" class="delete-trigger" data-item-id="103" data-item-name="Bảo dưỡng thang máy" title="Xóa"><i data-feather="trash-2"></i></a>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        </c:forEach>
                                     </div>
                                 </div>
                             </div>
@@ -738,63 +736,21 @@
                                 </div>
                                 <div class="event-header">
                                     <span class="dot"></span>
-                                    <span class="event-time-detail">9:30 AM - 8:00 PM</span>
-                                    <span class="event-title">Awards Conference</span>
+                                    <span class="event-time-detail"></span>
+                                    <span class="event-title"></span>
                                     <span class="event-type">Event</span>
                                 </div>
-
                                 <div class="event-info">
-                                    <i data-feather="calendar"></i> Aug 18, 2020 - Aug 19, 2020
-                                </div>
-                                <div class="event-info">
-                                    <i data-feather="clock"></i> 8:40 AM - 5:40 PM
+                                    <i data-feather="calendar"></i> <span class="event-date"></span>
                                 </div>
                                 <div class="event-info">
-                                    <i data-feather="map-pin"></i> Oslo, Canada
+                                    <i data-feather="clock"></i> <span class="event-time-range"></span>
                                 </div>
                                 <div class="event-info">
-                                    <i data-feather="mail"></i> Meeting
+                                    <i data-feather="map-pin"></i> <span class="event-location"></span>
                                 </div>
                                 <div class="event-info">
-                                    <i data-feather="eye"></i> Default Visibility
-                                </div>
-                                <div class="event-guests">
-                                    <i data-feather="users"></i> Guests:
-                                    <div class="guests-list">
-                                        <div class="guest">Morgan Winston</div>
-                                        <div class="guest">Charlie</div>
-                                        <div class="guest">Alex Johnson</div>
-                                        <div class="guest">Sarah Lee</div>
-                                        <div class="guest">Emily Tran</div>
-                                        <div class="guest">Michael Brown</div>
-                                    </div>
-                                </div>
-                                <div class="event-description">
-                                    <i data-feather="file-text"></i> Annual meeting with global branch teams & bosses about growth planning and fiscal year reports. This event includes discussions on strategic initiatives, budget allocations, and performance reviews for the upcoming fiscal year. All participants are expected to prepare a summary of their department's achievements and challenges.
-                                </div>
-                                <div class="event-notes">
-                                    <i data-feather="edit-3"></i> Additional Notes: Please bring your department's Q2 reports and be prepared for a Q&A session with the executive team. Refreshments will be provided during the break. The agenda includes a keynote speech, breakout sessions for each department, and a final wrap-up with action items assigned to team leads.
-                                </div>
-                                <div class="event-logistics">
-                                    <i data-feather="truck"></i> Logistics: Venue is booked at Oslo Conference Center, Room A-12. Parking is available on-site, and shuttle services will be provided from the central station. Please RSVP by Aug 10, 2020, to confirm attendance.
-                                </div>
-                                <div class="event-contacts">
-                                    <i data-feather="phone"></i> Contact Information: For any queries, reach out to the event coordinator, Jane Doe, at jane.doe@company.com or +1-234-567-890. Emergency contact during the event: John Smith, +1-987-654-321.
-                                </div>
-                                <div class="event-agenda">
-                                    <i data-feather="list"></i> Agenda:
-                                    <ul>
-                                        <li>9:30 AM - 10:00 AM: Welcome and Keynote Speech</li>
-                                        <li>10:00 AM - 12:00 PM: Departmental Breakout Sessions</li>
-                                        <li>12:00 PM - 1:00 PM: Lunch Break</li>
-                                        <li>1:00 PM - 3:00 PM: Budget Planning Workshop</li>
-                                        <li>3:00 PM - 3:30 PM: Coffee Break</li>
-                                        <li>3:30 PM - 5:00 PM: Performance Review Discussions</li>
-                                        <li>5:00 PM - 5:40 PM: Wrap-up and Action Items</li>
-                                    </ul>
-                                </div>
-                                <div class="event-resources">
-                                    <i data-feather="folder"></i> Resources: Download the event handbook and presentation templates from the company portal. Ensure all materials are reviewed prior to the meeting.
+                                    <i data-feather="edit-3"></i> <span class="event-notes"></span>
                                 </div>
                             </div>
                         </div>
@@ -825,22 +781,25 @@
                                     <form id="add-schedule-form" action="addSchedule" method="post">
                                         <label for="title">Tiêu đề:</label>
                                         <input type="text" id="title" name="title" required>
-                                        <label for="date">Ngày (dd/MM/yyyy):</label>
-                                        <input type="date" id="date" name="date" required>
+                                        <label for="scheduled_date">Ngày bắt đầu (yyyy-MM-dd):</label>
+                                        <input type="date" id="scheduled_date" name="scheduled_date" required>
+                                        <label for="end_date">Ngày kết thúc (yyyy-MM-dd):</label>
+                                        <input type="date" id="end_date" name="end_date">
                                         <label for="start_time">Giờ bắt đầu:</label>
-                                        <input type="time" id="start_time" name="start_time" required>
+                                        <input type="time" id="start_time" name="start_time">
                                         <label for="end_time">Giờ kết thúc:</label>
-                                        <input type="time" id="end_time" name="end_time" required>
-                                        <label for="client">Khách hàng:</label>
-                                        <input type="text" id="client" name="client" required>
-                                        <label for="responsible">Người chịu trách nhiệm:</label>
-                                        <input type="text" id="responsible" name="responsible" required>
+                                        <input type="time" id="end_time" name="end_time">
+                                        <label for="location">Vị trí:</label>
+                                        <input type="text" id="location" name="location" required>
                                         <label for="status">Trạng thái:</label>
                                         <select id="status" name="status" required>
                                             <option value="upcoming">Sắp tới</option>
                                             <option value="inprogress">Đang tiến hành</option>
                                             <option value="completed">Hoàn thành</option>
                                         </select>
+                                        <label for="notes">Ghi chú:</label>
+                                        <textarea id="notes" name="notes"></textarea>
+                                        <input type="hidden" name="technicalRequestId" value="0">
                                     </form>
                                 </div>
                                 <div class="modal-footer">
@@ -854,6 +813,10 @@
             </div>
 
             <script>
+                const currentView = '${viewMode}';
+                const isoDayDate = '${isoDayDate}';
+                const weekDates = [<c:forEach items="${weekDates}" var="d" varStatus="status">'${d}'<c:if test="${!status.last}">,</c:if></c:forEach>];
+                const monthDates = [<c:forEach items="${monthDates}" var="d" varStatus="status">'${d}'<c:if test="${!status.last}">,</c:if></c:forEach>];
 
                 feather.replace();
 
@@ -880,8 +843,8 @@
                     if (!scrollContainer)
                         return;
                     const rect = scrollContainer.getBoundingClientRect();
-                    const edgeSize = 50; // Distance from edge to start scrolling
-                    const maxSpeed = 20; // Maximum scroll speed in pixels per interval
+                    const edgeSize = 50;
+                    const maxSpeed = 20;
                     const distTop = ev.clientY - rect.top;
                     const distBottom = rect.bottom - ev.clientY;
                     if (distTop < edgeSize) {
@@ -904,7 +867,6 @@
                     document.removeEventListener('drop', stopAutoScroll);
                 }
 
-                // Update the drag function to include auto-scroll
                 function drag(ev) {
                     ev.dataTransfer.setData("text", ev.target.id);
                     isInteracting = true;
@@ -930,6 +892,8 @@
                         return;
                     const view = slot.closest('.calendar-view').id;
 
+                    let startCol, endCol;
+
                     if (view === 'month-view') {
                         let tasksList = slot.querySelector('.tasks-list');
                         if (!tasksList) {
@@ -942,7 +906,7 @@
                         eventElement.classList.add('all-day');
                         const timeText = eventElement.querySelector('.event-time');
                         if (timeText)
-                            timeText.textContent = '';
+                            timeText.textContent = 'Cả ngày';
 
                         if (view === 'day-view') {
                             slot.appendChild(eventElement);
@@ -960,14 +924,14 @@
                                 const numDays = 7;
                                 const dayWidth = rect.width / numDays;
                                 const x = ev.clientX - rect.left;
-                                let startCol = Math.floor(x / dayWidth) + 1;
+                                startCol = Math.floor(x / dayWidth) + 1;
 
                                 let span = 1;
                                 if (eventElement.classList.contains('all-day') && eventElement.dataset.span) {
                                     span = parseInt(eventElement.dataset.span);
                                 }
 
-                                let endCol = startCol + span;
+                                endCol = startCol + span;
                                 if (endCol > numDays + 1) {
                                     endCol = numDays + 1;
                                     startCol = endCol - span;
@@ -1005,6 +969,31 @@
                         if (handle)
                             handle.remove();
                     }
+
+                    // Cập nhật data backend sau khi drop
+                    const scheduleId = eventElement.id.split('-')[1];
+                    let newScheduledDate, newEndDate = null, newStartTime = null;
+
+                    if (view === 'day-view') {
+                        newScheduledDate = slot.dataset.date;
+                        newStartTime = slot.classList.contains('all-day-slot') ? null : slot.dataset.startTime;
+                    } else if (view === 'week-view') {
+                        if (slot.classList.contains('all-day-event-container')) {
+                            newScheduledDate = weekDates[startCol - 1];
+                            newEndDate = (eventElement.dataset.span > 1) ? weekDates[endCol - 2] : null;
+                            newStartTime = null;
+                        } else {
+                            newScheduledDate = slot.dataset.date;
+                            newStartTime = slot.dataset.startTime;
+                        }
+                    } else if (view === 'month-view') {
+                        newScheduledDate = slot.dataset.date;
+                        newStartTime = null;
+                    }
+
+                    if (scheduleId && newScheduledDate) {
+                        updateEvent(scheduleId, newScheduledDate, newEndDate, newStartTime);
+                    }
                 }
 
                 function initResize(e) {
@@ -1035,20 +1024,73 @@
                         window.removeEventListener('mousemove', resize);
                         window.removeEventListener('mouseup', stopResize);
                         setTimeout(() => isInteracting = false, 0);
+
+                        // Cập nhật data backend sau resize
+                        const scheduleId = eventElement.id.split('-')[1];
+                        const newStartCol = parseInt(eventElement.dataset.startCol);
+                        const newSpan = parseInt(eventElement.dataset.span);
+                        const newScheduledDate = weekDates[newStartCol - 1];
+                        const newEndDate = (newSpan > 1) ? weekDates[newStartCol + newSpan - 2] : null;
+                        const newStartTime = null;
+                        updateEvent(scheduleId, newScheduledDate, newEndDate, newStartTime);
                     }
 
                     window.addEventListener('mousemove', resize);
                     window.addEventListener('mouseup', stopResize);
                 }
 
+                function updateEvent(id, scheduledDate, endDate, startTime) {
+                    fetch('updateSchedule', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ id: id, scheduledDate: scheduledDate, endDate: endDate, startTime: startTime }),
+                    }).then(response => {
+                        if (response.ok) {
+                            location.reload();
+                        } else {
+                            alert('Cập nhật thất bại!');
+                        }
+                    }).catch(error => {
+                        console.error('Error:', error);
+                    });
+                }
+
                 function showDetails(element) {
                     if (isInteracting)
                         return;
                     const detailsPanel = document.getElementById('event-details-panel');
-                    const time = element.querySelector('.event-time')?.textContent || '';
+                    const time = element.querySelector('.event-time')?.textContent || 'Cả ngày';
                     const title = element.querySelector('.title')?.textContent || element.textContent.trim();
-                    detailsPanel.querySelector('.event-time-detail').textContent = time;
-                    detailsPanel.querySelector('.event-title').textContent = title;
+                    const scheduleId = element.id.split('-')[1];
+
+                    // Tìm schedule tương ứng để lấy thông tin chi tiết
+                    const schedules = [
+                        <c:forEach var="schedule" items="${schedules}" varStatus="status">
+                            {
+                                id: ${schedule.id},
+                                title: "${schedule.title}",
+                                scheduledDate: "${schedule.scheduledDate}",
+                                endDate: "${schedule.endDate != null ? schedule.endDate : ''}",
+                                startTime: "${schedule.startTime != null ? schedule.startTime : ''}",
+                                endTime: "${schedule.endTime != null ? schedule.endTime : ''}",
+                                location: "${schedule.location}",
+                                notes: "${schedule.notes}"
+                            }<c:if test="${!status.last}">,</c:if>
+                        </c:forEach>
+                    ];
+                    const schedule = schedules.find(s => s.id == scheduleId);
+
+                    if (schedule) {
+                        detailsPanel.querySelector('.event-time-detail').textContent = time;
+                        detailsPanel.querySelector('.event-title').textContent = schedule.title;
+                        detailsPanel.querySelector('.event-date').textContent = schedule.scheduledDate + (schedule.endDate ? ' - ' + schedule.endDate : '');
+                        detailsPanel.querySelector('.event-time-range').textContent = schedule.startTime ? `${schedule.startTime} - ${schedule.endTime || ''}` : 'Cả ngày';
+                        detailsPanel.querySelector('.event-location').textContent = schedule.location || 'Không xác định';
+                        detailsPanel.querySelector('.event-notes').textContent = schedule.notes || 'Không có ghi chú';
+                    }
+
                     detailsPanel.classList.add('show');
                 }
 
@@ -1076,13 +1118,12 @@
                         button.classList.add('active');
                         localStorage.setItem('selectedView', viewId);
 
-                        // ✅ Submit form để reload với viewMode mới (nếu cần tải dữ liệu từ server)
                         const form = document.getElementById("dayNavForm");
                         const viewModeInput = document.getElementById("viewMode");
                         const currentDayInput = document.getElementById("currentDay");
                         currentDayInput.value = document.getElementById("currentDate").getAttribute("data-date");
                         viewModeInput.value = viewId;
-                        form.submit(); // Reload trang để lấy displayDate mới dựa trên viewMode
+                        form.submit();
                     });
                 });
 
@@ -1153,7 +1194,7 @@
                     function calculateNewDate(baseDateStr, offsetDays) {
                         const date = new Date(baseDateStr);
                         date.setDate(date.getDate() + offsetDays);
-                        return date.toISOString().split("T")[0]; // yyyy-MM-dd
+                        return date.toISOString().split("T")[0];
                     }
 
                     function handleNav(direction) {
@@ -1163,13 +1204,12 @@
                         if (currentViewMode === "week-view") {
                             newDate = calculateNewDate(currentFullDate, direction === "prev" ? -7 : 7);
                         } else {
-                            controllerDayInput.value = direction; // day-view dùng prev/next
+                            controllerDayInput.value = direction;
                         }
 
                         currentDayInput.value = newDate;
                         viewModeInput.value = currentViewMode;
 
-                        // Lưu lại view vào localStorage để giữ nguyên sau reload
                         localStorage.setItem("selectedView", currentViewMode);
 
                         form.submit();
@@ -1186,6 +1226,6 @@
             </script>
 
             <script src="${pageContext.request.contextPath}/js/listSchedule.js"></script>
-        <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
-    </body>
+            <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
+        </body>
 </html>

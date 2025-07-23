@@ -1,5 +1,13 @@
 package vn.edu.fpt.controller;
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import vn.edu.fpt.dao.MaintenanceScheduleDAO;
+import vn.edu.fpt.model.MaintenanceSchedule;
+
 import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -11,14 +19,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import vn.edu.fpt.dao.MaintenanceScheduleDAO;
-import vn.edu.fpt.model.MaintenanceSchedule;
 
 @WebServlet(name = "listScheduleController", urlPatterns = {"/listSchedule"})
 public class listScheduleController extends HttpServlet {
@@ -110,8 +110,8 @@ public class listScheduleController extends HttpServlet {
         // ========== 2. Tạo danh sách thời gian trong ngày ==========
         List<String> dayTimeLabels = new ArrayList<>();
         List<String> dayStartTimes = new ArrayList<>();
-        dayTimeLabels.add("all-day");
-        dayStartTimes.add("all-day");
+        dayTimeLabels.add("Cả ngày"); // Thay "all-day" bằng nhãn tiếng Việt
+        dayStartTimes.add("00:00");   // Thay "all-day" bằng 00:00
 
         for (int h = 1; h <= 11; h++) {
             dayTimeLabels.add(h + ":00 am");
@@ -197,9 +197,11 @@ public class listScheduleController extends HttpServlet {
 
         // ========== 5. Timeline các giờ (Weekly/Month View) ==========
         List<String> hours = new ArrayList<>();
-        for (int h = 1; h <= 23; h++) {
+        for (int h = 0; h <= 23; h++) { // Bắt đầu từ 0 để bao gồm 00:00
             hours.add(String.format("%02d:00", h));
-            hours.add(String.format("%02d:30", h));
+            if (h < 23) { // Không thêm :30 cho 23:30 để tránh vượt quá 24h
+                hours.add(String.format("%02d:30", h));
+            }
         }
 
         // ========== 6. Truyền dữ liệu ra JSP ==========
