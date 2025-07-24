@@ -804,6 +804,7 @@ public class UserDAO {
                 user.setEmployeeCode(rs.getString("employee_code"));
                 user.setDepartmentName(rs.getString("departmentName"));
                 user.setPositionName(rs.getString("positionName"));
+                user.setAvatarUrl(rs.getString("avatar_url"));
                 user.setRoleName(rs.getString("roleName"));
                 user.setIsDeleted(rs.getInt("is_deleted")); // Lấy trạng thái
                 list.add(user);
@@ -989,6 +990,98 @@ public User getUserByEmail(String email) {
         e.printStackTrace();
     }
     return null;
+}
+
+
+   /**
+ * Tìm kiếm một người dùng (bao gồm cả những người đã bị xóa mềm) bằng email hoặc số CMND/CCCD.
+ * @param email Email để tìm kiếm.
+ * @param idCard Số CMND/CCCD để tìm kiếm.
+ * @return Đối tượng User nếu tìm thấy, ngược lại trả về null.
+ */
+public User findUserByEmailOrIdCard(String email, String idCard) {
+    // Câu lệnh SQL tìm kiếm trên cả hai trường, không phân biệt trạng thái isDeleted
+    String sql = "SELECT * FROM Users WHERE email = ? OR identity_card_number = ?";
+    User user = null;
+
+    try (Connection conn = new DBContext().getConnection(); // Giả sử DBContext là lớp kết nối của bạn
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+
+        ps.setString(1, email);
+        ps.setString(2, idCard);
+
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                user = new User();
+                // Ánh xạ dữ liệu từ ResultSet sang đối tượng User
+                user.setId(rs.getInt("id"));
+                user.setLastName(rs.getString("lastName"));
+                user.setMiddleName(rs.getString("middleName"));
+                user.setFirstName(rs.getString("firstName"));
+                user.setEmail(rs.getString("email"));
+                user.setPhoneNumber(rs.getString("phoneNumber"));
+                user.setIdentityCardNumber(rs.getString("identity_card_number"));
+                user.setIsDeleted(rs.getInt("isDeleted")); // Lấy cả trạng thái isDeleted
+                // Thêm các trường khác nếu cần
+            }
+        }
+    } catch (Exception e) {
+        e.printStackTrace(); // In lỗi ra console để debug
+    }
+    return user;
+}
+
+    /**
+ * Kích hoạt lại một tài khoản người dùng đã bị xóa mềm.
+ * @param userId ID của người dùng cần kích hoạt lại.
+ * @return true nếu kích hoạt thành công, false nếu có lỗi.
+ */
+public boolean reactivateUser(int userId) {
+    String sql = "UPDATE Users SET isDeleted = 0 WHERE id = ?";
+    
+    try (Connection conn = new DBContext().getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+
+        ps.setInt(1, userId);
+        
+        // executeUpdate() trả về số dòng bị ảnh hưởng
+        int affectedRows = ps.executeUpdate();
+        
+        // Nếu có ít nhất một dòng bị ảnh hưởng, coi như thành công
+        return affectedRows > 0;
+        
+    } catch (Exception e) {
+        e.printStackTrace();
+        return false;
+    }
+}
+
+    /**
+ * Cập nhật phòng ban và chức vụ cho một người dùng.
+ * @param userId ID của người dùng.
+ * @param departmentId ID của phòng ban mới.
+ * @param positionId ID của chức vụ mới.
+ * @return true nếu cập nhật thành công, false nếu có lỗi.
+ */
+public boolean updateUserDepartmentAndPosition(int userId, int departmentId, int positionId) {
+    // Giả sử bảng trung gian của bạn có tên là User_Department_Position
+    String sql = "UPDATE User_Department_Position SET departmentId = ?, positionId = ? WHERE userId = ?";
+    
+    try (Connection conn = new DBContext().getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+
+        ps.setInt(1, departmentId);
+        ps.setInt(2, positionId);
+        ps.setInt(3, userId);
+
+        int affectedRows = ps.executeUpdate();
+        
+        return affectedRows > 0;
+        
+    } catch (Exception e) {
+        e.printStackTrace();
+        return false;
+    }
 }
 
 }

@@ -69,6 +69,13 @@
                 </a>
             </li>
 
+            <li class="main-menu-item">
+                <a href="${pageContext.request.contextPath}/list-plan" class="main-menu-link">
+                    <i data-feather="clipboard"></i>
+                    <span>Kế hoạch</span>
+                </a>
+            </li>
+
             <%-- ===== NHÓM HỆ THỐNG & TÀI KHOẢN ===== --%>
             <c:set var="isProfileSection" value="${currentPage == 'viewProfile' || currentPage == 'changePassword'}" />
             <li class="nav-item-dropdown ${isProfileSection ? 'open' : ''}">

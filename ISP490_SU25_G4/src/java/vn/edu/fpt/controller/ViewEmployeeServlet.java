@@ -35,25 +35,32 @@ public class ViewEmployeeServlet extends HttpServlet {
         try {
             int employeeId = Integer.parseInt(idStr);
             UserDAO userDAO = new UserDAO();
-
-            // Giả sử bạn có hàm getUserById trong UserDAO
             User employee = userDAO.getUserById(employeeId);
 
-            if (employee != null) {
-                // Đặt đối tượng employee vào request, JSP sẽ dùng tên "employee"
+            // Kiểm tra xem nhân viên có tồn tại VÀ đang hoạt động không
+            if (employee != null && employee.getIsDeleted() == 0) {
+                // Đặt đối tượng vào request
                 request.setAttribute("employee", employee);
 
-                // Chuyển đến trang JSP xem chi tiết
+                // Chuyển tiếp đến trang JSP với đường dẫn ĐÚNG
                 request.getRequestDispatcher("/jsp/admin/viewEmployee.jsp").forward(request, response);
+                
             } else {
-                response.getWriter().println("Không tìm thấy nhân viên.");
+                // Nếu không tìm thấy hoặc nhân viên đã bị xóa, quay về trang danh sách với thông báo
+                String message = (employee == null) ? "Không tìm thấy nhân viên với ID này." : "Nhân viên này đã bị vô hiệu hóa.";
+                request.getSession().setAttribute("errorMessage", message);
+                response.sendRedirect(request.getContextPath() + "/listEmployee");
             }
 
+        } catch (NumberFormatException e) {
+            // Xử lý khi ID không hợp lệ
+            request.getSession().setAttribute("errorMessage", "ID nhân viên không hợp lệ.");
+            response.sendRedirect(request.getContextPath() + "/listEmployee");
         } catch (Exception e) {
-            e.printStackTrace();
-            // Xử lý lỗi (ví dụ: chuyển hướng về trang danh sách)
-            response.sendRedirect(request.getContextPath() + "/listEmployee?error=true");
+            // Xử lý các lỗi ngoài dự kiến
+            e.printStackTrace(); // In lỗi ra console của server để debug
+            request.getSession().setAttribute("errorMessage", "Đã có lỗi xảy ra. Vui lòng thử lại.");
+            response.sendRedirect(request.getContextPath() + "/listEmployee");
         }
     }
-
 }
