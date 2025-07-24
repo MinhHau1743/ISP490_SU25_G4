@@ -1,0 +1,187 @@
+/*
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
+*/
+/* 
+    Created on : Jul 21, 2025, 3:02:05 PM
+    Author     : NGUYEN MINH
+*/
+html, body {
+    height: 100%;
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    background-color: #f8f9fa; /* Màu nền cho trang báo cáo */
+}
+
+/* Layout chính cho content */
+.content-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.main-content-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 24px 32px;
+}
+
+/* --- CSS DÀNH RIÊNG CHO TRANG BÁO CÁO --- */
+
+/* Thanh Filter */
+.report-filters {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    padding: 16px;
+    background-color: var(--white);
+    border-radius: 8px;
+    margin-bottom: 24px;
+    border: 1px solid var(--border-color);
+}
+
+.report-filters .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.report-filters label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.report-filters select,
+.report-filters input {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+}
+
+/* Lưới chứa các thẻ báo cáo */
+.report-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+}
+
+/* Style chung cho mỗi thẻ báo cáo */
+.report-card {
+    background-color: #fff;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.report-card-header {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.report-card-header .icon {
+    margin-right: 12px;
+    color: var(--primary-color, #298E94);
+}
+
+.report-card-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.report-card-body {
+    padding: 20px;
+    flex-grow: 1;
+}
+
+/* Báo cáo doanh thu */
+.revenue-summary {
+    text-align: center;
+}
+.revenue-summary .total-revenue {
+    font-size: 32px;
+    font-weight: 700;
+    color: #28a745; /* Màu xanh lá cây cho doanh thu */
+    margin: 0 0 8px 0;
+}
+.revenue-summary .period {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* Báo cáo khách hàng & hợp đồng */
+.kpi-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.kpi-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+.kpi-item:last-child {
+    border-bottom: none;
+}
+.kpi-item .label {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+.kpi-item .value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.kpi-item .value.success {
+    color: #28a745;
+}
+.kpi-item .value.warning {
+    color: #ffc107;
+}
+.kpi-item .value.danger {
+    color: #E53E3E;
+}
+
+
+/* Báo cáo sản phẩm */
+.product-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+.product-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+}
+.product-item .rank {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    width: 30px;
+}
+.product-item .info {
+    flex-grow: 1;
+}
+.product-item .info .name {
+    font-weight: 500;
+    margin: 0 0 4px 0;
+}
+.product-item .info .sales {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0;
+}

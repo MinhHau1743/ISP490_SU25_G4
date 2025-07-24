@@ -59,13 +59,18 @@
                                 </div>
                             </div>
                             <%-- Customer details content --%>
+                            <%-- BẮT ĐẦU KHỐI CODE CẬP NHẬT --%>
                             <div class="detail-layout">
                                 <div class="main-column">
                                     <div class="profile-header-card detail-card">
                                         <div class="card-body">
                                             <c:choose>
-                                                <c:when test="${not empty customer.avatarUrl}"><img src="${BASE_URL}/${customer.avatarUrl}" alt="Avatar" class="customer-avatar" style="object-fit: cover;"></c:when>
-                                                <c:otherwise><img src="https://placehold.co/80x80/E0F7FA/00796B?text=<c:out value='${customer.name.substring(0,1)}'/>" alt="Avatar" class="customer-avatar"></c:otherwise>
+                                                <c:when test="${not empty customer.avatarUrl}">
+                                                    <img src="${BASE_URL}/${customer.avatarUrl}" alt="Avatar" class="customer-avatar" style="object-fit: cover;">
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <img src="https://placehold.co/80x80/E0F7FA/00796B?text=<c:out value='${customer.name.substring(0,1)}'/>" alt="Avatar" class="customer-avatar">
+                                                </c:otherwise>
                                             </c:choose>
                                             <div class="customer-main-info">
                                                 <h2 class="name"><c:out value="${customer.name}"/></h2>
@@ -73,22 +78,67 @@
                                             </div>
                                         </div>
                                     </div>
+
+                                    <%-- Thông tin doanh nghiệp --%>
                                     <div class="detail-card">
-                                        <h3 class="card-title">Thông tin Doanh nghiệp & Liên hệ</h3>
+                                        <h3 class="card-title">Thông tin doanh nghiệp</h3>
                                         <div class="card-body info-grid">
-                                            <c:if test="${not empty customer.contacts}">
-                                                <c:set var="primaryContact" value="${customer.contacts[0]}"/>
-                                            </c:if>
-                                            <div class="info-item"><span class="label"><i data-feather="user"></i>Người đại diện</span><span class="value"><c:out value="${primaryContact.fullName}"/></span></div>
-                                            <div class="info-item"><span class="label"><i data-feather="briefcase"></i>Chức vụ</span><span class="value"><c:out value="${primaryContact.position}"/></span></div>
-                                            <div class="info-item"><span class="label"><i data-feather="phone"></i>Số điện thoại</span><span class="value"><c:out value="${customer.contacts[0].phoneNumber}"/></span></div>
-                                            <div class="info-item"><span class="label"><i data-feather="mail"></i>Email</span><span class="value"><a href="mailto:<c:out value='${customer.contacts[0].email}'/>"><c:out value="${customer.contacts[0].email}"/></a></span></div>
+                                            <div class="info-item"><span class="label"><i data-feather="phone-call"></i>Fax/Hotline</span><span class="value"><c:out value="${not empty customer.fax ? customer.fax : 'N/A'}"/></span></div>
+                                            <div class="info-item"><span class="label"><i data-feather="at-sign"></i>Email doanh nghiệp</span><span class="value"><a href="mailto:<c:out value='${customer.businessEmail}'/>"><c:out value="${not empty customer.businessEmail ? customer.businessEmail : 'N/A'}"/></a></span></div>
                                             <div class="info-item"><span class="label"><i data-feather="hash"></i>Mã số thuế</span><span class="value"><c:out value="${not empty customer.taxCode ? customer.taxCode : 'N/A'}"/></span></div>
                                             <div class="info-item"><span class="label"><i data-feather="credit-card"></i>Số tài khoản</span><span class="value"><c:out value="${not empty customer.bankNumber ? customer.bankNumber : 'N/A'}"/></span></div>
                                             <div class="info-item full-width"><span class="label"><i data-feather="map-pin"></i>Địa chỉ</span><span class="value"><c:out value="${customer.fullAddress}"/></span></div>
                                         </div>
                                     </div>
+
+                                    <%-- Thông tin người đại diện --%>
+                                    <div class="detail-card">
+                                        <h3 class="card-title">Thông tin người đại diện</h3>
+                                        <c:set var="primaryContact" value="${customer.contacts[0]}"/>
+                                        <div class="card-body info-grid">
+                                            <div class="info-item"><span class="label"><i data-feather="user"></i>Họ và tên</span><span class="value"><c:out value="${primaryContact.fullName}"/></span></div>
+                                            <div class="info-item"><span class="label"><i data-feather="briefcase"></i>Chức vụ</span><span class="value"><c:out value="${primaryContact.position}"/></span></div>
+                                            <div class="info-item"><span class="label"><i data-feather="phone"></i>Số điện thoại</span><span class="value"><c:out value="${primaryContact.phoneNumber}"/></span></div>
+                                            <div class="info-item"><span class="label"><i data-feather="mail"></i>Email</span><span class="value"><a href="mailto:<c:out value='${primaryContact.email}'/>"><c:out value="${not empty primaryContact.email ? primaryContact.email : 'N/A'}"/></a></span></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="detail-card">
+                                        <h3 class="card-title">Hợp đồng đã ký kết</h3>
+                                        <div class="card-body" style="padding: 0;">
+                                            <table class="contract-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Mã Hợp đồng</th>
+                                                        <th>Tên Hợp đồng</th>
+                                                        <th>Ngày ký</th>
+                                                        <th>Giá trị</th>
+                                                        <th>Trạng thái</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td><a href="#" class="contract-code">HD-2024-150</a></td>
+                                                        <td>Hợp đồng bảo trì hệ thống điều hòa 2024-2025</td>
+                                                        <td>15/01/2024</td>
+                                                        <td><fmt:formatNumber value="120000000" type="currency" currencyCode="VND"/></td>
+                                                        <td><span class="status-pill status-active">Còn hiệu lực</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><a href="#" class="contract-code">HD-2023-088</a></td>
+                                                        <td>Hợp đồng cung cấp vật tư 2023</td>
+                                                        <td>20/07/2023</td>
+                                                        <td><fmt:formatNumber value="85000000" type="currency" currencyCode="VND"/></td>
+                                                        <td><span class="status-pill status-expired">Đã hết hạn</span></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+
                                 </div>
+
                                 <div class="sidebar-column">
                                     <div class="detail-card">
                                         <h3 class="card-title">Thông tin bổ sung</h3>
@@ -102,10 +152,45 @@
                                                     </c:forEach>
                                                 </div>
                                             </div>
+                                            <div class="info-item">
+                                                <span class="label">Ngày tham gia</span>
+                                                <span class="value"><fmt:formatDate value="${customer.createdAt}" pattern="dd/MM/yyyy"/></span>
+                                            </div>
                                         </div>
+                                    </div>      
+                                    <div class="detail-card">
+                                        <h3 class="card-title">Giao dịch gần đây</h3>
+                                        <c:choose>
+                                            <c:when test="${not empty recentRequests}">
+                                                <ul class="transaction-history-list">
+                                                    <c:forEach var="r" items="${recentRequests}">
+                                                        <li class="transaction-item">
+                                                            <div class="transaction-info">
+                                                                <a href="${pageContext.request.contextPath}/ticket?action=view&id=${r.id}" class="code"><c:out value="${r.requestCode}"/></a>
+                                                                <p class="type"><c:out value="${r.serviceName}"/></p>
+                                                            </div>
+                                                            <c:choose>
+                                                                <c:when test="${r.status == 'new'}"><span class="status-pill status-new">Mới</span></c:when>
+                                                                <c:when test="${r.status == 'assigned'}"><span class="status-pill status-assigned">Đã giao</span></c:when>
+                                                                <c:when test="${r.status == 'in_progress'}"><span class="status-pill status-in-progress">Đang xử lý</span></c:when>
+                                                                <c:when test="${r.status == 'resolved'}"><span class="status-pill status-resolved">Đã xử lý</span></c:when>
+                                                                <c:when test="${r.status == 'closed'}"><span class="status-pill status-closed">Đã đóng</span></c:when>
+                                                                <c:when test="${r.status == 'rejected'}"><span class="status-pill status-rejected">Từ chối</span></c:when>
+
+                                                                <c:otherwise><span class="status-pill">${r.status}</span></c:otherwise>
+                                                            </c:choose>
+                                                        </li>
+                                                    </c:forEach>
+                                                </ul>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <p style="padding: 0 16px;">Không có giao dịch gần đây.</p>
+                                            </c:otherwise>
+                                        </c:choose>
                                     </div>
                                 </div>
                             </div>
+                            <%-- KẾT THÚC KHỐI CODE CẬP NHẬT --%>
 
 
                         </div>
@@ -155,7 +240,7 @@
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
         <script src="${pageContext.request.contextPath}/js/delete-modal-handler.js"></script>
         <script>
-                            feather.replace();
+            feather.replace();
         </script>
     </body>
 </html>

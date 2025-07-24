@@ -53,7 +53,8 @@ public class ProductEditController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
+        HttpSession session = request.getSession();
+        String userName = (String) session.getAttribute("userName");
         try {
             List<String> errors = new ArrayList<>();
             int id = 0;
@@ -197,7 +198,7 @@ public class ProductEditController extends HttpServlet {
             p.setIsDeleted(isDeleted);
             p.setCreatedAt(createdAt);
             p.setUpdatedAt(LocalDateTime.now().format(dtf));
-
+            p.setUpdatedBy(userName);
             boolean success = dao.editProduct(p);
 
             if (success && !filesToDelete.isEmpty()) {

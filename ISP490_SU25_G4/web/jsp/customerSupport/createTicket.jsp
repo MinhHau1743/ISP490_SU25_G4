@@ -41,8 +41,12 @@
                                     </div>
                                     <div class="form-group">
                                         <label for="contractId">Hợp đồng</label>
-                                        <select id="contractId" name="contractId" class="form-control" disabled>
-                                            <option value="">-- Vui lòng chọn khách hàng trước --</option>
+                                        <%-- Bỏ 'disabled' và dùng JSTL để lặp --%>
+                                        <select id="contractId" name="contractId" class="form-control">
+                                            <option value="">-- Chọn hợp đồng  --</option>
+                                            <c:forEach var="contract" items="${contractList}">
+                                                <option value="${contract.id}">${contract.contractCode}</option>
+                                            </c:forEach>
                                         </select>
                                     </div>
                                     <div class="form-group">
@@ -95,9 +99,9 @@
                 </main>
             </div>
 
-        <script>const contextPath = '${pageContext.request.contextPath}';</script>    
-<script src="${pageContext.request.contextPath}/js/createTicket.js?v=<%= System.currentTimeMillis() %>"></script>
+            <script>const contextPath = '${pageContext.request.contextPath}';</script>    
+        <script src="${pageContext.request.contextPath}/js/createTicket.js?v=<%= System.currentTimeMillis()%>"></script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
-        
+
     </body>
 </html>

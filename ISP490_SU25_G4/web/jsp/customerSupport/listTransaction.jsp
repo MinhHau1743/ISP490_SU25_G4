@@ -120,22 +120,75 @@
                                             <a href="${pageContext.request.contextPath}/ticket?action=view&id=${tx.id}" title="Xem chi tiết"><i data-feather="eye" class="icon-view"></i></a>
 
                                             <a href="${pageContext.request.contextPath}/ticket?action=edit&id=${tx.id}" title="Sửa"><i data-feather="edit-2" class="icon-edit"></i></a>
-                                            <a href="#" onclick="return confirm('Xóa giao dịch ${tx.requestCode}?')" title="Xóa"><i data-feather="trash-2" class="icon-delete"></i></a>
-                                        </div>
+                                            <a href="javascript:void(0);" class="delete-link" data-id="${tx.id}" data-name="${tx.requestCode}" title="Xóa">
+                                                <i data-feather="trash-2" class="icon-delete"></i>
+                                            </a>                                    </div>
                                     </div>
                                 </div>
                             </c:forEach>
+                            <c:if test="${totalPages > 1}">
+                                <div class="pagination">
+                                    <%-- Nút Previous --%>
+                                    <c:if test="${currentPage > 1}">
+                                        <a href="${pageContext.request.contextPath}/ticket?action=list&page=${currentPage - 1}">&laquo;</a>
+                                    </c:if>
+                                    <c:if test="${currentPage == 1}">
+                                        <a href="#" class="disabled">&laquo;</a>
+                                    </c:if>
+
+                                    <%-- Các nút số trang --%>
+                                    <c:forEach begin="1" end="${totalPages}" var="i">
+                                        <c:choose>
+                                            <c:when test="${currentPage eq i}">
+                                                <a href="#" class="active">${i}</a>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <a href="${pageContext.request.contextPath}/ticket?action=list&page=${i}">${i}</a>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </c:forEach>
+
+                                    <%-- Nút Next --%>
+                                    <c:if test="${currentPage < totalPages}">
+                                        <a href="${pageContext.request.contextPath}/ticket?action=list&page=${currentPage + 1}">&raquo;</a>
+                                    </c:if>
+                                    <c:if test="${currentPage == totalPages}">
+                                        <a href="#" class="disabled">&raquo;</a>
+                                    </c:if>
+                                </div>
+                            </c:if>
                         </div>
                         <%-- <jsp:include page="/view/pagination.jsp" /> --%>
                     </div>
                 </div>
             </main>
         </div>
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                feather.replace();
-            });
-        </script>
+        <div class="modal-overlay" id="delete-confirm-modal">
+            <div class="modal-content">
+                <div class="modal-icon">
+                    <i data-feather="alert-triangle"></i>
+                </div>
+                <h3 class="modal-title">Xác nhận xóa</h3>
+                <p class="modal-message">
+                    Bạn có chắc chắn muốn xóa phiếu yêu cầu <br> <strong id="item-to-delete-name" style="color: #d32f2f; font-size: 1.1em;"></strong>?
+                </p>
+                <div class="modal-actions">
+                    <button class="modal-btn btn-cancel" id="cancel-delete-btn">Hủy</button>
+                    <button class="modal-btn btn-confirm-delete" id="confirm-delete-btn">Xóa</button>
+                </div>
+            </div>
+        </div>
+
+        <%-- 2. JavaScript --%>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
+        <script>
+            // Gán contextPath vào một biến toàn cục để file JS bên ngoài có thể dùng
+            window.APP_CONTEXT_PATH = "${pageContext.request.contextPath}";
+        </script>
+
+        <%-- Sau đó mới gọi file JS xử lý logic --%>
+        <script src="${pageContext.request.contextPath}/js/listTransaction.js"></script>
     </body>
+</html>
+</body>
 </html>

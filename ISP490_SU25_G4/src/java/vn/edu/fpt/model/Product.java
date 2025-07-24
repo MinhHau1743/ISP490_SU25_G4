@@ -20,11 +20,13 @@ public class Product {
     private boolean isDeleted;
     private String createdAt;
     private String updatedAt;
-
+    private String createdBy;
+    private String updatedBy;
+    
     public Product() {
     }
 
-    public Product(int id, String name, String productCode, String image, String origin, double price, String description, int categoryId, boolean isDeleted, String createdAt, String updatedAt) {
+    public Product(int id, String name, String productCode, String image, String origin, double price, String description, int categoryId, boolean isDeleted, String createdAt, String updatedAt, String createdBy, String updatedBy) {
         this.id = id;
         this.name = name;
         this.productCode = productCode;
@@ -36,7 +38,11 @@ public class Product {
         this.isDeleted = isDeleted;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.createdBy = createdBy;
+        this.updatedBy = updatedBy;
     }
+
+    
 
     public int getId() {
         return id;
@@ -126,4 +132,20 @@ public class Product {
         this.updatedAt = updatedAt;
     }
 
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public String getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(String updatedBy) {
+        this.updatedBy = updatedBy;
+    }
+   
 }

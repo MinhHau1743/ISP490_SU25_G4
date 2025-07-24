@@ -782,6 +782,7 @@ public class UserDAO {
                 + "ORDER BY u.id " // Sắp xếp lại theo ID cho nhất quán
                 + "LIMIT ? OFFSET ?";
 
+
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -991,6 +992,7 @@ public User getUserByEmail(String email) {
     return null;
 }
 
+
    /**
  * Tìm kiếm một người dùng (bao gồm cả những người đã bị xóa mềm) bằng email hoặc số CMND/CCCD.
  * @param email Email để tìm kiếm.
@@ -1081,4 +1083,5 @@ public boolean updateUserDepartmentAndPosition(int userId, int departmentId, int
         return false;
     }
 }
+
 }

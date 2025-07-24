@@ -20,7 +20,7 @@ import vn.edu.fpt.model.ContractProduct;
 
 public class TechnicalRequestDAO {
 
-    public List<TechnicalRequest> getAllTechnicalRequests() throws SQLException {
+    public List<TechnicalRequest> getAllTechnicalRequests(int limit, int offset) throws SQLException {
         List<TechnicalRequest> requests = new ArrayList<>();
         String sql = "SELECT tr.*, e.name as enterpriseName, c.contract_code as contractCode, s.name as serviceName, "
                 + "CONCAT(assignee.last_name, ' ', assignee.middle_name, ' ', assignee.first_name) as assignedToName "
@@ -29,22 +29,31 @@ public class TechnicalRequestDAO {
                 + "JOIN Services s ON tr.service_id = s.id "
                 + "LEFT JOIN Contracts c ON tr.contract_id = c.id "
                 + "LEFT JOIN Users assignee ON tr.assigned_to_id = assignee.id "
-                + "ORDER BY tr.created_at DESC";
+                + "WHERE tr.is_deleted = 0 "
+                + "ORDER BY tr.created_at DESC "
+                + "LIMIT ? OFFSET ?"; // <-- THÊM DÒNG NÀY
 
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                TechnicalRequest req = new TechnicalRequest();
-                req.setId(rs.getInt("id"));
-                req.setRequestCode(rs.getString("request_code"));
-                req.setStatus(rs.getString("status"));
-                req.setIsBillable(rs.getBoolean("is_billable"));
-                req.setCreatedAt(rs.getTimestamp("created_at"));
-                req.setEnterpriseName(rs.getString("enterpriseName"));
-                req.setContractCode(rs.getString("contractCode"));
-                req.setServiceName(rs.getString("serviceName"));
-                req.setAssignedToName(rs.getString("assignedToName"));
-                req.setEstimatedCost(rs.getDouble("estimated_cost"));
-                requests.add(req);
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, limit);   // <-- THÊM DÒNG NÀY
+            ps.setInt(2, offset);  // <-- THÊM DÒNG NÀY
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    TechnicalRequest req = new TechnicalRequest();
+                    // ... phần code gán giá trị giữ nguyên ...
+                    req.setId(rs.getInt("id"));
+                    req.setRequestCode(rs.getString("request_code"));
+                    req.setStatus(rs.getString("status"));
+                    req.setIsBillable(rs.getBoolean("is_billable"));
+                    req.setCreatedAt(rs.getTimestamp("created_at"));
+                    req.setEnterpriseName(rs.getString("enterpriseName"));
+                    req.setContractCode(rs.getString("contractCode"));
+                    req.setServiceName(rs.getString("serviceName"));
+                    req.setAssignedToName(rs.getString("assignedToName"));
+                    req.setEstimatedCost(rs.getDouble("estimated_cost"));
+                    requests.add(req);
+                }
             }
         }
         return requests;
@@ -155,26 +164,6 @@ public class TechnicalRequestDAO {
         return services;
     }
 
-    public List<Contract> getActiveContractsByEnterpriseId(int enterpriseId) throws SQLException {
-        List<Contract> contracts = new ArrayList<>();
-        String sql = "SELECT id, contract_code FROM contracts WHERE enterprise_id = ? AND status = 'active' ORDER BY created_at DESC";
-
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, enterpriseId);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Contract c = new Contract();
-                    c.setId(rs.getInt("id"));
-                    c.setContractCode(rs.getString("contract_code"));
-                    contracts.add(c);
-                }
-            }
-        }
-        return contracts;
-    }
-
     public boolean createTechnicalRequest(TechnicalRequest request, List<TechnicalRequestDevice> devices) {
         Connection conn = null;
         String sqlRequest = "INSERT INTO TechnicalRequests (request_code, enterprise_id, contract_id, service_id, title, description, priority, status, reporter_id, assigned_to_id, is_billable, estimated_cost, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -272,78 +261,97 @@ public class TechnicalRequestDAO {
         return contracts;
     }
 
-    public boolean updateTechnicalRequest(TechnicalRequest request, List<TechnicalRequestDevice> devices) throws SQLException {
-    // Câu lệnh SQL UPDATE đã được cập nhật đầy đủ các trường
-    String sqlUpdateTicket = "UPDATE TechnicalRequests SET enterprise_id=?, service_id=?, assigned_to_id=?, "
-                           + "title=?, description=?, priority=?, status=?, is_billable=?, estimated_cost=? "
-                           + "WHERE id=?";
-    String sqlDeleteDevices = "DELETE FROM TechnicalRequestDevices WHERE technical_request_id = ?";
-    String sqlInsertDevice = "INSERT INTO TechnicalRequestDevices (technical_request_id, device_name, serial_number, problem_description) VALUES (?, ?, ?, ?)";
+    public List<Contract> getActiveContractsByEnterpriseId(int enterpriseId) throws SQLException {
+        List<Contract> contracts = new ArrayList<>();
+        String sql = "SELECT id, contract_code FROM contracts WHERE enterprise_id = ? AND status = 'active' ORDER BY created_at DESC";
 
-    Connection conn = null;
-    try {
-        conn = DBContext.getConnection();
-        conn.setAutoCommit(false); // Bắt đầu Transaction
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
-        // 1. Cập nhật thông tin phiếu chính
-        try (PreparedStatement psUpdate = conn.prepareStatement(sqlUpdateTicket)) {
-            psUpdate.setInt(1, request.getEnterpriseId());
-            psUpdate.setInt(2, request.getServiceId());
-            psUpdate.setInt(3, request.getAssignedToId());
-            psUpdate.setString(4, request.getTitle());
-            psUpdate.setString(5, request.getDescription());
-            psUpdate.setString(6, request.getPriority());
-            psUpdate.setString(7, request.getStatus());
-            psUpdate.setBoolean(8, request.isIsBillable());
-            psUpdate.setDouble(9, request.getEstimatedCost());
-            psUpdate.setInt(10, request.getId()); // ID của ticket cần update
-            psUpdate.executeUpdate();
-        }
+            ps.setInt(1, enterpriseId); // Gán enterpriseId vào câu lệnh SQL
 
-        // 2. Xóa tất cả thiết bị cũ của phiếu này
-        try (PreparedStatement psDelete = conn.prepareStatement(sqlDeleteDevices)) {
-            psDelete.setInt(1, request.getId());
-            psDelete.executeUpdate();
-        }
-
-        // 3. Thêm lại danh sách thiết bị mới (nếu có)
-        if (devices != null && !devices.isEmpty()) {
-            try (PreparedStatement psInsert = conn.prepareStatement(sqlInsertDevice)) {
-                for (TechnicalRequestDevice device : devices) {
-                    psInsert.setInt(1, request.getId());
-                    psInsert.setString(2, device.getDeviceName());
-                    psInsert.setString(3, device.getSerialNumber());
-                    psInsert.setString(4, device.getProblemDescription());
-                    psInsert.addBatch();
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Contract c = new Contract();
+                    c.setId(rs.getInt("id"));
+                    c.setContractCode(rs.getString("contract_code"));
+                    contracts.add(c);
                 }
-                psInsert.executeBatch();
             }
         }
+        return contracts;
+    }
 
-        conn.commit(); // Hoàn tất transaction
-        return true;
+    public boolean updateTechnicalRequest(TechnicalRequest request, List<TechnicalRequestDevice> devices) throws SQLException {
+        // Câu lệnh SQL UPDATE đã được cập nhật đầy đủ các trường
+        String sqlUpdateTicket = "UPDATE TechnicalRequests SET enterprise_id=?, service_id=?, assigned_to_id=?, "
+                + "title=?, description=?, priority=?, status=?, is_billable=?, estimated_cost=? "
+                + "WHERE id=?";
+        String sqlDeleteDevices = "DELETE FROM TechnicalRequestDevices WHERE technical_request_id = ?";
+        String sqlInsertDevice = "INSERT INTO TechnicalRequestDevices (technical_request_id, device_name, serial_number, problem_description) VALUES (?, ?, ?, ?)";
 
-    } catch (Exception e) {
-        if (conn != null) {
-            conn.rollback(); // Hoàn tác nếu có lỗi
-        }
-        e.printStackTrace();
-        return false;
-    } finally {
-        if (conn != null) {
-            conn.setAutoCommit(true);
-            conn.close();
+        Connection conn = null;
+        try {
+            conn = DBContext.getConnection();
+            conn.setAutoCommit(false); // Bắt đầu Transaction
+
+            // 1. Cập nhật thông tin phiếu chính
+            try (PreparedStatement psUpdate = conn.prepareStatement(sqlUpdateTicket)) {
+                psUpdate.setInt(1, request.getEnterpriseId());
+                psUpdate.setInt(2, request.getServiceId());
+                psUpdate.setInt(3, request.getAssignedToId());
+                psUpdate.setString(4, request.getTitle());
+                psUpdate.setString(5, request.getDescription());
+                psUpdate.setString(6, request.getPriority());
+                psUpdate.setString(7, request.getStatus());
+                psUpdate.setBoolean(8, request.isIsBillable());
+                psUpdate.setDouble(9, request.getEstimatedCost());
+                psUpdate.setInt(10, request.getId()); // ID của ticket cần update
+                psUpdate.executeUpdate();
+            }
+
+            // 2. Xóa tất cả thiết bị cũ của phiếu này
+            try (PreparedStatement psDelete = conn.prepareStatement(sqlDeleteDevices)) {
+                psDelete.setInt(1, request.getId());
+                psDelete.executeUpdate();
+            }
+
+            // 3. Thêm lại danh sách thiết bị mới (nếu có)
+            if (devices != null && !devices.isEmpty()) {
+                try (PreparedStatement psInsert = conn.prepareStatement(sqlInsertDevice)) {
+                    for (TechnicalRequestDevice device : devices) {
+                        psInsert.setInt(1, request.getId());
+                        psInsert.setString(2, device.getDeviceName());
+                        psInsert.setString(3, device.getSerialNumber());
+                        psInsert.setString(4, device.getProblemDescription());
+                        psInsert.addBatch();
+                    }
+                    psInsert.executeBatch();
+                }
+            }
+
+            conn.commit(); // Hoàn tất transaction
+            return true;
+
+        } catch (Exception e) {
+            if (conn != null) {
+                conn.rollback(); // Hoàn tác nếu có lỗi
+            }
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (conn != null) {
+                conn.setAutoCommit(true);
+                conn.close();
+            }
         }
     }
-}
+
     public List<Product> getAllProducts() throws SQLException {
         List<Product> productList = new ArrayList<>();
         // Câu lệnh SQL giả định bảng sản phẩm của bạn tên là 'products'
         String sql = "SELECT id, name FROM products WHERE is_deleted = 0 ORDER BY name ASC";
-        
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 Product product = new Product();
@@ -354,5 +362,69 @@ public class TechnicalRequestDAO {
         }
         return productList;
     }
+
+    public boolean deleteTechnicalRequest(int requestId) throws SQLException {
+        String sql = "UPDATE TechnicalRequests SET is_deleted = 1 WHERE id = ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, requestId);
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0;
+        }
+    }
+
+    public int getTotalTechnicalRequestCount() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM TechnicalRequests WHERE is_deleted = 0";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
+    public List<TechnicalRequest> getRecentRequestsByEnterprise(int enterpriseId, int limit) throws Exception {
+    List<TechnicalRequest> list = new ArrayList<>();
+
+    String sql = """
+        SELECT tr.id, tr.request_code, tr.enterprise_id, tr.service_id, tr.title, tr.description,
+               tr.priority, tr.status, tr.reporter_id, s.name AS service_name
+        FROM technicalrequests tr
+        JOIN services s ON tr.service_id = s.id
+        WHERE tr.enterprise_id = ?
+        ORDER BY tr.id DESC
+        LIMIT ?
+    """;
+
+    try (
+        Connection conn = DBContext.getConnection();
+        PreparedStatement stmt = conn.prepareStatement(sql)
+    ) {
+        stmt.setInt(1, enterpriseId);
+        stmt.setInt(2, limit);
+
+        ResultSet rs = stmt.executeQuery();
+        while (rs.next()) {
+            TechnicalRequest req = new TechnicalRequest();
+            req.setId(rs.getInt("id"));
+            req.setRequestCode(rs.getString("request_code"));
+            req.setEnterpriseId(rs.getInt("enterprise_id"));
+            req.setServiceId(rs.getInt("service_id"));
+            req.setTitle(rs.getString("title"));
+            req.setDescription(rs.getString("description"));
+            req.setPriority(rs.getString("priority"));
+            req.setStatus(rs.getString("status"));
+            req.setReporterId(rs.getInt("reporter_id"));
+            req.setServiceName(rs.getString("service_name")); // dùng JOIN lấy tên dịch vụ
+
+            list.add(req);
+        }
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        throw new Exception("Lỗi truy vấn recent requests: " + e.getMessage());
+    }
+
+    return list;
+}
 
 }

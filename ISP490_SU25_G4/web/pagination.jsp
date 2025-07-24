@@ -1,66 +1,56 @@
 <%--
-    Document   : pagination
-    Created on : Jun 6, 2025
-    Author     : minhnhn
-    Version    : 6.1 (3-page sliding window)
+    Document   : pagination (Generic & Bootstrap 5)
+    Version    : 8.0
 --%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 
-<c:set var="extraParams" value="${param.queryString}" />
+<%-- Logic xây dựng extraParams giữ nguyên --%>
+<c:set var="extraParams" value="" />
+<c:forEach var="p" items="${param}">
+    <c:if test="${p.key != 'page'}">
+        <c:forEach var="value" items="${p.value}">
+            <c:set var="extraParams" value="${extraParams}&${p.key}=${fn:escapeXml(value)}" />
+        </c:forEach>
+    </c:if>
+</c:forEach>
+
 
 <c:if test="${totalPages > 1}">
-    <%-- === LOGIC TÍNH TOÁN 3 SỐ TRANG HIỂN THỊ === --%>
-    <%-- 1. Đặt trang bắt đầu là trang hiện tại trừ 1 --%>
+    <%-- Logic tính toán sliding window giữ nguyên --%>
     <c:set var="begin" value="${currentPage - 1}" />
-
-    <%-- 2. Xử lý trường hợp ở cuối danh sách --%>
-    <c:if test="${totalPages > 3 && currentPage >= totalPages - 1}">
-        <c:set var="begin" value="${totalPages - 2}" />
-    </c:if>
-
-    <%-- 3. Đảm bảo trang bắt đầu không nhỏ hơn 1 --%>
-    <c:if test="${begin < 1}">
-        <c:set var="begin" value="1" />
-    </c:if>
-
-    <%-- 4. Đặt trang kết thúc là trang bắt đầu + 2 --%>
+    <c:if test="${totalPages > 3 && currentPage >= totalPages - 1}"><c:set var="begin" value="${totalPages - 2}" /></c:if>
+    <c:if test="${begin < 1}"><c:set var="begin" value="1" /></c:if>
     <c:set var="end" value="${begin + 2}" />
+    <c:if test="${end > totalPages}"><c:set var="end" value="${totalPages}" /></c:if>
 
-    <%-- 5. Đảm bảo trang kết thúc không lớn hơn tổng số trang --%>
-    <c:if test="${end > totalPages}">
-        <c:set var="end" value="${totalPages}" />
-    </c:if>
-    <%-- === KẾT THÚC LOGIC TÍNH TOÁN === --%>
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
 
-    <div class="table-footer">
-        <div class="pagination">
-            <a href="?page=1&size=${pageSize}${extraParams}"
-               class="page-link ${currentPage == 1 ? 'disabled' : ''}">
-                &lt;&lt;
-            </a>
+            <%-- Nút First & Previous --%>
+            <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
+                <a class="page-link" href="?page=1${extraParams}" aria-label="First">&laquo;</a>
+            </li>
+            <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
+                <a class="page-link" href="?page=${currentPage - 1}${extraParams}" aria-label="Previous">&lsaquo;</a>
+            </li>
 
-            <a href="?page=${currentPage - 1}&size=${pageSize}${extraParams}"
-               class="page-link ${currentPage == 1 ? 'disabled' : ''}">
-                &lt;
-            </a>
-
+            <%-- Các trang ở giữa --%>
             <c:forEach begin="${begin}" end="${end}" var="i">
-                <a href="?page=${i}&size=${pageSize}${extraParams}"
-                   class="page-link ${i == currentPage ? 'active' : ''}">
-                    ${i}
-                </a>
+                <li class="page-item ${i == currentPage ? 'active' : ''}">
+                    <a class="page-link" href="?page=${i}${extraParams}">${i}</a>
+                </li>
             </c:forEach>
 
-            <a href="?page=${currentPage + 1}&size=${pageSize}${extraParams}"
-               class="page-link ${currentPage == totalPages ? 'disabled' : ''}">
-                &gt;
-            </a>
+            <%-- Nút Next & Last --%>
+            <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="?page=${currentPage + 1}${extraParams}" aria-label="Next">&rsaquo;</a>
+            </li>
+            <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="?page=${totalPages}${extraParams}" aria-label="Last">&raquo;</a>
+            </li>
 
-            <a href="?page=${totalPages}&size=${pageSize}${extraParams}"
-               class="page-link ${currentPage == totalPages ? 'disabled' : ''}">
-                &gt;&gt;
-            </a>
-        </div>
-    </div>
+        </ul>
+    </nav>
 </c:if>
