@@ -244,7 +244,6 @@
                 position: relative;
                 left: 0;
                 right: 0;
-                background: teal;
                 color: white;
                 padding: 5px;
                 border-radius: 10px;
@@ -521,7 +520,6 @@
 
             /* Month view events */
             #month-view .event {
-                background: teal;
                 color: white;
                 padding: 5px;
                 border-radius: 10px;
@@ -587,8 +585,8 @@
 
             /* Highlight cho ngày hiện tại trong week-view */
             .day-header-cell.today-highlight {
-                background-color: #e6f7ff;
-                border-bottom: 2px solid #007bff;
+                background-color: #e0f2f1;
+                border-bottom: 2px solid #008080;
                 box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
             }
 
@@ -673,7 +671,7 @@
                                                  ondragover="allowDrop(event)" ondrop="drop(event)">
                                              <c:forEach var="schedule" items="${schedules}">
                                                  <c:if test="${schedule.scheduledDate.equals(today) && (startTime == '00:00' ? schedule.startTime == null : (schedule.startTime != null && schedule.startTime.toString() == startTime))}">
-                                                     <div class="event ${startTime == '00:00' ? 'all-day' : ''}" id="event-${schedule.id}" data-schedule-id="${schedule.id}" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" onclick="showDetails(this)">
+                                                     <div class="event ${startTime == '00:00' ? 'all-day' : ''}" id="event-${schedule.id}" data-schedule-id="${schedule.id}" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" onclick="showDetails(this)" style="background-color: ${schedule.color};">
                                                          <span class="event-time">${schedule.startTime != null ? schedule.startTime : 'Cả ngày'}</span><br>${schedule.title}
                                                      </div>
                                                  </c:if>
@@ -693,13 +691,13 @@
 
                                 <div class="time-grid">
                                     <!-- All-day row -->
-                                    <div class="time-label">Cả ngày</div>
+                                    <div class="time-label">Mọi ngày</div>
                                     <div class="all-day-event-container" ondragover="allowDrop(event)" ondrop="drop(event)">
                                         <c:forEach var="schedule" items="${schedules}">
                                             <c:if test="${schedule.startTime == null}">
                                                 <c:forEach var="weekDate" items="${weekDates}" varStatus="ws">
                                                     <c:if test="${schedule.scheduledDate.equals(weekDate)}">
-                                                        <div class="event all-day" id="event-${schedule.id}" style="grid-column: ${ws.index + 1} / span 1;" data-schedule-id="${schedule.id}" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" onclick="showDetails(this)">
+                                                        <div class="event all-day" id="event-${schedule.id}" style="grid-column: ${ws.index + 1} / span 1; background-color: ${schedule.color};" data-schedule-id="${schedule.id}" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" onclick="showDetails(this)">
                                                             ${schedule.title}
                                                             <div class="resize-handle"></div>
                                                         </div>
@@ -716,7 +714,7 @@
                                             <div class="time-slot" data-start-time="${hour}" data-day="${day}" data-date="${weekDates[ds.index]}" ondragover="allowDrop(event)" ondrop="drop(event)">
                                                 <c:forEach var="schedule" items="${schedules}">
                                                     <c:if test="${schedule.scheduledDate.equals(weekDates[ds.index]) && schedule.startTime != null && schedule.startTime.toString() == hour}">
-                                                        <div class="event" id="event-${schedule.id}" data-schedule-id="${schedule.id}" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" onclick="showDetails(this)">
+                                                        <div class="event" id="event-${schedule.id}" data-schedule-id="${schedule.id}" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" onclick="showDetails(this)" style="background-color: ${schedule.color};">
                                                             <span class="event-time">${hour}</span><br>${schedule.title}
                                                         </div>
                                                     </c:if>
@@ -736,7 +734,7 @@
                                             <div class="tasks-list">
                                                 <c:forEach var="schedule" items="${schedules}">
                                                     <c:if test="${schedule.scheduledDate.equals(monthDates[status.index])}">
-                                                        <div class="task-item status-${fn:toLowerCase(schedule.status)}" data-task-id="${schedule.id}" data-schedule-id="${schedule.id}" data-item-name="${schedule.title}" title="${schedule.title}" onclick="showDetails(this)" draggable="true" ondragstart="drag(event)">
+                                                        <div class="task-item status-${fn:toLowerCase(schedule.status)}" data-task-id="${schedule.id}" data-schedule-id="${schedule.id}" data-item-name="${schedule.title}" title="${schedule.title}" onclick="showDetails(this)" draggable="true" ondragstart="drag(event)" style="background-color: ${schedule.color}; color: white;">
                                                             ${fn:substring(schedule.title, 0, 10)}...
                                                         </div>
                                                     </c:if>
@@ -752,7 +750,7 @@
                                         <h2>Tất cả lịch bảo trì</h2>
                                         <div class="maintenance-list">
                                         <c:forEach var="schedule" items="${schedules}">
-                                            <div class="maintenance-card status-${fn:toLowerCase(schedule.status)}" data-schedule-id="${schedule.id}" onclick="showDetails(this)">
+                                            <div class="maintenance-card status-${fn:toLowerCase(schedule.status)}" data-schedule-id="${schedule.id}" onclick="showDetails(this)" style="background-color: ${schedule.color}; color: white;">
                                                 <div class="card-content">
                                                     <p class="title">${schedule.title}</p>
                                                     <p class="info">
@@ -810,15 +808,15 @@
                                 <i class="bi bi-pencil-square" aria-label="Notes Icon"></i> <span class="event-notes"></span>
                             </div>
                             <div class="event-info">
-                                <i class="bi bi-activity" aria-label="Status Icon"></i> Status:&nbsp; <span class="event-status"></span>
+                                <i class="bi bi-activity" aria-label="Status Icon"></i> Status:  <span class="event-status"></span>
                             </div>
                             <div class="event-info">
                                 <!-- Differentiated: Upload icon for Created At -->
-                                <i class="bi bi-upload" aria-label="Created At Icon"></i>Created at:&nbsp; <span class="event-created-at"></span>
+                                <i class="bi bi-upload" aria-label="Created At Icon"></i>Created at:  <span class="event-created-at"></span>
                             </div>
                             <div class="event-info">
                                 <!-- Differentiated: Arrow-repeat icon for Updated At -->
-                                <i class="bi bi-arrow-repeat" aria-label="Updated At Icon"></i> Updated at:&nbsp; <span class="event-updated-at"></span>
+                                <i class="bi bi-arrow-repeat" aria-label="Updated At Icon"></i> Updated at:  <span class="event-updated-at"></span>
                             </div>
                         </div>
 
@@ -1145,24 +1143,7 @@
             }
 
             // Tìm schedule
-            const schedules = [
-            <c:forEach var="schedule" items="${schedules}" varStatus="status">
-            {
-            id: ${schedule.id},
-                    technicalRequestId: ${schedule.technicalRequestId},
-                    title: "${schedule.title}",
-                    scheduledDate: "${schedule.scheduledDate}",
-                    endDate: "${schedule.endDate != null ? schedule.endDate : ''}",
-                    startTime: "${schedule.startTime != null ? schedule.startTime : ''}",
-                    endTime: "${schedule.endTime != null ? schedule.endTime : ''}",
-                    location: "${schedule.location}",
-                    status: "${schedule.status}",
-                    notes: "${schedule.notes}",
-                    createdAt: "${schedule.createdAt}",
-                    updatedAt: "${schedule.updatedAt}"
-            }<c:if test="${!status.last}">,</c:if>
-            </c:forEach>
-            ];
+            const schedules = [            <c:forEach var="schedule" items="${schedules}" varStatus="status">            {            id: ${schedule.id},                    technicalRequestId: ${schedule.technicalRequestId},                    title: "${schedule.title}",                    scheduledDate: "${schedule.scheduledDate}",                    endDate: "${schedule.endDate != null ? schedule.endDate : ''}",                    startTime: "${schedule.startTime != null ? schedule.startTime : ''}",                    endTime: "${schedule.endTime != null ? schedule.endTime : ''}",                    location: "${schedule.location}",                    status: "${schedule.status}",                    notes: "${schedule.notes}",                    createdAt: "${schedule.createdAt}",                    updatedAt: "${schedule.updatedAt}"            }<c:if test="${!status.last}">,</c:if>            </c:forEach>            ];
                     const schedule = schedules.find(s => s.id == scheduleId);
                     if (schedule) {
             detailsPanel.querySelector('.event-id').textContent = schedule.id;

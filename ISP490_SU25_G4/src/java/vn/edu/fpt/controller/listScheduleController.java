@@ -110,7 +110,7 @@ public class listScheduleController extends HttpServlet {
         // ========== 2. Tạo danh sách thời gian trong ngày ==========
         List<String> dayTimeLabels = new ArrayList<>();
         List<String> dayStartTimes = new ArrayList<>();
-        dayTimeLabels.add("all-day");  // Giữ label hiển thị là "all-day"
+        dayTimeLabels.add("Cả ngày");  // Giữ label hiển thị là "all-day"
         dayStartTimes.add("00:00");    // Thay "all-day" bằng "00:00" để đồng bộ định dạng thời gian, tránh lỗi parse
         dayTimeLabels.add("");
         dayStartTimes.add("00:30");
@@ -121,7 +121,7 @@ public class listScheduleController extends HttpServlet {
             dayTimeLabels.add("");
             dayStartTimes.add(String.format("%02d:30", h));
         }
-        dayTimeLabels.add("12:00 pm");
+        dayTimeLabels.add("12:00 am");
         dayStartTimes.add("12:00");
         dayTimeLabels.add("");
         dayStartTimes.add("12:30");
