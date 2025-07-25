@@ -112,6 +112,8 @@ public class listScheduleController extends HttpServlet {
         List<String> dayStartTimes = new ArrayList<>();
         dayTimeLabels.add("all-day");  // Giữ label hiển thị là "all-day"
         dayStartTimes.add("00:00");    // Thay "all-day" bằng "00:00" để đồng bộ định dạng thời gian, tránh lỗi parse
+        dayTimeLabels.add("");
+        dayStartTimes.add("00:30");
 
         for (int h = 1; h <= 11; h++) {
             dayTimeLabels.add(h + ":00 am");
@@ -130,9 +132,6 @@ public class listScheduleController extends HttpServlet {
             dayTimeLabels.add("");
             dayStartTimes.add(String.format("%02d:30", h + 12));
         }
-
-        dayTimeLabels.add("12:00 am");
-        dayStartTimes.add("00:00");  // Đã đồng bộ với all-day ở đầu
 
         // ========== 3. Xử lý chế độ TUẦN ==========
         List<String> days = Arrays.asList("sun", "mon", "tue", "wed", "thu", "fri", "sat");
@@ -199,9 +198,7 @@ public class listScheduleController extends HttpServlet {
         List<String> hours = new ArrayList<>();
         for (int h = 0; h <= 23; h++) { // Bắt đầu từ 0 để bao gồm 00:00
             hours.add(String.format("%02d:00", h));
-            if (h < 23) { // Không thêm :30 cho 23:30 để tránh vượt quá 24h
-                hours.add(String.format("%02d:30", h));
-            }
+            hours.add(String.format("%02d:30", h));
         }
 
         // ========== 6. Truyền dữ liệu ra JSP ==========

@@ -699,7 +699,7 @@
                                             <c:if test="${schedule.startTime == null}">
                                                 <c:forEach var="weekDate" items="${weekDates}" varStatus="ws">
                                                     <c:if test="${schedule.scheduledDate.equals(weekDate)}">
-                                                        <div class="event all-day" style="grid-column: ${ws.index + 1} / span 1;" data-schedule-id="${schedule.id}" draggable="true" ondragstart="drag(event)" onclick="showDetails(this)">
+                                                        <div class="event all-day" id="event-${schedule.id}" style="grid-column: ${ws.index + 1} / span 1;" data-schedule-id="${schedule.id}" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" onclick="showDetails(this)">
                                                             ${schedule.title}
                                                             <div class="resize-handle"></div>
                                                         </div>
@@ -1320,7 +1320,6 @@
                     });
                     });
         </script>
-
         <script src="${pageContext.request.contextPath}/js/listSchedule.js"></script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
