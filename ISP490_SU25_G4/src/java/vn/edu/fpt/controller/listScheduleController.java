@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @WebServlet(name = "listScheduleController", urlPatterns = {"/listSchedule"})
 public class listScheduleController extends HttpServlet {
@@ -202,7 +204,14 @@ public class listScheduleController extends HttpServlet {
         }
 
         // ========== 6. Truyền dữ liệu ra JSP ==========
+        // ========== 6. Truyền dữ liệu ra JSP ==========
         List<MaintenanceSchedule> schedules = dao.getAllMaintenanceSchedules();
+
+// Vì scheduledDate là LocalDate, bỏ toLocalDate()
+        Map<LocalDate, List<MaintenanceSchedule>> groupedSchedules
+                = schedules.stream()
+                        .collect(Collectors.groupingBy(MaintenanceSchedule::getScheduledDate));
+        request.setAttribute("groupedSchedules", groupedSchedules);
         request.setAttribute("schedules", schedules);
         request.setAttribute("hours", hours);
         request.setAttribute("days", days);

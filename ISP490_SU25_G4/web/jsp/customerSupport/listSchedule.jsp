@@ -618,6 +618,83 @@
                 border: none;
                 box-shadow: none;
             }
+            /* Chỉ áp dụng cho list-view, không ảnh hưởng event-details */
+            #list-view .view-title {
+                margin-bottom: 8px;
+                font-size: 1.5em;
+                color: #333;
+            }
+
+            #list-view .schedule-count {
+                margin-bottom: 16px;
+                color: #666;
+                font-size: 0.95em;
+            }
+
+            #list-view .event-list {
+                display: flex;
+                flex-direction: column;
+            }
+
+            #list-view .event-item {
+                display: flex;
+                align-items: center;
+                padding: 12px 16px;
+                margin-bottom: 10px;
+                border: 1px solid #e0e0e0;
+                border-radius: 4px;
+                background-color: #fff;
+                transition: background-color 0.2s, box-shadow 0.2s;
+                cursor: pointer;
+            }
+
+            #list-view .event-item:hover {
+                background-color: #f9f9f9;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            }
+
+            #list-view .event-color-dot {
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                margin-right: 12px;
+                flex-shrink: 0;
+            }
+
+            #list-view .event-info {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+            }
+
+            #list-view .event-title {
+                font-weight: 600;
+                color: #2c3e50;
+                margin-bottom: 4px;
+            }
+
+            #list-view .event-meta {
+                font-size: 0.85em;
+                color: #757575;
+            }
+
+            #list-view .event-actions {
+                display: flex;
+                gap: 8px;
+            }
+
+            #list-view .event-actions a {
+                color: #757575;
+                text-decoration: none;
+                font-size: 1.1em;
+                padding: 4px;
+                transition: color 0.2s;
+            }
+
+            #list-view .event-actions a:hover {
+                color: #1976d2;
+            }
+
         </style>
     </head>
     <body>
@@ -745,32 +822,58 @@
                                 </div>
                             </div>
 
-                            <div id="list-view" class="calendar-view <c:if test="${viewMode == 'list-view'}">active</c:if>">
-                                    <div class="list-grid">
-                                        <h2>Tất cả lịch bảo trì</h2>
-                                        <div class="maintenance-list">
-                                        <c:forEach var="schedule" items="${schedules}">
-                                            <div class="maintenance-card status-${fn:toLowerCase(schedule.status)}" data-schedule-id="${schedule.id}" onclick="showDetails(this)" style="background-color: ${schedule.color}; color: white;">
-                                                <div class="card-content">
-                                                    <p class="title">${schedule.title}</p>
-                                                    <p class="info">
-                                                        <i data-feather="calendar"></i>
-                                                        <fmt:parseDate value="${schedule.scheduledDate}" pattern="yyyy-MM-dd" var="parsedDate" type="date" />
-                                                        <fmt:formatDate pattern="dd/MM/yyyy" value="${parsedDate}" />
-                                                    </p>
-                                                    <p class="info"><i data-feather="briefcase"></i> ${schedule.location}</p>
-                                                    <p class="info"><i data-feather="users"></i> ${schedule.notes}</p>
-                                                </div>
-                                                <div class="card-actions">
-                                                    <a href="#" title="Xem"><i data-feather="eye"></i></a>
-                                                    <a href="#" title="Sửa"><i data-feather="edit-2"></i></a>
-                                                    <a href="#" class="delete-trigger" data-item-id="${schedule.id}" data-item-name="${schedule.title}" title="Xóa"><i data-feather="trash-2"></i></a>
-                                                </div>
+                            <div id="list-view" class="calendar-view active">
+                                <div class="list-grid">
+                                    <h2 class="view-title">Tất cả lịch bảo trì</h2>
+                                    <p class="schedule-count">Có tổng <strong>${schedules.size()}</strong> lịch</p>
+
+                                    <div class="grouped-schedule-list">
+                                        <!-- Lặp qua từng nhóm ngày -->
+                                        <c:forEach var="dateGroup" items="${groupedSchedules}">
+
+                                            <!-- Header ngày -->
+                                            <div class="date-group-header">
+                                                <h3 class="date-title">${dateGroup.key}</h3>
+
                                             </div>
+
+                                            <!-- Danh sách events trong ngày -->
+                                            <div class="date-group-content">
+                                                <c:forEach var="schedule" items="${dateGroup.value}">
+                                                    <div class="event-item"
+                                                         data-schedule-id="${schedule.id}"
+                                                         onclick="showDetails(this)">
+                                                        <div class="event-color-dot" 
+                                                             style="background-color: ${schedule.color}; margin-right: 16px;"></div>
+                                                        <div class="event-time" 
+                                                             style="margin-right: 16px;">
+                                                            <c:if test="${schedule.startTime != null}">
+                                                                ${schedule.startTime}
+                                                            </c:if>
+                                                            <c:if test="${schedule.startTime == null}">
+                                                                Cả ngày
+                                                            </c:if>
+                                                        </div>
+
+                                                        <div class="event-info">
+                                                            <div class="event-title">${schedule.title}</div>
+                                                            <div class="event-meta">
+                                                                <span class="event-location">${schedule.location}</span>
+                                                                <c:if test="${schedule.notes != null && !empty schedule.notes}">
+                                                                    <span class="event-notes">· ${schedule.notes}</span>
+                                                                </c:if>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </c:forEach>
+                                            </div>
+
                                         </c:forEach>
                                     </div>
                                 </div>
                             </div>
+
+
                         </div>
                         <div class="event-details" id="event-details-panel">
                             <div class="actions">
@@ -1124,29 +1227,30 @@
             }
 
             function showDetails(element) {
-            if (isInteracting) return;
-                    const detailsPanel = document.getElementById('event-details-panel');
-                    if (!detailsPanel) {
-            console.error('Event details panel not found');
+                if (isInteracting)
                     return;
-            }
-
-            // Lấy scheduleId từ data-schedule-id hoặc id.split
-            let scheduleId = element.dataset.scheduleId;
-                    if (!scheduleId && element.id) {
-            scheduleId = element.id.split('-')[1];
-            }
-
-            if (!scheduleId) {
-            console.error('Schedule ID not found for element', element);
+                const detailsPanel = document.getElementById('event-details-panel');
+                if (!detailsPanel) {
+                    console.error('Event details panel not found');
                     return;
-            }
+                }
 
-            // Tìm schedule
-            const schedules = [            <c:forEach var="schedule" items="${schedules}" varStatus="status">            {            id: ${schedule.id},                    technicalRequestId: ${schedule.technicalRequestId},                    title: "${schedule.title}",                    scheduledDate: "${schedule.scheduledDate}",                    endDate: "${schedule.endDate != null ? schedule.endDate : ''}",                    startTime: "${schedule.startTime != null ? schedule.startTime : ''}",                    endTime: "${schedule.endTime != null ? schedule.endTime : ''}",                    location: "${schedule.location}",                    status: "${schedule.status}",                    notes: "${schedule.notes}",                    createdAt: "${schedule.createdAt}",                    updatedAt: "${schedule.updatedAt}"            }<c:if test="${!status.last}">,</c:if>            </c:forEach>            ];
-                    const schedule = schedules.find(s => s.id == scheduleId);
-                    if (schedule) {
-            detailsPanel.querySelector('.event-id').textContent = schedule.id;
+                // Lấy scheduleId từ data-schedule-id hoặc id.split
+                let scheduleId = element.dataset.scheduleId;
+                if (!scheduleId && element.id) {
+                    scheduleId = element.id.split('-')[1];
+                }
+
+                if (!scheduleId) {
+                    console.error('Schedule ID not found for element', element);
+                    return;
+                }
+
+                // Tìm schedule
+                const schedules = [            <c:forEach var="schedule" items="${schedules}" varStatus="status">            {            id: ${schedule.id}, technicalRequestId: ${schedule.technicalRequestId}, title: "${schedule.title}", scheduledDate: "${schedule.scheduledDate}", endDate: "${schedule.endDate != null ? schedule.endDate : ''}", startTime: "${schedule.startTime != null ? schedule.startTime : ''}", endTime: "${schedule.endTime != null ? schedule.endTime : ''}", location: "${schedule.location}", status: "${schedule.status}", notes: "${schedule.notes}", createdAt: "${schedule.createdAt}", updatedAt: "${schedule.updatedAt}"            }<c:if test="${!status.last}">,</c:if>            </c:forEach>            ];
+                const schedule = schedules.find(s => s.id == scheduleId);
+                if (schedule) {
+                    detailsPanel.querySelector('.event-id').textContent = schedule.id;
                     detailsPanel.querySelector('.event-technical-request-id').textContent = schedule.technicalRequestId || '0';
                     detailsPanel.querySelector('.event-time-detail').textContent = element.querySelector('.event-time')?.textContent || 'Cả ngày';
                     detailsPanel.querySelector('.event-title').textContent = schedule.title;
@@ -1160,29 +1264,29 @@
                     detailsPanel.querySelector('.event-created-at').textContent = schedule.createdAt || 'N/A';
                     detailsPanel.querySelector('.event-updated-at').textContent = schedule.updatedAt || 'N/A';
                     detailsPanel.classList.add('show');
-            } else {
-            console.error('Schedule not found for ID', scheduleId);
-            }
+                } else {
+                    console.error('Schedule not found for ID', scheduleId);
+                }
             }
 
             function closeDetails() {
-            const detailsPanel = document.getElementById('event-details-panel');
-                    if (detailsPanel)
+                const detailsPanel = document.getElementById('event-details-panel');
+                if (detailsPanel)
                     detailsPanel.classList.remove('show');
             }
 
             function editEvent() {
-            alert('Edit event');
+                alert('Edit event');
             }
 
             function deleteEvent() {
-            alert('Delete event');
+                alert('Delete event');
             }
 
             // View toggle và lưu localStorage
             document.querySelectorAll('.btn-toggle').forEach(button => {
-            button.addEventListener('click', () => {
-            const viewId = button.getAttribute('data-view');
+                button.addEventListener('click', () => {
+                    const viewId = button.getAttribute('data-view');
                     document.querySelectorAll('.calendar-view').forEach(view => view.classList.remove('active'));
                     document.getElementById(viewId).classList.add('active');
                     document.querySelectorAll('.btn-toggle').forEach(btn => btn.classList.remove('active'));
@@ -1194,112 +1298,112 @@
                     currentDayInput.value = document.getElementById("currentDate").getAttribute("data-date");
                     viewModeInput.value = viewId;
                     form.submit();
+                });
             });
-            });
-                    // Init view từ localStorage
-                    document.addEventListener('DOMContentLoaded', () => {
-                    const savedView = localStorage.getItem('selectedView') || 'day-view';
-                            document.querySelectorAll('.calendar-view').forEach(view => {
+            // Init view từ localStorage
+            document.addEventListener('DOMContentLoaded', () => {
+                const savedView = localStorage.getItem('selectedView') || 'day-view';
+                document.querySelectorAll('.calendar-view').forEach(view => {
                     view.classList.remove('active');
-                    });
-                            const selectedViewElement = document.getElementById(savedView);
-                            if (selectedViewElement)
-                            selectedViewElement.classList.add('active');
-                            document.querySelectorAll('.btn-toggle').forEach(button => {
+                });
+                const selectedViewElement = document.getElementById(savedView);
+                if (selectedViewElement)
+                    selectedViewElement.classList.add('active');
+                document.querySelectorAll('.btn-toggle').forEach(button => {
                     button.classList.remove('active');
-                            if (button.getAttribute('data-view') === savedView) {
-                    button.classList.add('active');
+                    if (button.getAttribute('data-view') === savedView) {
+                        button.classList.add('active');
                     }
-                    });
-                    });
-                    // Init các event khác
-                    document.addEventListener('DOMContentLoaded', () => {
-                    document.querySelectorAll('#week-view .event.all-day').forEach(event => {
+                });
+            });
+            // Init các event khác
+            document.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('#week-view .event.all-day').forEach(event => {
                     if (!event.querySelector('.resize-handle')) {
-                    const handle = document.createElement('div');
-                            handle.classList.add('resize-handle');
-                            event.appendChild(handle);
-                            handle.addEventListener('mousedown', initResize);
-                            handle.addEventListener('click', (e) => e.stopPropagation());
+                        const handle = document.createElement('div');
+                        handle.classList.add('resize-handle');
+                        event.appendChild(handle);
+                        handle.addEventListener('mousedown', initResize);
+                        handle.addEventListener('click', (e) => e.stopPropagation());
                     }
                     if (!event.dataset.startCol) {
-                    const col = event.style.gridColumn || '1 / 2';
-                            const [start, end] = col.split('/').map(s => parseInt(s.trim()));
-                            event.dataset.startCol = start;
-                            event.dataset.span = end - start;
+                        const col = event.style.gridColumn || '1 / 2';
+                        const [start, end] = col.split('/').map(s => parseInt(s.trim()));
+                        event.dataset.startCol = start;
+                        event.dataset.span = end - start;
                     }
-                    });
-                            document.addEventListener('dragend', (e) => {
-                            if (e.target.classList.contains('event')) {
-                            setTimeout(() => isInteracting = false, 0);
-                            }
-                            });
-                            document.querySelectorAll('#month-view .task-item').forEach(item => {
+                });
+                document.addEventListener('dragend', (e) => {
+                    if (e.target.classList.contains('event')) {
+                        setTimeout(() => isInteracting = false, 0);
+                    }
+                });
+                document.querySelectorAll('#month-view .task-item').forEach(item => {
                     item.id = item.dataset.taskId ? 'task-' + item.dataset.taskId : 'task-' + Math.random().toString(36).substring(7);
-                            item.draggable = true;
-                            item.addEventListener('dragstart', drag);
-                            item.addEventListener('dragend', (e) => {
-                            setTimeout(() => isInteracting = false, 0);
-                            });
+                    item.draggable = true;
+                    item.addEventListener('dragstart', drag);
+                    item.addEventListener('dragend', (e) => {
+                        setTimeout(() => isInteracting = false, 0);
                     });
-                            document.querySelectorAll('#month-view .month-day').forEach(day => {
+                });
+                document.querySelectorAll('#month-view .month-day').forEach(day => {
                     day.addEventListener('dragover', allowDrop);
-                            day.addEventListener('drop', drop);
-                    });
-                            // Lấy ngày hiện tại và highlight
-                            const today = new Date().toISOString().split('T')[0];
-                            // Highlight ngày hiện tại trong week-view
-                            const weekHeaders = document.querySelectorAll('#week-view .day-header-cell:not(:first-child)');
-                            weekHeaders.forEach((header, index) => {
-                            if (weekDates[index] === today) {
-                            header.classList.add('today-highlight');
-                            }
-                            });
-                            // Highlight ngày hiện tại trong month-view với hình tròn quanh số
-                            const monthDays = document.querySelectorAll('#month-view .month-day');
-                            monthDays.forEach((day) => {
-                            if (day.dataset.date === today) {
-                            day.classList.add('today-highlight');
-                            }
-                            });
-                    });
-                    // Navigation (prev/next) với xử lý viewMode
-                    document.addEventListener("DOMContentLoaded", function () {
-                    const form = document.getElementById("dayNavForm");
-                            const controllerDayInput = document.getElementById("controllerDay");
-                            const currentDayInput = document.getElementById("currentDay");
-                            const viewModeInput = document.getElementById("viewMode");
-                            const currentDateElem = document.getElementById("currentDate");
-                            const currentFullDate = currentDateElem.getAttribute("data-date");
-                            let currentViewMode = localStorage.getItem("selectedView") || "day-view";
-                            function calculateNewDate(baseDateStr, offsetDays) {
-                            const date = new Date(baseDateStr);
-                                    date.setDate(date.getDate() + offsetDays);
-                                    return date.toISOString().split("T")[0];
-                            }
+                    day.addEventListener('drop', drop);
+                });
+                // Lấy ngày hiện tại và highlight
+                const today = new Date().toISOString().split('T')[0];
+                // Highlight ngày hiện tại trong week-view
+                const weekHeaders = document.querySelectorAll('#week-view .day-header-cell:not(:first-child)');
+                weekHeaders.forEach((header, index) => {
+                    if (weekDates[index] === today) {
+                        header.classList.add('today-highlight');
+                    }
+                });
+                // Highlight ngày hiện tại trong month-view với hình tròn quanh số
+                const monthDays = document.querySelectorAll('#month-view .month-day');
+                monthDays.forEach((day) => {
+                    if (day.dataset.date === today) {
+                        day.classList.add('today-highlight');
+                    }
+                });
+            });
+            // Navigation (prev/next) với xử lý viewMode
+            document.addEventListener("DOMContentLoaded", function () {
+                const form = document.getElementById("dayNavForm");
+                const controllerDayInput = document.getElementById("controllerDay");
+                const currentDayInput = document.getElementById("currentDay");
+                const viewModeInput = document.getElementById("viewMode");
+                const currentDateElem = document.getElementById("currentDate");
+                const currentFullDate = currentDateElem.getAttribute("data-date");
+                let currentViewMode = localStorage.getItem("selectedView") || "day-view";
+                function calculateNewDate(baseDateStr, offsetDays) {
+                    const date = new Date(baseDateStr);
+                    date.setDate(date.getDate() + offsetDays);
+                    return date.toISOString().split("T")[0];
+                }
 
-                    function handleNav(direction) {
+                function handleNav(direction) {
                     let newDate = currentFullDate;
-                            controllerDayInput.value = "";
-                            if (currentViewMode === "week-view") {
-                    newDate = calculateNewDate(currentFullDate, direction === "prev" ? - 7 : 7);
+                    controllerDayInput.value = "";
+                    if (currentViewMode === "week-view") {
+                        newDate = calculateNewDate(currentFullDate, direction === "prev" ? -7 : 7);
                     } else {
-                    controllerDayInput.value = direction;
+                        controllerDayInput.value = direction;
                     }
 
                     currentDayInput.value = newDate;
-                            viewModeInput.value = currentViewMode;
-                            localStorage.setItem("selectedView", currentViewMode);
-                            form.submit();
-                    }
+                    viewModeInput.value = currentViewMode;
+                    localStorage.setItem("selectedView", currentViewMode);
+                    form.submit();
+                }
 
-                    document.getElementById("prevDayBtn").addEventListener("click", function () {
+                document.getElementById("prevDayBtn").addEventListener("click", function () {
                     handleNav("prev");
-                    });
-                            document.getElementById("nextDayBtn").addEventListener("click", function () {
+                });
+                document.getElementById("nextDayBtn").addEventListener("click", function () {
                     handleNav("next");
-                    });
-                    });
+                });
+            });
         </script>
         <script src="${pageContext.request.contextPath}/js/listSchedule.js"></script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
