@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
     feather.replace();
 
     // --- 1. LOGIC CHUYỂN ĐỔI VIEW (TUẦN/THÁNG) ---
-    
+
 
     // --- 2. LOGIC POPOVER CHO LỊCH THÁNG ---
     const popover = document.getElementById('month-task-popover');

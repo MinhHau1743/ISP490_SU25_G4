@@ -28,7 +28,7 @@ public class MaintenanceScheduleDAO extends DBContext {
                 schedule.setId(rs.getInt("id"));
                 schedule.setTechnicalRequestId(rs.getInt("technical_request_id"));
                 schedule.setTitle(rs.getString("title"));
-
+                schedule.setColor(rs.getString("color"));
                 // Xử lý ngày tháng (MySQL -> LocalDate/LocalDateTime/LocalTime)
                 Date scheduledDate = rs.getDate("scheduled_date");
                 schedule.setScheduledDate(scheduledDate != null ? scheduledDate.toLocalDate() : null);
@@ -61,6 +61,22 @@ public class MaintenanceScheduleDAO extends DBContext {
         return schedules;
     }
 
+    public boolean deleteMaintenanceSchedule(int scheduleId) {
+        String sql = "DELETE FROM MaintenanceSchedules WHERE id = ?";
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, scheduleId);
+            int rowsAffected = ps.executeUpdate();
+
+            return rowsAffected > 0; // Trả về true nếu xóa thành công
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public MaintenanceSchedule getMaintenanceScheduleById(int id) {
         MaintenanceSchedule schedule = null;
         String sql = "SELECT * FROM MaintenanceSchedules WHERE id = ?";
@@ -83,19 +99,20 @@ public class MaintenanceScheduleDAO extends DBContext {
             return false;
         }
 
-        String sql = "UPDATE MaintenanceSchedules SET technical_request_id = ?, title = ?, scheduled_date = ?, end_date = ?, start_time = ?, end_time = ?, location = ?, status = ?, notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        String sql = "UPDATE MaintenanceSchedules SET technical_request_id = ?, title = ?,color = ?, scheduled_date = ?, end_date = ?, start_time = ?, end_time = ?, location = ?, status = ?, notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
 
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, schedule.getTechnicalRequestId());
             ps.setString(2, schedule.getTitle());
-            ps.setObject(3, schedule.getScheduledDate());
-            ps.setObject(4, schedule.getEndDate());
-            ps.setObject(5, schedule.getStartTime());
-            ps.setObject(6, schedule.getEndTime());
-            ps.setString(7, schedule.getLocation());
-            ps.setString(8, schedule.getStatus());
-            ps.setString(9, schedule.getNotes());
-            ps.setInt(10, schedule.getId());
+            ps.setString(3, schedule.getColor());
+            ps.setObject(4, schedule.getScheduledDate());
+            ps.setObject(5, schedule.getEndDate());
+            ps.setObject(6, schedule.getStartTime());
+            ps.setObject(7, schedule.getEndTime());
+            ps.setString(8, schedule.getLocation());
+            ps.setString(9, schedule.getStatus());
+            ps.setString(10, schedule.getNotes());
+            ps.setInt(11, schedule.getId());
 
             int rowsUpdated = ps.executeUpdate();
             return rowsUpdated > 0;
@@ -110,6 +127,7 @@ public class MaintenanceScheduleDAO extends DBContext {
         schedule.setId(rs.getInt("id"));
         schedule.setTechnicalRequestId(rs.getInt("technical_request_id"));
         schedule.setTitle(rs.getString("title"));
+        schedule.setColor(rs.getString("color"));
         schedule.setScheduledDate(rs.getObject("scheduled_date", LocalDate.class));
         schedule.setEndDate(rs.getObject("end_date", LocalDate.class));
         schedule.setStartTime(rs.getObject("start_time", LocalTime.class));
@@ -130,6 +148,7 @@ public class MaintenanceScheduleDAO extends DBContext {
         for (MaintenanceSchedule ms : schedules) {
             System.out.println("ID: " + ms.getId());
             System.out.println("Title: " + ms.getTitle());
+            System.out.println("Title: " + ms.getColor());
             System.out.println("Scheduled Date: " + ms.getScheduledDate());
             System.out.println("Start Time: " + ms.getStartTime());
             System.out.println("End Time: " + ms.getEndTime());

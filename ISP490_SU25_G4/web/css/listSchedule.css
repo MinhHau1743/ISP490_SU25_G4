@@ -355,48 +355,11 @@ html, body {
     padding: 0;
     color: #888;
 }
-.modal-body {
-    padding: 32px 24px;
-    text-align: center;
-}
-.modal-body .warning-icon {
-    color: #f59e0b;
-    margin-bottom: 16px;
-}
-.modal-body p {
-    margin: 0;
-    font-size: 15px;
-    line-height: 1.6;
-    color: #444;
-}
+
 .modal-footer {
     display: flex;
-    gap: 12px;
-    padding: 16px 24px;
-    background-color: #f9fafb;
-}
-.modal-footer .btn {
-    flex: 1;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    font-weight: 600;
-    cursor: pointer;
-    text-decoration: none;
-    text-align: center;
-    font-size: 14px;
-}
-.modal-footer .btn-cancel {
-    background-color: #fff;
-}
-.modal-footer .btn-cancel:hover {
-    background-color: #f5f5f5;
-}
-.modal-footer .btn-confirm-delete {
-    background-color: #ef4444;
-    color: white;
-    border-color: #ef4444;
-}
-.modal-footer .btn-confirm-delete:hover {
-    background-color: #dc2626;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 15px 20px;
+    background-color: #f7fafc;
 }

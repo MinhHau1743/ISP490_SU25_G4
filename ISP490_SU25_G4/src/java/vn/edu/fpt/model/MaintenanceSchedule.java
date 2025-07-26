@@ -16,6 +16,7 @@ public class MaintenanceSchedule {
     private int id;
     private int technicalRequestId;
     private String title;
+    private String color;
     private LocalDate scheduledDate;
     private LocalDate endDate;
     private LocalTime startTime;
@@ -29,10 +30,11 @@ public class MaintenanceSchedule {
     public MaintenanceSchedule() {
     }
 
-    public MaintenanceSchedule(int id, int technicalRequestId, String title, LocalDate scheduledDate, LocalDate endDate, LocalTime startTime, LocalTime endTime, String location, String status, String notes, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public MaintenanceSchedule(int id, int technicalRequestId, String title, String color, LocalDate scheduledDate, LocalDate endDate, LocalTime startTime, LocalTime endTime, String location, String status, String notes, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.technicalRequestId = technicalRequestId;
         this.title = title;
+        this.color = color;
         this.scheduledDate = scheduledDate;
         this.endDate = endDate;
         this.startTime = startTime;
@@ -43,6 +45,8 @@ public class MaintenanceSchedule {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
+
+    
 
     public int getId() {
         return id;
@@ -66,6 +70,14 @@ public class MaintenanceSchedule {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
     }
 
     public LocalDate getScheduledDate() {
