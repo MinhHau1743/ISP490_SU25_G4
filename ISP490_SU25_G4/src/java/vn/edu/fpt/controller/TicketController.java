@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import vn.edu.fpt.dao.FeedbackDAO;
 import vn.edu.fpt.model.ContractProduct;
 
 @WebServlet(name = "TicketController", urlPatterns = {"/ticket"})
@@ -129,9 +130,23 @@ public class TicketController extends HttpServlet {
         try {
             int id = Integer.parseInt(request.getParameter("id"));
             TechnicalRequest ticket = dao.getTechnicalRequestById(id);
+
             if (ticket != null) {
+
+                // --- PHẦN CODE CẬP NHẬT ---
+                // 1. Khởi tạo FeedbackDAO
+                FeedbackDAO feedbackDAO = new FeedbackDAO();
+
+                // 2. Kiểm tra xem feedback đã tồn tại cho ticket này chưa
+                boolean hasFeedback = feedbackDAO.feedbackExistsForTechnicalRequest(id);
+
+                // 3. Gửi cả ticket và kết quả kiểm tra sang JSP
                 request.setAttribute("ticket", ticket);
+                request.setAttribute("hasFeedback", hasFeedback); // <-- Gửi biến này sang JSP
+
                 request.getRequestDispatcher("/jsp/customerSupport/viewTransaction.jsp").forward(request, response);
+                // --- KẾT THÚC PHẦN CẬP NHẬT ---
+
             } else {
                 response.sendRedirect("ticket?action=list&error=notFound");
             }
