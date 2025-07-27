@@ -4,6 +4,7 @@
  */
 package vn.edu.fpt.controller;
 
+import com.google.gson.Gson;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -38,29 +39,36 @@ public class DashboardServlet extends HttpServlet {
             }
 
             LocalDate today = LocalDate.now();
-            LocalDate startDate = today;
-            LocalDate endDate = today;
-            String summaryPeriod = "Tháng này"; // Tiêu đề mặc định
+            LocalDate startDate; // Bỏ khởi tạo ở đây
+            LocalDate endDate;   // Bỏ khởi tạo ở đây
+            String summaryPeriod;
 
-            // Tính toán khoảng ngày dựa trên lựa chọn của người dùng
+// THAY THẾ TOÀN BỘ KHỐI SWITCH CŨ BẰNG KHỐI NÀY
             switch (period) {
                 case "last7days":
                     startDate = today.minusDays(6);
+                    endDate = today; // Luôn là ngày hiện tại
                     summaryPeriod = "7 ngày qua";
                     break;
+
                 case "lastmonth":
+                    // Logic này đã đúng, giữ nguyên
                     startDate = today.minusMonths(1).withDayOfMonth(1);
                     endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
                     summaryPeriod = "Tháng trước";
                     break;
+
                 case "thisyear":
                     startDate = today.withDayOfYear(1);
+                    endDate = today; // Luôn là ngày hiện tại
                     summaryPeriod = "Năm nay";
                     break;
+
                 case "thismonth":
-                default: // Mặc định là tháng này
+                default: // Mặc định là "Tháng này"
                     startDate = today.withDayOfMonth(1);
-                    // endDate vẫn là ngày hôm nay
+                    endDate = today; // LỖI SAI Ở ĐÂY: Cần phải gán lại endDate một cách tường minh
+                    summaryPeriod = "Tháng này";
                     break;
             }
 
@@ -76,16 +84,29 @@ public class DashboardServlet extends HttpServlet {
             Map<String, Integer> requestStatusCounts = reportDAO.getTechnicalRequestStatusCounts(dateFromStr, dateToStr);
             List<Map<String, Object>> topProducts = reportDAO.getTopProducts(dateFromStr, dateToStr, 3);
 
-            // Đặt các thuộc tính vào request để JSP có thể truy cập
+            // === THÊM MỚI: LẤY DỮ LIỆU CHO BIỂU ĐỒ ===
+            List<Map<String, Object>> revenueTrend = reportDAO.getRevenueTrend(dateFromStr, dateToStr);
+            List<Map<String, Object>> customerTrend = reportDAO.getNewCustomersTrend(dateFromStr, dateToStr);
+
+            // Chuyển dữ liệu biểu đồ sang JSON
+            Gson gson = new Gson();
+            String revenueTrendJson = gson.toJson(revenueTrend);
+            String customerTrendJson = gson.toJson(customerTrend);
+
+            // --- GỬI DỮ LIỆU SANG JSP ---
+            // Dữ liệu thống kê (giữ nguyên)
             request.setAttribute("totalRevenue", totalRevenue);
             request.setAttribute("newCustomers", newCustomers);
             request.setAttribute("totalCustomers", totalCustomers);
             request.setAttribute("contractStatus", contractStatusCounts);
             request.setAttribute("requestStatus", requestStatusCounts);
             request.setAttribute("topProducts", topProducts);
+            request.setAttribute("period", period);
+            request.setAttribute("summaryPeriod", summaryPeriod);
 
-            request.setAttribute("period", period); // Gửi lại lựa chọn để select box hiển thị đúng
-            request.setAttribute("summaryPeriod", summaryPeriod); // Gửi lại tiêu đề giai đoạn
+            // === THÊM MỚI: Gửi dữ liệu biểu đồ sang JSP ===
+            request.setAttribute("revenueTrendJson", revenueTrendJson);
+            request.setAttribute("customerTrendJson", customerTrendJson);
 
         } catch (SQLException e) {
             e.printStackTrace();

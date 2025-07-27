@@ -4,6 +4,7 @@
  */
 package vn.edu.fpt.controller;
 
+import com.google.gson.Gson;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
@@ -55,6 +56,15 @@ public class ReportServlet extends HttpServlet {
                 case "doanhthu":
                     request.setAttribute("totalRevenue", reportDAO.getTotalRevenue(dateFromStr, dateToStr));
                     request.setAttribute("revenueTrend", reportDAO.getRevenueTrend(dateFromStr, dateToStr));
+
+                    // === THÊM ĐOẠN MÃ NÀY ===
+                    // Lấy top 5 sản phẩm theo doanh thu
+                    List<Map<String, Object>> topProductsByRevenue = reportDAO.getTopProductsByRevenue(dateFromStr, dateToStr, 5);
+                    // Chuyển sang JSON để dùng trong JavaScript
+                    Gson gson = new Gson();
+                    request.setAttribute("topProductsByRevenueJson", gson.toJson(topProductsByRevenue));
+                    // ========================
+
                     break;
                 case "khachhang":
                     request.setAttribute("newCustomers", reportDAO.getNewCustomerCount(dateFromStr, dateToStr));

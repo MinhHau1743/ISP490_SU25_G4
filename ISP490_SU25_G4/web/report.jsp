@@ -155,26 +155,36 @@
                     <c:choose>
                         <%-- ======================= CASE 1: BÁO CÁO DOANH THU ======================= --%>
                         <c:when test="${reportType == 'doanhthu'}">
-                            <div class="report-grid" style="grid-template-columns: 1fr;">
-                                <div class="report-card">
-                                    <div class="report-card-header">
-                                        <i data-feather="dollar-sign" class="icon"></i>
-                                        <h3>Tổng doanh thu</h3>
-                                    </div>
-                                    <div class="report-card-body">
-                                        <div class="revenue-summary">
-                                            <p class="total-revenue"><fmt:formatNumber value="${totalRevenue}" type="currency" currencySymbol="₫" maxFractionDigits="0"/></p>
-                                            <p class="period">Từ ${selectedDateFrom} đến ${selectedDateTo}</p>
-                                        </div>
+                            <div class="report-card" style="width: 100%; margin-bottom: 24px;">
+                                <div class="report-card-header">
+                                    <i data-feather="dollar-sign" class="icon"></i>
+                                    <h3>Tổng doanh thu</h3>
+                                </div>
+                                <div class="report-card-body">
+                                    <div class="revenue-summary">
+                                        <p class="total-revenue"><fmt:formatNumber value="${totalRevenue}" type="currency" currencySymbol="₫" maxFractionDigits="0"/></p>
+                                        <p class="period">Từ ${selectedDateFrom} đến ${selectedDateTo}</p>
                                     </div>
                                 </div>
+                            </div>
+
+                            <div class="report-grid" style="grid-template-columns: 1fr 1fr; align-items: flex-start; gap: 24px;">
                                 <div class="report-card">
                                     <div class="report-card-header">
                                         <i data-feather="bar-chart-2" class="icon"></i>
                                         <h3>Biểu đồ xu hướng doanh thu</h3>
                                     </div>
-                                    <div class="report-card-body">
+                                    <div class="report-card-body" style="height: 300px;">
                                         <canvas id="revenueChart"></canvas>
+                                    </div>
+                                </div>
+                                <div class="report-card">
+                                    <div class="report-card-header">
+                                        <i data-feather="package" class="icon"></i>
+                                        <h3>Top sản phẩm theo doanh thu</h3>
+                                    </div>
+                                    <div class="report-card-body" style="height: 300px;">
+                                        <canvas id="revenueByProductChart"></canvas>
                                     </div>
                                 </div>
                             </div>
@@ -182,61 +192,94 @@
 
                         <%-- ======================= CASE 2: BÁO CÁO KHÁCH HÀNG ======================= --%>
                         <c:when test="${reportType == 'khachhang'}">
-                            <div class="report-grid">
-                                <div class="report-card">
-                                    <div class="report-card-header"><i data-feather="user-plus" class="icon"></i><h3>Khách hàng mới</h3></div>
-                                    <div class="report-card-body"><p class="total-revenue">+ <fmt:formatNumber value="${newCustomers}"/></p></div>
+                            <div class="report-grid" style="grid-template-columns: 400px 1fr; align-items: flex-start; gap: 24px;">
+
+                                <%-- Cột trái: Biểu đồ và Thống kê nhanh --%>
+                                <div style="display: flex; flex-direction: column; gap: 24px;">
+                                    <div class="report-card">
+                                        <div class="report-card-header"><i data-feather="pie-chart" class="icon"></i><h3>Tỷ lệ Khách hàng</h3></div>
+                                        <div class="report-card-body" style="height: 300px;">
+                                            <canvas id="customerPieChart"></canvas>
+                                        </div>
+                                    </div>
+                                    <div class="report-card">
+                                        <div class="report-card-header"><i data-feather="users" class="icon"></i><h3>Thống kê nhanh</h3></div>
+                                        <div class="report-card-body">
+                                            <ul class="kpi-list">
+                                                <li class="kpi-item"><span class="label">Khách hàng mới</span><span class="value success">+ <fmt:formatNumber value="${newCustomers}"/></span></li>
+                                                <li class="kpi-item"><span class="label">Tổng số khách hàng</span><span class="value"><fmt:formatNumber value="${totalCustomers}"/></span></li>
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </div>
+
+                                <%-- Cột phải: Bảng chi tiết --%>
                                 <div class="report-card">
-                                    <div class="report-card-header"><i data-feather="users" class="icon"></i><h3>Tổng số khách hàng</h3></div>
-                                    <div class="report-card-body"><p class="total-revenue"><fmt:formatNumber value="${totalCustomers}"/></p></div>
-                                </div>
-                            </div>
-                            <div class="report-card" style="margin-top: 20px; width: 100%;">
-                                <div class="report-card-header"><h3>Danh sách khách hàng mới</h3></div>
-                                <div class="report-card-body">
-                                    <table class="detail-table">
-                                        <thead><tr><th>Mã KH</th><th>Tên doanh nghiệp</th><th>Ngày tham gia</th></tr></thead>
-                                        <tbody>
-                                            <c:forEach var="customer" items="${newCustomersList}">
-                                                <tr>
-                                                    <td><c:out value="${customer.code}"/></td>
-                                                    <td>
-                                                        <img src="${not empty customer.avatar_url ? customer.avatar_url : 'images/default-avatar.png'}" class="customer-avatar" alt="Avatar">
-                                                        <c:out value="${customer.name}"/>
-                                                    </td>
-                                                    <td><fmt:formatDate value="${customer.created_at}" pattern="dd/MM/yyyy"/></td>
-                                                </tr>
-                                            </c:forEach>
-                                            <c:if test="${empty newCustomersList}">
-                                                <tr><td colspan="3" style="text-align: center;">Không có khách hàng mới trong khoảng thời gian này.</td></tr>
-                                            </c:if>
-                                        </tbody>
-                                    </table>
+                                    <div class="report-card-header"><h3>Danh sách khách hàng mới</h3></div>
+                                    <div class="report-card-body">
+                                        <table class="detail-table">
+                                            <thead><tr><th>Mã KH</th><th>Tên doanh nghiệp</th><th>Ngày tham gia</th></tr></thead>
+                                            <tbody>
+                                                <c:forEach var="customer" items="${newCustomersList}">
+                                                    <tr>
+                                                        <td><c:out value="${customer.code}"/></td>
+                                                        <td>
+                                                            <img src="${not empty customer.avatar_url ? customer.avatar_url : 'images/default-avatar.png'}" class="customer-avatar" alt="Avatar">
+                                                            <c:out value="${customer.name}"/>
+                                                        </td>
+                                                        <td><fmt:formatDate value="${customer.created_at}" pattern="dd/MM/yyyy"/></td>
+                                                    </tr>
+                                                </c:forEach>
+                                                <c:if test="${empty newCustomersList}">
+                                                    <tr><td colspan="3" style="text-align: center;">Không có khách hàng mới trong khoảng thời gian này.</td></tr>
+                                                </c:if>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </c:when>
 
                         <%-- ======================= CASE 3: BÁO CÁO SẢN PHẨM ======================= --%>
                         <c:when test="${reportType == 'sanpham'}">
-                            <div class="report-card" style="width: 100%;">
-                                <div class="report-card-header"><i data-feather="package" class="icon"></i><h3>Thống kê sản phẩm/dịch vụ bán chạy</h3></div>
-                                <div class="report-card-body">
-                                    <table class="detail-table">
-                                        <thead><tr><th>Hạng</th><th>Tên sản phẩm/dịch vụ</th><th>Số lượt mua</th></tr></thead>
-                                        <tbody>
-                                            <c:forEach var="product" items="${topProducts}" varStatus="loop">
-                                                <tr>
-                                                    <td><b>#${loop.count}</b></td>
-                                                    <td><c:out value="${product.name}"/></td>
-                                                    <td><fmt:formatNumber value="${product.sales}"/></td>
-                                                </tr>
-                                            </c:forEach>
-                                            <c:if test="${empty topProducts}">
-                                                <tr><td colspan="3" style="text-align: center;">Không có dữ liệu sản phẩm trong khoảng thời gian này.</td></tr>
-                                            </c:if>
-                                        </tbody>
-                                    </table>
+                            <div class="report-grid" style="grid-template-columns: 1fr 1fr; align-items: flex-start; gap: 24px;">
+
+                                <%-- Cột bên trái cho Biểu đồ --%>
+                                <div style="display: flex; flex-direction: column; gap: 24px;">
+                                    <div class="report-card">
+                                        <div class="report-card-header"><i data-feather="bar-chart-2" class="icon"></i><h3>Top sản phẩm bán chạy (Biểu đồ cột)</h3></div>
+                                        <div class="report-card-body" style="height: 300px;">
+                                            <canvas id="productBarChart"></canvas>
+                                        </div>
+                                    </div>
+                                    <div class="report-card">
+                                        <div class="report-card-header"><i data-feather="pie-chart" class="icon"></i><h3>Tỷ trọng sản phẩm (Biểu đồ tròn)</h3></div>
+                                        <div class="report-card-body" style="height: 300px;">
+                                            <canvas id="productPieChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <%-- Cột bên phải cho Bảng chi tiết --%>
+                                <div class="report-card">
+                                    <div class="report-card-header"><i data-feather="package" class="icon"></i><h3>Thống kê chi tiết</h3></div>
+                                    <div class="report-card-body">
+                                        <table class="detail-table">
+                                            <thead><tr><th>Hạng</th><th>Tên sản phẩm/dịch vụ</th><th>Số lượt mua</th></tr></thead>
+                                            <tbody>
+                                                <c:forEach var="product" items="${topProducts}" varStatus="loop">
+                                                    <tr>
+                                                        <td><b>#${loop.count}</b></td>
+                                                        <td><c:out value="${product.name}"/></td>
+                                                        <td><fmt:formatNumber value="${product.sales}"/></td>
+                                                    </tr>
+                                                </c:forEach>
+                                                <c:if test="${empty topProducts}">
+                                                    <tr><td colspan="3" style="text-align: center;">Không có dữ liệu sản phẩm trong khoảng thời gian này.</td></tr>
+                                                </c:if>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </c:when>
@@ -245,129 +288,145 @@
 
                         <%-- ======================= CASE 4: BÁO CÁO HỢP ĐỒNG ======================= --%>
                         <c:when test="${reportType == 'hopdong'}">
-                            <div class="report-grid">
-                                <div class="report-card">
-                                    <div class="report-card-header"><i data-feather="check-square" class="icon"></i><h3>Đang hiệu lực</h3></div>
-                                    <div class="report-card-body"><p class="total-revenue"><fmt:formatNumber value="${contractStatus.active}"/></p></div>
+                            <div class="report-grid" style="grid-template-columns: 400px 1fr; align-items: flex-start; gap: 24px;">
+
+                                <%-- Cột trái: Biểu đồ và Thẻ số liệu --%>
+                                <div style="display: flex; flex-direction: column; gap: 24px;">
+                                    <div class="report-card">
+                                        <div class="report-card-header"><i data-feather="pie-chart" class="icon"></i><h3>Biểu đồ trạng thái Hợp đồng</h3></div>
+                                        <div class="report-card-body" style="height: 300px;">
+                                            <canvas id="contractStatusChart"></canvas>
+                                        </div>
+                                    </div>
+                                    <div class="report-card">
+                                        <div class="report-card-header"><i data-feather="archive" class="icon"></i><h3>Thống kê nhanh</h3></div>
+                                        <div class="report-card-body">
+                                            <ul class="kpi-list">
+                                                <li class="kpi-item"><span class="label">Đang hiệu lực</span><span class="value success"><fmt:formatNumber value="${contractStatus.active}"/></span></li>
+                                                <li class="kpi-item"><span class="label">Sắp hết hạn</span><span class="value warning"><fmt:formatNumber value="${contractStatus.expiring}"/></span></li>
+                                                <li class="kpi-item"><span class="label">Đã hết hạn</span><span class="value danger"><fmt:formatNumber value="${contractStatus.expired}"/></span></li>
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </div>
+
+                                <%-- Cột phải: Bảng chi tiết --%>
                                 <div class="report-card">
-                                    <div class="report-card-header"><i data-feather="alert-triangle" class="icon"></i><h3>Sắp hết hạn</h3></div>
-                                    <div class="report-card-body"><p class="total-revenue"><fmt:formatNumber value="${contractStatus.expiring}"/></p></div>
-                                </div>
-                                <div class="report-card">
-                                    <div class="report-card-header"><i data-feather="x-circle" class="icon"></i><h3>Đã hết hạn</h3></div>
-                                    <div class="report-card-body"><p class="total-revenue"><fmt:formatNumber value="${contractStatus.expired}"/></p></div>
-                                </div>
-                            </div>
-                            <div class="report-card" style="margin-top: 20px; width: 100%;">
-                                <div class="report-card-header"><h3>Danh sách hợp đồng</h3></div>
-                                <div class="report-card-body">
-                                    <table class="detail-table">
-                                        <thead><tr><th>Mã HĐ</th><th>Khách hàng</th><th>Ngày BĐ</th><th>Ngày KT</th><th>Trạng thái</th></tr></thead>
-                                        <tbody>
-                                            <c:forEach var="contract" items="${contractsList}">
-                                                <tr>
-                                                    <td><b><c:out value="${contract.code}"/></b></td>
-                                                    <td><c:out value="${contract.enterprise_name}"/></td>
-                                                    <td><fmt:formatDate value="${contract.start_date}" pattern="dd/MM/yyyy"/></td>
-                                                    <td><fmt:formatDate value="${contract.end_date}" pattern="dd/MM/yyyy"/></td>
-                                                    <td>
-                                                        <span class="status-badge status-${fn:toLowerCase(contract.status)}">
-                                                            <c:out value="${contract.status}"/>
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            </c:forEach>
-                                            <c:if test="${empty contractsList}">
-                                                <tr><td colspan="5" style="text-align: center;">Không có hợp đồng nào trong khoảng thời gian này.</td></tr>
-                                            </c:if>
-                                        </tbody>
-                                    </table>
+                                    <div class="report-card-header"><h3>Danh sách hợp đồng chi tiết</h3></div>
+                                    <div class="report-card-body">
+                                        <table class="detail-table">
+                                            <thead><tr><th>Mã HĐ</th><th>Khách hàng</th><th>Ngày BĐ</th><th>Ngày KT</th><th>Trạng thái</th></tr></thead>
+                                            <tbody>
+                                                <c:forEach var="contract" items="${contractsList}">
+                                                    <tr>
+                                                        <td><b><c:out value="${contract.code}"/></b></td>
+                                                        <td><c:out value="${contract.enterprise_name}"/></td>
+                                                        <td><fmt:formatDate value="${contract.start_date}" pattern="dd/MM/yyyy"/></td>
+                                                        <td><fmt:formatDate value="${contract.end_date}" pattern="dd/MM/yyyy"/></td>
+                                                        <td>
+                                                            <span class="status-badge status-${fn:toLowerCase(contract.status)}">
+                                                                <c:out value="${contract.status}"/>
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                </c:forEach>
+                                                <c:if test="${empty contractsList}">
+                                                    <tr><td colspan="5" style="text-align: center;">Không có hợp đồng nào trong khoảng thời gian này.</td></tr>
+                                                </c:if>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </c:when>
 
                         <%-- ======================= CASE 5: BÁO CÁO SỬA CHỮA ======================= --%>
-                        <%-- Trong report.jsp, THAY THẾ TOÀN BỘ khối <c:when test="${reportType == 'suachua'}"> bằng khối này --%>
                         <c:when test="${reportType == 'suachua'}">
-                            <div class="report-grid">
-                                <div class="report-card">
-                                    <div class="report-card-header"><i data-feather="check-circle" class="icon"></i><h3>Đã hoàn thành</h3></div>
-                                    <div class="report-card-body"><p class="total-revenue"><fmt:formatNumber value="${requestStatus.completed}"/></p></div>
+                            <div class="report-grid" style="grid-template-columns: 400px 1fr; align-items: flex-start; gap: 24px;">
+
+                                <%-- Cột trái: Biểu đồ và Thống kê nhanh --%>
+                                <div style="display: flex; flex-direction: column; gap: 24px;">
+                                    <div class="report-card">
+                                        <div class="report-card-header"><i data-feather="pie-chart" class="icon"></i><h3>Biểu đồ trạng thái Sửa chữa</h3></div>
+                                        <div class="report-card-body" style="height: 300px;">
+                                            <canvas id="requestStatusChart"></canvas>
+                                        </div>
+                                    </div>
+                                    <div class="report-card">
+                                        <div class="report-card-header"><i data-feather="archive" class="icon"></i><h3>Thống kê nhanh</h3></div>
+                                        <div class="report-card-body">
+                                            <ul class="kpi-list">
+                                                <li class="kpi-item"><span class="label">Đã hoàn thành</span><span class="value success"><fmt:formatNumber value="${requestStatus.completed}"/></span></li>
+                                                <li class="kpi-item"><span class="label">Đang tiến hành</span><span class="value warning"><fmt:formatNumber value="${requestStatus.in_progress}"/></span></li>
+                                                <li class="kpi-item"><span class="label">Chờ xử lý</span><span class="value"><fmt:formatNumber value="${requestStatus.pending}"/></span></li>
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </div>
+
+                                <%-- Cột phải: Bảng chi tiết --%>
                                 <div class="report-card">
-                                    <div class="report-card-header"><i data-feather="loader" class="icon"></i><h3>Đang tiến hành</h3></div>
-                                    <div class="report-card-body"><p class="total-revenue"><fmt:formatNumber value="${requestStatus.in_progress}"/></p></div>
-                                </div>
-                                <div class="report-card">
-                                    <div class="report-card-header"><i data-feather="inbox" class="icon"></i><h3>Chờ xử lý</h3></div>
-                                    <div class="report-card-body"><p class="total-revenue"><fmt:formatNumber value="${requestStatus.pending}"/></p></div>
-                                </div>
-                            </div>
-                            <div class="report-card" style="margin-top: 20px; width: 100%;">
-                                <div class="report-card-header"><h3>Danh sách yêu cầu sửa chữa</h3></div>
-                                <div class="report-card-body">
-                                    <%-- Thêm dòng này vào trước thẻ table để kiểm tra --%>
-                                    <p style="color: red; font-size: 20px; font-weight: bold;">
-                                        Số yêu cầu tìm thấy: ${fn:length(requestsWithDevices)}
-                                    </p>
-                                    <table class="detail-table">
-                                        <thead>
-                                            <tr>
-                                                <th style="width: 10%;">Mã YC</th>
-                                                <th style="width: 25%;">Tiêu đề / Khách hàng</th>
-                                                <th style="width: 15%;">Nhân viên xử lý</th>
-                                                <th style="width: 10%;">Ngày tạo</th>
-                                                <th style="width: 10%;">Trạng thái</th>
-                                                <th style="width: 30%;">Chi tiết thiết bị</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <c:forEach var="req" items="${requestsWithDevices}">
+                                    <div class="report-card-header"><h3>Danh sách yêu cầu sửa chữa chi tiết</h3></div>
+                                    <div class="report-card-body">
+                                        <%-- Bảng chi tiết giữ nguyên như cũ --%>
+                                        <table class="detail-table">
+                                            <thead>
                                                 <tr>
-                                                    <td><b><c:out value="${req.code}"/></b></td>
-                                                    <td>
-                                                        <div><c:out value="${req.title}"/></div>
-                                                        <div style="font-size: 12px; color: #6c757d;"><c:out value="${req.enterprise_name}"/></div>
-                                                    </td>
-                                                    <td>
-                                                        <c:choose>
-                                                            <c:when test="${not empty req.assigned_to}"><c:out value="${req.assigned_to}"/></c:when>
-                                                            <c:otherwise><i style="color: #888;">Chưa phân công</i></c:otherwise>
-                                                        </c:choose>
-                                                    </td>
-                                                    <td><fmt:formatDate value="${req.created_at}" pattern="dd/MM/yyyy"/></td>
-                                                    <td>
-                                                        <span class="status-badge status-${fn:replace(req.status, '_', '')}">
-                                                            <c:out value="${req.status}"/>
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <c:if test="${not empty req.devices}">
-                                                            <table class="nested-table">
-                                                                <thead><tr><th>Tên thiết bị</th><th>Số Serial</th><th>Mô tả lỗi</th></tr></thead>
-                                                                <tbody>
-                                                                    <c:forEach var="device" items="${req.devices}">
-                                                                        <tr>
-                                                                            <td><c:out value="${device.device_name}"/></td>
-                                                                            <td><c:out value="${device.serial_number}"/></td>
-                                                                            <td><c:out value="${device.problem_description}"/></td>
-                                                                        </tr>
-                                                                    </c:forEach>
-                                                                </tbody>
-                                                            </table>
-                                                        </c:if>
-                                                        <c:if test="${empty req.devices}">
-                                                            <i style="color: #888; font-size: 13px;">Không có thông tin thiết bị.</i>
-                                                        </c:if>
-                                                    </td>
+                                                    <th style="width: 10%;">Mã YC</th>
+                                                    <th style="width: 25%;">Tiêu đề / Khách hàng</th>
+                                                    <th style="width: 15%;">Nhân viên xử lý</th>
+                                                    <th style="width: 10%;">Ngày tạo</th>
+                                                    <th style="width: 10%;">Trạng thái</th>
+                                                    <th style="width: 30%;">Chi tiết thiết bị</th>
                                                 </tr>
-                                            </c:forEach>
-                                            <c:if test="${empty requestsWithDevices}">
-                                                <tr><td colspan="6" style="text-align: center;">Không có yêu cầu nào trong khoảng thời gian này.</td></tr>
-                                            </c:if>
-                                        </tbody>
-                                    </table>
+                                            </thead>
+                                            <tbody>
+                                                <c:forEach var="req" items="${requestsWithDevices}">
+                                                    <tr>
+                                                        <td><b><c:out value="${req.code}"/></b></td>
+                                                        <td>
+                                                            <div><c:out value="${req.title}"/></div>
+                                                            <div style="font-size: 12px; color: #6c757d;"><c:out value="${req.enterprise_name}"/></div>
+                                                        </td>
+                                                        <td>
+                                                            <c:choose>
+                                                                <c:when test="${not empty req.assigned_to}"><c:out value="${req.assigned_to}"/></c:when>
+                                                                <c:otherwise><i style="color: #888;">Chưa phân công</i></c:otherwise>
+                                                            </c:choose>
+                                                        </td>
+                                                        <td><fmt:formatDate value="${req.created_at}" pattern="dd/MM/yyyy"/></td>
+                                                        <td>
+                                                            <span class="status-badge status-${fn:replace(req.status, '_', '')}">
+                                                                <c:out value="${req.status}"/>
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <c:if test="${not empty req.devices}">
+                                                                <table class="nested-table">
+                                                                    <thead><tr><th>Tên thiết bị</th><th>Số Serial</th><th>Mô tả lỗi</th></tr></thead>
+                                                                    <tbody>
+                                                                        <c:forEach var="device" items="${req.devices}">
+                                                                            <tr>
+                                                                                <td><c:out value="${device.device_name}"/></td>
+                                                                                <td><c:out value="${device.serial_number}"/></td>
+                                                                                <td><c:out value="${device.problem_description}"/></td>
+                                                                            </tr>
+                                                                        </c:forEach>
+                                                                    </tbody>
+                                                                </table>
+                                                            </c:if>
+                                                            <c:if test="${empty req.devices}">
+                                                                <i style="color: #888; font-size: 13px;">Không có thông tin thiết bị.</i>
+                                                            </c:if>
+                                                        </td>
+                                                    </tr>
+                                                </c:forEach>
+                                                <c:if test="${empty requestsWithDevices}">
+                                                    <tr><td colspan="6" style="text-align: center;">Không có yêu cầu nào trong khoảng thời gian này.</td></tr>
+                                                </c:if>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </c:when>
@@ -433,66 +492,219 @@
             </div>
         </div>
 
+
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                feather.replace();
-
-                // Chỉ chạy script vẽ biểu đồ nếu đang ở trang báo cáo doanh thu
-                if ('${reportType}' === 'doanhthu') {
-                    const ctx = document.getElementById('revenueChart').getContext('2d');
-                    const revenueData = [<c:forEach var="item" items="${revenueTrend}">{date: '${item.date}', revenue: ${item.revenue}},</c:forEach>];
-
-                    new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: revenueData.map(item => new Date(item.date).toLocaleDateString('vi-VN')),
+            // Luôn gọi feather.replace() để render icon
+            feather.replace();
+            // Lấy reportType từ JSP
+            const reportType = '${reportType}';
+            // ===================================================================
+            // HÀM VẼ BIỂU ĐỒ DOANH THU (LINE CHART)
+            // ===================================================================
+            if (reportType === 'doanhthu') {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            const revenueData = [<c:forEach var="item" items="${revenueTrend}">{date: '${item.date}', revenue: ${item.revenue}},</c:forEach>];
+            new Chart(ctx, {
+            type: 'line',
+                    data: {
+                    labels: revenueData.map(item => new Date(item.date).toLocaleDateString('vi-VN')),
                             datasets: [{
-                                    label: 'Doanh thu',
+                            label: 'Doanh thu',
                                     data: revenueData.map(item => item.revenue),
                                     borderColor: 'rgba(54, 162, 235, 1)',
                                     backgroundColor: 'rgba(54, 162, 235, 0.2)',
                                     borderWidth: 2,
                                     fill: true,
                                     tension: 0.1
-                                }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
+                            }]
+                    },
+                    options: {
+                    responsive: true, maintainAspectRatio: false,
                             scales: {
-                                y: {
-                                    beginAtZero: true,
+                            y: {
+                            beginAtZero: true,
                                     ticks: {callback: value => new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(value)}
-                                }
+                            }
                             },
                             plugins: {
-                                tooltip: {
-                                    callbacks: {
-                                        label: context => `\${context.dataset.label || ''}: \${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(context.parsed.y)}`
-                                    }
-                                }
+                            tooltip: {
+                            callbacks: {
+                            label: context => `\${context.dataset.label || ''}: \${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(context.parsed.y)}`
                             }
-                        }
-                    });
-                }
+                            }
+                            }
+                    }
             });
-            </script>
-        <%-- Thêm đoạn script này vào cuối file report.jsp, trước </body> --%>
+            // 2. Vẽ biểu đồ cột cho top sản phẩm theo doanh thu
+            const topProductsData = JSON.parse('${topProductsByRevenueJson}');
+            if (topProductsData.length > 0) {
+            const barCtx = document.getElementById('revenueByProductChart').getContext('2d');
+            new Chart(barCtx, {
+            type: 'bar',
+                    data: {
+                    labels: topProductsData.map(p => p.name),
+                            datasets: [{
+                            label: 'Doanh thu',
+                                    data: topProductsData.map(p => p.revenue),
+                                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                                    borderColor: 'rgba(75, 192, 192, 1)',
+                                    borderWidth: 1
+                            }]
+                    },
+                    options: {
+                    responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                            y: {
+                            beginAtZero: true,
+                                    ticks: { callback: value => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value) }
+                            }
+                            },
+                            plugins: {
+                            tooltip: {
+                            callbacks: {
+                            label: context => `${context.dataset.label || ''}: \${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(context.parsed.y)}`
+                            }
+                            }
+                            }
+                    }
+            });
+            }
+            }
+
+
+            // ===================================================================
+            // HÀM VẼ BIỂU ĐỒ SẢN PHẨM (BAR & PIE CHARTS)
+            // ===================================================================
+            else if (reportType === 'sanpham') {
+            const topProductsData = [<c:forEach var="p" items="${topProducts}">{name: '${p.name}', sales: ${p.sales}},</c:forEach>];
+            if (topProductsData.length > 0) {
+            const labels = topProductsData.map(p => p.name);
+            const data = topProductsData.map(p => p.sales);
+            // 1. Biểu đồ cột
+            const barCtx = document.getElementById('productBarChart').getContext('2d');
+            new Chart(barCtx, {
+            type: 'bar',
+                    data: {
+                    labels: labels,
+                            datasets: [{
+                            label: 'Số lượt mua',
+                                    data: data,
+                                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                                    borderColor: 'rgba(75, 192, 192, 1)',
+                                    borderWidth: 1
+                            }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
+            // 2. Biểu đồ tròn
+            const pieCtx = document.getElementById('productPieChart').getContext('2d');
+            new Chart(pieCtx, {
+            type: 'pie',
+                    data: {
+                    labels: labels,
+                            datasets: [{
+                            label: 'Tỷ trọng sản phẩm',
+                                    data: data,
+                                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#C9CBCF', '#E7E9ED', '#7C7F82', '#A6A9AD'],
+                                    hoverOffset: 4
+                            }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+            });
+            }
+            }
+
+            // ===================================================================
+            // HÀM VẼ BIỂU ĐỒ HỢP ĐỒNG (PIE CHART)
+            // ===================================================================
+            else if (reportType === 'hopdong') {
+            const contractData = {
+            active: ${contractStatus.active ne null ? contractStatus.active : 0},
+                    expiring: ${contractStatus.expiring ne null ? contractStatus.expiring : 0},
+                    expired: ${contractStatus.expired ne null ? contractStatus.expired : 0}
+            };
+            const total = contractData.active + contractData.expiring + contractData.expired;
+            if (total > 0) {
+            const pieCtx = document.getElementById('contractStatusChart').getContext('2d');
+            new Chart(pieCtx, {
+            type: 'pie',
+                    data: {
+                    labels: ['Đang hiệu lực', 'Sắp hết hạn', 'Đã hết hạn'],
+                            datasets: [{
+                            data: [contractData.active, contractData.expiring, contractData.expired],
+                                    backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
+                                    hoverOffset: 4
+                            }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+            });
+            }
+            }
+
+            // ===================================================================
+            // HÀM VẼ BIỂU ĐỒ SỬA CHỮA (PIE CHART)
+            // ===================================================================
+            else if (reportType === 'suachua') {
+            const requestData = {
+            completed: ${requestStatus.completed ne null ? requestStatus.completed : 0},
+                    in_progress: ${requestStatus.in_progress ne null ? requestStatus.in_progress : 0},
+                    pending: ${requestStatus.pending ne null ? requestStatus.pending : 0}
+            };
+            const total = requestData.completed + requestData.in_progress + requestData.pending;
+            if (total > 0) {
+            const pieCtx = document.getElementById('requestStatusChart').getContext('2d');
+            new Chart(pieCtx, {
+            type: 'pie',
+                    data: {
+                    labels: ['Đã hoàn thành', 'Đang tiến hành', 'Chờ xử lý'],
+                            datasets: [{
+                            data: [requestData.completed, requestData.in_progress, requestData.pending],
+                                    backgroundColor: ['#28a745', '#ffc107', '#6c757d'],
+                                    hoverOffset: 4
+                            }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+            });
+            }
+            }
+            // Thêm khối này vào trong script chính
+            else if (reportType === 'khachhang') {
+            const newCustomers = ${newCustomers ne null ? newCustomers : 0};
+            const totalCustomers = ${totalCustomers ne null ? totalCustomers : 0};
+            const existingCustomers = totalCustomers - newCustomers;
+            if (totalCustomers > 0) {
+            const pieCtx = document.getElementById('customerPieChart').getContext('2d');
+            new Chart(pieCtx, {
+            type: 'pie',
+                    data: {
+                    labels: ['Khách hàng mới', 'Khách hàng cũ'],
+                            datasets: [{
+                            data: [newCustomers, existingCustomers],
+                                    backgroundColor: ['#36A2EB', '#FFCE56'],
+                                    hoverOffset: 4
+                            }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+            });
+            }
+            }
+            });</script>
+            <%-- Thêm đoạn script này vào cuối file report.jsp, trước </body> --%>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                // Tìm đến form lọc bằng ID
-                const filterForm = document.getElementById('reportFilterForm');
-
-                // Tìm tất cả các input và select có class 'auto-submit-filter'
-                const filterInputs = document.querySelectorAll('.auto-submit-filter');
-
-                // Gắn sự kiện 'change' cho mỗi bộ lọc
-                filterInputs.forEach(function (input) {
-                    input.addEventListener('change', function () {
-                        // Khi giá trị của bất kỳ bộ lọc nào thay đổi, tự động gửi form
-                        filterForm.submit();
-                    });
-                });
+            // Tìm đến form lọc bằng ID
+            const filterForm = document.getElementById('reportFilterForm');
+            // Tìm tất cả các input và select có class 'auto-submit-filter'
+            const filterInputs = document.querySelectorAll('.auto-submit-filter');
+            // Gắn sự kiện 'change' cho mỗi bộ lọc
+            filterInputs.forEach(function (input) {
+            input.addEventListener('change', function () {
+            // Khi giá trị của bất kỳ bộ lọc nào thay đổi, tự động gửi form
+            filterForm.submit();
+            });
+            });
             });
         </script>
         <script src="js/mainMenu.js"></script>
