@@ -99,6 +99,24 @@ public class TechnicalRequestDAO {
         return req;
     }
 
+    public List<TechnicalRequest> getAllTechnicalRequestsIdAndTitle() throws SQLException {
+        List<TechnicalRequest> requests = new ArrayList<>();
+        String sql = "SELECT tr.id, tr.title " // Lấy đúng trường 'title' từ bảng TechnicalRequests
+                + "FROM TechnicalRequests tr ";
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    TechnicalRequest req = new TechnicalRequest();
+                    req.setId(rs.getInt("id"));
+                    req.setTitle(rs.getString("title"));
+                    requests.add(req);
+                }
+            }
+        }
+        return requests;
+    }
+
     private List<TechnicalRequestDevice> getDevicesForRequest(int requestId) throws SQLException {
         List<TechnicalRequestDevice> devices = new ArrayList<>();
         String sql = "SELECT * FROM TechnicalRequestDevices WHERE technical_request_id = ?";
@@ -383,9 +401,9 @@ public class TechnicalRequestDAO {
     }
 
     public List<TechnicalRequest> getRecentRequestsByEnterprise(int enterpriseId, int limit) throws Exception {
-    List<TechnicalRequest> list = new ArrayList<>();
+        List<TechnicalRequest> list = new ArrayList<>();
 
-    String sql = """
+        String sql = """
         SELECT tr.id, tr.request_code, tr.enterprise_id, tr.service_id, tr.title, tr.description,
                tr.priority, tr.status, tr.reporter_id, s.name AS service_name
         FROM technicalrequests tr
@@ -395,36 +413,34 @@ public class TechnicalRequestDAO {
         LIMIT ?
     """;
 
-    try (
-        Connection conn = DBContext.getConnection();
-        PreparedStatement stmt = conn.prepareStatement(sql)
-    ) {
-        stmt.setInt(1, enterpriseId);
-        stmt.setInt(2, limit);
+        try (
+                Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, enterpriseId);
+            stmt.setInt(2, limit);
 
-        ResultSet rs = stmt.executeQuery();
-        while (rs.next()) {
-            TechnicalRequest req = new TechnicalRequest();
-            req.setId(rs.getInt("id"));
-            req.setRequestCode(rs.getString("request_code"));
-            req.setEnterpriseId(rs.getInt("enterprise_id"));
-            req.setServiceId(rs.getInt("service_id"));
-            req.setTitle(rs.getString("title"));
-            req.setDescription(rs.getString("description"));
-            req.setPriority(rs.getString("priority"));
-            req.setStatus(rs.getString("status"));
-            req.setReporterId(rs.getInt("reporter_id"));
-            req.setServiceName(rs.getString("service_name")); // dùng JOIN lấy tên dịch vụ
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                TechnicalRequest req = new TechnicalRequest();
+                req.setId(rs.getInt("id"));
+                req.setRequestCode(rs.getString("request_code"));
+                req.setEnterpriseId(rs.getInt("enterprise_id"));
+                req.setServiceId(rs.getInt("service_id"));
+                req.setTitle(rs.getString("title"));
+                req.setDescription(rs.getString("description"));
+                req.setPriority(rs.getString("priority"));
+                req.setStatus(rs.getString("status"));
+                req.setReporterId(rs.getInt("reporter_id"));
+                req.setServiceName(rs.getString("service_name")); // dùng JOIN lấy tên dịch vụ
 
-            list.add(req);
+                list.add(req);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception("Lỗi truy vấn recent requests: " + e.getMessage());
         }
 
-    } catch (Exception e) {
-        e.printStackTrace();
-        throw new Exception("Lỗi truy vấn recent requests: " + e.getMessage());
+        return list;
     }
-
-    return list;
-}
 
 }

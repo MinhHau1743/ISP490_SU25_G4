@@ -15,7 +15,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 @WebServlet(name = "updateScheduleController", urlPatterns = {"/updateSchedule"})
-public class updateScheduleController extends HttpServlet {
+public class EditScheduleController extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

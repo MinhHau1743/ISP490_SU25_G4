@@ -93,6 +93,31 @@ public class MaintenanceScheduleDAO extends DBContext {
         return schedule;
     }
 
+    public boolean addMaintenanceSchedule(MaintenanceSchedule schedule) {
+        String sql = "INSERT INTO MaintenanceSchedules "
+                + "(technical_request_id, title, color, scheduled_date, end_date, start_time, end_time, location, status, notes, created_at, updated_at) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, schedule.getTechnicalRequestId());
+            ps.setString(2, schedule.getTitle());
+            ps.setString(3, schedule.getColor());
+            ps.setObject(4, schedule.getScheduledDate());
+            ps.setObject(5, schedule.getEndDate());
+            ps.setObject(6, schedule.getStartTime());
+            ps.setObject(7, schedule.getEndTime());
+            ps.setString(8, schedule.getLocation());
+            ps.setString(9, schedule.getStatus());
+            ps.setString(10, schedule.getNotes());
+
+            int rowsInserted = ps.executeUpdate();
+            return rowsInserted > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public boolean updateMaintenanceSchedule(MaintenanceSchedule schedule) {
         if (schedule.getId() <= 0) {
             System.out.println("Error: ID is required for update.");

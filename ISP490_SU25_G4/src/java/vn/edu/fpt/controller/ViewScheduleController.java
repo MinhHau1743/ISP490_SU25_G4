@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @WebServlet(name = "listScheduleController", urlPatterns = {"/listSchedule"})
-public class listScheduleController extends HttpServlet {
+public class ViewScheduleController extends HttpServlet {
 
     private final DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private final DateTimeFormatter displayFormatter = DateTimeFormatter.ofPattern("EEEE, dd/MM/yyyy", new Locale("vi", "VN"));

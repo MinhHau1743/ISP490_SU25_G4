@@ -52,7 +52,7 @@
             </c:if>
 
             <%-- ===== NHÓM NGHIỆP VỤ ===== --%>
-            <c:set var="isSupportSection" value="${currentPage == 'ticket' || currentPage == 'createTicket'}" />
+            <c:set var="isSupportSection" value="${currentPage == 'ticket' || currentPage == 'createTicket' || currentPage == 'listSchedule'}" />
             <li class="nav-item-dropdown ${isSupportSection ? 'open' : ''}">
                 <a href="#" class="${isSupportSection ? 'active' : ''}">
                     <i data-feather="tool"></i><span>Hỗ trợ Kỹ thuật</span><i data-feather="chevron-down" class="dropdown-icon"></i>
@@ -60,6 +60,7 @@
                 <ul class="sub-menu">
                     <li><a href="${pageContext.request.contextPath}/ticket" class="${currentPage == 'ticket' ? 'active' : ''}">Danh sách Phiếu</a></li>
                     <li><a href="${pageContext.request.contextPath}/ticket?action=create" class="${currentPage == 'createTicket' ? 'active' : ''}">Tạo Phiếu mới</a></li>
+                    <li><a href="${pageContext.request.contextPath}/listSchedule" class="${currentPage == 'listSchedule' ? 'active' : ''}">Lịch bảo trì</a></li>
                 </ul>
             </li>
 
