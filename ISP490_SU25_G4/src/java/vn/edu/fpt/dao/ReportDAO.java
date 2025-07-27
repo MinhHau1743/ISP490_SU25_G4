@@ -420,4 +420,62 @@ public class ReportDAO {
         // Trả về danh sách các yêu cầu (đã chứa các thiết bị bên trong)
         return new ArrayList<>(requestMap.values());
     }
+
+    // Trong file vn/edu/fpt/dao/ReportDAO.java
+// Thêm phương thức mới này
+    public List<Map<String, Object>> getTopProductsByRevenue(String startDate, String endDate, int limit) throws SQLException {
+        List<Map<String, Object>> topProducts = new ArrayList<>();
+        // Truy vấn này tính tổng doanh thu cho mỗi sản phẩm
+        String query = "SELECT p.name, SUM(cp.quantity * cp.unit_price) as total_revenue "
+                + "FROM ContractProducts cp "
+                + "JOIN Products p ON cp.product_id = p.id "
+                + "JOIN Contracts c ON cp.contract_id = c.id "
+                + "WHERE p.is_deleted = 0 AND c.created_at BETWEEN ? AND ? "
+                + "GROUP BY p.id, p.name "
+                + "ORDER BY total_revenue DESC "
+                + "LIMIT ?";
+        try {
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setString(1, startDate);
+            ps.setString(2, endDate);
+            ps.setInt(3, limit);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                Map<String, Object> product = new HashMap<>();
+                product.put("name", rs.getString("name"));
+                product.put("revenue", rs.getDouble("total_revenue")); // Lấy doanh thu
+                topProducts.add(product);
+            }
+        } finally {
+            closeResources();
+        }
+        return topProducts;
+    }
+
+    // Thêm phương thức này vào ReportDAO.java
+    public List<Map<String, Object>> getNewCustomersTrend(String startDate, String endDate) throws SQLException {
+        List<Map<String, Object>> trendData = new ArrayList<>();
+        String query = "SELECT DATE(created_at) as a_date, COUNT(id) as daily_new_customers "
+                + "FROM Enterprises "
+                + "WHERE is_deleted = 0 AND created_at BETWEEN ? AND ? "
+                + "GROUP BY a_date "
+                + "ORDER BY a_date ASC";
+        try {
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setString(1, startDate);
+            ps.setString(2, endDate);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                Map<String, Object> dataPoint = new HashMap<>();
+                dataPoint.put("date", rs.getString("a_date"));
+                dataPoint.put("count", rs.getInt("daily_new_customers"));
+                trendData.add(dataPoint);
+            }
+        } finally {
+            closeResources();
+        }
+        return trendData;
+    }
 }

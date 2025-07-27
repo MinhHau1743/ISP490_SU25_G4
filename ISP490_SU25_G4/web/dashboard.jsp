@@ -5,6 +5,7 @@
 
 <%-- Đặt trang hiện tại là 'dashboard' để menu được active đúng --%>
 <c:set var="currentPage" value="dashboard" />
+<c:set var="user" value="${sessionScope.user}" /> <%-- Giả sử thông tin user lưu trong session với key "user" --%>
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -13,33 +14,68 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Bảng điều khiển - DPCRM</title>
 
-        <%-- Các link CSS và script cần thiết --%>
+        <%-- Các link CSS và font --%>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <script src="https://unpkg.com/feather-icons"></script>
+
+        <%-- Các file CSS chung --%>
         <link rel="stylesheet" href="css/style.css">
         <link rel="stylesheet" href="css/header.css">
         <link rel="stylesheet" href="css/mainMenu.css">
+        <link rel="stylesheet" href="css/report.css">
 
-        <%-- Dùng lại CSS của trang report cho các thẻ thống kê --%>
-        <link rel="stylesheet" href="css/report.css"> 
+        <%-- Thư viện biểu đồ Chart.js --%>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
         <style>
-            /* Thêm vào thẻ <style> trong file dashboard.jsp */
+            .welcome-header {
+                margin-bottom: 24px;
+            }
+            .welcome-header h1 {
+                font-size: 24px;
+                font-weight: 600;
+                color: #212529;
+                margin: 0;
+            }
+            .welcome-header p {
+                font-size: 16px;
+                color: #6c757d;
+                margin-top: 4px;
+            }
+
+            .dashboard-grid {
+                display: grid;
+                gap: 24px;
+                grid-template-columns: repeat(4, 1fr); /* Lưới 4 cột */
+            }
+
+            .main-chart-card {
+                grid-column: 1 / -1; /* Trải dài toàn bộ 4 cột */
+                height: 350px;
+            }
+
+            .secondary-chart-card {
+                grid-column: span 2; /* Trải dài 2 cột */
+                height: 350px;
+            }
+
+            .kpi-card {
+                grid-column: span 2; /* Trải dài 2 cột */
+            }
 
             .quick-filters {
                 display: flex;
-                gap: 8px; /* Khoảng cách giữa các nút */
+                gap: 8px;
                 align-items: center;
-                margin-left: auto; /* Đẩy bộ lọc về phía bên phải */
-                padding-right: 20px;
+                margin-left: auto;
             }
-
             .quick-filter-btn {
                 display: inline-block;
                 padding: 8px 16px;
                 border: 1px solid #dee2e6;
-                border-radius: 20px; /* Bo tròn để tạo hình viên thuốc */
+                border-radius: 20px;
                 background-color: #f8f9fa;
                 color: #495057;
                 font-size: 14px;
@@ -47,72 +83,83 @@
                 text-decoration: none;
                 transition: all 0.2s ease-in-out;
             }
-
             .quick-filter-btn:hover {
                 border-color: #007bff;
                 color: #007bff;
                 background-color: #e7f1ff;
             }
-
-            /* Đây là style cho nút đang được chọn */
             .quick-filter-btn.active {
-                background-color: #007bff; /* Màu xanh dương chủ đạo */
-                color: #ffffff; /* Chữ trắng */
+                background-color: #007bff;
+                color: #ffffff;
                 border-color: #007bff;
-                box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
             }
         </style>
     </head>
     <body>
         <div class="app-container">
-            <%-- Include Menu chính --%>
             <jsp:include page="mainMenu.jsp"/>
 
             <div class="content-wrapper">
-                <%-- Header của trang --%>
                 <header class="main-top-bar">
                     <div class="page-title">Bảng điều khiển</div>
 
-                    <%-- THÊM BỘ LỌC NHANH VÀO ĐÂY --%>
-                    <%-- Trong file dashboard.jsp, thay thế thẻ <form> cũ trong <div class="quick-filters"> --%>
+                    <%-- Bộ lọc nhanh --%>
                     <div class="quick-filters">
-                        <a href="dashboard?period=last7days" class="quick-filter-btn ${period == 'last7days' || empty period ? 'active' : ''}">7 ngày qua</a>
+                        <a href="dashboard?period=last7days" class="quick-filter-btn ${period == 'last7days' ? 'active' : ''}">7 ngày qua</a>
                         <a href="dashboard?period=thismonth" class="quick-filter-btn ${period == 'thismonth' ? 'active' : ''}">Tháng này</a>
                         <a href="dashboard?period=lastmonth" class="quick-filter-btn ${period == 'lastmonth' ? 'active' : ''}">Tháng trước</a>
                         <a href="dashboard?period=thisyear" class="quick-filter-btn ${period == 'thisyear' ? 'active' : ''}">Năm nay</a>
                     </div>
                 </header>
 
-                <%-- Phần thân của nội dung --%>
                 <section class="main-content-body">
                     <c:if test="${not empty errorMessage}">
-                        <p style="color: red;">${errorMessage}</p>
+                        <p class="error-message">${errorMessage}</p>
                     </c:if>
 
-                    <%-- Lưới hiển thị các thẻ thống kê --%>
-                    <div class="report-grid">
-                        <%-- Thẻ Doanh thu --%>
-                        <div class="report-card">
-                            <div class="report-card-header"><i data-feather="dollar-sign" class="icon"></i><h3>Doanh thu (${summaryPeriod})</h3></div>
+                    <%-- Lời chào mừng --%>
+                    <div class="welcome-header">
+                        <h1>Chào mừng quay trở lại, <c:out value="${user.firstName} ${user.lastName}"/>!</h1>
+                        <p>Đây là tổng quan nhanh về hoạt động của bạn.</p>
+                    </div>
+
+                    <%-- Lưới hiển thị chính --%>
+                    <div class="dashboard-grid">
+
+                        <%-- Biểu đồ Doanh thu (Lớn) --%>
+                        <div class="report-card main-chart-card">
+                            <div class="report-card-header"><i data-feather="trending-up" class="icon"></i><h3>Xu hướng Doanh thu (${summaryPeriod})</h3></div>
                             <div class="report-card-body">
-                                <div class="revenue-summary">
-                                    <p class="total-revenue"><fmt:formatNumber value="${totalRevenue}" type="currency" currencySymbol="₫" maxFractionDigits="0"/></p>
-                                </div>
+                                <canvas id="revenueTrendChart"></canvas>
                             </div>
                         </div>
 
-                        <%-- Thẻ Khách hàng --%>
-                        <div class="report-card">
-                            <div class="report-card-header"><i data-feather="users" class="icon"></i><h3>Thống kê Khách hàng</h3></div>
+                        <%-- Thẻ KPI Doanh thu và Khách hàng mới --%>
+                        <div class="report-card kpi-card">
+                            <div class="report-card-header"><i data-feather="activity" class="icon"></i><h3>Chỉ số chính (${summaryPeriod})</h3></div>
                             <div class="report-card-body">
                                 <ul class="kpi-list">
-                                    <li class="kpi-item"><span class="label">Khách hàng mới (${summaryPeriod})</span><span class="value success">+ <fmt:formatNumber value="${newCustomers}"/></span></li>
-                                    <li class="kpi-item"><span class="label">Tổng số khách hàng</span><span class="value"><fmt:formatNumber value="${totalCustomers}"/></span></li>
+                                    <li class="kpi-item" style="padding-bottom: 16px; border-bottom: 1px solid #f0f0f0;">
+                                        <span class="label">Tổng doanh thu</span>
+                                        <span class="value" style="font-size: 24px; color: #28a745;"><fmt:formatNumber value="${totalRevenue}" type="currency" currencySymbol="₫" maxFractionDigits="0"/></span>
+                                    </li>
+                                    <li class="kpi-item" style="padding-top: 16px;">
+                                        <span class="label">Khách hàng mới</span>
+                                        <span class="value success" style="font-size: 24px;">+ <fmt:formatNumber value="${newCustomers}"/></span>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
 
-                        <%-- Thẻ Hợp đồng --%>
+                        <%-- Biểu đồ khách hàng mới --%>
+                        <div class="report-card secondary-chart-card">
+                            <div class="report-card-header"><i data-feather="user-plus" class="icon"></i><h3>Xu hướng Khách hàng mới (${summaryPeriod})</h3></div>
+                            <div class="report-card-body">
+                                <canvas id="customerTrendChart"></canvas>
+                            </div>
+                        </div>
+
+                        <%-- Thẻ Tình trạng Hợp đồng --%>
                         <div class="report-card">
                             <div class="report-card-header"><i data-feather="briefcase" class="icon"></i><h3>Tình trạng Hợp đồng</h3></div>
                             <div class="report-card-body">
@@ -124,7 +171,7 @@
                             </div>
                         </div>
 
-                        <%-- Thẻ Sửa chữa --%>
+                        <%-- Thẻ Tình trạng Sửa chữa --%>
                         <div class="report-card">
                             <div class="report-card-header"><i data-feather="tool" class="icon"></i><h3>Yêu cầu sửa chữa (${summaryPeriod})</h3></div>
                             <div class="report-card-body">
@@ -136,33 +183,100 @@
                             </div>
                         </div>
 
-                        <%-- Thẻ Sản phẩm nổi bật --%>
-                        <div class="report-card">
-                            <div class="report-card-header"><i data-feather="package" class="icon"></i><h3>Sản phẩm nổi bật (${summaryPeriod})</h3></div>
-                            <div class="report-card-body">
-                                <ul class="product-list">
-                                    <c:forEach var="product" items="${topProducts}" varStatus="loop">
-                                        <li class="product-item">
-                                            <span class="rank">#${loop.count}</span>
-                                            <div class="info">
-                                                <p class="name"><c:out value="${product.name}"/></p>
-                                                <p class="sales"><c:out value="${product.sales}"/> lượt mua</p>
-                                            </div>
-                                        </li>
-                                    </c:forEach>
-                                    <c:if test="${empty topProducts}"><p style="text-align: center; color: #888;">Không có dữ liệu.</p></c:if>
-                                </ul>
-                            </div>
-                        </div>
                     </div>
                 </section>
             </div>
         </div>
 
+        <%-- XÓA 2 khối <script> cũ và THAY BẰNG khối script duy nhất này --%>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                feather.replace(); // Kích hoạt icon
-            });
+                // Kích hoạt icon Feather (chỉ cần gọi 1 lần)
+                feather.replace();
+
+                // Dữ liệu từ Servlet
+                const revenueTrendData = JSON.parse('${revenueTrendJson}');
+                const customerTrendData = JSON.parse('${customerTrendJson}');
+
+                // === 1. BIỂU ĐỒ XU HƯỚNG DOANH THU ===
+                const revenueCtx = document.getElementById('revenueTrendChart').getContext('2d');
+                if (revenueTrendData && revenueTrendData.length > 0) {
+                    new Chart(revenueCtx, {
+                        type: 'line',
+                        data: {
+                            labels: revenueTrendData.map(d => new Date(d.date).toLocaleDateString('vi-VN')),
+                            datasets: [{
+                                    label: 'Doanh thu',
+                                    data: revenueTrendData.map(d => d.revenue),
+                                    borderColor: 'rgba(0, 123, 255, 1)',
+                                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                                    borderWidth: 2,
+                                    fill: true,
+                                    tension: 0.3
+                                }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: value => new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(value)
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        // Lỗi sai nằm ở cặp dấu }); bị thừa trong dòng này ở code cũ của bạn
+                                        label: context => `${context.dataset.label}: \${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(context.parsed.y)}`
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }); // Dấu đóng của new Chart() phải nằm ở đây
+                                                }
+
+                                                // === 2. BIỂU ĐỒ XU HƯỚNG KHÁCH HÀNG MỚI ===
+                                                const customerCtx = document.getElementById('customerTrendChart').getContext('2d');
+                                                if (customerTrendData && customerTrendData.length > 0) {
+                                                    new Chart(customerCtx, {
+                                                        type: 'bar',
+                                                        data: {
+                                                            labels: customerTrendData.map(d => new Date(d.date).toLocaleDateString('vi-VN')),
+                                                            datasets: [{
+                                                                    label: 'Khách hàng mới',
+                                                                    data: customerTrendData.map(d => d.count),
+                                                                    backgroundColor: 'rgba(255, 193, 7, 0.7)',
+                                                                    borderColor: 'rgba(255, 193, 7, 1)',
+                                                                    borderWidth: 1
+                                                                }]
+                                                        },
+                                                        options: {
+                                                            responsive: true,
+                                                            maintainAspectRatio: false,
+                                                            scales: {
+                                                                y: {
+                                                                    beginAtZero: true,
+                                                                    ticks: {
+                                                                        // Đảm bảo trục y là số nguyên
+                                                                        stepSize: 1
+                                                                    }
+                                                                }
+                                                            },
+                                                            plugins: {
+                                                                legend: {
+                                                                    display: false
+                                                                }
+                                                            }
+                                                        }
+                                                    });
+                                                }
+                                            });
         </script>
         <script src="js/mainMenu.js"></script>
     </body>
