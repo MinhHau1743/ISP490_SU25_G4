@@ -61,6 +61,7 @@ public class TechnicalRequestDAO {
 
     public TechnicalRequest getTechnicalRequestById(int id) throws SQLException {
         TechnicalRequest req = null;
+        // ✔️ SỬA LẠI SQL: Thêm tr.enterprise_id vào câu lệnh SELECT
         String sql = "SELECT tr.*, e.name as enterpriseName, c.contract_code as contractCode, s.name as serviceName, "
                 + "CONCAT(assignee.last_name, ' ', assignee.middle_name, ' ', assignee.first_name) as assignedToName, "
                 + "CONCAT(reporter.last_name, ' ', reporter.middle_name, ' ', reporter.first_name) as reporterName "
@@ -78,6 +79,10 @@ public class TechnicalRequestDAO {
                 if (rs.next()) {
                     req = new TechnicalRequest();
                     req.setId(rs.getInt("id"));
+
+                    // ✔️ THÊM DÒNG NÀY: Lấy enterpriseId và gán vào model
+                    req.setEnterpriseId(rs.getInt("enterprise_id"));
+
                     req.setRequestCode(rs.getString("request_code"));
                     req.setTitle(rs.getString("title"));
                     req.setDescription(rs.getString("description"));
