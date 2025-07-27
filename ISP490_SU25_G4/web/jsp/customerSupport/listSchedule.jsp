@@ -775,6 +775,18 @@
                 padding: 15px 20px;
                 background-color: #f7fafc;
             }
+            #add-schedule-btn {
+                background-color: #e0f2f1 !important;
+                color: #000;
+                border: none;
+                transition: background-color 0.3s ease;
+            }
+
+            #add-schedule-btn:hover {
+                background-color: #b2dfdb !important; /* Màu xanh nhạt đậm hơn khi hover */
+                color: #000; /* Giữ màu chữ hoặc đổi tùy ý */
+                cursor: pointer;
+            }
 
         </style>
     </head>
@@ -807,10 +819,12 @@
                             <button class="btn-nav" id="nextDayBtn"><i data-feather="chevron-right"></i></button>
                         </div>
                         <div class="toolbar-spacer"></div>
-                        <button class="btn-primary" id="add-schedule-btn">
+                        <form action="createSchedule">
+                        <button class="btn-primary" id="add-schedule-btn" style="background-color: #e0f2f1; color: #000; border: none;">
                             <i data-feather="plus"></i>
                             Lên lịch bảo trì
                         </button>
+                        </form>
                     </div>
 
                     <div class="calendar-content">

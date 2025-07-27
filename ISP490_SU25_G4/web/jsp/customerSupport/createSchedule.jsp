@@ -18,9 +18,9 @@
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <script src="https://unpkg.com/feather-icons"></script>
 
-        <link rel="stylesheet" href="../../css/style.css">
-        <link rel="stylesheet" href="../../css/header.css">
-        <link rel="stylesheet" href="../../css/mainMenu.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
 
         <style>
             html, body { height: 100%; font-family: 'Inter', sans-serif; margin: 0; background-color: #f9fafb; }
