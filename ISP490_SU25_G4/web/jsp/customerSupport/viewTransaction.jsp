@@ -40,9 +40,29 @@
                         </a>
                         <div class="action-buttons" style="display: flex; gap: 8px;">
                             <%-- Các chức năng Sửa, In sẽ được phát triển sau --%>
+                            <%-- Chỉ hiển thị nút phản hồi khi ticket đã được xử lý hoặc đã đóng --%>
+
 
                             <a href="${pageContext.request.contextPath}/ticket?action=edit&id=${ticket.id}" class="btn btn-primary"><i data-feather="edit-2"></i>Sửa</a>
                             <a href="#" class="btn btn-primary"><i data-feather="printer"></i>In Phiếu</a>
+                            <c:choose>
+                                <%-- Nếu đã có feedback thì hiển thị thông báo --%>
+                                <c:when test="${hasFeedback}">
+                                    <div style="display: flex; align-items: center; background-color: #eef2ff; color: #4338ca; padding: 8px 16px; border-radius: 8px; font-weight: 500;">
+                                        <i data-feather="check-circle" style="width: 20px; height: 20px; margin-right: 8px;"></i>
+                                        <span>Bạn đã gửi phản hồi.</span>
+                                    </div>
+                                </c:when>
+
+                                <%-- Nếu chưa có, chỉ hiện nút khi ticket đã xong --%>
+                                <c:otherwise>
+                                    <c:if test="${ticket.status == 'resolved' || ticket.status == 'closed'}">
+                                        <a href="${pageContext.request.contextPath}/createFeedback?technicalRequestId=${ticket.id}" class="btn btn-teal">
+                                            <i data-feather="star"></i>Gửi Phản Hồi
+                                        </a>
+                                    </c:if>
+                                </c:otherwise>
+                            </c:choose>
                         </div>
                     </div>
 
