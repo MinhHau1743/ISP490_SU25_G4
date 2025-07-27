@@ -93,6 +93,18 @@
                 color: #ffffff;
                 border-color: #007bff;
             }
+            /* Thêm vào thẻ <style> trong dashboard.jsp */
+            .no-data-message {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100%;
+                color: #868e96;
+                font-size: 14px;
+                font-style: italic;
+                text-align: center;
+                padding: 20px;
+            }
         </style>
     </head>
     <body>
@@ -129,9 +141,23 @@
                         <%-- Biểu đồ Doanh thu (Lớn) --%>
                         <div class="report-card main-chart-card">
                             <div class="report-card-header"><i data-feather="trending-up" class="icon"></i><h3>Xu hướng Doanh thu (${summaryPeriod})</h3></div>
+
+                            <%-- THAY THẾ KHỐI NÀY --%>
                             <div class="report-card-body">
-                                <canvas id="revenueTrendChart"></canvas>
+                                <c:choose>
+                                    <%-- Khi có dữ liệu --%>
+                                    <c:when test="${not empty revenueTrendJson and revenueTrendJson ne '[]'}">
+                                        <canvas id="revenueTrendChart"></canvas>
+                                        </c:when>
+                                        <%-- Khi không có dữ liệu --%>
+                                        <c:otherwise>
+                                        <div class="no-data-message">
+                                            <p>Không có dữ liệu doanh thu trong khoảng thời gian này.</p>
+                                        </div>
+                                    </c:otherwise>
+                                </c:choose>
                             </div>
+
                         </div>
 
                         <%-- Thẻ KPI Doanh thu và Khách hàng mới --%>
@@ -154,9 +180,23 @@
                         <%-- Biểu đồ khách hàng mới --%>
                         <div class="report-card secondary-chart-card">
                             <div class="report-card-header"><i data-feather="user-plus" class="icon"></i><h3>Xu hướng Khách hàng mới (${summaryPeriod})</h3></div>
+
+                            <%-- THAY THẾ KHỐI NÀY --%>
                             <div class="report-card-body">
-                                <canvas id="customerTrendChart"></canvas>
+                                <c:choose>
+                                    <%-- Khi có dữ liệu --%>
+                                    <c:when test="${not empty customerTrendJson and customerTrendJson ne '[]'}">
+                                        <canvas id="customerTrendChart"></canvas>
+                                        </c:when>
+                                        <%-- Khi không có dữ liệu --%>
+                                        <c:otherwise>
+                                        <div class="no-data-message">
+                                            <p>Không có khách hàng mới trong khoảng thời gian này.</p>
+                                        </div>
+                                    </c:otherwise>
+                                </c:choose>
                             </div>
+
                         </div>
 
                         <%-- Thẻ Tình trạng Hợp đồng --%>
@@ -234,49 +274,49 @@
                                     callbacks: {
                                         // Lỗi sai nằm ở cặp dấu }); bị thừa trong dòng này ở code cũ của bạn
                                         label: context => `${context.dataset.label}: \${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(context.parsed.y)}`
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                    }); // Dấu đóng của new Chart() phải nằm ở đây
-                                                }
+                                    }
+                                }
+                            }
+                        }
+                    }); // Dấu đóng của new Chart() phải nằm ở đây
+                }
 
-                                                // === 2. BIỂU ĐỒ XU HƯỚNG KHÁCH HÀNG MỚI ===
-                                                const customerCtx = document.getElementById('customerTrendChart').getContext('2d');
-                                                if (customerTrendData && customerTrendData.length > 0) {
-                                                    new Chart(customerCtx, {
-                                                        type: 'bar',
-                                                        data: {
-                                                            labels: customerTrendData.map(d => new Date(d.date).toLocaleDateString('vi-VN')),
-                                                            datasets: [{
-                                                                    label: 'Khách hàng mới',
-                                                                    data: customerTrendData.map(d => d.count),
-                                                                    backgroundColor: 'rgba(255, 193, 7, 0.7)',
-                                                                    borderColor: 'rgba(255, 193, 7, 1)',
-                                                                    borderWidth: 1
-                                                                }]
-                                                        },
-                                                        options: {
-                                                            responsive: true,
-                                                            maintainAspectRatio: false,
-                                                            scales: {
-                                                                y: {
-                                                                    beginAtZero: true,
-                                                                    ticks: {
-                                                                        // Đảm bảo trục y là số nguyên
-                                                                        stepSize: 1
-                                                                    }
-                                                                }
-                                                            },
-                                                            plugins: {
-                                                                legend: {
-                                                                    display: false
-                                                                }
-                                                            }
-                                                        }
-                                                    });
-                                                }
-                                            });
+                // === 2. BIỂU ĐỒ XU HƯỚNG KHÁCH HÀNG MỚI ===
+                const customerCtx = document.getElementById('customerTrendChart').getContext('2d');
+                if (customerTrendData && customerTrendData.length > 0) {
+                    new Chart(customerCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: customerTrendData.map(d => new Date(d.date).toLocaleDateString('vi-VN')),
+                            datasets: [{
+                                    label: 'Khách hàng mới',
+                                    data: customerTrendData.map(d => d.count),
+                                    backgroundColor: 'rgba(255, 193, 7, 0.7)',
+                                    borderColor: 'rgba(255, 193, 7, 1)',
+                                    borderWidth: 1
+                                }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        // Đảm bảo trục y là số nguyên
+                                        stepSize: 1
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            }
+                        }
+                    });
+                }
+            });
         </script>
         <script src="js/mainMenu.js"></script>
     </body>
