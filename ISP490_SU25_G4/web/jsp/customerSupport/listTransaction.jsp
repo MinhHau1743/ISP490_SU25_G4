@@ -3,6 +3,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%-- CẬP NHẬT: Thêm thư viện JSTL format để định dạng ngày tháng --%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -37,6 +38,7 @@
 
                 <div class="page-content">
                     <div class="content-card">
+                        
                         <%-- CẬP NHẬT: Sửa action của form và link "Tạo Phiếu" --%>
                         <form class="table-toolbar" action="${pageContext.request.contextPath}/ticket" method="get">
                             <input type="hidden" name="action" value="list">
