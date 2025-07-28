@@ -26,6 +26,34 @@
         <link rel="stylesheet" href="${BASE_URL}/css/style.css">
         <link rel="stylesheet" href="${BASE_URL}/css/mainMenu.css">
         <link rel="stylesheet" href="${BASE_URL}/css/listCustomer.css">
+
+        <style>
+            .no-results-message {
+                text-align: center;
+                padding: 40px 20px;
+                margin: 20px;
+                border: 1px dashed #ccc;
+                border-radius: 8px;
+                background-color: #f9f9f9;
+                color: #555;
+            }
+
+            .no-results-message .feather-info {
+                width: 48px;
+                height: 48px;
+                color: #888;
+                margin-bottom: 16px;
+            }
+
+            .no-results-message p {
+                margin: 5px 0;
+                font-size: 1.1rem;
+            }
+
+            .no-results-message strong {
+                color: #d9534f;
+            }
+        </style>
     </head>
     <body>
         <div class="app-container">
@@ -83,135 +111,150 @@
                         </div>
                     </div>
 
+                </div> <%-- Đóng thẻ .table-toolbar --%>
+
+                <%-- === BẮT ĐẦU: KHỐI MÃ HIỂN THỊ THÔNG BÁO === --%>
+                <c:if test="${not empty searchQuery && noResultsFound}">
+                    <div class="no-results-message">
+                        <i data-feather="info"></i>
+                        <p>Không tìm thấy khách hàng nào phù hợp với từ khóa "<strong><c:out value="${searchQuery}"/></strong>".</p>
+                        <p>Vui lòng thử lại với từ khóa khác hoặc kiểm tra xem khách hàng đã bị xóa hay chưa.</p>
+                    </div>
+                </c:if>
+                <%-- === KẾT THÚC: KHỐI MÃ HIỂN THỊ THÔNG BÁO === --%>
+
+                <%-- Chỉ hiển thị bảng Kanban nếu có kết quả hoặc không tìm kiếm --%>
+                <c:if test="${empty noResultsFound}">
                     <div class="customer-board-container">
                         <div class="customer-board">
                             <jsp:include page="kanbanColumn.jsp"><jsp:param name="columnKey" value="potential"/><jsp:param name="columnTitle" value="Khách hàng Tiềm năng"/></jsp:include>
                             <jsp:include page="kanbanColumn.jsp"><jsp:param name="columnKey" value="other"/><jsp:param name="columnTitle" value="Khách hàng Mới"/></jsp:include>
                             <jsp:include page="kanbanColumn.jsp"><jsp:param name="columnKey" value="loyal"/><jsp:param name="columnTitle" value="Khách hàng Thân thiết"/></jsp:include>
-                            <jsp:include page="kanbanColumn.jsp"><jsp:param name="columnKey" value="vip"/><jsp:param name="columnTitle" value="Khách hàng VIP"/></jsp:include>                           
+                            <jsp:include page="kanbanColumn.jsp"><jsp:param name="columnKey" value="vip"/><jsp:param name="columnTitle" value="Khách hàng VIP"/></jsp:include>
                             </div>
                         </div>
-                    </div>
-                </main>
-            </div>
-
-        <%-- Delete Confirmation Modal --%>
-        <div id="deleteConfirmModal" class="modal-overlay">
-            <div class="modal-content">
-                <i data-feather="alert-triangle" class="warning-icon"></i>
-                <h3 class="modal-title">Xác nhận Xóa</h3>
-                <p id="deleteMessage">Bạn có chắc chắn muốn xóa khách hàng này không?</p>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" id="cancelDeleteBtn">Hủy</button>
-                    <form id="deleteForm" action="${BASE_URL}/deleteCustomer" method="POST" style="margin:0;">
-                        <input type="hidden" id="customerIdToDelete" name="customerId">
-                        <button type="submit" class="btn btn-danger">Xóa</button>
-                    </form>
-                </div>
-            </div>
+                </c:if>               
         </div>
+    </main>
+</div>
 
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                // Render all Feather icons on the page
-                feather.replace();
-                setTimeout(() => feather.replace(), 100);
+<%-- Delete Confirmation Modal --%>
+<div id="deleteConfirmModal" class="modal-overlay">
+    <div class="modal-content">
+        <i data-feather="alert-triangle" class="warning-icon"></i>
+        <h3 class="modal-title">Xác nhận Xóa</h3>
+        <p id="deleteMessage">Bạn có chắc chắn muốn xóa khách hàng này không?</p>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="cancelDeleteBtn">Hủy</button>
+            <form id="deleteForm" action="${BASE_URL}/deleteCustomer" method="POST" style="margin:0;">
+                <input type="hidden" id="customerIdToDelete" name="customerId">
+                <button type="submit" class="btn btn-danger">Xóa</button>
+            </form>
+        </div>
+    </div>
+</div>
 
-                // --- Collapsible Menu Logic ---
-                const appContainer = document.querySelector('.app-container');
-                const menuToggleButton = document.getElementById('menu-toggle-btn');
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Render all Feather icons on the page
+        feather.replace();
+        setTimeout(() => feather.replace(), 100);
 
-                if (appContainer && menuToggleButton) {
-                    menuToggleButton.addEventListener('click', function () {
-                        appContainer.classList.toggle('menu-collapsed');
-                        const isCollapsed = appContainer.classList.contains('menu-collapsed');
-                        localStorage.setItem('menuCollapsed', isCollapsed);
-                    });
+        // --- Collapsible Menu Logic ---
+        const appContainer = document.querySelector('.app-container');
+        const menuToggleButton = document.getElementById('menu-toggle-btn');
 
-                    if (localStorage.getItem('menuCollapsed') === 'true') {
-                        appContainer.classList.add('menu-collapsed');
-                    }
+        if (appContainer && menuToggleButton) {
+            menuToggleButton.addEventListener('click', function () {
+                appContainer.classList.toggle('menu-collapsed');
+                const isCollapsed = appContainer.classList.contains('menu-collapsed');
+                localStorage.setItem('menuCollapsed', isCollapsed);
+            });
+
+            if (localStorage.getItem('menuCollapsed') === 'true') {
+                appContainer.classList.add('menu-collapsed');
+            }
+        }
+
+
+        // ===================================================================
+        // <<< BẮT ĐẦU: LOGIC GỢI Ý TÌM KIẾM (PHIÊN BẢN ĐÃ SỬA LỖI) >>>
+        // ===================================================================
+        const searchInput = document.getElementById('searchInput');
+        const suggestionsContainer = document.getElementById('suggestionsContainer');
+        const searchForm = document.querySelector('.search-form');
+
+        if (searchInput && suggestionsContainer && searchForm) {
+            searchInput.addEventListener('input', async function () {
+                const query = this.value.trim();
+
+                if (query.length < 2) {
+                    suggestionsContainer.style.display = 'none';
+                    return;
                 }
 
+                try {
+                    // === DÒNG CODE ĐÃ ĐƯỢC SỬA LẠI ĐỂ AN TOÀN HƠN ===
+                    const url = '${BASE_URL}' + '/searchSuggestions?query=' + encodeURIComponent(query);
+                    const response = await fetch(url);
+                    // ===============================================
 
-                // ===================================================================
-                // <<< BẮT ĐẦU: LOGIC GỢI Ý TÌM KIẾM (PHIÊN BẢN ĐÃ SỬA LỖI) >>>
-                // ===================================================================
-                const searchInput = document.getElementById('searchInput');
-                const suggestionsContainer = document.getElementById('suggestionsContainer');
-                const searchForm = document.querySelector('.search-form');
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    const suggestions = await response.json();
 
-                if (searchInput && suggestionsContainer && searchForm) {
-                    searchInput.addEventListener('input', async function () {
-                        const query = this.value.trim();
+                    suggestionsContainer.innerHTML = '';
 
-                        if (query.length < 2) {
-                            suggestionsContainer.style.display = 'none';
-                            return;
-                        }
+                    if (suggestions.length > 0) {
+                        suggestions.forEach(name => {
+                            const item = document.createElement('div');
+                            item.className = 'suggestion-item';
+                            item.textContent = name;
 
-                        try {
-                            // === DÒNG CODE ĐÃ ĐƯỢC SỬA LẠI ĐỂ AN TOÀN HƠN ===
-                            const url = '${BASE_URL}' + '/searchSuggestions?query=' + encodeURIComponent(query);
-                            const response = await fetch(url);
-                            // ===============================================
-
-                            if (!response.ok) {
-                                throw new Error('Network response was not ok');
-                            }
-                            const suggestions = await response.json();
-
-                            suggestionsContainer.innerHTML = '';
-
-                            if (suggestions.length > 0) {
-                                suggestions.forEach(name => {
-                                    const item = document.createElement('div');
-                                    item.className = 'suggestion-item';
-                                    item.textContent = name;
-
-                                    item.addEventListener('click', function () {
-                                        searchInput.value = this.textContent;
-                                        suggestionsContainer.style.display = 'none';
-                                        searchForm.submit();
-                                    });
-                                    suggestionsContainer.appendChild(item);
-                                });
-                                suggestionsContainer.style.display = 'block';
-                            } else {
+                            item.addEventListener('click', function () {
+                                searchInput.value = this.textContent;
                                 suggestionsContainer.style.display = 'none';
-                            }
-
-                        } catch (error) {
-                            console.error('Lỗi khi lấy gợi ý tìm kiếm:', error);
-                            suggestionsContainer.style.display = 'none';
-                        }
-                    });
-
-                    document.addEventListener('click', function (event) {
-                        if (!searchInput.contains(event.target) && !suggestionsContainer.contains(event.target)) {
-                            suggestionsContainer.style.display = 'none';
-                        }
-                    });
-                }
-                // ===================================================================
-                // <<< KẾT THÚC: LOGIC GỢI Ý TÌM KIẾM >>>
-                // ===================================================================
-            });
-        </script>
-        <script>
-            // Script này chỉ cần thêm một lần vào trang layout chính hoặc vào từng trang cần thiết
-            document.addEventListener('DOMContentLoaded', function () {
-                document.body.addEventListener('click', function (event) {
-                    const disabledLink = event.target.closest('.disabled-action');
-                    if (disabledLink) {
-                        event.preventDefault();
-                        const errorMessage = disabledLink.getAttribute('data-error') || 'Bạn không có quyền thực hiện chức năng này.';
-                        alert(errorMessage);
+                                searchForm.submit();
+                            });
+                            suggestionsContainer.appendChild(item);
+                        });
+                        suggestionsContainer.style.display = 'block';
+                    } else {
+                        suggestionsContainer.style.display = 'none';
                     }
-                });
+
+                } catch (error) {
+                    console.error('Lỗi khi lấy gợi ý tìm kiếm:', error);
+                    suggestionsContainer.style.display = 'none';
+                }
             });
-        </script>
-        <script src="${pageContext.request.contextPath}/js/delete-modal-handler.js"></script>
-        <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
-    </body>
+
+            document.addEventListener('click', function (event) {
+                if (!searchInput.contains(event.target) && !suggestionsContainer.contains(event.target)) {
+                    suggestionsContainer.style.display = 'none';
+                }
+            });
+        }
+        // ===================================================================
+        // <<< KẾT THÚC: LOGIC GỢI Ý TÌM KIẾM >>>
+        // ===================================================================
+    });
+</script>
+<script>
+    // Script này chỉ cần thêm một lần vào trang layout chính hoặc vào từng trang cần thiết
+    document.addEventListener('DOMContentLoaded', function () {
+        document.body.addEventListener('click', function (event) {
+            const disabledLink = event.target.closest('.disabled-action');
+            if (disabledLink) {
+                event.preventDefault();
+                const errorMessage = disabledLink.getAttribute('data-error') || 'Bạn không có quyền thực hiện chức năng này.';
+                alert(errorMessage);
+            }
+        });
+    });
+</script>
+<script src="${pageContext.request.contextPath}/js/delete-modal-handler.js"></script>
+<script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
+</body>
 </html>

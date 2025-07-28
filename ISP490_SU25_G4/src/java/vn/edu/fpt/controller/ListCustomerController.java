@@ -41,6 +41,12 @@ public class ListCustomerController extends HttpServlet {
             // Truyền tham số tìm kiếm vào DAO
             List<Enterprise> allEnterprises = enterpriseDAO.getAllActiveEnterprises(searchQuery);
 
+            // Kiểm tra xem người dùng có thực hiện tìm kiếm và kết quả trả về có rỗng không.
+            if (searchQuery != null && !searchQuery.trim().isEmpty() && allEnterprises.isEmpty()) {
+                // Nếu đúng, đặt một "cờ" để JSP có thể nhận biết và hiển thị thông báo.
+                request.setAttribute("noResultsFound", true);
+            }
+
             // Prepare a map to hold categorized customer lists for the Kanban board
             Map<String, List<Enterprise>> customerColumns = new HashMap<>();
             customerColumns.put("vip", new ArrayList<>());
