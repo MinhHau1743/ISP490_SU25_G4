@@ -43,7 +43,7 @@ html, body {
 }
 .view-toggle {
     display: flex;
-    background-color: #f0f0f0;
+    background-color: #e0f2f1;
     border-radius: 8px;
     padding: 4px;
 }
@@ -59,7 +59,7 @@ html, body {
 }
 .view-toggle .btn-toggle.active {
     background-color: #fff;
-    color: #8B4513;
+    color: #009688;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 .week-nav {
