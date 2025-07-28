@@ -653,7 +653,7 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     max-width: 400px;
     margin: auto;
 }
-            /* ====== Responsive Product Grid & Card ====== */
+/* ====== Responsive Product Grid & Card ====== */
 .product-grid {
     width: 100%;
     overflow-x: auto;
@@ -778,22 +778,24 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
 }
 
 .search-box {
-    display: flex;
-    align-items: center;
-    background: #f5f5f5;
-    border-radius: 8px;
-    padding: 4px 12px;
-    gap: 8px;
+    position: relative;
 }
-
+.search-box .feather-search {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    width: 18px;
+}
 .search-box input {
-    border: none;
-    background: transparent;
-    outline: none;
-    width: 180px;
-    font-size: 1rem;
-    padding: 6px 0;
-}
+    padding: 8px 12px 8px 40px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    height: 38px;
+    width: 250px;
+}   
 
 .filter-container {
     margin-top: 12px;
@@ -880,8 +882,26 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
         align-items: stretch;
         gap: 10px;
     }
-    .search-box input {
-        width: 100%;
+    /* Fix for Search Box Layout */
+    .search-box {
+        position: relative; /* Tạo một hệ quy chiếu cho icon */
+        display: flex;
+        align-items: center;
+    }
+
+    .search-box input[type="text"] {
+        padding-left: 35px; /* Tạo khoảng trống bên trái cho icon */
+        height: 38px; /* Đồng bộ chiều cao */
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        width: 100%; /* Đảm bảo input chiếm đủ không gian */
+    }
+
+    .search-box i {
+        position: absolute; /* Đặt icon chồng lên trên input */
+        left: 10px; /* Căn lề trái cho icon */
+        color: #888; /* Màu cho icon */
+        pointer-events: none; /* Cho phép click xuyên qua icon vào input */
     }
 }
 

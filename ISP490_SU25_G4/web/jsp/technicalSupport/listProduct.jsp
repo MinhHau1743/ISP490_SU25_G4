@@ -64,8 +64,8 @@
                         <form action="ProductController" method="get">
                             <div class="table-toolbar">
                                 <div class="search-box">
-                                    <i data-feather="search"></i>
                                     <input type="text" name="keyword" placeholder="Tìm kiếm tên, mã SP..." value="${param.keyword}">
+                                    <i data-feather="search"></i>
                                 </div>
                                 <button type="button" class="filter-button" id="filterBtn">
                                     <i data-feather="filter"></i><span>Bộ lọc</span>
