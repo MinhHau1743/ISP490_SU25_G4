@@ -159,7 +159,14 @@
                 align-items: center;
                 gap: 8px;
             }
-
+            .color-picker {
+                width: 40px;
+                height: 40px;
+                padding: 0;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+            }
             .form-actions {
                 margin-top: 32px;
                 padding-top: 24px;
@@ -194,6 +201,7 @@
                 color: white;
                 border: none;
             }
+
         </style>
     </head>
     <body>
@@ -221,6 +229,7 @@
                                     </c:forEach>
                                 </select>
                             </div>
+
                             <div class="form-group">
                                 <label for="scheduled_date">Ngày bắt đầu</label>
                                 <input type="date" id="scheduled_date" name="scheduled_date" class="form-control" required>
@@ -251,10 +260,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="color">Màu sắc</label>
-                                <div class="color-picker-wrapper">
-                                    <input type="color" id="color" name="color" class="form-control" style="width: 50px; padding: 5px;">
-                                    <span id="color-preview" class="color-preview" style="background-color: #ffffff;"></span>
-                                </div>
+                                <input type="color" id="color" name="color" class="form-control color-picker" value="${schedule.color != null ? schedule.color : '#007bff'}">
                             </div>
                         </div>
 
@@ -271,17 +277,6 @@
                 </section>
             </div>
         </div>
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                feather.replace();
-                const colorInput = document.getElementById('color');
-                const colorPreview = document.getElementById('color-preview');
-                colorInput.addEventListener('input', (e) => {
-                    colorPreview.style.backgroundColor = e.target.value;
-                });
-                // Set initial preview color
-                colorPreview.style.backgroundColor = colorInput.value || '#ffffff';
-            });
-        </script>
+
     </body>
 </html>
