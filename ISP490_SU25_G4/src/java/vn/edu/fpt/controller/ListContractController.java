@@ -53,7 +53,6 @@ public class ListContractController extends HttpServlet {
         int totalPages = (int) Math.ceil((double) totalContracts / PAGE_SIZE);
 
         // 5. Đặt các thuộc tính vào request để JSP có thể truy cập
-        // Đảm bảo tên thuộc tính ("contractList") chính xác tuyệt đối
         request.setAttribute("contractList", contractList);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("currentPage", page);

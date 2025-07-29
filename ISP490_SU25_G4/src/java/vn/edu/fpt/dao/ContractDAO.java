@@ -27,23 +27,24 @@ public class ContractDAO extends DBContext {
         List<Object> params = new ArrayList<>();
 
         StringBuilder sql = new StringBuilder(
-                "SELECT "
-                + "    c.*, "
-                + "    e.name AS enterpriseName "
-                + "FROM Contracts c "
-                + "LEFT JOIN Enterprises e ON c.enterprise_id = e.id "
-                + "WHERE c.is_deleted = 0 "
+            "SELECT c.*, e.name AS enterpriseName " +
+            "FROM Contracts c " +
+            "LEFT JOIN Enterprises e ON c.enterprise_id = e.id " +
+            "WHERE c.is_deleted = 0 "
         );
 
+        // Xây dựng mệnh đề WHERE động
         buildWhereClause(sql, params, searchQuery, status, startDateFrom, startDateTo);
 
-        sql.append("ORDER BY c.created_at DESC ");
-        sql.append("LIMIT ?, ?");
+        // Thêm sắp xếp và phân trang
+        sql.append("ORDER BY c.created_at DESC LIMIT ?, ?");
         params.add((page - 1) * pageSize);
         params.add(pageSize);
 
-        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
+            // Gán các tham số vào câu lệnh SQL
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
             }
@@ -55,11 +56,8 @@ public class ContractDAO extends DBContext {
                     contract.setContractCode(rs.getString("contract_code"));
                     contract.setContractName(rs.getString("contract_name"));
                     contract.setEnterpriseId(rs.getLong("enterprise_id"));
-
-                    // SỬA LỖI: Dùng rs.getDate() để lấy java.sql.Date
                     contract.setStartDate(rs.getDate("start_date"));
                     contract.setEndDate(rs.getDate("end_date"));
-
                     contract.setTotalValue(rs.getBigDecimal("total_value"));
                     contract.setStatus(rs.getString("status"));
                     contract.setEnterpriseName(rs.getString("enterpriseName"));
@@ -78,11 +76,13 @@ public class ContractDAO extends DBContext {
      */
     public int getContractCount(String searchQuery, String status, String startDateFrom, String startDateTo) {
         List<Object> params = new ArrayList<>();
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM Contracts c WHERE c.is_deleted = 0 ");
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM Contracts c LEFT JOIN Enterprises e ON c.enterprise_id = e.id WHERE c.is_deleted = 0 ");
 
+        // Sử dụng lại cùng logic xây dựng mệnh đề WHERE
         buildWhereClause(sql, params, searchQuery, status, startDateFrom, startDateTo);
 
-        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
@@ -104,16 +104,20 @@ public class ContractDAO extends DBContext {
      * Phương thức private helper để xây dựng mệnh đề WHERE, tránh lặp code.
      */
     private void buildWhereClause(StringBuilder sql, List<Object> params, String searchQuery, String status, String startDateFrom, String startDateTo) {
+        // Điều kiện tìm kiếm theo từ khóa
         if (searchQuery != null && !searchQuery.trim().isEmpty()) {
-            sql.append("AND (c.contract_code LIKE ? OR c.contract_name LIKE ?) ");
+            sql.append("AND (c.contract_code LIKE ? OR c.contract_name LIKE ? OR e.name LIKE ?) ");
             String searchPattern = "%" + searchQuery.trim() + "%";
             params.add(searchPattern);
             params.add(searchPattern);
+            params.add(searchPattern);
         }
+        // Điều kiện lọc theo trạng thái
         if (status != null && !status.isEmpty()) {
             sql.append("AND c.status = ? ");
             params.add(status);
         }
+        // Điều kiện lọc theo khoảng ngày bắt đầu
         if (startDateFrom != null && !startDateFrom.isEmpty()) {
             sql.append("AND c.start_date >= ? ");
             params.add(startDateFrom);
@@ -123,6 +127,8 @@ public class ContractDAO extends DBContext {
             params.add(startDateTo);
         }
     }
+
+    
 
     /**
      * Lấy thông tin chi tiết của một hợp đồng theo ID.
@@ -435,6 +441,7 @@ public class ContractDAO extends DBContext {
      */
     public List<Contract> getRecentContractsByEnterpriseId(int enterpriseId, int limit) throws Exception {
         List<Contract> contracts = new ArrayList<>();
+        // Lấy các cột cần thiết để hiển thị trên trang chi tiết khách hàng
         String sql = "SELECT id, contract_code, contract_name, signed_date, total_value, status " +
                      "FROM Contracts " +
                      "WHERE enterprise_id = ? AND is_deleted = 0 " +
@@ -460,12 +467,9 @@ public class ContractDAO extends DBContext {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace(); // Log lỗi
+            e.printStackTrace(); // Log lỗi để dễ dàng gỡ rối
             throw new Exception("Lỗi khi lấy danh sách hợp đồng gần đây: " + e.getMessage());
         }
         return contracts;
     }
-    
-    
-    
 }

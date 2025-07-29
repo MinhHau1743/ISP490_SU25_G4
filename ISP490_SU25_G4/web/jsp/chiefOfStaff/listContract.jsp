@@ -54,7 +54,7 @@
                 <header class="page-header">
                     <div class="title-section">
                         <h1 class="title">Danh sách Hợp đồng</h1>
-                        
+
                     </div>
                     <div class="header-actions">
                         <button class="notification-btn"><i data-feather="bell"></i></button>
@@ -63,16 +63,15 @@
 
                 <div class="page-content">
                     <div class="content-card">
-                        <form action="listContract" method="get">
+                        <%-- Thay thế toàn bộ khối form cũ bằng khối form này --%>
+                        <form action="listContract" method="get" id="filterForm" autocomplete="off">
                             <div class="table-toolbar">
                                 <div class="search-box">
                                     <i data-feather="search" class="feather-search"></i>
-                                    <input type="text" name="searchQuery" placeholder="Tìm mã, tên hợp đồng..." value="${searchQuery}">
+                                    <input type="text" name="searchQuery" placeholder="Tìm mã, tên hợp đồng..." value="${searchQuery}" autocomplete="off">
                                 </div>
                                 <button type="button" class="filter-button" id="filterBtn"><i data-feather="filter"></i><span>Bộ lọc</span></button>
                                 <div class="toolbar-actions">
-                                    <%-- ========================================================== --%>
-                                    <%-- Bắt đầu phân quyền nút "Tạo Hợp đồng" --%>
                                     <c:choose>
                                         <c:when test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Chánh văn phòng'}">
                                             <a href="${pageContext.request.contextPath}/createContract" class="btn btn-primary"><i data-feather="plus"></i>Tạo Hợp đồng</a>
@@ -81,8 +80,6 @@
                                             <a href="#" class="btn btn-primary disabled-action" data-error="Bạn không có quyền tạo hợp đồng mới."><i data-feather="plus"></i>Tạo Hợp đồng</a>
                                         </c:otherwise>
                                     </c:choose>
-                                    <%-- Kết thúc phân quyền nút "Tạo Hợp đồng" --%>
-                                    <%-- ========================================================== --%>
                                 </div>
                             </div>
 
@@ -103,14 +100,17 @@
                                     <div class="filter-group">
                                         <label>Ngày hiệu lực</label>
                                         <div class="date-inputs">
-                                            <input type="date" name="startDateFrom" value="${startDateFrom}">
-                                            <input type="date" name="startDateTo" value="${startDateTo}">
+                                            <input type="date" name="startDateFrom" value="${startDateFrom}" autocomplete="off">
+                                            <input type="date" name="startDateTo" value="${startDateTo}" autocomplete="off">
                                         </div>
                                     </div>
                                 </div>
                                 <div class="filter-actions">
-                                    <a href="listContract" class="btn-reset-filter">Xóa lọc</a>
-                                    <button type="submit" class="btn-apply-filter">Áp dụng</button>
+                                    <%-- SỬA LỖI: Chuyển nút "Xóa lọc" thành một đường dẫn <a> đơn giản. --%>
+                                    <%-- Đây là cách đáng tin cậy nhất để reset trang. --%>
+                                    <a href="${pageContext.request.contextPath}/listContract" class="btn btn-secondary">Xóa lọc</a>
+
+                                    <button type="submit" class="btn btn-primary">Áp dụng</button>
                                 </div>
                             </div>
                         </form>
@@ -143,7 +143,7 @@
                                                 <%-- Bắt đầu phân quyền link "Mã Hợp đồng" --%>
                                                 <c:choose>
                                                     <c:when test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Chánh văn phòng'}">
-                                                        <a href="listContract?action=view&id=${contract.id}" class="contract-code">${contract.contractCode}</a>
+                                                        <a href="${pageContext.request.contextPath}/viewContract?id=${contract.id}" class="contract-code">${contract.contractCode}</a>
                                                     </c:when>
                                                     <c:otherwise>
                                                         <span class="contract-code">${contract.contractCode}</span>
