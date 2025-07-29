@@ -3,7 +3,6 @@
     Created on : Jun 21, 2025
     Author     : NGUYEN MINH / Gemini
 --%>
-
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
@@ -861,7 +860,7 @@
 
                             <div id="week-view" class="calendar-view <c:if test="${viewMode == 'week-view'}">active</c:if>">
                                     <div class="day-header-row">
-                                        <div class="day-header-cell"></div>
+                                        <div class="day-header-cell" style="width:63px; min-width:63px;"></div>
                                     <c:forEach var="label" items="${dayHeaders}" varStatus="status">
                                         <div class="day-header-cell">${label}</div>
                                     </c:forEach>
@@ -873,14 +872,30 @@
                                     <div class="all-day-event-container" ondragover="allowDrop(event)" ondrop="drop(event)">
                                         <c:forEach var="schedule" items="${schedules}">
                                             <c:if test="${schedule.startTime == null}">
+                                                <c:set var="startIndex" value="-1" />
                                                 <c:forEach var="weekDate" items="${weekDates}" varStatus="ws">
-                                                    <c:if test="${schedule.scheduledDate.equals(weekDate)}">
-                                                        <div class="event all-day" id="event-${schedule.id}" style="grid-column: ${ws.index + 1} / span 1; background-color: ${schedule.color};" data-schedule-id="${schedule.id}" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" onclick="showDetails(this)">
-                                                            ${schedule.title}
-                                                            <div class="resize-handle"></div>
-                                                        </div>
+                                                    <c:if test="${weekDate == schedule.scheduledDate}">
+                                                        <c:set var="startIndex" value="${ws.index}" />
                                                     </c:if>
                                                 </c:forEach>
+                                                <c:if test="${startIndex >= 0}">
+                                                    <fmt:parseDate value="${schedule.scheduledDate}" pattern="yyyy-MM-dd" var="startD" type="date"/>
+                                                    <c:set var="span" value="1" />
+                                                    <c:if test="${schedule.endDate != null && schedule.endDate != ''}">
+                                                        <fmt:parseDate value="${schedule.endDate}" pattern="yyyy-MM-dd" var="endD" type="date"/>
+                                                        <c:set var="diffMillis" value="${endD.time - startD.time}" />
+                                                        <c:set var="span" value="${(diffMillis / 86400000) + 1}" />
+                                                    </c:if>
+                                                    <c:set var="endIndex" value="${startIndex + span - 1}" />
+                                                    <c:if test="${endIndex > 6}">
+                                                        <c:set var="endIndex" value="6" />
+                                                        <c:set var="span" value="${endIndex - startIndex + 1}" />
+                                                    </c:if>
+                                                    <div class="event all-day" id="event-${schedule.id}" style="grid-column: ${startIndex + 1} / span ${span}; background-color: ${schedule.color};" data-schedule-id="${schedule.id}" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" onclick="showDetails(this)">
+                                                        ${schedule.title}
+                                                        <div class="resize-handle"></div>
+                                                    </div>
+                                                </c:if>
                                             </c:if>
                                         </c:forEach>
                                     </div>
@@ -1038,7 +1053,7 @@
                 </section>
             </div>
         </div>
-<script>
+        <script>
     const currentView = '${viewMode}';
     const isoDayDate = '${isoDayDate}';
     const weekDates = [<c:forEach items="${weekDates}" var="d" varStatus="status">'${d}'<c:if test="${!status.last}">,</c:if></c:forEach>];
@@ -1189,7 +1204,7 @@
 
                     container.appendChild(eventElement);
 
-                    if (!event.querySelector('.resize-handle')) {
+                    if (!eventElement.querySelector('.resize-handle')) {
                         const handle = document.createElement('div');
                         handle.classList.add('resize-handle');
                         eventElement.appendChild(handle);

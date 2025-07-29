@@ -35,12 +35,17 @@
                     <i data-feather="file-text"></i><span>Hợp đồng</span>
                 </a>
             </li>
+
             <li>
                 <a href="${pageContext.request.contextPath}/ProductController" class="${currentPage.contains('Product') ? 'active' : ''}">
                     <i data-feather="box"></i><span>Hàng hóa</span>
                 </a>
             </li>
-
+            <li>
+                <a href="${pageContext.request.contextPath}/listSchedule" class="${currentPage.contains('Schedule') ? 'active' : ''}">
+                    <i data-feather="check-square"></i><span>Lịch bảo trì</span>
+                </a>
+            </li>
             <%-- ===== NHÓM QUẢN TRỊ (CHỈ ADMIN THẤY) ===== --%>
             <c:if test="${sessionScope.userRole == 'Admin'}">
                 <li>
@@ -60,7 +65,7 @@
                 <ul class="sub-menu">
                     <li><a href="${pageContext.request.contextPath}/ticket" class="${currentPage == 'ticket' ? 'active' : ''}">Danh sách Phiếu</a></li>
                     <li><a href="${pageContext.request.contextPath}/ticket?action=create" class="${currentPage == 'createTicket' ? 'active' : ''}">Tạo Phiếu mới</a></li>
-                    <li><a href="${pageContext.request.contextPath}/listSchedule" class="${currentPage == 'listSchedule' ? 'active' : ''}">Lịch bảo trì</a></li>
+                    
                 </ul>
             </li>
 
