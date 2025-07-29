@@ -25,6 +25,7 @@ public class FeedbackView {
     private String enterprisePhone;
     private String technicianName;
     private int relatedRequestId;
+    private String requestCode;
 
     // Constructors, Getters và Setters
     public FeedbackView() {
@@ -127,5 +128,14 @@ public class FeedbackView {
     public void setRelatedRequestId(int relatedRequestId) {
         this.relatedRequestId = relatedRequestId;
     }
+
+    public String getRequestCode() {
+        return requestCode;
+    }
+
+    public void setRequestCode(String requestCode) {
+        this.requestCode = requestCode;
+    }
+    
     
 }
