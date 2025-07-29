@@ -425,4 +425,47 @@ public class ContractDAO extends DBContext {
             return rowsAffected > 0;
         }
     }
+    
+    /**
+     * Lấy danh sách các hợp đồng gần đây nhất của một doanh nghiệp.
+     * @param enterpriseId ID của doanh nghiệp.
+     * @param limit Số lượng hợp đồng tối đa cần lấy.
+     * @return Danh sách các đối tượng Contract.
+     * @throws Exception nếu có lỗi xảy ra.
+     */
+    public List<Contract> getRecentContractsByEnterpriseId(int enterpriseId, int limit) throws Exception {
+        List<Contract> contracts = new ArrayList<>();
+        String sql = "SELECT id, contract_code, contract_name, signed_date, total_value, status " +
+                     "FROM Contracts " +
+                     "WHERE enterprise_id = ? AND is_deleted = 0 " +
+                     "ORDER BY signed_date DESC, id DESC " +
+                     "LIMIT ?";
+
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, enterpriseId);
+            ps.setInt(2, limit);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Contract contract = new Contract();
+                    contract.setId(rs.getLong("id"));
+                    contract.setContractCode(rs.getString("contract_code"));
+                    contract.setContractName(rs.getString("contract_name"));
+                    contract.setSignedDate(rs.getDate("signed_date"));
+                    contract.setTotalValue(rs.getBigDecimal("total_value"));
+                    contract.setStatus(rs.getString("status"));
+                    contracts.add(contract);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace(); // Log lỗi
+            throw new Exception("Lỗi khi lấy danh sách hợp đồng gần đây: " + e.getMessage());
+        }
+        return contracts;
+    }
+    
+    
+    
 }

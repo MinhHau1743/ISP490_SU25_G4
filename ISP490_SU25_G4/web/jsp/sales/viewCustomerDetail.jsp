@@ -1,7 +1,7 @@
 <%--
     Document   : viewCustomerDetail
     Author     : anhndhe172050
-    Description: Displays detailed information about a single customer, with a redesigned action footer.
+    Description: Displays detailed information about a single customer, including their recent contracts.
 --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
@@ -31,13 +31,10 @@
                 <c:choose>
                     <c:when test="${not empty customer}">
                         <div class="page-content">
-                            <%-- Đoạn code mới đã được cập nhật --%>
                             <div class="detail-header">
                                 <a href="${BASE_URL}/listCustomer" class="back-link"><i data-feather="arrow-left"></i><span>Quay lại danh sách</span></a>
-
-                                <%-- Các nút hành động được chuyển lên đây --%>
                                 <div class="header-actions">
-                                    <%-- Phân quyền nút Sửa --%>
+                                    <%-- User Access Control for Edit Button --%>
                                     <c:choose>
                                         <c:when test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Kinh doanh'}">
                                             <a href="${BASE_URL}/editCustomer?id=${customer.id}" class="btn btn-secondary"><i data-feather="edit-2"></i>Sửa</a>
@@ -47,7 +44,7 @@
                                         </c:otherwise>
                                     </c:choose>
 
-                                    <%-- Phân quyền nút Xóa --%>
+                                    <%-- User Access Control for Delete Button --%>
                                     <c:choose>
                                         <c:when test="${sessionScope.userRole == 'Admin'}">
                                             <a href="#" class="btn btn-danger delete-trigger-btn" data-id="<c:out value='${customer.id}'/>" data-name="<c:out value='${customer.name}'/>"><i data-feather="trash-2"></i>Xóa</a>
@@ -58,8 +55,7 @@
                                     </c:choose>
                                 </div>
                             </div>
-                            <%-- Customer details content --%>
-                            <%-- BẮT ĐẦU KHỐI CODE CẬP NHẬT --%>
+                            
                             <div class="detail-layout">
                                 <div class="main-column">
                                     <div class="profile-header-card detail-card">
@@ -79,7 +75,7 @@
                                         </div>
                                     </div>
 
-                                    <%-- Thông tin doanh nghiệp --%>
+                                    <%-- Enterprise Information --%>
                                     <div class="detail-card">
                                         <h3 class="card-title">Thông tin doanh nghiệp</h3>
                                         <div class="card-body info-grid">
@@ -91,7 +87,7 @@
                                         </div>
                                     </div>
 
-                                    <%-- Thông tin người đại diện --%>
+                                    <%-- Representative Information --%>
                                     <div class="detail-card">
                                         <h3 class="card-title">Thông tin người đại diện</h3>
                                         <c:set var="primaryContact" value="${customer.contacts[0]}"/>
@@ -102,40 +98,49 @@
                                             <div class="info-item"><span class="label"><i data-feather="mail"></i>Email</span><span class="value"><a href="mailto:<c:out value='${primaryContact.email}'/>"><c:out value="${not empty primaryContact.email ? primaryContact.email : 'N/A'}"/></a></span></div>
                                         </div>
                                     </div>
-
+                                    
+                                    <%-- Recent Contracts Section --%>
                                     <div class="detail-card">
                                         <h3 class="card-title">Hợp đồng đã ký kết</h3>
                                         <div class="card-body" style="padding: 0;">
-                                            <table class="contract-table">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Mã Hợp đồng</th>
-                                                        <th>Tên Hợp đồng</th>
-                                                        <th>Ngày ký</th>
-                                                        <th>Giá trị</th>
-                                                        <th>Trạng thái</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        <td><a href="#" class="contract-code">HD-2024-150</a></td>
-                                                        <td>Hợp đồng bảo trì hệ thống điều hòa 2024-2025</td>
-                                                        <td>15/01/2024</td>
-                                                        <td><fmt:formatNumber value="120000000" type="currency" currencyCode="VND"/></td>
-                                                        <td><span class="status-pill status-active">Còn hiệu lực</span></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td><a href="#" class="contract-code">HD-2023-088</a></td>
-                                                        <td>Hợp đồng cung cấp vật tư 2023</td>
-                                                        <td>20/07/2023</td>
-                                                        <td><fmt:formatNumber value="85000000" type="currency" currencyCode="VND"/></td>
-                                                        <td><span class="status-pill status-expired">Đã hết hạn</span></td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
+                                            <c:choose>
+                                                <c:when test="${not empty recentContracts}">
+                                                    <table class="contract-table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Mã Hợp đồng</th>
+                                                                <th>Tên Hợp đồng</th>
+                                                                <th>Ngày ký</th>
+                                                                <th>Giá trị</th>
+                                                                <th>Trạng thái</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <c:forEach var="contract" items="${recentContracts}">
+                                                                <tr>
+                                                                    <td><a href="${BASE_URL}/viewContract?id=${contract.id}" class="contract-code"><c:out value="${contract.contractCode}"/></a></td>
+                                                                    <td><c:out value="${contract.contractName}"/></td>
+                                                                    <td><fmt:formatDate value="${contract.signedDate}" pattern="dd/MM/yyyy"/></td>
+                                                                    <td><fmt:formatNumber value="${contract.totalValue}" type="currency" currencyCode="VND"/></td>
+                                                                    <td>
+                                                                        <c:choose>
+                                                                            <c:when test="${contract.status == 'active'}"><span class="status-pill status-active">Còn hiệu lực</span></c:when>
+                                                                            <c:when test="${contract.status == 'expiring'}"><span class="status-pill status-expiring">Sắp hết hạn</span></c:when>
+                                                                            <c:when test="${contract.status == 'expired'}"><span class="status-pill status-expired">Đã hết hạn</span></c:when>
+                                                                            <c:otherwise><span class="status-pill"><c:out value="${contract.status}"/></span></c:otherwise>
+                                                                        </c:choose>
+                                                                    </td>
+                                                                </tr>
+                                                            </c:forEach>
+                                                        </tbody>
+                                                    </table>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <p style="padding: 20px; text-align: center; color: #6b7280;">Không có hợp đồng nào gần đây.</p>
+                                                </c:otherwise>
+                                            </c:choose>
                                         </div>
                                     </div>
-
 
                                 </div>
 
@@ -158,6 +163,7 @@
                                             </div>
                                         </div>
                                     </div>      
+                                    
                                     <div class="detail-card">
                                         <h3 class="card-title">Giao dịch gần đây</h3>
                                         <c:choose>
@@ -176,7 +182,6 @@
                                                                 <c:when test="${r.status == 'resolved'}"><span class="status-pill status-resolved">Đã xử lý</span></c:when>
                                                                 <c:when test="${r.status == 'closed'}"><span class="status-pill status-closed">Đã đóng</span></c:when>
                                                                 <c:when test="${r.status == 'rejected'}"><span class="status-pill status-rejected">Từ chối</span></c:when>
-
                                                                 <c:otherwise><span class="status-pill">${r.status}</span></c:otherwise>
                                                             </c:choose>
                                                         </li>
@@ -190,9 +195,6 @@
                                     </div>
                                 </div>
                             </div>
-                            <%-- KẾT THÚC KHỐI CODE CẬP NHẬT --%>
-
-
                         </div>
                     </c:when>
                     <c:otherwise>
@@ -223,10 +225,7 @@
         </div>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                // Kích hoạt icon
                 feather.replace();
-
-                // Script xử lý click vào nút bị vô hiệu hóa
                 document.body.addEventListener('click', function (event) {
                     const disabledLink = event.target.closest('.disabled-action');
                     if (disabledLink) {
@@ -239,8 +238,5 @@
         </script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
         <script src="${pageContext.request.contextPath}/js/delete-modal-handler.js"></script>
-        <script>
-            feather.replace();
-        </script>
     </body>
 </html>

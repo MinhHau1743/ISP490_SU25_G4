@@ -1,4 +1,3 @@
-// File: src/main/java/vn/edu/fpt/controller/ViewCustomerController.java
 package vn.edu.fpt.controller;
 
 import jakarta.servlet.ServletException;
@@ -11,6 +10,8 @@ import vn.edu.fpt.dao.EnterpriseDAO;
 import vn.edu.fpt.model.Enterprise;
 import vn.edu.fpt.dao.TechnicalRequestDAO;
 import vn.edu.fpt.model.TechnicalRequest;
+import vn.edu.fpt.dao.ContractDAO; // Import a class mới
+import vn.edu.fpt.model.Contract;   // Import a class mới
 
 import java.io.IOException;
 import java.util.List;
@@ -42,11 +43,15 @@ public class ViewCustomerController extends HttpServlet {
             if (customer == null) {
                 request.setAttribute("errorMessage", "Không tìm thấy khách hàng với ID cung cấp.");
             } else {
-                // Lấy 3 yêu cầu kỹ thuật gần nhất (có tên dịch vụ do JOIN)
+                // Lấy 3 yêu cầu kỹ thuật gần nhất
                 TechnicalRequestDAO requestDAO = new TechnicalRequestDAO();
                 List<TechnicalRequest> recentRequests = requestDAO.getRecentRequestsByEnterprise(enterpriseId, 3);
-                
                 request.setAttribute("recentRequests", recentRequests);
+                
+                // *** LOGIC MỚI: LẤY 5 HỢP ĐỒNG GẦN NHẤT ***
+                ContractDAO contractDAO = new ContractDAO();
+                List<Contract> recentContracts = contractDAO.getRecentContractsByEnterpriseId(enterpriseId, 5);
+                request.setAttribute("recentContracts", recentContracts);
             }
 
             request.setAttribute("customer", customer);
