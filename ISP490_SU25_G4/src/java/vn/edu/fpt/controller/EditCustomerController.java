@@ -87,6 +87,80 @@ public class EditCustomerController extends HttpServlet {
         String existingAvatarUrl = request.getParameter("existingAvatarUrl");
 
         try {
+
+            // *** THAY ĐỔI: BẮT ĐẦU KHỐI VALIDATION ***
+            // 1. Lấy và validate tất cả các trường bắt buộc
+            String customerName = request.getParameter("customerName");
+            if (customerName == null || customerName.trim().isEmpty()) {
+                request.setAttribute("errorMessage", "Tên doanh nghiệp không được để trống.");
+                doGet(request, response);
+                return;
+            }
+
+            String hotline = request.getParameter("hotline");
+            if (hotline == null || hotline.trim().isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng nhập Fax/Hotline của doanh nghiệp.");
+                doGet(request, response);
+                return;
+            }
+
+            String businessEmail = request.getParameter("businessEmail");
+            if (businessEmail == null || businessEmail.trim().isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng nhập Email của doanh nghiệp.");
+                doGet(request, response);
+                return;
+            }
+
+            String customerGroupIdStr = request.getParameter("customerGroup");
+            if (customerGroupIdStr == null || customerGroupIdStr.isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng chọn nhóm khách hàng.");
+                doGet(request, response);
+                return;
+            }
+
+            String employeeIdStr = request.getParameter("employeeId");
+            if (employeeIdStr == null || employeeIdStr.isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng chọn nhân viên phụ trách.");
+                doGet(request, response);
+                return;
+            }
+
+            String provinceIdStr = request.getParameter("province");
+            if (provinceIdStr == null || provinceIdStr.isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng chọn Tỉnh/Thành phố.");
+                doGet(request, response);
+                return;
+            }
+
+            String districtIdStr = request.getParameter("district");
+            if (districtIdStr == null || districtIdStr.isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng chọn Quận/Huyện.");
+                doGet(request, response);
+                return;
+            }
+
+            String wardIdStr = request.getParameter("ward");
+            if (wardIdStr == null || wardIdStr.isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng chọn Phường/Xã.");
+                doGet(request, response);
+                return;
+            }
+
+            String streetAddress = request.getParameter("streetAddress");
+            if (streetAddress == null || streetAddress.trim().isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng nhập địa chỉ cụ thể.");
+                doGet(request, response);
+                return;
+            }
+
+            // Chuyển đổi sang số sau khi đã qua validation
+            int customerGroupId = Integer.parseInt(customerGroupIdStr);
+            int employeeId = Integer.parseInt(employeeIdStr);
+            int provinceId = Integer.parseInt(provinceIdStr);
+            int districtId = Integer.parseInt(districtIdStr);
+            int wardId = Integer.parseInt(wardIdStr);
+            // *** KẾT THÚC KHỐI VALIDATION ***
+
             // 1. Handle File Upload
             String avatarDbPath = existingAvatarUrl;
             Part filePart = request.getPart("avatar");
@@ -100,23 +174,36 @@ public class EditCustomerController extends HttpServlet {
                 avatarDbPath = "uploads/avatars/" + uniqueFileName;
             }
 
-            // 2. Get all form data
-            String customerName = request.getParameter("customerName");
-            String hotline = request.getParameter("hotline");
-            String businessEmail = request.getParameter("businessEmail");
+            // *** THAY ĐỔI: Lấy các trường không bắt buộc và gán "N/A" nếu trống ***
             String taxCode = request.getParameter("taxCode");
-            String bankNumber = request.getParameter("bankNumber");
-            String fullName = request.getParameter("fullName");
-            String position = request.getParameter("position");
-            String phone = request.getParameter("phone");
-            String email = request.getParameter("email");
-            int customerGroupId = Integer.parseInt(request.getParameter("customerGroup"));
-            int employeeId = Integer.parseInt(request.getParameter("employeeId"));
+            if (taxCode == null || taxCode.trim().isEmpty()) {
+                taxCode = "N/A";
+            }
 
-            String streetAddress = request.getParameter("streetAddress");
-            int provinceId = Integer.parseInt(request.getParameter("province"));
-            int districtId = Integer.parseInt(request.getParameter("district"));
-            int wardId = Integer.parseInt(request.getParameter("ward"));
+            String bankNumber = request.getParameter("bankNumber");
+            if (bankNumber == null || bankNumber.trim().isEmpty()) {
+                bankNumber = "N/A";
+            }
+
+            String fullName = request.getParameter("fullName");
+            if (fullName == null || fullName.trim().isEmpty()) {
+                fullName = "N/A";
+            }
+
+            String position = request.getParameter("position");
+            if (position == null || position.trim().isEmpty()) {
+                position = "N/A";
+            }
+
+            String phone = request.getParameter("phone");
+            if (phone == null || phone.trim().isEmpty()) {
+                phone = "N/A";
+            }
+
+            String email = request.getParameter("email");
+            if (email == null || email.trim().isEmpty()) {
+                email = "N/A";
+            }
 
             // 3. Start Transaction
             conn = new DBContext().getConnection();
