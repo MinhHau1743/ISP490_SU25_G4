@@ -88,7 +88,9 @@
                                 <div class="search-box">
                                     <i data-feather="search"></i>
                                     <%-- Thêm id="searchInput" để dễ dàng truy cập bằng JS --%>
-                                    <input type="text" id="searchInput" name="search" placeholder="Tìm theo tên khách hàng" value="<c:out value='${searchQuery}'/>" autocomplete="off">
+                                    <input type="text" id="searchInput" name="search" 
+                                           placeholder="Tìm theo tên, địa chỉ hoặc số fax" 
+                                           value="<c:out value='${searchQuery}'/>" autocomplete="off">
                                 </div>
                                 <%-- Container để hiển thị các gợi ý --%>
                                 <div id="suggestionsContainer" class="suggestions-list"></div>

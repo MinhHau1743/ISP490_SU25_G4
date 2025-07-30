@@ -37,7 +37,7 @@
                 </div>
 
                 <%-- Contact Info --%>
-                <div class="card-info-row"><i data-feather="phone"></i><span><c:out value="${not empty customer.primaryContactPhone ? customer.primaryContactPhone : 'Chưa có SĐT'}"/></span></div>
+                <div class="card-info-row"><i data-feather="phone"></i><span><c:out value="${not empty customer.fax ? customer.fax : 'Chưa có SĐT'}"/></span></div>
                 <div class="card-info-row"><i data-feather="map-pin"></i><span><c:out value="${not empty customer.fullAddress ? customer.fullAddress : 'Chưa có địa chỉ'}"/></span></div>
 
                 <%-- Card Footer with Assigned Users' Avatars --%>

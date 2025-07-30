@@ -84,7 +84,7 @@ public class EnterpriseDAO extends DBContext {
         // Base query to fetch all enterprise details
         StringBuilder sql = new StringBuilder(
                 "SELECT "
-                + "    e.id AS enterprise_id, e.name AS enterprise_name, e.enterprise_code, e.avatar_url AS enterprise_avatar, "
+                + "    e.id AS enterprise_id, e.name AS enterprise_name, e.enterprise_code, e.avatar_url AS enterprise_avatar, e.fax, "
                 + "    CONCAT_WS(', ', a.street_address, w.name, d.name, p.name) AS full_address, "
                 + "    ct.name AS customer_type_name, "
                 + "    u.id AS user_id, u.first_name, u.last_name, u.middle_name, u.avatar_url AS user_avatar, "
@@ -102,13 +102,7 @@ public class EnterpriseDAO extends DBContext {
 
         // Dynamically build the WHERE clause for searching to find matching enterprise IDs
         if (isSearching) {
-            sql.append(" AND e.id IN ( ");
-            sql.append("   SELECT id FROM Enterprises WHERE name LIKE ? ");
-            sql.append("   UNION "); // UNION automatically handles duplicates
-            sql.append("   SELECT enterprise_id FROM EnterpriseContacts WHERE full_name LIKE ? ");
-            sql.append("   UNION ");
-            sql.append("   SELECT ea.enterprise_id FROM EnterpriseAssignments ea JOIN Users u ON ea.user_id = u.id WHERE CONCAT_WS(' ', u.last_name, u.middle_name, u.first_name) LIKE ? ");
-            sql.append(" ) ");
+            sql.append(" AND (e.name LIKE ? OR e.fax LIKE ? OR CONCAT_WS(', ', a.street_address, w.name, d.name, p.name) LIKE ?) ");
         }
 
         sql.append(" ORDER BY e.name, u.id");
@@ -119,9 +113,9 @@ public class EnterpriseDAO extends DBContext {
             // Set parameters ONLY if searching
             if (isSearching) {
                 String searchPattern = "%" + searchQuery + "%";
-                ps.setString(1, searchPattern);
-                ps.setString(2, searchPattern);
-                ps.setString(3, searchPattern);
+                ps.setString(1, searchPattern); // Cho e.name
+                ps.setString(2, searchPattern); // Cho e.fax
+                ps.setString(3, searchPattern); // Cho địa chỉ full_address
             }
 
             // Execute the query and process the results in a separate try block
@@ -135,6 +129,7 @@ public class EnterpriseDAO extends DBContext {
                             newEnterprise.setId(rs.getInt("enterprise_id"));
                             newEnterprise.setName(rs.getString("enterprise_name"));
                             newEnterprise.setEnterpriseCode(rs.getString("enterprise_code"));
+                            newEnterprise.setFax(rs.getString("fax"));
                             newEnterprise.setCustomerTypeName(rs.getString("customer_type_name"));
                             newEnterprise.setFullAddress(rs.getString("full_address"));
                             newEnterprise.setPrimaryContactPhone(rs.getString("primary_phone"));
