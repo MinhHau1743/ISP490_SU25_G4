@@ -127,8 +127,8 @@
                                 <h3 class="card-title">Thông tin doanh nghiệp</h3>
                                 <div class="card-body">
                                     <div class="info-grid">
-                                        <div class="form-group"><label for="hotline">Fax/Hotline</label><input type="tel" id="hotline" name="hotline" class="form-control"></div>
-                                        <div class="form-group"><label for="businessEmail">Email doanh nghiệp</label><input type="email" id="businessEmail" name="businessEmail" class="form-control"></div>
+                                        <div class="form-group"><label for="hotline">Fax/Hotline (*)</label><input type="tel" id="hotline" name="hotline" class="form-control" required></div>
+                                        <div class="form-group"><label for="businessEmail">Email doanh nghiệp (*)</label><input type="email" id="businessEmail" name="businessEmail" class="form-control" required></div>
                                         <div class="form-group"><label for="taxCode">Mã số thuế</label><input type="text" id="taxCode" name="taxCode" class="form-control"></div>
                                         <div class="form-group"><label for="bankNumber">Số tài khoản ngân hàng</label><input type="text" id="bankNumber" name="bankNumber" class="form-control"></div>
                                     </div>
@@ -169,9 +169,9 @@
                                 <h3 class="card-title">Thông tin người đại diện</h3>
                                 <div class="card-body">
                                     <div class="info-grid">
-                                        <div class="form-group"><label for="fullName">Họ và tên (*)</label><input type="text" id="fullName" name="fullName" class="form-control" required></div>
-                                        <div class="form-group"><label for="position">Chức vụ (*)</label><input type="text" id="position" name="position" class="form-control" required></div>
-                                        <div class="form-group"><label for="phone">Số điện thoại (*)</label><input type="tel" id="phone" name="phone" class="form-control" required></div>
+                                        <div class="form-group"><label for="fullName">Họ và tên </label><input type="text" id="fullName" name="fullName" class="form-control" ></div>
+                                        <div class="form-group"><label for="position">Chức vụ </label><input type="text" id="position" name="position" class="form-control" ></div>
+                                        <div class="form-group"><label for="phone">Số điện thoại </label><input type="tel" id="phone" name="phone" class="form-control" ></div>
                                         <div class="form-group"><label for="email">Email</label><input type="email" id="email" name="email" class="form-control"></div>
                                     </div>
                                 </div>
@@ -189,7 +189,7 @@
                                     <div class="form-group"><label for="customerCode">Mã khách hàng</label><input type="text" id="customerCode" name="customerCode" class="form-control" value="(Tự động tạo)" readonly></div>
                                     <div class="form-group">
                                         <label for="customerGroup">Nhóm khách hàng</label>
-                                        <select id="customerGroup" name="customerGroup" class="form-control">
+                                        <select id="customerGroup" name="customerGroup" class="form-control" required>
                                             <c:forEach var="type" items="${customerTypes}">
                                                 <option value="${type.id}">${type.name}</option>
                                             </c:forEach>

@@ -92,9 +92,9 @@
                                         <h3 class="card-title">Thông tin người đại diện</h3>
                                         <c:set var="primaryContact" value="${customer.contacts[0]}"/>
                                         <div class="card-body info-grid">
-                                            <div class="info-item"><span class="label"><i data-feather="user"></i>Họ và tên</span><span class="value"><c:out value="${primaryContact.fullName}"/></span></div>
-                                            <div class="info-item"><span class="label"><i data-feather="briefcase"></i>Chức vụ</span><span class="value"><c:out value="${primaryContact.position}"/></span></div>
-                                            <div class="info-item"><span class="label"><i data-feather="phone"></i>Số điện thoại</span><span class="value"><c:out value="${primaryContact.phoneNumber}"/></span></div>
+                                            <div class="info-item"><span class="label"><i data-feather="user"></i>Họ và tên</span><span class="value"><c:out value="${not empty primaryContact.fullName ? primaryContact.fullName : 'N/A'}"/></span></div>
+                                            <div class="info-item"><span class="label"><i data-feather="briefcase"></i>Chức vụ</span><span class="value"><c:out value="${not empty primaryContact.position ? primaryContact.position : 'N/A'}"/></span></div>
+                                            <div class="info-item"><span class="label"><i data-feather="phone"></i>Số điện thoại</span><span class="value"><c:out value="${not empty primaryContact.phoneNumber ? primaryContact.phoneNumber : 'N/A'}"/></span></div>
                                             <div class="info-item"><span class="label"><i data-feather="mail"></i>Email</span><span class="value"><a href="mailto:<c:out value='${primaryContact.email}'/>"><c:out value="${not empty primaryContact.email ? primaryContact.email : 'N/A'}"/></a></span></div>
                                         </div>
                                     </div>
