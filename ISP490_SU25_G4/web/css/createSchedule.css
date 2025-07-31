@@ -1,293 +1,184 @@
 /*
-    Tác giả   : NGUYEN MINH
-    Tái cấu trúc & Tối ưu : Gemini
-    Ngày cập nhật: 08/07/2025
+    Tác giả   : PHAM HAI HUY
+    Ngày cập nhật: 31/07/2025
 */
 
-/* --- 1. BIẾN TOÀN CỤC VÀ STYLE CƠ BẢN --- */
-:root {
-    --primary-color: #0d9488;
-    --primary-color-light: rgba(13, 148, 136, 0.1);
-}
 
-/* --- 2. CẤU TRÚC LAYOUT CHÍNH --- */
-.page-content {
-    padding: 24px;
+html, body {
+    height: 100%;
+    font-family: 'Inter', sans-serif;
+    margin: 0;
     background-color: #f9fafb;
-
-    /* --- TỐI ƯU CHO MÀN HÌNH RỘNG --- */
-    width: 100%;
-    max-width: 1440px;    /* Chiều rộng tối đa của nội dung */
-    margin-left: auto;    /* Tự động căn lề để đưa nội dung ra giữa */
-    margin-right: auto;
+}
+.content-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    overflow: hidden;
+}
+.main-content-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 24px 32px;
 }
 
-.detail-header {
+/* CSS CHUNG CHO FORM VÀ VIEW DETAILS */
+.page-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e5e7eb;
+}
+.page-header h1 {
+    font-size: 24px;
+    margin: 0;
+}
+.page-header .actions .btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+.btn-edit {
+    background-color: #3b82f6;
+    color: white;
+}
+.btn-delete {
+    background-color: #ef4444;
+    color: white;
 }
 
-.detail-layout {
-    display: grid;
-    grid-template-columns: 2fr 1fr; /* Tỷ lệ 2:1 cho cột chính và cột phụ */
-    gap: 24px;
-    align-items: flex-start;
-}
-
-.main-column, .sidebar-column {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-}
-
-
-/* --- 3. CÁC THÀNH PHẦN CHUNG (COMPONENTS) --- */
-
-/* Thẻ chung */
-.detail-card {
-    background: #ffffff;
+.form-container, .details-container {
+    background-color: white;
+    padding: 32px;
     border-radius: 12px;
-    border: 1px solid #e5e7eb;
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
-.card-title {
-    font-size: 18px;
+.form-grid, .details-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px 32px;
+}
+
+.form-group, .detail-item {
+    margin-bottom: 20px;
+}
+.form-group label, .detail-label {
+    display: block;
     font-weight: 600;
-    padding: 16px 20px;
-    border-bottom: 1px solid #f3f4f6;
-    margin: 0;
-}
-
-.card-body {
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-/* Form controls */
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.form-group label {
-    font-size: 14px;
-    font-weight: 500;
+    margin-bottom: 8px;
     color: #374151;
 }
 
-.form-control, .form-control[readonly] {
+.form-control {
     width: 100%;
-    height: 40px;
-    padding: 0 12px;
-    border: 1px solid #d1d5db;
+    padding: 10px 12px;
+    border: 1px solid #00897b;
     border-radius: 8px;
     font-size: 14px;
-    background-color: #ffffff;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
 }
-
 .form-control:focus {
+    border-color: #00897b;
+    box-shadow: 0 0 0 2px rgba(139, 69, 19, 0.2);
     outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px var(--primary-color-light);
 }
-
-.form-control[readonly] {
-    background-color: #f3f4f6;
-    color: #6b7280;
-    cursor: default;
-}
-
 textarea.form-control {
-    height: auto;
-    padding-top: 10px;
-    padding-bottom: 10px;
+    min-height: 120px;
+    resize: vertical;
 }
 
-/* Lưới hiển thị thông tin */
-.info-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr; /* 2 cột thông tin */
-    gap: 20px;
-}
-
-/* Lưới cho các ô ngày tháng */
-.date-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-}
-
-/* Nút bấm */
-.add-item-btn {
-    background-color: #f9fafb;
-    border: 1px dashed #d1d5db;
-    color: #4b5563;
-    width: 100%;
-    text-align: center;
-    padding: 10px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.2s;
-    margin-top: 16px;
-    display: inline-flex;
-    justify-content: center;
+.color-picker-wrapper {
+    display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+}
+.color-preview {
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    border: 1px solid #d1d5db;
+    display: inline-block;
 }
 
-.add-item-btn:hover {
-    background-color: #f3f4f6;
-    border-color: #9ca3af;
-}
-
-.back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    font-weight: 500;
-    color: #4b5563;
-    transition: color 0.2s;
-}
-
-.back-link:hover {
-    color: var(--primary-color);
-}
-
-
-/* --- 4. BẢNG CHI TIẾT SẢN PHẨM/HỢP ĐỒNG --- */
-/* Gộp các style chung cho bảng */
-.item-list-table, .data-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.item-list-table th, .item-list-table td,
-.data-table th, .data-table td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid #f3f4f6;
-    font-size: 14px;
-    vertical-align: middle;
-}
-
-.item-list-table thead th,
-.data-table thead th {
-    background-color: #f9fafb;
-    font-weight: 600;
-    color: #4b5563;
-    font-size: 13px;
-}
-
-.item-list-table tfoot td {
-    font-weight: 600;
-}
-.item-list-table tfoot tr:last-child td {
-    padding-top: 12px;
-    border-top: 1px solid #e5e7eb;
-}
-.item-list-table tfoot .grand-total {
+.detail-value {
     font-size: 16px;
-    color: var(--primary-color);
+    color: #111827;
 }
-.item-list-table .delete-item-btn {
-    background: none; border: none; cursor: pointer; color: #9ca3af;
-    padding: 0; line-height: 0; transition: color 0.2s;
-}
-.item-list-table .delete-item-btn:hover { color: #ef4444; }
-
-
-/* --- 5. MODAL CHỌN SẢN PHẨM --- */
-.modal-overlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background-color: rgba(0,0,0,0.6);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000;
-}
-.modal-content {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    width: 90%;
-    max-width: 700px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 24px;
-    border-bottom: 1px solid #e5e7eb;
-}
-.modal-title {
-    font-size: 18px; font-weight: 600; color: #111827; margin: 0;
-}
-.modal-body {
-    display: flex;
-    flex-direction: column;
-    max-height: 70vh;
-}
-.modal-body .search-bar-container {
-    padding: 16px;
-    border-bottom: 1px solid #e0e0e0;
-}
-#productList {
-    overflow-y: auto;
-}
-.product-search-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    border-bottom: 1px solid #f3f4f6;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-.product-search-item:hover { background-color: #f9fafb; }
-.product-search-info .name { font-weight: 600; }
-.product-search-info .code { font-size: 12px; color: #6b7280; }
-.product-search-price { font-weight: 500; }
-.empty-list-message { text-align: center; padding: 40px; color: #6c757d; font-style: italic;}
-
-
-/* --- 6. CÁC PILL TRẠNG THÁI --- */
-.status-pill {
+.detail-value .status {
     padding: 4px 12px;
     border-radius: 16px;
     font-size: 12px;
-    font-weight: 500;
-    display: inline-block;
+    font-weight: 600;
 }
-.status-active, .status-completed { background-color: #dcfce7; color: #166534; }
-.status-pending, .status-processing, .status-expiring { background-color: #fef3c7; color: #92400e; }
-.status-expired, .status-cancelled { background-color: #fee2e2; color: #991b1b; }
-
-
-/* --- 7. RESPONSIVE DESIGN --- */
-@media (max-width: 1024px) {
-    .detail-layout {
-        grid-template-columns: 1fr; /* Chuyển thành 1 cột trên màn hình nhỏ hơn */
-    }
+.detail-value .status.status-upcoming {
+    background-color: #fff8e1;
+    color: #ffa000;
 }
-@media (max-width: 768px) {
-    .info-grid, .date-grid {
-        grid-template-columns: 1fr; /* Chuyển thành 1 cột trên mobile */
-    }
-    .page-content {
-        padding: 16px;
-    }
+.detail-value .status.status-inprogress {
+    background-color: #e3f2fd;
+    color: #1565c0;
+}
+.detail-value .status.status-completed {
+    background-color: #e3f4e3;
+    color: #2e7d32;
+}
+
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.color-picker {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.form-actions {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+.form-actions .btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+}
+.btn-secondary {
+    background-color: #e5e7eb;
+    color: #374151;
+    border: none;
+}
+.btn-primary {
+    background-color: #8B4513;
+    color: white;
+    border: none;
+}
+
+/* Màu trong ảnh */
+.form-control {
+    border-color: #d1d5db; /* Màu viền form */
+}
+.btn-primary {
+    background-color: #008080; /* Màu nút add */
+    color: white;
+    border: none;
 }
