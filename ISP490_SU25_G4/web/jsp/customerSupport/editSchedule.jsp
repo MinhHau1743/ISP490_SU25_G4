@@ -17,118 +17,25 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <script src="https://unpkg.com/feather-icons"></script>
-
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.slim.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/editSchedule.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
-
-        <style>
-            html, body {
-                height: 100%;
-                font-family: 'Inter', sans-serif;
-                margin: 0;
-                background-color: #f9fafb;
-            }
-            .content-wrapper {
-                display: flex;
-                flex-direction: column;
-                flex-grow: 1;
-                overflow: hidden;
-            }
-            .main-content-body {
-                flex-grow: 1;
-                overflow-y: auto;
-                padding: 24px 32px;
-            }
-
-            .page-header {
-                margin-bottom: 24px;
-            }
-            .page-header h1 {
-                font-size: 24px;
-                margin: 0;
-                color: #111827;
-            }
-
-            .form-container {
-                background-color: white;
-                padding: 32px;
-                border-radius: 12px;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            }
-            .form-grid {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 24px 32px;
-            }
-            .form-group {
-                margin-bottom: 20px;
-            }
-            .form-group.full-width {
-                grid-column: 1 / -1;
-            }
-            .form-group label {
-                display: block;
-                font-weight: 600;
-                margin-bottom: 8px;
-                color: #374151;
-                font-size: 14px;
-            }
-            .form-control {
-                width: 100%;
-                padding: 10px 12px;
-                border: 1px solid #d1d5db;
-                border-radius: 8px;
-                font-size: 14px;
-                box-sizing: border-box;
-            }
-            .form-control:focus {
-                border-color: #8B4513;
-                box-shadow: 0 0 0 2px rgba(139, 69, 19, 0.2);
-                outline: none;
-            }
-            textarea.form-control {
-                min-height: 120px;
-                resize: vertical;
-            }
-            .color-picker {
-                width: 40px;
-                height: 40px;
-                padding: 0;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-            }
-            .form-actions {
-                margin-top: 32px;
-                padding-top: 24px;
-                border-top: 1px solid #e5e7eb;
-                display: flex;
-                justify-content: flex-end;
-                gap: 12px;
-            }
-            .form-actions .btn {
-                padding: 10px 20px;
-                border-radius: 8px;
-                font-weight: 600;
-                text-decoration: none;
-                border: none;
-                cursor: pointer;
-            }
-            .btn-secondary {
-                background-color: #e5e7eb;
-                color: #374151;
-            }
-            .btn-primary {
-                background-color: #8B4513;
-                color: white;
-            }
-        </style>
     </head>
     <body>
         <div class="app-container">
             <jsp:include page="../../mainMenu.jsp"/>
             <div class="content-wrapper">
+                <c:if test="${not empty error}">
+                    <div class="alert alert-warning alert-dismissible fade show">
+                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                        <strong></strong>${error}
+                    </div>
+                </c:if>
                 <section class="main-content-body">
                     <div class="page-header">
                         <h1>Chỉnh sửa Lịch bảo trì</h1>
@@ -198,44 +105,6 @@
                 </section>
             </div>
         </div>
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                feather.replace();
-
-                // Xử lý logic cho ngày và giờ
-                const startDateInput = document.getElementById('scheduledDate');
-                const endDateInput = document.getElementById('endDate');
-                const startTimeInput = document.getElementById('startTime');
-                const endTimeInput = document.getElementById('endTime');
-
-                // Đảm bảo endDate >= scheduledDate
-                startDateInput.addEventListener('change', () => {
-                    if (endDateInput.value && endDateInput.value < startDateInput.value) {
-                        endDateInput.value = startDateInput.value;
-                    }
-                    endDateInput.min = startDateInput.value;
-                });
-
-                // Đảm bảo endTime hợp lý khi startTime thay đổi
-                startTimeInput.addEventListener('change', () => {
-                    if (startTimeInput.value && !endTimeInput.value) {
-                        const startTime = new Date(`1970-01-01T${startTimeInput.value}`);
-                        startTime.setMinutes(startTime.getMinutes() + 60); // Mặc định thêm 1 giờ
-                        endTimeInput.value = startTime.toTimeString().slice(0, 5);
-                    }
-                });
-
-                // Đảm bảo endTime >= startTime nếu cùng ngày
-                endTimeInput.addEventListener('change', () => {
-                    if (startTimeInput.value && endTimeInput.value && startDateInput.value === endDateInput.value) {
-                        const startTime = startTimeInput.value;
-                        const endTime = endTimeInput.value;
-                        if (endTime < startTime) {
-                            endTimeInput.value = startTime;
-                        }
-                    }
-                });
-            });
-        </script>
+        <script src="${pageContext.request.contextPath}/js/editSchedule.js"></script>               
     </body>
 </html>
