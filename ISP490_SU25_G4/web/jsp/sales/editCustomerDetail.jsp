@@ -93,8 +93,8 @@
                                 <h3 class="card-title">Thông tin doanh nghiệp</h3>
                                 <div class="card-body">
                                     <div class="info-grid">
-                                        <div class="form-group"><label for="hotline">Fax/Hotline</label><input type="tel" id="hotline" name="hotline" class="form-control" value="<c:out value='${customer.fax}'/>"></div>
-                                        <div class="form-group"><label for="businessEmail">Email doanh nghiệp</label><input type="email" id="businessEmail" name="businessEmail" class="form-control" value="<c:out value='${customer.businessEmail}'/>"></div>
+                                        <div class="form-group"><label for="hotline">Fax/Hotline (*)</label><input type="tel" id="hotline" name="hotline" class="form-control" value="<c:out value='${customer.fax}'/>" required></div>
+                                        <div class="form-group"><label for="businessEmail">Email doanh nghiệp (*)</label><input type="email" id="businessEmail" name="businessEmail" class="form-control" value="<c:out value='${customer.businessEmail}'/>" required></div>
                                         <div class="form-group"><label for="taxCode">Mã số thuế</label><input type="text" id="taxCode" name="taxCode" class="form-control" value="<c:out value='${customer.taxCode}'/>"></div>
                                         <div class="form-group"><label for="bankNumber">Số tài khoản ngân hàng</label><input type="text" id="bankNumber" name="bankNumber" class="form-control" value="<c:out value='${customer.bankNumber}'/>"></div>
                                     </div>
@@ -132,9 +132,9 @@
                                 <div class="card-body">
                                     <c:set var="primaryContact" value="${customer.contacts[0]}"/>
                                     <div class="info-grid">
-                                        <div class="form-group"><label for="fullName">Họ và tên (*)</label><input type="text" id="fullName" name="fullName" class="form-control" value="<c:out value='${primaryContact.fullName}'/>" required></div>
-                                        <div class="form-group"><label for="position">Chức vụ (*)</label><input type="text" id="position" name="position" class="form-control" value="<c:out value='${primaryContact.position}'/>" required></div>
-                                        <div class="form-group"><label for="phone">Số điện thoại (*)</label><input type="tel" id="phone" name="phone" class="form-control" value="<c:out value='${primaryContact.phoneNumber}'/>" required></div>
+                                        <div class="form-group"><label for="fullName">Họ và tên</label><input type="text" id="fullName" name="fullName" class="form-control" value="<c:out value='${primaryContact.fullName}'/>" ></div>
+                                        <div class="form-group"><label for="position">Chức vụ</label><input type="text" id="position" name="position" class="form-control" value="<c:out value='${primaryContact.position}'/>" ></div>
+                                        <div class="form-group"><label for="phone">Số điện thoại</label><input type="tel" id="phone" name="phone" class="form-control" value="<c:out value='${primaryContact.phoneNumber}'/>" ></div>
                                         <div class="form-group"><label for="email">Email</label><input type="email" id="email" name="email" class="form-control" value="<c:out value='${primaryContact.email}'/>"></div>
                                     </div>
                                 </div>

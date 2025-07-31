@@ -63,7 +63,7 @@ public class CreateCustomerController extends HttpServlet {
                 List<User> employees = userDAO.getAllEmployees();
 
                 request.setAttribute("provinces", provinces);
-                
+
                 request.setAttribute("customerTypes", customerTypes);
                 request.setAttribute("employees", employees);
 
@@ -124,21 +124,65 @@ public class CreateCustomerController extends HttpServlet {
                 avatarDbPath = "uploads/avatars/" + uniqueFileName;
             }
 
+            // === PHẦN 2: LẤY VÀ VALIDATE CÁC THAM SỐ TỪ FORM ===
+            // Lấy các tham số mới bắt buộc
+            String hotline = request.getParameter("hotline");
+            String businessEmail = request.getParameter("businessEmail");
+
+            // *** THAY ĐỔI: Thêm validation cho các trường bắt buộc mới ***
+            if (hotline == null || hotline.trim().isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng nhập Fax/Hotline của doanh nghiệp.");
+                doGet(request, response);
+                return;
+            }
+            if (businessEmail == null || businessEmail.trim().isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng nhập Email của doanh nghiệp.");
+                doGet(request, response);
+                return;
+            }
+
+            // *** THAY ĐỔI: Validate đầy đủ cho địa chỉ ***
+            String provinceIdStr = request.getParameter("province");
+            if (provinceIdStr == null || provinceIdStr.isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng chọn Tỉnh/Thành phố.");
+                doGet(request, response);
+                return;
+            }
+
+            String districtIdStr = request.getParameter("district");
+            if (districtIdStr == null || districtIdStr.isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng chọn Quận/Huyện.");
+                doGet(request, response);
+                return;
+            }
+
+            String wardIdStr = request.getParameter("ward");
+            if (wardIdStr == null || wardIdStr.isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng chọn Phường/Xã.");
+                doGet(request, response);
+                return;
+            }
+
+            String streetAddress = request.getParameter("streetAddress");
+            if (streetAddress == null || streetAddress.trim().isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng nhập địa chỉ cụ thể.");
+                doGet(request, response);
+                return;
+            }
+
             // Get other form parameters
             String fullName = request.getParameter("fullName");
             String position = request.getParameter("position");
             String phone = request.getParameter("phone");
-            String hotline = request.getParameter("hotline");
             String email = request.getParameter("email");
-            String businessEmail = request.getParameter("businessEmail");
             String taxCode = request.getParameter("taxCode");
             String bankNumber = request.getParameter("bankNumber");
 
             int provinceId = Integer.parseInt(request.getParameter("province"));
             int districtId = Integer.parseInt(request.getParameter("district"));
             int wardId = Integer.parseInt(request.getParameter("ward"));
-            String streetAddress = request.getParameter("streetAddress");
-            int customerGroupId = Integer.parseInt(request.getParameter("customerGroup"));
+            
+            
             String employeeIdStr = request.getParameter("employeeId");
 
             // Validate that an employee was selected
@@ -148,6 +192,15 @@ public class CreateCustomerController extends HttpServlet {
                 return;
             }
             int employeeId = Integer.parseInt(employeeIdStr);
+            // Đặt sau đoạn kiểm tra employeeId
+
+            String customerGroupIdStr = request.getParameter("customerGroup");
+            if (customerGroupIdStr == null || customerGroupIdStr.isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng chọn nhóm khách hàng.");
+                doGet(request, response);
+                return;
+            }
+            int customerGroupId = Integer.parseInt(customerGroupIdStr);
 
             // Start a database transaction
             conn = new DBContext().getConnection();
@@ -162,8 +215,10 @@ public class CreateCustomerController extends HttpServlet {
             int newAddressId = addressDAO.insertAddress(conn, streetAddress, wardId, districtId, provinceId);
             // 2. Insert enterprise and get the new ID
             int newEnterpriseId = enterpriseDAO.insertEnterprise(conn, customerName, businessEmail, hotline, customerGroupId, newAddressId, taxCode, bankNumber, avatarDbPath);
-            // 3. Insert primary contact for the enterprise
-            enterpriseDAO.insertEnterpriseContact(conn, newEnterpriseId, fullName, position, phone, email);
+            // Chỉ thêm người liên hệ nếu có thông tin được nhập
+            if (fullName != null && !fullName.trim().isEmpty()) {
+                enterpriseDAO.insertEnterpriseContact(conn, newEnterpriseId, fullName, position, phone, email);
+            }
             // 4. Assign the responsible employee
             assignmentDAO.insertAssignment(conn, newEnterpriseId, employeeId, "account_manager");
 

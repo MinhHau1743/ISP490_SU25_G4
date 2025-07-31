@@ -9,66 +9,73 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 
-<!DOCTYPE html>
 <html lang="vi">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Quản lý Phản hồi - DPCRM</title>
+        <title>Phản hồi Khách hàng - DPCRM</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <script src="https://unpkg.com/feather-icons"></script>
 
-        <%-- SỬA 1: Dùng contextPath cho tất cả các đường dẫn --%>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
 
         <style>
-            /* CSS của bạn giữ nguyên, không cần thay đổi */
-            html, body {
-                height: 100%;
-                font-family: 'Inter', sans-serif;
-                margin: 0;
-                background-color: #f9fafb;
-            }
-            .content-wrapper {
+            /* === BỐ CỤC CHUNG === */
+            .main-content {
+                flex-grow: 1;
                 display: flex;
                 flex-direction: column;
-                flex-grow: 1;
-                overflow: hidden;
+                background-color: #f3f4f6;
             }
-            .main-content-body {
-                flex-grow: 1;
-                overflow-y: auto;
-                padding: 24px 32px;
-            }
-
             .page-header {
-                margin-bottom: 24px;
+                background-color: #fff;
+                padding: 1.5rem 2rem;
+                border-bottom: 1px solid #e5e7eb;
             }
-            .page-header h1 {
-                font-size: 28px;
+            .page-header .title-section .title {
+                font-size: 1.75rem;
                 font-weight: 700;
                 color: #111827;
                 margin: 0;
             }
+            .page-header .breadcrumb {
+                font-size: 0.875rem;
+                color: #6b7280;
+            }
+            .page-header .breadcrumb span {
+                font-weight: 500;
+                color: #374151;
+            }
+            .page-content {
+                padding: 1.5rem 2rem;
+                flex-grow: 1;
+                overflow-y: auto;
+            }
+            .content-card {
+                background-color: #fff;
+                border-radius: 0.75rem;
+                border: 1px solid #e5e7eb;
+                padding: 1.5rem;
+            }
 
+            /* === KHỐI THỐNG KÊ === */
             .stats-grid {
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-                gap: 20px;
-                margin-bottom: 24px;
+                gap: 1.5rem;
+                margin-bottom: 1.5rem;
             }
             .stat-card {
                 background-color: #fff;
-                padding: 20px;
-                border-radius: 12px;
+                padding: 1.25rem;
+                border-radius: 0.75rem;
                 border: 1px solid #e5e7eb;
                 display: flex;
                 align-items: center;
-                gap: 16px;
+                gap: 1rem;
             }
             .stat-card .icon-wrapper {
                 width: 48px;
@@ -96,27 +103,25 @@
             }
             .stat-card .info .title {
                 color: #6b7280;
-                font-size: 14px;
-                margin-bottom: 4px;
+                font-size: 0.875rem;
+                margin-bottom: 0.25rem;
             }
             .stat-card .info .value {
-                font-size: 24px;
+                font-size: 1.5rem;
                 font-weight: 700;
                 color: #111827;
             }
 
-            .toolbar-container {
-                background-color: #fff;
-                border-radius: 12px;
-                border: 1px solid #e5e7eb;
-                padding: 16px 20px;
+            /* === THANH CÔNG CỤ TÌM KIẾM === */
+            .table-toolbar {
                 display: flex;
-                justify-content: space-between;
                 align-items: center;
-                margin-bottom: 24px;
+                gap: 0.75rem;
+                margin-bottom: 1.5rem;
             }
             .search-box {
                 position: relative;
+                flex-grow: 1;
             }
             .search-box .feather-search {
                 position: absolute;
@@ -126,143 +131,122 @@
                 color: #9ca3af;
             }
             .search-box input {
-                padding: 9px 12px 9px 40px;
+                width: 100%;
+                box-sizing: border-box;
+                padding: 0.625rem 0.75rem 0.625rem 2.5rem;
                 border: 1px solid #d1d5db;
-                border-radius: 8px;
-                width: 280px;
-            }
-            .actions-group {
-                display: flex;
-                gap: 12px;
+                border-radius: 0.5rem;
             }
             .btn {
-                padding: 9px 16px;
-                border-radius: 8px;
+                padding: 0.625rem 1rem;
+                border-radius: 0.5rem;
                 font-weight: 600;
                 display: inline-flex;
                 align-items: center;
-                gap: 8px;
+                gap: 0.5rem;
                 cursor: pointer;
                 text-decoration: none;
                 border: 1px solid #d1d5db;
                 background-color: #fff;
+            }
+            .btn-secondary {
+                color: #374151;
             }
             .btn-primary {
                 background-color: #3b82f6;
                 color: #fff;
                 border-color: #3b82f6;
             }
-
-            .list-panel {
-                background-color: #fff;
-                border-radius: 12px;
-                border: 1px solid #e5e7eb;
+            .toolbar-actions {
+                margin-left: auto;
             }
 
-            .list-header {
-                display: flex;
-                padding: 16px 24px;
-                border-bottom: 1px solid #d1d5db;
-                ; /* SỬA Ở ĐÂY: Dùng đường kẻ đậm hơn */
-                font-size: 12px;
-                color: #6b7280;
-                text-transform: uppercase;
-                letter-spacing: 0.05em;
-                font-weight: 600;
-                align-items: center;
-                gap: 8px;
+            /* === GIAO DIỆN LƯỚI THẺ FEEDBACK === */
+            .feedback-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+                gap: 1.5rem;
             }
-            .list-header .col {
-                font-size: 12px;
-                color: #6b7280;
-                text-transform: uppercase;
-                letter-spacing: 0.05em;
-                font-weight: 600;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            }
-
-            .feedback-list-container {
-                display: flex;
-                flex-direction: column;
-            }
-
             .feedback-card {
-                padding: 0 24px;
-                border-bottom: 1px solid #e5e7eb; /* Đường kẻ đậm hơn với màu xám nhạt */
-                transition: background-color 0.2s ease-in-out;
-            }
-            .feedback-card:last-child {
-                border-bottom: none;
+                border-radius: 0.75rem;
+                overflow: hidden;
+                transition: box-shadow 0.2s ease;
+                border: 1px solid #e5e7eb;
+                background-color: #fff;
             }
             .feedback-card:hover {
-                background-color: #f9fafb;
+                box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
             }
 
-            .main-row {
-                display: flex;
-                padding: 16px 0;
-                align-items: center;
+            /* THAY ĐỔI: CSS MÀU SẮC CHO HEADER CỦA THẺ */
+            .card-good .card-header {
+                background-color: #22c55e;
+                color: #ffffff;
             }
-            .comment-row {
-                padding: 0 0 16px 0;
+            .card-good .card-header .status-pill {
+                background-color: #ffffff;
+                color: #16a34a;
+            }
+            .card-normal .card-header {
+                background-color: #eab308;
+                color: #ffffff;
+            }
+            .card-normal .card-header .status-pill {
+                background-color: #ffffff;
+                color: #a16207;
+            }
+            .card-bad .card-header {
+                background-color: #ef4444;
+                color: #ffffff;
+            }
+            .card-bad .card-header .status-pill {
+                background-color: #ffffff;
+                color: #b91c1c;
+            }
+            .feedback-card .card-header .customer-link {
+                color: inherit;
+            }
+
+            .card-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 1rem 1.25rem;
+                border-bottom: 1px solid #e5e7eb;
+            }
+            .customer-link {
+                text-decoration: none;
+                color: #111827;
+                font-weight: 600;
+            }
+            .status-pill {
+                padding: 0.25rem 0.75rem;
+                border-radius: 9999px;
+                font-size: 0.75rem;
+                font-weight: 600;
+            }
+            /* Các style status cũ không cần nữa vì đã có style mới ở trên */
+            .card-body {
+                padding: 1.25rem;
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .card-info-row {
                 display: flex;
                 align-items: flex-start;
-                gap: 12px;
+                gap: 0.75rem;
                 color: #4b5563;
-                font-size: 14px;
             }
-            .comment-row p {
-                margin: 0;
-                font-style: italic;
+            .card-info-row i {
+                width: 16px;
+                height: 16px;
+                margin-top: 2px;
+                flex-shrink: 0;
             }
-
-            .col {
-                padding: 0 8px;
-            }
-            .col-customer {
-                flex: 0 0 30%;
-            }
-            .col-service  {
-                flex: 0 0 25%;
-            }
-            .col-rating   {
-                flex: 0 0 20%;
-            }
-            .col-status   {
-                flex: 0 0 15%;
-            }
-            .col-date     {
-                flex: 0 0 10%;
-                text-align: right;
-            }
-
-            .customer-cell {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-            }
-            .customer-avatar {
-                width: 36px;
-                height: 36px;
-                border-radius: 50%;
-                background-color: #e0e7ff;
-                color: #4338ca;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: 600;
-                text-transform: uppercase;
-            }
-            .customer-name {
-                font-weight: 600;
-                color: #111827;
-            }
-
             .rating-cell .feather-star {
-                width: 18px;
-                height: 18px;
+                width: 16px;
+                height: 16px;
             }
             .rating-cell .star-filled {
                 color: #facc15;
@@ -271,120 +255,111 @@
             .rating-cell .star-empty {
                 color: #d1d5db;
             }
-
-            .status-tag {
-                padding: 4px 10px;
-                border-radius: 16px;
-                font-weight: 600;
-                font-size: 12px;
-                display: inline-block;
+            .card-footer {
+                display: flex;
+                justify-content: flex-end;
+                align-items: center;
+                padding: 1rem 1.25rem;
+                border-top: 1px solid #e5e7eb;
+                background-color: #f9fafb;
             }
-            .status-good {
-                background-color: #dcfce7;
-                color: #16a34a;
+            .action-buttons {
+                display: flex;
+                gap: 1rem;
             }
-            .status-normal {
-                background-color: #fef9c3;
-                color: #a16207;
+            .action-buttons a {
+                color: #6b7280;
             }
-            .status-bad {
-                background-color: #fee2e2;
-                color: #b91c1c;
+            .action-buttons a:hover {
+                color: #3b82f6;
+            }
+            .action-buttons a.delete-action:hover {
+                color: #ef4444;
             }
         </style>
     </head>
     <body>
         <div class="app-container">
             <jsp:include page="/mainMenu.jsp"/>
-            <div class="content-wrapper">
-
-                <section class="main-content-body">
-                    <div class="page-header">
-                        <h1>Phản hồi Khách hàng</h1>
+            <main class="main-content">
+                <header class="page-header">
+                    <div class="title-section">
+                        <div class="title">Phản hồi Khách hàng</div>
+                        <div class="breadcrumb">Phản hồi / <span>Danh sách Phản hồi</span></div>
                     </div>
-
-                    <%-- SỬA 2: Hiển thị các số liệu thống kê động --%>
+                </header>
+                <div class="page-content">
                     <div class="stats-grid">
                         <div class="stat-card"><div class="icon-wrapper total"><i data-feather="message-square"></i></div><div class="info"><div class="title">Tổng phản hồi</div><div class="value"><fmt:formatNumber value="${totalCount}" type="number"/></div></div></div>
                         <div class="stat-card"><div class="icon-wrapper good"><i data-feather="trending-up"></i></div><div class="info"><div class="title">Rất hài lòng</div><div class="value"><fmt:formatNumber value="${goodCount}" type="number"/></div></div></div>
                         <div class="stat-card"><div class="icon-wrapper normal"><i data-feather="minus"></i></div><div class="info"><div class="title">Bình thường</div><div class="value"><fmt:formatNumber value="${normalCount}" type="number"/></div></div></div>
                         <div class="stat-card"><div class="icon-wrapper bad"><i data-feather="trending-down"></i></div><div class="info"><div class="title">Chưa hài lòng</div><div class="value"><fmt:formatNumber value="${badCount}" type="number"/></div></div></div>
                     </div>
-
-                    <div class="toolbar-container">
-                        <div class="search-box"><i data-feather="search" style="width:18px;"></i><input type="text" placeholder="Tìm kiếm theo khách hàng, dịch vụ..."></div>
-                        <div class="actions-group">
-                            <button class="btn"><i data-feather="filter" style="width:16px;"></i> Lọc</button>
-                        </div>
-                    </div>
-
-                    <div class="list-panel">
-                        <div class="list-header">
-                            <div class="col col-customer"><i data-feather="users"></i> KHÁCH HÀNG</div>
-                            <div class="col col-service"><i data-feather="tool"></i> DỊCH VỤ</div>
-                            <div class="col col-rating"><i data-feather="star"></i> ĐÁNH GIÁ</div>
-                            <div class="col col-status"><i data-feather="activity"></i> TRẠNG THÁI</div>
-                            <div class="col col-date"><i data-feather="calendar"></i> NGÀY</div>
-                        </div>
-                        <div class="feedback-list-container">
-
-                            <%-- SỬA 3: Dùng vòng lặp để hiển thị danh sách --%>
+                    <div class="content-card">
+                        <form class="table-toolbar" action="${pageContext.request.contextPath}/listFeedback" method="get">
+                            <div class="search-box">
+                                <i data-feather="search" class="feather-search"></i>
+                                <input type="text" name="query" placeholder="Tìm kiếm theo khách hàng, mã yêu cầu...">
+                            </div>
+                            <button type="submit" class="btn btn-secondary"><i data-feather="search"></i>Tìm kiếm</button>
+                            <div class="toolbar-actions"></div>
+                        </form>
+                        <div class="feedback-grid">
                             <c:if test="${empty feedbackList}">
-                                <p style="text-align: center; padding: 40px; color: #6b7280;">Không có phản hồi nào để hiển thị.</p>
+                                <p style="grid-column: 1 / -1; text-align: center;">Không có phản hồi nào để hiển thị.</p>
                             </c:if>
-
                             <c:forEach var="fb" items="${feedbackList}">
-                                <div class="feedback-card">
-                                    <div class="main-row">
-                                        <div class="col col-customer">
-                                            <div class="customer-cell">
-                                                <%-- Bọc thẻ a quanh avatar và tên --%>
-                                                <a href="${pageContext.request.contextPath}/viewFeedback?id=${fb.id}" style="text-decoration: none; display: flex; align-items: center; gap: 12px;">
-                                                    <div class="customer-avatar">${fn:substring(fb.enterpriseName, 0, 1)}</div>
-                                                    <div class="customer-name">${fb.enterpriseName}</div>
-                                                </a>
-                                            </div>
+                                <div class="feedback-card 
+                                     <c:choose>
+                                         <c:when test='${fb.rating >= 4}'>card-good</c:when>
+                                         <c:when test='${fb.rating == 3}'>card-normal</c:when>
+                                         <c:otherwise>card-bad</c:otherwise>
+                                     </c:choose>
+                                     ">
+                                    <div class="card-header">
+                                        <a href="${pageContext.request.contextPath}/viewFeedback?id=${fb.id}" class="customer-link">${fb.enterpriseName}</a>
+                                        <c:choose>
+                                            <c:when test="${fb.rating >= 4}"><span class="status-pill">Rất hài lòng</span></c:when>
+                                            <c:when test="${fb.rating == 3}"><span class="status-pill">Bình thường</span></c:when>
+                                            <c:otherwise><span class="status-pill">Chưa hài lòng</span></c:otherwise>
+                                        </c:choose>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="card-info-row">
+                                            <i data-feather="tag"></i>
+                                            <span>${fb.requestCode}</span>
                                         </div>
-                                        <div class="col col-service">${fb.serviceName}</div>
-                                        <div class="col col-rating rating-cell">
+                                        <div class="card-info-row rating-cell">
+                                            <i data-feather="star"></i>
                                             <c:forEach begin="1" end="5" var="i">
-                                                <c:choose>
-                                                    <c:when test="${i <= fb.rating}">
-                                                        <i data-feather="star" class="star-filled"></i>
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                        <i data-feather="star" class="star-empty"></i>
-                                                    </c:otherwise>
-                                                </c:choose>
+                                                <i data-feather="star" class="${i <= fb.rating ? 'star-filled' : 'star-empty'}"></i>
                                             </c:forEach>
                                         </div>
-                                        <div class="col col-status">
-                                            <c:choose>
-                                                <c:when test="${fb.rating >= 4}"><span class="status-tag status-good">Rất hài lòng</span></c:when>
-                                                <c:when test="${fb.rating == 3}"><span class="status-tag status-normal">Bình thường</span></c:when>
-                                                <c:otherwise><span class="status-tag status-bad">Chưa hài lòng</span></c:otherwise>
-                                            </c:choose>
-                                        </div>
-                                        <div class="col col-date">
-                                            <fmt:formatDate value="${fb.createdAt}" pattern="dd/MM/yyyy" />
+                                        <c:if test="${not empty fb.comment}">
+                                            <div class="card-info-row">
+                                                <i data-feather="message-circle"></i>
+                                                <span style="font-style: italic;">"${fb.comment}"</span>
+                                            </div>
+                                        </c:if>
+                                        <div class="card-info-row">
+                                            <i data-feather="calendar"></i>
+                                            <span><fmt:formatDate value="${fb.createdAt}" pattern="HH:mm dd/MM/yyyy" /></span>
                                         </div>
                                     </div>
-                                    <c:if test="${not empty fb.comment}">
-                                        <div class="comment-row">
-                                            <i data-feather="message-circle" style="width: 18px; flex-shrink: 0;"></i>
-                                            <p>"${fb.comment}"</p>
+                                    <div class="card-footer">
+                                        <div class="action-buttons">
+                                            <a href="${pageContext.request.contextPath}/viewFeedback?id=${fb.id}" title="Xem chi tiết"><i data-feather="eye"></i></a>
+                                            <a href="${pageContext.request.contextPath}/editFeedback?id=${fb.id}" title="Sửa"><i data-feather="edit-2"></i></a>
+                                            <a href="${pageContext.request.contextPath}/deleteFeedback?id=${fb.id}" title="Xóa" class="delete-action" onclick="return confirm('Bạn có chắc chắn muốn xóa phản hồi này không?')"><i data-feather="trash-2"></i></a>
                                         </div>
-                                    </c:if>
+                                    </div>
                                 </div>
                             </c:forEach>
-
                         </div>
                     </div>
-
-                </section>
-            </div>
+                </div>
+            </main>
         </div>
-
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 feather.replace({'stroke-width': 1.5});

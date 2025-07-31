@@ -1,58 +1,44 @@
 /*
- * CSS for listContract.jsp
- * Author: NGUYEN MINH (Optimized by Gemini)
+ * File: listContract.css
+ * Phiên bản hoàn thiện: Tối ưu hóa, sửa lỗi và chú thích đầy đủ.
+ * Author: NGUYEN MINH (Refactored by Gemini)
  */
 
-/* === BIẾN MÀU CHUNG === */
+/* === BIẾN MÀU VÀ FONT CHUNG === */
 :root {
-    --primary-color: #0d9488;
+    --primary-color: #0d9488; /* Màu xanh mòng két chủ đạo */
+    --primary-color-dark: #0f766e;
+    --danger-color: #dc2626;  /* Màu đỏ cho hành động nguy hiểm */
+    --danger-color-dark: #b91c1c;
+    --text-primary: #111827;
+    --text-secondary: #4b5563; /* Màu xám cho chữ phụ */
+    --border-color: #e5e7eb;  /* Màu viền nhạt */
+    --background-light: #f9fafb;     /* Màu nền sáng */
 }
 
-/* === HEADER CỦA TRANG === */
+/* === BỐ CỤC CHUNG VÀ HEADER === */
 .page-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 16px 24px;
     background-color: #ffffff;
-    border-bottom: 1px solid #e5e7eb;
-}
-.page-header .title-section {
-    display: flex;
-    align-items: baseline;
-    gap: 16px;
+    border-bottom: 1px solid var(--border-color);
 }
 .page-header .title-section .title {
     font-size: 22px;
     font-weight: 600;
-    color: #111827;
+    color: var(--text-primary);
     margin: 0;
 }
-.page-header .title-section .breadcrumb {
-    font-size: 14px;
-    color: #6b7280;
-}
-.page-header .title-section .breadcrumb span::before {
-    content: '/';
-    margin: 0 8px;
-    color: #d1d5db;
-}
-.header-actions .notification-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #6b7280;
-}
-
-/* === KHUNG NỘI DUNG CHÍNH === */
 .content-card {
     padding: 0;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     border-radius: 12px;
     background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
 }
 
-/* === THANH CÔNG CỤ (TÌM KIẾM, LỌC, THÊM MỚI) === */
+/* === THANH CÔNG CỤ (TOOLBAR) === */
 .table-toolbar {
     display: flex;
     flex-wrap: wrap;
@@ -60,6 +46,8 @@
     align-items: center;
     padding: 16px 24px;
     border-bottom: 1px solid #f3f4f6;
+    position: relative; /* Đảm bảo không bị che khuất */
+    z-index: 10;
 }
 .search-box {
     position: relative;
@@ -80,40 +68,24 @@
     height: 38px;
     width: 250px;
 }
-.filter-button {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    height: 38px;
-    padding: 0 16px;
-    background: white;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 14px;
-    color: #374151;
-    cursor: pointer;
-    font-weight: 500;
-}
 .toolbar-actions {
     margin-left: auto;
+    display: flex;
+    gap: 12px; /* Khoảng cách giữa các nút */
 }
 
-/* === KHUNG BỘ LỌC === */
+/* === BỘ LỌC (FILTER) === */
 .filter-container {
-    display: none; /* Mặc định ẩn */
+    display: none; /* Mặc định ẩn, JS sẽ bật/tắt */
     padding: 20px 24px;
-    background-color: #f9fafb;
+    background-color: var(--background-light);
     border-bottom: 1px solid #f3f4f6;
-    gap: 24px;
     justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
 }
 .filter-container.open {
-    display: flex; /* Hiện ra khi có class .open */
-}
-.filter-button.active {
-    background-color: #f0fdfa;
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    display: flex;
 }
 .filter-controls {
     display: flex;
@@ -150,11 +122,62 @@
     gap: 12px;
     align-items: flex-end;
 }
-.btn-apply-filter, .btn-reset-filter {
-    /* Tái sử dụng style từ .btn nếu có, hoặc định nghĩa riêng */
+
+/* === ĐỊNH NGHĨA KIỂU NÚT CHUNG (BUTTONS) === */
+.btn, .filter-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-weight: 500;
+    text-align: center;
+    cursor: pointer;
+    border: 1px solid transparent;
+    padding: 8px 16px;
+    font-size: 14px;
+    height: 38px;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+}
+.filter-button {
+    background-color: #ffffff;
+    border-color: #d1d5db;
+}
+.filter-button.active, .filter-button:hover {
+    background-color: #f0fdfa;
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+.btn-primary {
+    color: #fff;
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+.btn-primary:hover {
+    background-color: var(--primary-color-dark);
+    border-color: var(--primary-color-dark);
+}
+.btn-secondary {
+    color: #374151;
+    background-color: #ffffff;
+    border-color: #d1d5db;
+}
+.btn-secondary:hover {
+    background-color: #f9fafb;
+    border-color: #c7cbd1;
+}
+.btn-danger {
+    color: #fff;
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+}
+.btn-danger:hover {
+    background-color: var(--danger-color-dark);
+    border-color: var(--danger-color-dark);
 }
 
-/* === BẢNG DỮ LIỆU === */
+/* === BẢNG DỮ LIỆU (DATA TABLE) === */
 .data-table-container {
     width: 100%;
     overflow-x: auto;
@@ -165,13 +188,13 @@
     font-size: 14px;
 }
 .data-table thead th {
-    background-color: #f9fafb;
+    background-color: var(--background-light);
     padding: 12px 16px;
     text-align: left;
     font-weight: 600;
     color: #4b5563;
     font-size: 13px;
-    border-bottom: 2px solid #e5e7eb;
+    border-bottom: 2px solid var(--border-color);
 }
 .data-table tbody td {
     padding: 14px 16px;
@@ -195,7 +218,7 @@
     background: none;
     border: none;
     cursor: pointer;
-    color: #6b7280;
+    color: var(--text-secondary);
     padding: 6px;
     border-radius: 50%;
     display: flex;
@@ -211,17 +234,12 @@
     height: 16px;
 }
 
-/* === CSS CHO MODAL XÁC NHẬN (BỔ SUNG) === */
+/* === MODAL & TOAST NOTIFICATIONS === */
 .modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 0; left: 0; width: 100%; height: 100%;
     background-color: rgba(0, 0, 0, 0.6);
-    display: none; /* JS sẽ đổi thành 'flex' */
-    justify-content: center;
-    align-items: center;
+    display: none; justify-content: center; align-items: center;
     z-index: 1050;
 }
 .modal-content {
@@ -236,7 +254,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px 24px;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--border-color);
 }
 .modal-title {
     font-size: 18px;
@@ -251,64 +269,37 @@
 }
 .modal-footer {
     padding: 16px 24px;
-    background-color: #f9fafb;
+    background-color: var(--background-light);
     display: flex;
     justify-content: flex-end;
     gap: 12px;
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid var(--border-color);
 }
 
-/* ================================== */
-/* CSS CHO THÔNG BÁO DẠNG TOAST       */
-/* ================================== */
-
-/* Style cho hộp thông báo chính */
 .alert {
-    position: fixed; /* Nổi lên trên cùng và cố định khi cuộn trang */
-    top: 24px;
-    right: 24px; /* Sửa 'left' thành 'right' */
-    z-index: 2000; /* Đảm bảo nằm trên mọi thứ khác */
-
-    display: flex; /* Căn icon và chữ */
-    align-items: center;
-    gap: 12px;
-
-    min-width: 320px; /* Chiều rộng tối thiểu */
-    max-width: 400px; /* Chiều rộng tối đa */
-    padding: 16px;
-
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Đổ bóng cho đẹp */
-
-    font-size: 14px;
-    font-weight: 500;
-
+    position: fixed;
+    top: 24px; right: 24px; z-index: 2000;
+    display: flex; align-items: center; gap: 12px;
+    min-width: 320px; max-width: 400px;
+    padding: 16px; border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    font-size: 14px; font-weight: 500;
     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
 }
-
-/* Class để làm mờ và ẩn thông báo */
 .alert.fade-out {
     opacity: 0;
     transform: translateY(-20px);
 }
-
-/* Style cho icon bên trong thông báo */
 .alert .feather {
-    width: 20px;
-    height: 20px;
-    flex-shrink: 0; /* Đảm bảo icon không bị co lại */
+    width: 20px; height: 20px; flex-shrink: 0;
 }
-
-/* Style cho thông báo thành công (màu xanh) */
 .alert-success {
     color: #ffffff;
-    background-color: #0d9488; /* Màu xanh đậm của bạn */
+    background-color: var(--primary-color);
     border-left: 5px solid #047857;
 }
-
-/* Style cho thông báo lỗi (màu đỏ) */
 .alert-danger {
     color: #ffffff;
-    background-color: #dc2626; /* Màu đỏ */
+    background-color: #dc2626;
     border-left: 5px solid #b91c1c;
 }
