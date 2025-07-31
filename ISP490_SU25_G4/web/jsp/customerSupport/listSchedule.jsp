@@ -367,11 +367,6 @@
                 font-weight: bold;
             }
 
-            .event-details .event-type {
-                color: #666;
-                margin-left: 10px;
-            }
-
             .event-details .event-info {
                 display: flex;
                 align-items: center;
@@ -1001,7 +996,6 @@
                                 <span class="dot"></span>
                                 <span class="event-time-detail"></span>
                                 <span class="event-title"></span>
-                                <span class="event-type"></span>
                             </div>
                             <div class="event-info">
                                 <i class="bi bi-hash" aria-label="ID Icon"></i> ID: <span class="event-id"></span>
@@ -1209,19 +1203,25 @@
                     }
                     } else {
                     slot.appendChild(eventElement);
-                            eventElement.classList.remove('all-day');
-                            eventElement.style.gridColumn = '';
-                            eventElement.style.gridRow = '';
-                            eventElement.style.height = 'auto';
-                            eventElement.style.top = '0';
-                            const time = slot.getAttribute('data-start-time');
-                            const timeText = eventElement.querySelector('.event-time');
-                            if (timeText && time)
-                            timeText.textContent = time;
-                            const handle = eventElement.querySelector('.resize-handle');
-                            if (handle)
-                            handle.remove();
-                    }
+                    eventElement.classList.remove('all-day');
+
+                    /* START: Sửa lỗi lệch vị trí */
+                    eventElement.style.position = 'relative';
+                    eventElement.style.top = '0';
+                    eventElement.style.left = '0';
+                    eventElement.style.transform = 'none';
+                    eventElement.style.gridColumn = '';
+                    eventElement.style.gridRow = '';
+                    eventElement.style.height = 'auto';
+                    /* END: Sửa lỗi lệch vị trí */
+                    const time = slot.getAttribute('data-start-time');
+                    const timeText = eventElement.querySelector('.event-time');
+                    if (timeText && time)
+                        timeText.textContent = time;
+                    const handle = eventElement.querySelector('.resize-handle');
+                    if (handle)
+                        handle.remove();
+                }
 
                     // Cập nhật data backend sau khi drop
                     const scheduleId = eventElement.id.split('-')[1];
@@ -1389,7 +1389,6 @@
                             detailsPanel.querySelector('.event-technical-request-id').textContent = schedule.technicalRequestId || '0';
                             detailsPanel.querySelector('.event-time-detail').textContent = element.querySelector('.event-time')?.textContent || 'Cả ngày';
                             detailsPanel.querySelector('.event-title').textContent = schedule.title;
-                            detailsPanel.querySelector('.event-type').textContent = schedule.status ? `(${schedule.status})` : '';
                             detailsPanel.querySelector('.event-date').textContent = schedule.scheduledDate + (schedule.endDate ? ' - ' + schedule.endDate : '');
                             detailsPanel.querySelector('.event-time-range').textContent = schedule.startTime ? schedule.startTime + (schedule.endTime ? ' - ' + schedule.endTime : '') : 'Cả ngày';
                             detailsPanel.querySelector('.event-location').textContent = schedule.location || 'Không xác định';

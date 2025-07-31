@@ -1,0 +1,293 @@
+/*
+    Tác giả   : NGUYEN MINH
+    Tái cấu trúc & Tối ưu : Gemini
+    Ngày cập nhật: 08/07/2025
+*/
+
+/* --- 1. BIẾN TOÀN CỤC VÀ STYLE CƠ BẢN --- */
+:root {
+    --primary-color: #0d9488;
+    --primary-color-light: rgba(13, 148, 136, 0.1);
+}
+
+/* --- 2. CẤU TRÚC LAYOUT CHÍNH --- */
+.page-content {
+    padding: 24px;
+    background-color: #f9fafb;
+
+    /* --- TỐI ƯU CHO MÀN HÌNH RỘNG --- */
+    width: 100%;
+    max-width: 1440px;    /* Chiều rộng tối đa của nội dung */
+    margin-left: auto;    /* Tự động căn lề để đưa nội dung ra giữa */
+    margin-right: auto;
+}
+
+.detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.detail-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr; /* Tỷ lệ 2:1 cho cột chính và cột phụ */
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.main-column, .sidebar-column {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+
+/* --- 3. CÁC THÀNH PHẦN CHUNG (COMPONENTS) --- */
+
+/* Thẻ chung */
+.detail-card {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.card-title {
+    font-size: 18px;
+    font-weight: 600;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f3f4f6;
+    margin: 0;
+}
+
+.card-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Form controls */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.form-control, .form-control[readonly] {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: #ffffff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-color-light);
+}
+
+.form-control[readonly] {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    cursor: default;
+}
+
+textarea.form-control {
+    height: auto;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+/* Lưới hiển thị thông tin */
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 2 cột thông tin */
+    gap: 20px;
+}
+
+/* Lưới cho các ô ngày tháng */
+.date-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+/* Nút bấm */
+.add-item-btn {
+    background-color: #f9fafb;
+    border: 1px dashed #d1d5db;
+    color: #4b5563;
+    width: 100%;
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+    margin-top: 16px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+.add-item-btn:hover {
+    background-color: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    color: #4b5563;
+    transition: color 0.2s;
+}
+
+.back-link:hover {
+    color: var(--primary-color);
+}
+
+
+/* --- 4. BẢNG CHI TIẾT SẢN PHẨM/HỢP ĐỒNG --- */
+/* Gộp các style chung cho bảng */
+.item-list-table, .data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.item-list-table th, .item-list-table td,
+.data-table th, .data-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 14px;
+    vertical-align: middle;
+}
+
+.item-list-table thead th,
+.data-table thead th {
+    background-color: #f9fafb;
+    font-weight: 600;
+    color: #4b5563;
+    font-size: 13px;
+}
+
+.item-list-table tfoot td {
+    font-weight: 600;
+}
+.item-list-table tfoot tr:last-child td {
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+}
+.item-list-table tfoot .grand-total {
+    font-size: 16px;
+    color: var(--primary-color);
+}
+.item-list-table .delete-item-btn {
+    background: none; border: none; cursor: pointer; color: #9ca3af;
+    padding: 0; line-height: 0; transition: color 0.2s;
+}
+.item-list-table .delete-item-btn:hover { color: #ef4444; }
+
+
+/* --- 5. MODAL CHỌN SẢN PHẨM --- */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    width: 90%;
+    max-width: 700px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
+.modal-title {
+    font-size: 18px; font-weight: 600; color: #111827; margin: 0;
+}
+.modal-body {
+    display: flex;
+    flex-direction: column;
+    max-height: 70vh;
+}
+.modal-body .search-bar-container {
+    padding: 16px;
+    border-bottom: 1px solid #e0e0e0;
+}
+#productList {
+    overflow-y: auto;
+}
+.product-search-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f3f4f6;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.product-search-item:hover { background-color: #f9fafb; }
+.product-search-info .name { font-weight: 600; }
+.product-search-info .code { font-size: 12px; color: #6b7280; }
+.product-search-price { font-weight: 500; }
+.empty-list-message { text-align: center; padding: 40px; color: #6c757d; font-style: italic;}
+
+
+/* --- 6. CÁC PILL TRẠNG THÁI --- */
+.status-pill {
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-block;
+}
+.status-active, .status-completed { background-color: #dcfce7; color: #166534; }
+.status-pending, .status-processing, .status-expiring { background-color: #fef3c7; color: #92400e; }
+.status-expired, .status-cancelled { background-color: #fee2e2; color: #991b1b; }
+
+
+/* --- 7. RESPONSIVE DESIGN --- */
+@media (max-width: 1024px) {
+    .detail-layout {
+        grid-template-columns: 1fr; /* Chuyển thành 1 cột trên màn hình nhỏ hơn */
+    }
+}
+@media (max-width: 768px) {
+    .info-grid, .date-grid {
+        grid-template-columns: 1fr; /* Chuyển thành 1 cột trên mobile */
+    }
+    .page-content {
+        padding: 16px;
+    }
+}
