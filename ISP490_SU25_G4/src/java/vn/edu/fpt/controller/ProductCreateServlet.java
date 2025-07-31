@@ -72,7 +72,7 @@ public class ProductCreateServlet extends HttpServlet {
                 errors.add("Mã sản phẩm không được để trống!");
             }
 
-            if (origin == null || origin.trim().isEmpty()) {
+            if (origin == null || sma.trim().isEmpty()) {
                 errors.add("Xuất xứ không được để trống!");
             }
 

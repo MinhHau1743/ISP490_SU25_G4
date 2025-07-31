@@ -124,7 +124,7 @@
 
 
                             <div class="form-actions">
-                                <button type="button" class="btn-form"><i data-feather="x"></i><span>Hủy</span></button>
+                                <a href="ProductController" class="btn-form"><i data-feather="x"></i><span>Hủy</span></a>
                                 <button type="submit" class="btn-form primary"><i data-feather="save"></i><span>Lưu sản phẩm</span></button>
                             </div>
                         </form>
@@ -137,7 +137,6 @@
             feather.replace();
         </script>
         <script src="${pageContext.request.contextPath}/js/createProduct.js"></script>
-
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>
