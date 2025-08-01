@@ -60,7 +60,36 @@ public class MaintenanceScheduleDAO extends DBContext {
 
         return schedules;
     }
+    public boolean updateScheduleByDragDrop(int id, LocalDate scheduledDate, LocalDate endDate, LocalTime startTime, LocalTime endTime) {
+    // Sửa lại câu SQL
+    String sql = "UPDATE MaintenanceSchedules SET scheduled_date = ?, end_date = ?, start_time = ?, end_time = ?, updated_at = NOW() WHERE id = ?";
 
+    try (Connection conn = new DBContext().getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+
+        ps.setDate(1, Date.valueOf(scheduledDate));
+
+        if (endDate != null) ps.setDate(2, Date.valueOf(endDate));
+        else ps.setNull(2, java.sql.Types.DATE);
+
+        if (startTime != null) ps.setTime(3, Time.valueOf(startTime));
+        else ps.setNull(3, java.sql.Types.TIME);
+
+        // Thêm logic cho endTime
+        if (endTime != null) ps.setTime(4, Time.valueOf(endTime));
+        else ps.setNull(4, java.sql.Types.TIME);
+
+        // Tham số ID giờ là thứ 5
+        ps.setInt(5, id);
+
+        int affectedRows = ps.executeUpdate();
+        return affectedRows > 0;
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        return false;
+    }
+}
     public boolean deleteMaintenanceSchedule(int scheduleId) {
         String sql = "DELETE FROM MaintenanceSchedules WHERE id = ?";
 
