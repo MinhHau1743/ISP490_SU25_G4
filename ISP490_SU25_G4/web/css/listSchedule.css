@@ -62,6 +62,52 @@ html, body {
     color: #009688;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
+
+/* Date Navigation Styles */
+.date-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 4px;
+    margin-left: 16px;
+}
+.date-nav .date-range {
+    font-weight: 500;
+    padding: 0 12px;
+    font-size: 14px;
+    color: #333;
+    min-width: 120px;
+    text-align: center;
+}
+.date-nav .btn-nav {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background-color: transparent;
+    cursor: pointer;
+    color: #555;
+    transition: all 0.2s ease-in-out;
+}
+.date-nav .btn-nav:hover {
+    background-color: #f0f0f0;
+    color: #333;
+}
+.date-nav .btn-nav i {
+    width: 16px;
+    height: 16px;
+}
+
+/* Hide date navigation in list view */
+.date-nav.hidden {
+    display: none !important;
+}
+
 .week-nav {
     display: flex;
     align-items: center;

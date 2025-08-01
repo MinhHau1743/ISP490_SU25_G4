@@ -838,13 +838,16 @@
                                     <c:forEach var="label" items="${dayTimeLabels}" varStatus="status">
                                         <div class="time-label">${label}</div>
                                         <c:set var="startTime" value="${dayStartTimes[status.index]}"/>
-                                        <div class="${startTime == '00:00' ? 'time-slot all-day-slot' : 'time-slot'}" data-date="${isoDayDate}"
-                                             <c:if test="${startTime != '00:00'}">data-start-time="${startTime}"</c:if>
+                                        <div class="${startTime == '' ? 'time-slot all-day-slot' : 'time-slot'}" data-date="${isoDayDate}"
+                                             <c:if test="${startTime != ''}">data-start-time="${startTime}"</c:if>
                                                  ondragover="allowDrop(event)" ondrop="drop(event)">
                                              <c:forEach var="schedule" items="${schedules}">
-                                                 <c:if test="${schedule.scheduledDate.equals(today) && (startTime == '00:00' ? schedule.startTime == null : (schedule.startTime != null && schedule.startTime.toString() == startTime))}">
-                                                     <div class="event ${startTime == '00:00' ? 'all-day' : ''}" id="event-${schedule.id}" data-schedule-id="${schedule.id}" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" onclick="showDetails(this)" style="background-color: ${schedule.color};">
-                                                         <span class="event-time">${schedule.startTime != null ? schedule.startTime : 'Cả ngày'}</span><br>${schedule.title}
+                                                 <!-- All-day: startTime (DB) == null <=> slot có startTime == ""  -->
+                                                 <c:if test="${schedule.scheduledDate.equals(today) && (startTime == '' ? schedule.startTime == null : (schedule.startTime != null && schedule.startTime.toString() == startTime))}">
+                                                     <div class="event ${startTime == '' ? 'all-day' : ''}" id="event-${schedule.id}" data-schedule-id="${schedule.id}" draggable="true"
+                                                          ondragstart="drag(event)" onclick="showDetails(this)" style="background-color: ${schedule.color};">
+                                                         <span class="event-time">${schedule.startTime != null ? schedule.startTime : 'Cả ngày'}</span>
+                                                         <br>${schedule.title}
                                                      </div>
                                                  </c:if>
                                              </c:forEach>
@@ -867,33 +870,31 @@
                                     <div class="all-day-event-container" ondragover="allowDrop(event)" ondrop="drop(event)">
                                         <c:forEach var="schedule" items="${schedules}">
                                             <c:if test="${schedule.startTime == null}">
-                                                <c:set var="startIndex" value="-1" />
                                                 <c:forEach var="weekDate" items="${weekDates}" varStatus="ws">
                                                     <c:if test="${weekDate == schedule.scheduledDate}">
-                                                        <c:set var="startIndex" value="${ws.index}" />
+                                                        <c:set var="span" value="1"/>
+                                                        <c:if test="${schedule.endDate != null && schedule.endDate != ''}">
+                                                            <fmt:parseDate value="${schedule.scheduledDate}" pattern="yyyy-MM-dd" var="startD" type="date"/>
+                                                            <fmt:parseDate value="${schedule.endDate}" pattern="yyyy-MM-dd" var="endD" type="date"/>
+                                                            <c:set var="span" value="${((endD.time - startD.time) / 86400000) + 1}" />
+                                                        </c:if>
+                                                        <c:set var="colEnd" value="${ws.index + span}" />
+                                                        <c:if test="${colEnd > 7}">
+                                                            <c:set var="span" value="${7 - ws.index}" />
+                                                        </c:if>
+                                                        <div class="event all-day" id="event-${schedule.id}"
+                                                             style="grid-column: ${ws.index + 1} / span ${span}; background-color: ${schedule.color};"
+                                                             data-schedule-id="${schedule.id}" draggable="true"
+                                                             ondragstart="drag(event)" onclick="showDetails(this)">
+                                                            ${schedule.title}
+                                                            <div class="resize-handle"></div>
+                                                        </div>
                                                     </c:if>
                                                 </c:forEach>
-                                                <c:if test="${startIndex >= 0}">
-                                                    <fmt:parseDate value="${schedule.scheduledDate}" pattern="yyyy-MM-dd" var="startD" type="date"/>
-                                                    <c:set var="span" value="1" />
-                                                    <c:if test="${schedule.endDate != null && schedule.endDate != ''}">
-                                                        <fmt:parseDate value="${schedule.endDate}" pattern="yyyy-MM-dd" var="endD" type="date"/>
-                                                        <c:set var="diffMillis" value="${endD.time - startD.time}" />
-                                                        <c:set var="span" value="${(diffMillis / 86400000) + 1}" />
-                                                    </c:if>
-                                                    <c:set var="endIndex" value="${startIndex + span - 1}" />
-                                                    <c:if test="${endIndex > 6}">
-                                                        <c:set var="endIndex" value="6" />
-                                                        <c:set var="span" value="${endIndex - startIndex + 1}" />
-                                                    </c:if>
-                                                    <div class="event all-day" id="event-${schedule.id}" style="grid-column: ${startIndex + 1} / span ${span}; background-color: ${schedule.color};" data-schedule-id="${schedule.id}" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" onclick="showDetails(this)">
-                                                        ${schedule.title}
-                                                        <div class="resize-handle"></div>
-                                                    </div>
-                                                </c:if>
                                             </c:if>
                                         </c:forEach>
                                     </div>
+
 
                                     <!-- Time slots per hour -->
                                     <c:forEach var="hour" items="${hours}">
@@ -1203,25 +1204,24 @@
                     }
                     } else {
                     slot.appendChild(eventElement);
-                    eventElement.classList.remove('all-day');
-
-                    /* START: Sửa lỗi lệch vị trí */
-                    eventElement.style.position = 'relative';
-                    eventElement.style.top = '0';
-                    eventElement.style.left = '0';
-                    eventElement.style.transform = 'none';
-                    eventElement.style.gridColumn = '';
-                    eventElement.style.gridRow = '';
-                    eventElement.style.height = 'auto';
-                    /* END: Sửa lỗi lệch vị trí */
-                    const time = slot.getAttribute('data-start-time');
-                    const timeText = eventElement.querySelector('.event-time');
-                    if (timeText && time)
-                        timeText.textContent = time;
-                    const handle = eventElement.querySelector('.resize-handle');
-                    if (handle)
-                        handle.remove();
-                }
+                            eventElement.classList.remove('all-day');
+                            /* START: Sửa lỗi lệch vị trí */
+                            eventElement.style.position = 'relative';
+                            eventElement.style.top = '0';
+                            eventElement.style.left = '0';
+                            eventElement.style.transform = 'none';
+                            eventElement.style.gridColumn = '';
+                            eventElement.style.gridRow = '';
+                            eventElement.style.height = 'auto';
+                            /* END: Sửa lỗi lệch vị trí */
+                            const time = slot.getAttribute('data-start-time');
+                            const timeText = eventElement.querySelector('.event-time');
+                            if (timeText && time)
+                            timeText.textContent = time;
+                            const handle = eventElement.querySelector('.resize-handle');
+                            if (handle)
+                            handle.remove();
+                    }
 
                     // Cập nhật data backend sau khi drop
                     const scheduleId = eventElement.id.split('-')[1];
@@ -1571,7 +1571,7 @@
                     });
                             closeDeleteModal(); // Đóng modal ngay lập tức
                     });</script>
-        <script src="${pageContext.request.contextPath}/js/listSchedule.js"></script>
+                <script src="${pageContext.request.contextPath}/js/listSchedule.js"></script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>

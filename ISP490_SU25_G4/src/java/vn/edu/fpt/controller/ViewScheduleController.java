@@ -112,8 +112,10 @@ public class ViewScheduleController extends HttpServlet {
         // ========== 2. Tạo danh sách thời gian trong ngày ==========
         List<String> dayTimeLabels = new ArrayList<>();
         List<String> dayStartTimes = new ArrayList<>();
-        dayTimeLabels.add("Cả ngày");  // Giữ label hiển thị là "all-day"
-        dayStartTimes.add("00:00");    // Thay "all-day" bằng "00:00" để đồng bộ định dạng thời gian, tránh lỗi parse
+        dayTimeLabels.add("Cả ngày");  
+        dayStartTimes.add("");  
+        dayTimeLabels.add("12:00 am");  
+        dayStartTimes.add("00:00");  
         dayTimeLabels.add("");
         dayStartTimes.add("00:30");
 
@@ -202,11 +204,8 @@ public class ViewScheduleController extends HttpServlet {
             hours.add(String.format("%02d:00", h));
             hours.add(String.format("%02d:30", h));
         }
-
-        // ========== 6. Truyền dữ liệu ra JSP ==========
         // ========== 6. Truyền dữ liệu ra JSP ==========
         List<MaintenanceSchedule> schedules = dao.getAllMaintenanceSchedules();
-
 // Vì scheduledDate là LocalDate, bỏ toLocalDate()
         Map<LocalDate, List<MaintenanceSchedule>> groupedSchedules
                 = schedules.stream()
@@ -233,6 +232,9 @@ public class ViewScheduleController extends HttpServlet {
         request.setAttribute("isCurrentMonths", isCurrentMonths);
         request.setAttribute("monthDates", monthDates);
 
+        // Set viewMode attribute for JSP
+        request.setAttribute("viewMode", viewMode != null ? viewMode : "day-view");
+        
         // JSP view
         request.getRequestDispatcher("/jsp/customerSupport/listSchedule.jsp").forward(request, response);
     }
@@ -249,3 +251,5 @@ public class ViewScheduleController extends HttpServlet {
         processRequest(request, response);
     }
 }
+
+
