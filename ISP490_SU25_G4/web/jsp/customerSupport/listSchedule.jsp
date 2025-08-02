@@ -237,16 +237,7 @@
                 grid-auto-rows: minmax(60px, auto);
             }
 
-            /* Time labels */
-            .time-label {
-                text-align: right;
-                padding-right: 10px;
-                color: #666;
-                font-size: 12px;
-                height: 60px;
-                line-height: 60px;
-                border-bottom: 1px solid #eee;
-            }
+
 
             /* Events */
             .event {
@@ -478,10 +469,6 @@
                 border-right: 1px solid #eee;
             }
 
-            /* Remove redundant border for adjacent all-day slots */
-            .time-grid .all-day-slot + .all-day-slot {
-                border-left: none;
-            }
 
             /* Month grid */
             .month-grid {
@@ -787,6 +774,14 @@
                 color: #000; /* Giữ màu chữ hoặc đổi tùy ý */
                 cursor: pointer;
             }
+            /* --- CSS ĐỂ CHIA HÀNG "CẢ NGÀY" THÀNH 7 Ô --- */
+            .all-day-row-container {
+                grid-column: 2 / -1;
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                border-bottom: 1px solid #ddd;
+            }
+
 
         </style>
     </head>
@@ -865,61 +860,47 @@
                                 </div>
 
                                 <div class="time-grid">
-                                    <!-- ALL DAY LABEL VÀ EVENT CONTAINER -->
-                                    <div class="time-label">${hourLabels[0]}</div>
-                                    <div class="all-day-event-container" ondragover="allowDrop(event)" ondrop="drop(event)">
-                                        <c:forEach var="schedule" items="${schedules}">
-                                            <c:if test="${schedule.startTime == null}">
-                                                <!-- Kiểm tra từng cột tuần -->
-                                                <c:forEach var="weekDate" items="${weekDates}" varStatus="ws">
-                                                    <c:if test="${weekDate == schedule.scheduledDate}">
-                                                        <c:set var="span" value="1"/>
-                                                        <c:if test="${schedule.endDate != null && schedule.endDate != ''}">
-                                                            <fmt:parseDate value="${schedule.scheduledDate}" pattern="yyyy-MM-dd" var="startD" type="date"/>
-                                                            <fmt:parseDate value="${schedule.endDate}" pattern="yyyy-MM-dd" var="endD" type="date"/>
-                                                            <c:set var="span" value="${((endD.time - startD.time) / 86400000) + 1}" />
-                                                        </c:if>
-                                                        <c:set var="colEnd" value="${ws.index + span}" />
-                                                        <c:if test="${colEnd > 7}">
-                                                            <c:set var="span" value="${7 - ws.index}" />
-                                                        </c:if>
-                                                        <div class="event all-day" id="event-${schedule.id}"
-                                                             style="grid-column: ${ws.index + 1} / span ${span}; background-color: ${schedule.color};"
-                                                             data-schedule-id="${schedule.id}" draggable="true"
-                                                             ondragstart="drag(event)" onclick="showDetails(this)">
-                                                            <!-- Nên có <span class="event-time">Cả ngày</span> để đồng bộ JS! -->
-                                                            <span class="event-time">Cả ngày</span>
-                                                            <br>${schedule.title}
-                                                            <div class="resize-handle"></div>
-                                                        </div>
-                                                    </c:if>
-                                                </c:forEach>
-                                            </c:if>
-                                        </c:forEach>
-                                    </div>
+                                    <!-- Row ALL DAY: label + 7 day-cells (all-day-slot) -->
+                                    <div class="time-label">Cả ngày</div>
+                                    <c:forEach var="weekDate" items="${weekDates}" varStatus="ws">
+                                        <div class="all-day-slot"
+                                             data-date="${weekDate}"
+                                             ondragover="allowDrop(event)" ondrop="drop(event)">
+                                            <c:forEach var="schedule" items="${schedules}">
+                                                <c:if test="${schedule.startTime == null && schedule.scheduledDate.equals(weekDate)}">
+                                                    <div class="event all-day" id="event-${schedule.id}"
+                                                         style="background-color: ${schedule.color};"
+                                                         data-schedule-id="${schedule.id}" draggable="true"
+                                                         ondragstart="drag(event)" onclick="showDetails(this)">
+                                                        <span class="event-time">Cả ngày</span>
+                                                        <br>${schedule.title}
+                                                        <div class="resize-handle"></div>
+                                                    </div>
+                                                </c:if>
+                                            </c:forEach>
+                                        </div>
+                                    </c:forEach>
 
-                                    <!-- CÁC SLOT GIỜ (GIÁ TRỊ VÀ LABEL ĐÚNG CHỈ SỐ) -->
+                                    <!-- Các dòng slot giờ (label + 7 ô/ngày) -->
                                     <c:forEach var="hour" items="${hours}" varStatus="status">
                                         <div class="time-label">${hourLabels[status.index]}</div>
                                         <c:forEach var="day" items="${days}" varStatus="ds">
-                                            <div class="time-slot" 
-                                                 data-start-time="${hour}" 
-                                                 data-day="${day}" 
+                                            <div class="time-slot"
+                                                 data-start-time="${hour}"
                                                  data-date="${weekDates[ds.index]}"
                                                  ondragover="allowDrop(event)" ondrop="drop(event)">
                                                 <c:forEach var="schedule" items="${schedules}">
                                                     <c:if test="${schedule.scheduledDate.equals(weekDates[ds.index]) 
                                                                   && schedule.startTime != null 
                                                                   && schedule.startTime.toString() == hour}">
-                                                          <div class="event" 
-                                                               id="event-${schedule.id}" 
-                                                               data-schedule-id="${schedule.id}" 
-                                                               draggable="true" 
-                                                               ondragstart="drag(event)" 
-                                                               ondragover="allowDrop(event)" 
-                                                               onclick="showDetails(this)" 
+                                                          <div class="event"
+                                                               id="event-${schedule.id}"
+                                                               data-schedule-id="${schedule.id}"
+                                                               draggable="true"
+                                                               ondragstart="drag(event)"
+                                                               onclick="showDetails(this)"
                                                                style="background-color: ${schedule.color};">
-                                                              <span class="event-time">${hour}</span>
+                                                              <span class="event-time">${hour.substring(0,5)}</span>
                                                               <br>${schedule.title}
                                                           </div>
                                                     </c:if>
@@ -928,8 +909,6 @@
                                         </c:forEach>
                                     </c:forEach>
                                 </div>
-
-
                             </div>
 
                             <div id="month-view" class="calendar-view <c:if test="${viewMode == 'month-view'}">active</c:if>">
