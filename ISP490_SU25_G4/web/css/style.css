@@ -26,7 +26,7 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
 
 html, body {
     height: 100%;
-    overflow: hidden;
+    overflow: auto;
     font-family: 'Inter', sans-serif;
     background-color: var(--background-color);
 }

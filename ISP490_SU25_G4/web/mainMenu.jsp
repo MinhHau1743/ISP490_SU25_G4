@@ -70,9 +70,9 @@
             </li>
 
             <li class="main-menu-item">
-                <a href="${pageContext.request.contextPath}/list-plan" class="main-menu-link">
+                <a href="${pageContext.request.contextPath}/list-campaign" class="main-menu-link">
                     <i data-feather="clipboard"></i>
-                    <span>Kế hoạch</span>
+                    <span>Chiến dịch</span>
                 </a>
             </li>
 
