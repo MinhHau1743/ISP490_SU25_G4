@@ -77,18 +77,15 @@ public class EnterpriseDAO extends DBContext {
         }
     }
 
-    public List<Enterprise> getAllActiveEnterprises(String searchQuery) throws Exception {
+    public List<Enterprise> getAllActiveEnterprises(String searchQuery, String customerTypeId, String employeeId, String provinceId, String districtId, String wardId) throws Exception {
         Map<Integer, Enterprise> enterpriseMap = new HashMap<>();
-        boolean isSearching = (searchQuery != null && !searchQuery.trim().isEmpty());
+        List<Object> params = new ArrayList<>();
 
-        // Base query to fetch all enterprise details
         StringBuilder sql = new StringBuilder(
-                "SELECT "
-                + "    e.id AS enterprise_id, e.name AS enterprise_name, e.enterprise_code, e.avatar_url AS enterprise_avatar, e.fax, "
-                + "    CONCAT_WS(', ', a.street_address, w.name, d.name, p.name) AS full_address, "
-                + "    ct.name AS customer_type_name, "
-                + "    u.id AS user_id, u.first_name, u.last_name, u.middle_name, u.avatar_url AS user_avatar, "
-                + "    (SELECT ec.phone_number FROM EnterpriseContacts ec WHERE ec.enterprise_id = e.id AND ec.is_primary_contact = 1 LIMIT 1) AS primary_phone "
+                "SELECT DISTINCT e.id AS enterprise_id, e.name AS enterprise_name, e.enterprise_code, e.avatar_url AS enterprise_avatar, e.fax, "
+                + "CONCAT_WS(', ', a.street_address, w.name, d.name, p.name) AS full_address, "
+                + "ct.name AS customer_type_name, "
+                + "u.id AS user_id, u.first_name, u.last_name, u.middle_name, u.avatar_url AS user_avatar "
                 + "FROM Enterprises e "
                 + "LEFT JOIN CustomerTypes ct ON e.customer_type_id = ct.id "
                 + "LEFT JOIN Addresses a ON e.address_id = a.id "
@@ -100,46 +97,50 @@ public class EnterpriseDAO extends DBContext {
                 + "WHERE e.is_deleted = 0 "
         );
 
-        if (isSearching) {
-            // 1. Tạo một subquery để tìm ID của các doanh nghiệp phù hợp với bất kỳ tiêu chí nào.
-            //    DISTINCT để đảm bảo mỗi ID chỉ xuất hiện một lần.
-            String subQuery = "SELECT DISTINCT e_sub.id FROM Enterprises e_sub "
-                    + "LEFT JOIN Addresses a_sub ON e_sub.address_id = a_sub.id "
-                    + "LEFT JOIN Wards w_sub ON a_sub.ward_id = w_sub.id "
-                    + "LEFT JOIN Districts d_sub ON a_sub.district_id = d_sub.id "
-                    + "LEFT JOIN Provinces p_sub ON a_sub.province_id = p_sub.id "
-                    + "LEFT JOIN EnterpriseAssignments ea_sub ON e_sub.id = ea_sub.enterprise_id "
-                    + "LEFT JOIN Users u_sub ON ea_sub.user_id = u_sub.id "
-                    + "WHERE e_sub.is_deleted = 0 AND ("
-                    + "  e_sub.name LIKE ? "
-                    + "  OR e_sub.fax LIKE ? "
-                    + "  OR CONCAT_WS(', ', a_sub.street_address, w_sub.name, d_sub.name, p_sub.name) LIKE ? "
-                    + "  OR CONCAT_WS(' ', u_sub.last_name, u_sub.middle_name, u_sub.first_name) LIKE ? "
-                    + // <-- Tìm theo tên nhân viên
-                    ")";
+        if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+            sql.append("AND (e.name LIKE ? OR e.fax LIKE ? OR CONCAT_WS(' ', u.last_name, u.middle_name, u.first_name) LIKE ?) ");
+            String searchPattern = "%" + searchQuery + "%";
+            params.add(searchPattern);
+            params.add(searchPattern);
+            params.add(searchPattern);
+        }
 
-            // 2. Nối subquery vào câu truy vấn chính
-            sql.append(" AND e.id IN (").append(subQuery).append(") ");
+        if (customerTypeId != null && !customerTypeId.isEmpty()) {
+            sql.append("AND e.customer_type_id = ? ");
+            params.add(Integer.parseInt(customerTypeId));
+        }
+
+        if (employeeId != null && !employeeId.isEmpty()) {
+            sql.append("AND ea.user_id = ? ");
+            params.add(Integer.parseInt(employeeId));
+        }
+
+        if (provinceId != null && !provinceId.isEmpty()) {
+            sql.append("AND a.province_id = ? ");
+            params.add(Integer.parseInt(provinceId));
+        }
+
+        if (districtId != null && !districtId.isEmpty()) {
+            sql.append("AND a.district_id = ? ");
+            params.add(Integer.parseInt(districtId));
+        }
+
+        if (wardId != null && !wardId.isEmpty()) {
+            sql.append("AND a.ward_id = ? ");
+            params.add(Integer.parseInt(wardId));
         }
 
         sql.append(" ORDER BY e.name, u.id");
 
         try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
-            // Đặt tham số cho subquery CHỈ KHI đang tìm kiếm
-            if (isSearching) {
-                String searchPattern = "%" + searchQuery + "%";
-                ps.setString(1, searchPattern); // Cho e_sub.name
-                ps.setString(2, searchPattern); // Cho e_sub.fax
-                ps.setString(3, searchPattern); // Cho địa chỉ
-                ps.setString(4, searchPattern); // Cho tên nhân viên
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
             }
 
-            // Execute the query and process the results in a separate try block
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     int enterpriseId = rs.getInt("enterprise_id");
-                    // Use computeIfAbsent for cleaner and more efficient code
                     Enterprise enterprise = enterpriseMap.computeIfAbsent(enterpriseId, id -> {
                         Enterprise newEnterprise = new Enterprise();
                         try {
@@ -149,16 +150,14 @@ public class EnterpriseDAO extends DBContext {
                             newEnterprise.setFax(rs.getString("fax"));
                             newEnterprise.setCustomerTypeName(rs.getString("customer_type_name"));
                             newEnterprise.setFullAddress(rs.getString("full_address"));
-                            newEnterprise.setPrimaryContactPhone(rs.getString("primary_phone"));
                             newEnterprise.setAvatarUrl(rs.getString("enterprise_avatar"));
                             newEnterprise.setAssignedUsers(new ArrayList<>());
                         } catch (SQLException e) {
-                            throw new RuntimeException(e); // Propagate SQL exception
+                            throw new RuntimeException(e);
                         }
                         return newEnterprise;
                     });
 
-                    // If an assigned user exists for this row, add them to the list
                     if (rs.getObject("user_id") != null) {
                         User assignee = new User();
                         assignee.setId(rs.getInt("user_id"));
@@ -167,7 +166,6 @@ public class EnterpriseDAO extends DBContext {
                         assignee.setMiddleName(rs.getString("middle_name"));
                         assignee.setAvatarUrl(rs.getString("user_avatar"));
 
-                        // Prevent adding duplicate users if an enterprise has multiple assignments
                         if (enterprise.getAssignedUsers().stream().noneMatch(u -> u.getId() == assignee.getId())) {
                             enterprise.getAssignedUsers().add(assignee);
                         }
