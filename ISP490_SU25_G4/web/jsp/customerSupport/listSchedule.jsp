@@ -18,7 +18,7 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
-        <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.slim.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -865,23 +865,32 @@
                                 </div>
 
                                 <div class="time-grid">
-                                    <!-- All-day row -->
+                                    <!-- Hàng "Mọi ngày" (All-day row) -->
                                     <div class="time-label">Mọi ngày</div>
                                     <div class="all-day-event-container" ondragover="allowDrop(event)" ondrop="drop(event)">
+                                        <!-- Lặp qua tất cả lịch; chỉ lấy event all-day (startTime == null) -->
                                         <c:forEach var="schedule" items="${schedules}">
                                             <c:if test="${schedule.startTime == null}">
+                                                <!-- Lặp các ngày trong tuần để xác định event bắt đầu ngày nào (week view 7 cột) -->
                                                 <c:forEach var="weekDate" items="${weekDates}" varStatus="ws">
+                                                    <!-- Nếu ngày bắt đầu event trùng ngày hiện tại của tuần -->
                                                     <c:if test="${weekDate == schedule.scheduledDate}">
+                                                        <!-- Mặc định event chiếm 1 ngày (nếu là event chỉ 1 ngày) -->
                                                         <c:set var="span" value="1"/>
+                                                        <!-- Nếu event có endDate, tính khoảng cách ngày để trải dài event ra nhiều ngày -->
                                                         <c:if test="${schedule.endDate != null && schedule.endDate != ''}">
                                                             <fmt:parseDate value="${schedule.scheduledDate}" pattern="yyyy-MM-dd" var="startD" type="date"/>
                                                             <fmt:parseDate value="${schedule.endDate}" pattern="yyyy-MM-dd" var="endD" type="date"/>
+                                                            <!-- Số ngày giữa start và end, chia cho mili giây/ngày và cộng 1 để bao luôn ngày kết thúc -->
                                                             <c:set var="span" value="${((endD.time - startD.time) / 86400000) + 1}" />
                                                         </c:if>
+                                                        <!-- Kiểm tra xem event có tràn quá cuối tuần không (chỉ được span tối đa 7 cột) -->
                                                         <c:set var="colEnd" value="${ws.index + span}" />
                                                         <c:if test="${colEnd > 7}">
                                                             <c:set var="span" value="${7 - ws.index}" />
                                                         </c:if>
+                                                        <!-- Hiển thị event all-day, trải dài trên grid theo số ngày (span); 
+                                                             id để drag, data-schedule để thao tác JS, màu theo event -->
                                                         <div class="event all-day" id="event-${schedule.id}"
                                                              style="grid-column: ${ws.index + 1} / span ${span}; background-color: ${schedule.color};"
                                                              data-schedule-id="${schedule.id}" draggable="true"
@@ -895,23 +904,42 @@
                                         </c:forEach>
                                     </div>
 
-
-                                    <!-- Time slots per hour -->
+                                    <!-- Các dòng theo từng slot giờ (Time slots per hour) -->
                                     <c:forEach var="hour" items="${hours}">
                                         <div class="time-label">${hour}</div>
+                                        <!-- Lặp qua 7 ngày trong tuần, varStatus ds dùng để lấy index ngày -->
                                         <c:forEach var="day" items="${days}" varStatus="ds">
-                                            <div class="time-slot" data-start-time="${hour}" data-day="${day}" data-date="${weekDates[ds.index]}" ondragover="allowDrop(event)" ondrop="drop(event)">
+                                            <!-- Mỗi cell là 1 slot giờ (hour) của 1 ngày -->
+                                            <div class="time-slot" 
+                                                 data-start-time="${hour}" 
+                                                 data-day="${day}" 
+                                                 data-date="${weekDates[ds.index]}"
+                                                 ondragover="allowDrop(event)" ondrop="drop(event)">
+                                                <!-- Lặp toàn bộ event -->
                                                 <c:forEach var="schedule" items="${schedules}">
-                                                    <c:if test="${schedule.scheduledDate.equals(weekDates[ds.index]) && schedule.startTime != null && schedule.startTime.toString() == hour}">
-                                                        <div class="event" id="event-${schedule.id}" data-schedule-id="${schedule.id}" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" onclick="showDetails(this)" style="background-color: ${schedule.color};">
-                                                            <span class="event-time">${hour}</span><br>${schedule.title}
-                                                        </div>
+                                                    <!-- Chỉ lấy event đúng ngày và đúng giờ (startTime != null) -->
+                                                    <c:if test="${schedule.scheduledDate.equals(weekDates[ds.index]) 
+                                                                  && schedule.startTime != null 
+                                                                  && schedule.startTime.toString() == hour}">
+                                                          <!-- Render event vào slot phù hợp, có drag & drop và click -->
+                                                          <div class="event" 
+                                                               id="event-${schedule.id}" 
+                                                               data-schedule-id="${schedule.id}" 
+                                                               draggable="true" 
+                                                               ondragstart="drag(event)" 
+                                                               ondragover="allowDrop(event)" 
+                                                               onclick="showDetails(this)" 
+                                                               style="background-color: ${schedule.color};">
+                                                              <span class="event-time">${hour}</span>
+                                                              <br>${schedule.title}
+                                                          </div>
                                                     </c:if>
                                                 </c:forEach>
                                             </div>
                                         </c:forEach>
                                     </c:forEach>
                                 </div>
+
                             </div>
 
                             <div id="month-view" class="calendar-view <c:if test="${viewMode == 'month-view'}">active</c:if>">
@@ -1056,9 +1084,61 @@
             var contextPath = window.location.pathname.split('/')[1] ? '/' + window.location.pathname.split('/')[1] : '';
 
             feather.replace();
+// Gọi AJAX tới backend khi sự kiện drop hoàn tất
+            function updateEvent(id, scheduledDate, endDate, startTime, endTime) {
+    const eventElement = document.getElementById('event-' + id);
+    if (eventElement) {
+        eventElement.style.opacity = '0.5';
+    }
+
+    const contextPath = "${pageContext.request.contextPath}";
+
+    $.ajax({
+        url: `${contextPath}/updateScheduleTime`,
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            id: id,
+            scheduledDate: scheduledDate,
+            endDate: endDate,
+            startTime: startTime,
+            endTime: endTime
+        }),
+        success: function (response) {
+            console.log('Update successful:', response.message);
+            if (eventElement) {
+                eventElement.style.opacity = '1';
+
+                // --- START: SỬA LỖI KHÔNG CẬP NHẬT GIAO DIỆN ---
+                // 1. Tìm đến phần tử hiển thị thời gian
+                const timeTextElement = eventElement.querySelector('.event-time');
+                if (timeTextElement) {
+                    // 2. Cập nhật lại text thời gian trên giao diện
+                    // Nếu startTime có giá trị, hiển thị nó. Nếu không, hiển thị "Cả ngày".
+                    timeTextElement.textContent = startTime ? startTime.substring(0, 5) : 'Cả ngày';
+                }
+                // --- END: SỬA LỖI KHÔNG CẬP NHẬT GIAO DIỆN ---
+
+                // Cập nhật lại thuộc tính data-schedule để showDetails luôn đúng
+                try {
+                    let scheduleData = JSON.parse(eventElement.getAttribute('data-schedule'));
+                    scheduleData.scheduledDate = scheduledDate;
+                    scheduleData.endDate = endDate || '';
+                    scheduleData.startTime = startTime || '';
+                    scheduleData.endTime = endTime || '';
+                    eventElement.setAttribute('data-schedule', JSON.stringify(scheduleData));
+                } catch(e) { console.error("Could not update data-schedule attribute:", e); }
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error('Error during updateEvent:', xhr.responseText);
+            alert('Không thể cập nhật lịch trình. Vui lòng thử lại.');
+            location.reload();
+        }
+    });
+}
 
             let isInteracting = false;
-
             let scrollSpeed = 0;
             let scrollContainer = null;
             let scrollInterval = null;
@@ -1110,49 +1190,7 @@
                 const [h, m] = timeStr.split(':').map(Number);
                 return h * 60 + m;
             }
-            function updateEvent(id, scheduledDate, endDate, startTime, endTime) {
-                const eventElement = document.getElementById('event-' + id);
-                if (eventElement) {
-                    eventElement.style.opacity = '0.5';
-                }
 
-                fetch('updateScheduleTime', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({id, scheduledDate, endDate, startTime, endTime}),
-                })
-                        .then(response => response.ok ? response.json() : Promise.reject('Server error'))
-                        .then(data => {
-                            if (data.status === 'success') {
-                                console.log('Update successful!');
-
-                                // --- START: ĐỒNG BỘ DỮ LIỆU VÀ GIAO DIỆN ---
-                                if (eventElement) {
-                                    // Cập nhật giao diện trên lưới
-                                    eventElement.style.opacity = '1';
-                                    const timeTextElement = eventElement.querySelector('.event-time');
-                                    if (timeTextElement) {
-                                        timeTextElement.textContent = startTime ? startTime.substring(0, 5) : 'Cả ngày';
-                                    }
-                                }
-
-                                // Cập nhật lại dữ liệu trong mảng schedules ở client
-                                const scheduleIndex = schedules.findIndex(s => s.id == id);
-                                if (scheduleIndex !== -1) {
-                                    schedules[scheduleIndex].scheduledDate = scheduledDate;
-                                    schedules[scheduleIndex].endDate = endDate || '';
-                                    schedules[scheduleIndex].startTime = startTime || '';
-                                    schedules[scheduleIndex].endTime = endTime || '';
-                                    console.log('Local schedule data updated:', schedules[scheduleIndex]);
-                                }
-                                // --- END: ĐỒNG BỘ DỮ LIỆU VÀ GIAO DIỆN ---
-
-                            } else {
-                                throw new Error(data.message || 'Update failed!');
-                            }
-                        })
-
-            }
             function formatTime(minutes) {
                 const h = Math.floor(minutes / 60) % 24;
                 const m = minutes % 60;
@@ -1189,73 +1227,84 @@
                         if (!slot)
                             return;
 
-                        // Sửa lỗi nhân bản: Luôn xóa element khỏi vị trí cũ trước khi thêm vào vị trí mới.
+                        // --- START: SỬA LỖI NHÂN BẢN ---
+                        // Trước khi thêm vào vị trí mới, hãy đảm bảo nó đã được xóa khỏi vị trí cũ.
+                        // Thao tác này giúp ngăn chặn lỗi nhân bản.
                         if (eventElement.parentNode) {
                             eventElement.parentNode.removeChild(eventElement);
                         }
+                        // --- END: SỬA LỖI NHÂN BẢN ---
+
+                        // Bây giờ, thêm nó vào ô mới một cách an toàn
                         slot.appendChild(eventElement);
 
-                        // Reset style cơ bản
-                        eventElement.classList.remove('all-day');
-                        eventElement.style.position = 'relative';
-                        eventElement.style.top = '0';
-                        eventElement.style.left = '0';
+                        // --- Phần logic còn lại của hàm drop ---
+                        // (Bao gồm việc lấy newScheduledDate, newStartTime và gọi updateEvent)
 
-                        // Khai báo các biến thời gian mới
                         const scheduleId = eventElement.id.split('-')[1];
                         let newScheduledDate, newEndDate = null, newStartTime = null, newEndTime = null;
                         const view = slot.closest('.calendar-view').id;
 
                         if (slot.classList.contains('all-day-event-container') && view === 'week-view') {
-                            // --- START: SỬA LỖI CHIA Ô TRONG "MỌI NGÀY" ---
-
-                            // 1. Xác định cột (ngày) được thả vào
                             const container = slot;
                             const rect = container.getBoundingClientRect();
-                            const numDays = 7;
-                            const dayWidth = rect.width / numDays;
+                            const dayWidth = rect.width / 7;
                             const x = ev.clientX - rect.left;
                             let startCol = Math.floor(x / dayWidth) + 1;
-                            if (startCol < 1)
-                                startCol = 1;
-                            if (startCol > 7)
-                                startCol = 7;
-
-                            // 2. Buộc sự kiện chỉ chiếm 1 cột (span 1)
+                            startCol = Math.max(1, Math.min(startCol, 7));
                             eventElement.style.gridColumn = `${startCol} / span 1`;
-                            eventElement.classList.add('all-day');
-
-                            // 3. Xóa tay cầm resize vì không còn kéo dài nhiều ngày
-                            const handle = eventElement.querySelector('.resize-handle');
-                            if (handle) {
-                                handle.remove();
-                            }
-
-                            // 4. Lấy dữ liệu ngày mới để cập nhật
                             newScheduledDate = weekDates[startCol - 1];
-                            newStartTime = null; // Vì là sự kiện cả ngày
-
-                            // --- END: SỬA LỖI CHIA Ô ---
-
-                        } else if (slot.classList.contains('time-slot')) {
-                            // Xử lý cho các ô theo giờ
+                            newStartTime = null;
+                        } else if (slot.classList.contains('time-slot') && !slot.classList.contains('all-day-slot')) {
                             newScheduledDate = slot.dataset.date;
                             newStartTime = slot.dataset.startTime;
                         } else {
-                            // Xử lý cho các trường hợp khác như month-view hoặc day-view all-day
                             newScheduledDate = slot.dataset.date;
                             newStartTime = null;
-                            eventElement.classList.add('all-day');
-                        }
-
-                        // Cập nhật lại text trên giao diện và gọi AJAX
-                        const timeText = eventElement.querySelector('.event-time');
-                        if (timeText) {
-                            timeText.textContent = newStartTime ? newStartTime.substring(0, 5) : 'Cả ngày';
                         }
 
                         if (scheduleId && newScheduledDate) {
                             updateEvent(scheduleId, newScheduledDate, newEndDate, newStartTime, newEndTime);
+                        }
+                    }
+                    // Các hàm phụ cho kéo thả
+                    function startAutoScroll() {
+                        scrollContainer = document.querySelector('.calendar-left');
+                        if (!scrollContainer || scrollInterval)
+                            return;
+                        scrollInterval = setInterval(() => {
+                            if (scrollSpeed !== 0) {
+                                scrollContainer.scrollTop += scrollSpeed;
+                            }
+                        }, 20);
+                    }
+
+                    function stopAutoScroll() {
+                        scrollSpeed = 0;
+                        if (scrollInterval) {
+                            clearInterval(scrollInterval);
+                            scrollInterval = null;
+                        }
+                        document.removeEventListener('mousemove', updateScrollDirection);
+                        document.removeEventListener('dragend', stopAutoScroll);
+                        document.removeEventListener('drop', stopAutoScroll);
+                    }
+
+                    function updateScrollDirection(ev) {
+                        if (!scrollContainer)
+                            return;
+                        const rect = scrollContainer.getBoundingClientRect();
+                        const edgeSize = 50;
+                        const maxSpeed = 20;
+                        const distTop = ev.clientY - rect.top;
+                        const distBottom = rect.bottom - ev.clientY;
+
+                        if (distTop < edgeSize) {
+                            scrollSpeed = -Math.round(maxSpeed * (1 - distTop / edgeSize));
+                        } else if (distBottom < edgeSize) {
+                            scrollSpeed = Math.round(maxSpeed * (1 - distBottom / edgeSize));
+                        } else {
+                            scrollSpeed = 0;
                         }
                     }
 
@@ -1512,9 +1561,7 @@
                             alert('Đã xảy ra lỗi khi xóa!');
                         });
                         closeDeleteModal(); // Đóng modal ngay lập tức
-                    });
-
-                </script>
+                    });</script>
                 <script src="${pageContext.request.contextPath}/js/listSchedule.js"></script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
