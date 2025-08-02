@@ -112,10 +112,10 @@ public class ViewScheduleController extends HttpServlet {
         // ========== 2. Tạo danh sách thời gian trong ngày ==========
         List<String> dayTimeLabels = new ArrayList<>();
         List<String> dayStartTimes = new ArrayList<>();
-        dayTimeLabels.add("Cả ngày");  
-        dayStartTimes.add("");  
-        dayTimeLabels.add("12:00 am");  
-        dayStartTimes.add("00:00");  
+        dayTimeLabels.add("Cả ngày");
+        dayStartTimes.add("");
+        dayTimeLabels.add("12:00 am");
+        dayStartTimes.add("00:00");
         dayTimeLabels.add("");
         dayStartTimes.add("00:30");
 
@@ -200,9 +200,14 @@ public class ViewScheduleController extends HttpServlet {
 
         // ========== 5. Timeline các giờ (Weekly/Month View) ==========
         List<String> hours = new ArrayList<>();
-        for (int h = 0; h <= 23; h++) { // Bắt đầu từ 0 để bao gồm 00:00
+        List<String> hourLabels = new ArrayList<>();
+        hours.add("");
+        hourLabels.add("Cả ngày"); // Slot all-day
+        for (int h = 0; h <= 23; h++) {
             hours.add(String.format("%02d:00", h));
+            hourLabels.add(String.format("%02d:00", h));
             hours.add(String.format("%02d:30", h));
+            hourLabels.add("");
         }
         // ========== 6. Truyền dữ liệu ra JSP ==========
         List<MaintenanceSchedule> schedules = dao.getAllMaintenanceSchedules();
@@ -212,6 +217,7 @@ public class ViewScheduleController extends HttpServlet {
                         .collect(Collectors.groupingBy(MaintenanceSchedule::getScheduledDate));
         request.setAttribute("groupedSchedules", groupedSchedules);
         request.setAttribute("schedules", schedules);
+        request.setAttribute("hourLabels", hourLabels);
         request.setAttribute("hours", hours);
         request.setAttribute("days", days);
         // Day View
@@ -234,7 +240,7 @@ public class ViewScheduleController extends HttpServlet {
 
         // Set viewMode attribute for JSP
         request.setAttribute("viewMode", viewMode != null ? viewMode : "day-view");
-        
+
         // JSP view
         request.getRequestDispatcher("/jsp/customerSupport/listSchedule.jsp").forward(request, response);
     }
@@ -251,5 +257,3 @@ public class ViewScheduleController extends HttpServlet {
         processRequest(request, response);
     }
 }
-
-

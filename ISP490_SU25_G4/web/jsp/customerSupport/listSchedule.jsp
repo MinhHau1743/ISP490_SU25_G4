@@ -865,37 +865,31 @@
                                 </div>
 
                                 <div class="time-grid">
-                                    <!-- Hàng "Mọi ngày" (All-day row) -->
-                                    <div class="time-label">Mọi ngày</div>
+                                    <!-- ALL DAY LABEL VÀ EVENT CONTAINER -->
+                                    <div class="time-label">${hourLabels[0]}</div>
                                     <div class="all-day-event-container" ondragover="allowDrop(event)" ondrop="drop(event)">
-                                        <!-- Lặp qua tất cả lịch; chỉ lấy event all-day (startTime == null) -->
                                         <c:forEach var="schedule" items="${schedules}">
                                             <c:if test="${schedule.startTime == null}">
-                                                <!-- Lặp các ngày trong tuần để xác định event bắt đầu ngày nào (week view 7 cột) -->
+                                                <!-- Kiểm tra từng cột tuần -->
                                                 <c:forEach var="weekDate" items="${weekDates}" varStatus="ws">
-                                                    <!-- Nếu ngày bắt đầu event trùng ngày hiện tại của tuần -->
                                                     <c:if test="${weekDate == schedule.scheduledDate}">
-                                                        <!-- Mặc định event chiếm 1 ngày (nếu là event chỉ 1 ngày) -->
                                                         <c:set var="span" value="1"/>
-                                                        <!-- Nếu event có endDate, tính khoảng cách ngày để trải dài event ra nhiều ngày -->
                                                         <c:if test="${schedule.endDate != null && schedule.endDate != ''}">
                                                             <fmt:parseDate value="${schedule.scheduledDate}" pattern="yyyy-MM-dd" var="startD" type="date"/>
                                                             <fmt:parseDate value="${schedule.endDate}" pattern="yyyy-MM-dd" var="endD" type="date"/>
-                                                            <!-- Số ngày giữa start và end, chia cho mili giây/ngày và cộng 1 để bao luôn ngày kết thúc -->
                                                             <c:set var="span" value="${((endD.time - startD.time) / 86400000) + 1}" />
                                                         </c:if>
-                                                        <!-- Kiểm tra xem event có tràn quá cuối tuần không (chỉ được span tối đa 7 cột) -->
                                                         <c:set var="colEnd" value="${ws.index + span}" />
                                                         <c:if test="${colEnd > 7}">
                                                             <c:set var="span" value="${7 - ws.index}" />
                                                         </c:if>
-                                                        <!-- Hiển thị event all-day, trải dài trên grid theo số ngày (span); 
-                                                             id để drag, data-schedule để thao tác JS, màu theo event -->
                                                         <div class="event all-day" id="event-${schedule.id}"
                                                              style="grid-column: ${ws.index + 1} / span ${span}; background-color: ${schedule.color};"
                                                              data-schedule-id="${schedule.id}" draggable="true"
                                                              ondragstart="drag(event)" onclick="showDetails(this)">
-                                                            ${schedule.title}
+                                                            <!-- Nên có <span class="event-time">Cả ngày</span> để đồng bộ JS! -->
+                                                            <span class="event-time">Cả ngày</span>
+                                                            <br>${schedule.title}
                                                             <div class="resize-handle"></div>
                                                         </div>
                                                     </c:if>
@@ -904,24 +898,19 @@
                                         </c:forEach>
                                     </div>
 
-                                    <!-- Các dòng theo từng slot giờ (Time slots per hour) -->
-                                    <c:forEach var="hour" items="${hours}">
-                                        <div class="time-label">${hour}</div>
-                                        <!-- Lặp qua 7 ngày trong tuần, varStatus ds dùng để lấy index ngày -->
+                                    <!-- CÁC SLOT GIỜ (GIÁ TRỊ VÀ LABEL ĐÚNG CHỈ SỐ) -->
+                                    <c:forEach var="hour" items="${hours}" varStatus="status">
+                                        <div class="time-label">${hourLabels[status.index]}</div>
                                         <c:forEach var="day" items="${days}" varStatus="ds">
-                                            <!-- Mỗi cell là 1 slot giờ (hour) của 1 ngày -->
                                             <div class="time-slot" 
                                                  data-start-time="${hour}" 
                                                  data-day="${day}" 
                                                  data-date="${weekDates[ds.index]}"
                                                  ondragover="allowDrop(event)" ondrop="drop(event)">
-                                                <!-- Lặp toàn bộ event -->
                                                 <c:forEach var="schedule" items="${schedules}">
-                                                    <!-- Chỉ lấy event đúng ngày và đúng giờ (startTime != null) -->
                                                     <c:if test="${schedule.scheduledDate.equals(weekDates[ds.index]) 
                                                                   && schedule.startTime != null 
                                                                   && schedule.startTime.toString() == hour}">
-                                                          <!-- Render event vào slot phù hợp, có drag & drop và click -->
                                                           <div class="event" 
                                                                id="event-${schedule.id}" 
                                                                data-schedule-id="${schedule.id}" 
@@ -939,6 +928,7 @@
                                         </c:forEach>
                                     </c:forEach>
                                 </div>
+
 
                             </div>
 
@@ -1045,15 +1035,15 @@
                                 <i class="bi bi-pencil-square" aria-label="Notes Icon"></i> <span class="event-notes"></span>
                             </div>
                             <div class="event-info">
-                                <i class="bi bi-activity" aria-label="Status Icon"></i> Status:  <span class="event-status"></span>
+                                <i class="bi bi-activity" aria-label="Status Icon"></i> Status:  <span class="event-status"></span>
                             </div>
                             <div class="event-info">
                                 <!-- Differentiated: Upload icon for Created At -->
-                                <i class="bi bi-upload" aria-label="Created At Icon"></i>Created at:  <span class="event-created-at"></span>
+                                <i class="bi bi-upload" aria-label="Created At Icon"></i>Created at:  <span class="event-created-at"></span>
                             </div>
                             <div class="event-info">
                                 <!-- Differentiated: Arrow-repeat icon for Updated At -->
-                                <i class="bi bi-arrow-repeat" aria-label="Updated At Icon"></i> Updated at:  <span class="event-updated-at"></span>
+                                <i class="bi bi-arrow-repeat" aria-label="Updated At Icon"></i> Updated at:  <span class="event-updated-at"></span>
                             </div>
                         </div>
 
@@ -1199,84 +1189,100 @@
                     function drag(ev) {
                         ev.dataTransfer.setData("text", ev.target.id);
                         isInteracting = true;
+
+                        // --- SỬA LỖI ---
+                        // 1. Lưu lại element đang được kéo
+                        draggedElement = ev.target;
+                        // --- HẾT SỬA LỖI ---
+
                         startAutoScroll();
                         document.addEventListener('mousemove', updateScrollDirection);
-                        document.addEventListener('dragend', stopAutoScroll);
+                        document.addEventListener('dragend', () => {
+                            // 2. Khi kết thúc kéo, xóa biến tạm đi
+                            draggedElement = null;
+                            stopAutoScroll();
+                        });
                         document.addEventListener('drop', stopAutoScroll);
                     }
 
                     function allowDrop(ev) {
                         ev.preventDefault();
                     }
-function drop(ev) {
-    ev.preventDefault();
-    const data = ev.dataTransfer.getData("text");
-    const eventElement = document.getElementById(data);
-    if (!eventElement) return;
 
-    let slot = ev.target.closest('.time-slot, .all-day-slot, .all-day-event-container, .month-day');
-    if (!slot) return;
+                    function drop(ev) {
+                        ev.preventDefault();
+                        const data = ev.dataTransfer.getData("text");
+                        let eventElement = document.getElementById(data);
+                        if (!eventElement)
+                            return;
 
-    // Sửa lỗi nhân bản: Luôn xóa element khỏi vị trí cũ trước khi thêm vào vị trí mới.
-    if (eventElement.parentNode) {
-        eventElement.parentNode.removeChild(eventElement);
-    }
-    slot.appendChild(eventElement);
-    
-    // Reset style cơ bản
-    eventElement.classList.remove('all-day');
-    eventElement.style.position = 'relative';
-    eventElement.style.top = '0';
-    eventElement.style.left = '0';
-    eventElement.style.gridColumn = '';
-    eventElement.style.gridRow = '';
+                        // Xóa hết các bản duplicates có cùng id trên toàn DOM, chỉ giữ 1 bản duy nhất để ngăn bug nhân bản!
+                        document.querySelectorAll('#' + CSS.escape(data)).forEach((el) => {
+                            if (el !== eventElement && el.parentNode) {
+                                el.parentNode.removeChild(el);
+                            }
+                        });
 
-    // Khai báo các biến thời gian mới
-    const scheduleId = eventElement.id.split('-')[1];
-    let newScheduledDate, newEndDate = null, newStartTime = null, newEndTime = null;
-    const view = slot.closest('.calendar-view').id;
+                        // Xác định slot nhận event
+                        let slot = ev.target.closest('.time-slot, .all-day-slot, .all-day-event-container, .month-day');
+                        if (!slot)
+                            return;
 
-    // --- START: SỬA LỖI LOGIC XÁC ĐỊNH NGÀY ---
-    if (slot.classList.contains('all-day-event-container') && view === 'week-view') {
-        // TRƯỜNG HỢP 1: Thả vào hàng "Mọi ngày" của chế độ xem Tuần
-        const rect = slot.getBoundingClientRect();
-        const dayWidth = rect.width / 7;
-        const x = ev.clientX - rect.left;
-        let startCol = Math.floor(x / dayWidth) + 1;
-        startCol = Math.max(1, Math.min(startCol, 7));
+                        // Loại khỏi vị trí cũ nếu vẫn còn trong DOM
+                        if (eventElement.parentNode) {
+                            eventElement.parentNode.removeChild(eventElement);
+                        }
+                        // Chèn vào vị trí mới
+                        slot.appendChild(eventElement);
 
-        eventElement.style.gridColumn = `${startCol} / span 1`;
-        eventElement.classList.add('all-day');
-        
-        const handle = eventElement.querySelector('.resize-handle');
-        if (handle) handle.remove();
+                        // Xác định view
+                        const view = slot.closest('.calendar-view').id;
+                        const scheduleId = eventElement.id.split('-')[1];
+                        let newScheduledDate = null, newEndDate = null, newStartTime = null, newEndTime = null;
 
-        // Lấy ngày chính xác từ mảng weekDates
-        newScheduledDate = weekDates[startCol - 1];
-        newStartTime = null;
+                        if (slot.classList.contains('all-day-event-container') && view === 'week-view') {
+                            const rect = slot.getBoundingClientRect();
+                            const dayWidth = rect.width / 7;
+                            const x = ev.clientX - rect.left;
+                            let startCol = Math.floor(x / dayWidth) + 1;
+                            startCol = Math.max(1, Math.min(startCol, 7));
+                            eventElement.style.gridColumn = `${startCol} / span 1`;
+                            newScheduledDate = weekDates[startCol - 1];
+                            newStartTime = null;
 
-    } else if (slot.classList.contains('time-slot') && !slot.classList.contains('all-day-slot')) {
-        // TRƯỜNG HỢP 2: Thả vào một ô có giờ cụ thể
-        newScheduledDate = slot.dataset.date;
-        newStartTime = slot.dataset.startTime;
-    } else {
-        // TRƯỜNG HỢP 3: Các trường hợp còn lại (ô "Mọi ngày" của xem Ngày, hoặc các ô trong xem Tháng)
-        newScheduledDate = slot.dataset.date;
-        newStartTime = null;
-        eventElement.classList.add('all-day');
-    }
-    // --- END: SỬA LỖI LOGIC XÁC ĐỊNH NGÀY ---
+                            // *** Thêm 2 dòng này để đồng bộ ngày lên event ***
+                            eventElement.setAttribute('data-date', newScheduledDate);
+                            eventElement.dataset.date = newScheduledDate;
+                        } else if (slot.classList.contains('time-slot') && !slot.classList.contains('all-day-slot')) {
+                            newScheduledDate = slot.dataset.date;
+                            newStartTime = slot.dataset.startTime;
+                        } else {
+                            newScheduledDate = slot.dataset.date;
+                            newStartTime = null;
+                        }
 
-    // Cập nhật lại text trên giao diện và gọi AJAX
-    const timeText = eventElement.querySelector('.event-time');
-    if (timeText) {
-        timeText.textContent = newStartTime ? newStartTime.substring(0, 5) : 'Cả ngày';
-    }
+                        // Cập nhật UI event-time
+                        const eventTimeElement = eventElement.querySelector('.event-time');
+                        if (eventTimeElement) {
+                            if (newStartTime) {
+                                eventTimeElement.textContent = newStartTime;
+                            } else if (
+                                    slot.classList.contains('all-day-slot') ||
+                                    slot.classList.contains('all-day-event-container') ||
+                                    typeof newStartTime === "undefined" || newStartTime === null || newStartTime === ""
+                                    ) {
+                                eventTimeElement.textContent = 'Cả ngày';
+                            } else {
+                                eventTimeElement.textContent = '';
+                            }
+                        }
 
-    if (scheduleId && newScheduledDate) {
-        updateEvent(scheduleId, newScheduledDate, newEndDate, newStartTime, newEndTime);
-    }
-}
+                        // Gửi AJAX
+                        if (scheduleId && newScheduledDate) {
+                            updateEvent(scheduleId, newScheduledDate, newEndDate, newStartTime, newEndTime);
+                        }
+                    }
+
 
                     // Các hàm phụ cho kéo thả
                     function startAutoScroll() {
@@ -1577,3 +1583,5 @@ function drop(ev) {
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>
+
+
