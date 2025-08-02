@@ -1053,6 +1053,29 @@
             var contextPath = window.location.pathname.split('/')[1] ? '/' + window.location.pathname.split('/')[1] : '';
 
             feather.replace();
+            const schedules = [
+            <c:forEach var="schedule" items="${schedules}" varStatus="status">
+            {
+            id: ${schedule.id},
+                    technicalRequestId: ${schedule.technicalRequestId},
+                    title: "${schedule.title}",
+                    scheduledDate: "${schedule.scheduledDate}",
+                    endDate: "${schedule.endDate != null ? schedule.endDate : ''}",
+                    startTime: "${schedule.startTime != null ? schedule.startTime : ''}",
+                    endTime: "${schedule.endTime != null ? schedule.endTime : ''}",
+                    location: "${schedule.location}",
+                    status: "${schedule.status}",
+                    notes: "${schedule.notes}",
+                    createdAt: "${schedule.createdAt}",
+                    updatedAt: "${schedule.updatedAt}"
+            }<c:if test="${!status.last}">,</c:if>
+            </c:forEach>
+            ];
+// ====================================================================
+
+            var contextPath = window.location.pathname.split('/')[1] ? '/' + window.location.pathname.split('/')[1] : '';
+
+            feather.replace();
 // Gọi AJAX tới backend khi sự kiện drop hoàn tất
             function updateEvent(scheduleId, newScheduledDate, newEndDate, newStartTime, newEndTime) {
                 // Sửa lỗi URL - thêm contextPath nếu cần
@@ -1195,30 +1218,28 @@
                         if (!eventElement)
                             return;
 
-                        // Xóa hết các bản duplicates có cùng id trên toàn DOM, chỉ giữ 1 bản duy nhất để ngăn bug nhân bản!
+                        // Ngăn bug nhân bản
                         document.querySelectorAll('#' + CSS.escape(data)).forEach((el) => {
                             if (el !== eventElement && el.parentNode) {
                                 el.parentNode.removeChild(el);
                             }
                         });
 
-                        // Xác định slot nhận event
                         let slot = ev.target.closest('.time-slot, .all-day-slot, .all-day-event-container, .month-day');
                         if (!slot)
                             return;
 
-                        // Loại khỏi vị trí cũ nếu vẫn còn trong DOM
+                        // Di chuyển element
                         if (eventElement.parentNode) {
                             eventElement.parentNode.removeChild(eventElement);
                         }
-                        // Chèn vào vị trí mới
                         slot.appendChild(eventElement);
 
-                        // Xác định view
-                        const view = slot.closest('.calendar-view').id;
                         const scheduleId = eventElement.id.split('-')[1];
                         let newScheduledDate = null, newEndDate = null, newStartTime = null, newEndTime = null;
 
+                        // Tính toán ngày giờ mới dựa trên vị trí thả
+                        const view = slot.closest('.calendar-view').id;
                         if (slot.classList.contains('all-day-event-container') && view === 'week-view') {
                             const rect = slot.getBoundingClientRect();
                             const dayWidth = rect.width / 7;
@@ -1228,9 +1249,6 @@
                             eventElement.style.gridColumn = `${startCol} / span 1`;
                             newScheduledDate = weekDates[startCol - 1];
                             newStartTime = null;
-
-                            // *** Thêm 2 dòng này để đồng bộ ngày lên event ***
-                            eventElement.setAttribute('data-date', newScheduledDate);
                             eventElement.dataset.date = newScheduledDate;
                         } else if (slot.classList.contains('time-slot') && !slot.classList.contains('all-day-slot')) {
                             newScheduledDate = slot.dataset.date;
@@ -1240,29 +1258,40 @@
                             newStartTime = null;
                         }
 
-                        // Cập nhật UI event-time
+                        // Cập nhật text trên event UI
                         const eventTimeElement = eventElement.querySelector('.event-time');
                         if (eventTimeElement) {
-                            if (newStartTime) {
-                                eventTimeElement.textContent = newStartTime;
-                            } else if (
-                                    slot.classList.contains('all-day-slot') ||
-                                    slot.classList.contains('all-day-event-container') ||
-                                    typeof newStartTime === "undefined" || newStartTime === null || newStartTime === ""
-                                    ) {
-                                eventTimeElement.textContent = 'Cả ngày';
-                            } else {
-                                eventTimeElement.textContent = '';
+                            eventTimeElement.textContent = newStartTime ? newStartTime : 'Cả ngày';
+                        }
+
+                        // Cập nhật dữ liệu trong mảng `schedules` toàn cục
+                        if (scheduleId) {
+                            const scheduleToUpdate = schedules.find(s => s.id == scheduleId);
+                            if (scheduleToUpdate) {
+                                scheduleToUpdate.scheduledDate = newScheduledDate;
+                                scheduleToUpdate.startTime = newStartTime || '';
+                                // Khi kéo thả, coi như event chỉ kéo dài 1 ngày/1 slot, reset endDate và endTime
+                                scheduleToUpdate.endDate = '';
+                                scheduleToUpdate.endTime = '';
+                                scheduleToUpdate.updatedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
                             }
                         }
 
-                        // Gửi AJAX
+                        // Cập nhật detail panel nếu đang hiển thị
+                        const detailsPanel = document.getElementById('event-details-panel');
+                        if (detailsPanel && detailsPanel.classList.contains('show') && detailsPanel.querySelector('.event-id').textContent == scheduleId) {
+                            const updatedSchedule = schedules.find(s => s.id == scheduleId);
+                            if (updatedSchedule)
+                                showDetails(eventElement, updatedSchedule); // Gọi lại showDetails với dữ liệu mới
+                        }
+
+                        // Gửi AJAX lên server
                         if (scheduleId && newScheduledDate) {
                             updateEvent(scheduleId, newScheduledDate, newEndDate, newStartTime, newEndTime);
                         }
+
+                        stopAutoScroll();
                     }
-
-
                     // Các hàm phụ cho kéo thả
                     function startAutoScroll() {
                         scrollContainer = document.querySelector('.calendar-left');
@@ -1346,43 +1375,38 @@
                         window.addEventListener('mouseup', stopResize);
                     }
 
-
-
                     function showDetails(element) {
                         if (isInteracting)
                             return;
                         const detailsPanel = document.getElementById('event-details-panel');
-                        if (!detailsPanel) {
-                            console.error('Event details panel not found');
+                        if (!detailsPanel)
                             return;
-                        }
 
-                        // Lấy scheduleId từ data-schedule-id hoặc id.split
-                        let scheduleId = element.dataset.scheduleId;
-                        if (!scheduleId && element.id) {
-                            scheduleId = element.id.split('-')[1];
-                        }
-
-                        if (!scheduleId) {
-                            console.error('Schedule ID not found for element', element);
+                        let scheduleId = element.dataset.scheduleId || element.id?.split('-')[1];
+                        if (!scheduleId)
                             return;
-                        }
 
-                        // Tìm schedule
-                        const schedules = [            <c:forEach var="schedule" items="${schedules}" varStatus="status">            {            id: ${schedule.id}, technicalRequestId: ${schedule.technicalRequestId}, title: "${schedule.title}", scheduledDate: "${schedule.scheduledDate}", endDate: "${schedule.endDate != null ? schedule.endDate : ''}", startTime: "${schedule.startTime != null ? schedule.startTime : ''}", endTime: "${schedule.endTime != null ? schedule.endTime : ''}", location: "${schedule.location}", status: "${schedule.status}", notes: "${schedule.notes}", createdAt: "${schedule.createdAt}", updatedAt: "${schedule.updatedAt}"            }<c:if test="${!status.last}">,</c:if>            </c:forEach>            ];
+                        // *** BỎ KHAI BÁO schedules Ở ĐÂY ***
+                        // Hàm này giờ sẽ đọc từ mảng schedules toàn cục đã được cập nhật
                         const schedule = schedules.find(s => s.id == scheduleId);
+
                         if (schedule) {
                             detailsPanel.querySelector('.event-id').textContent = schedule.id;
                             detailsPanel.querySelector('.event-technical-request-id').textContent = schedule.technicalRequestId || '0';
-                            detailsPanel.querySelector('.event-time-detail').textContent = element.querySelector('.event-time')?.textContent || 'Cả ngày';
                             detailsPanel.querySelector('.event-title').textContent = schedule.title;
+
+                            // --- CẢI TIẾN ĐỂ NHẤT QUÁN ---
+                            // Tất cả các trường đều đọc từ đối tượng 'schedule'
+                            detailsPanel.querySelector('.event-time-detail').textContent = schedule.startTime ? schedule.startTime : 'Cả ngày';
                             detailsPanel.querySelector('.event-date').textContent = schedule.scheduledDate + (schedule.endDate ? ' - ' + schedule.endDate : '');
                             detailsPanel.querySelector('.event-time-range').textContent = schedule.startTime ? schedule.startTime + (schedule.endTime ? ' - ' + schedule.endTime : '') : 'Cả ngày';
+
                             detailsPanel.querySelector('.event-location').textContent = schedule.location || 'Không xác định';
                             detailsPanel.querySelector('.event-notes').textContent = schedule.notes || 'Không có ghi chú';
                             detailsPanel.querySelector('.event-status').textContent = schedule.status || 'Không xác định';
                             detailsPanel.querySelector('.event-created-at').textContent = schedule.createdAt || 'N/A';
                             detailsPanel.querySelector('.event-updated-at').textContent = schedule.updatedAt || 'N/A';
+
                             const editBtn = detailsPanel.querySelector('a[title="Sửa"]');
                             editBtn.href = contextPath + '/updateSchedule?id=' + encodeURIComponent(schedule.id);
                             detailsPanel.classList.add('show');
@@ -1558,7 +1582,7 @@
                         });
                         closeDeleteModal(); // Đóng modal ngay lập tức
                     });</script>
-                <script src="${pageContext.request.contextPath}/js/listSchedule.js"></script>
+        <script src="${pageContext.request.contextPath}/js/listSchedule.js"></script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>
