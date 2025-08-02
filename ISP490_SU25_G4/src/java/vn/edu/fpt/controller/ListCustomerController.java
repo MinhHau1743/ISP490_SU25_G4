@@ -1,5 +1,4 @@
 // src/java/vn/edu/fpt/controller/ListCustomerController.java
-
 package vn.edu.fpt.controller;
 
 import jakarta.servlet.ServletException;
@@ -45,11 +44,19 @@ public class ListCustomerController extends HttpServlet {
             String districtId = request.getParameter("districtId");
             String wardId = request.getParameter("wardId");
 
+            boolean isFilteringOrSearching = (searchQuery != null && !searchQuery.trim().isEmpty())
+                    || (customerTypeId != null && !customerTypeId.isEmpty())
+                    || (employeeId != null && !employeeId.isEmpty())
+                    || (provinceId != null && !provinceId.isEmpty())
+                    || (districtId != null && !districtId.isEmpty())
+                    || (wardId != null && !wardId.isEmpty());
+
             EnterpriseDAO enterpriseDAO = new EnterpriseDAO();
             // Truyền tất cả tham số lọc vào DAO
             List<Enterprise> allEnterprises = enterpriseDAO.getAllActiveEnterprises(searchQuery, customerTypeId, employeeId, provinceId, districtId, wardId);
 
-            if (searchQuery != null && !searchQuery.trim().isEmpty() && allEnterprises.isEmpty()) {
+            // Chỉ đặt cờ "noResultsFound" khi người dùng đang lọc/tìm kiếm và danh sách trả về rỗng
+            if (isFilteringOrSearching && allEnterprises.isEmpty()) {
                 request.setAttribute("noResultsFound", true);
             }
 
@@ -72,7 +79,7 @@ public class ListCustomerController extends HttpServlet {
                     customerColumns.get("other").add(enterprise);
                 }
             }
-            
+
             // Lấy dữ liệu cho các dropdown bộ lọc
             AddressDAO addressDAO = new AddressDAO();
             CustomerTypeDAO customerTypeDAO = new CustomerTypeDAO();
@@ -90,7 +97,6 @@ public class ListCustomerController extends HttpServlet {
             request.setAttribute("selectedProvinceId", provinceId);
             request.setAttribute("selectedDistrictId", districtId);
             request.setAttribute("selectedWardId", wardId);
-
 
         } catch (Exception e) {
             e.printStackTrace();
