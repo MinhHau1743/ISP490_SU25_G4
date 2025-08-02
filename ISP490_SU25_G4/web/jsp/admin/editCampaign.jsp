@@ -79,19 +79,19 @@
             .detail-input,
             .detail-textarea,
             .detail-select {
-                width: 100%; /* Đã sửa: Chiếm 100% chiều rộng của parent, padding đã được tính bằng box-sizing */
+                width: 100%;
                 padding: 10px 15px;
                 background-color: var(--background-color);
                 border: 1px solid var(--border-color);
                 border-radius: 6px;
                 font-size: 1em;
                 color: var(--text-primary);
-                background-color: var(--white); /* Ensure background is white for inputs */
-                box-sizing: border-box; /* Include padding and border in width */
+                background-color: var(--white);
+                box-sizing: border-box;
             }
 
             .detail-input[type="date"] {
-                width: fit-content; /* Allow date input to shrink */
+                width: fit-content;
             }
             
             /* Style cho input file */
@@ -143,30 +143,48 @@
                 font-size: 0.95em;
                 gap: 6px;
                 font-weight: 600;
-                display: inline-flex; /* To align icon and text */
+                display: inline-flex;
                 align-items: center;
                 justify-content: center;
                 cursor: pointer;
-                text-decoration: none; /* For anchor tags */
+                text-decoration: none;
             }
 
+            /* ĐÃ SỬA: CSS cho nút Quay lại */
             .btn-back {
-                background-color: var(--text-secondary);
-                color: var(--white);
-                border: none;
-                margin-right: 10px;
+                padding: 0; /* Loại bỏ padding */
+                border: none; /* Loại bỏ border */
+                background-color: transparent; /* Loại bỏ nền */
+                
+                font-size: 1.5em; /* Tăng kích thước icon nếu muốn */
+                color: #6c757d; /* Màu icon xám */
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 30px; /* Đặt chiều rộng và cao để căn giữa tốt hơn */
+                height: 30px;
+                border-radius: 50%; /* Làm tròn để có hình tròn khi hover */
+                transition: color 0.2s, background-color 0.2s;
+                margin-right: 10px; /* Giữ khoảng cách với nút Save */
             }
             .btn-back:hover {
-                background-color: #5a6268;
+                color: #212529; /* Đậm hơn khi hover */
+                background-color: #e9ecef; /* Nền mờ khi hover */
+            }
+            /* Đảm bảo icon Feather vẫn được hiển thị đúng */
+            .btn-back i {
+                 width: 1em; /* Sử dụng em để kích thước theo font-size của parent */
+                 height: 1em;
             }
 
             .btn-save {
-                background-color: var(--primary-color);
+                background-color: var(--custom-green-teal);
                 color: var(--white);
                 border: none;
             }
             .btn-save:hover {
-                background-color: #0056b3;
+                background-color: #307e7e;
             }
 
             .error-message {
@@ -221,7 +239,7 @@
 
             /* CSS cho dropdown trạng thái trong edit form (giống listCampaign) */
             .detail-select {
-                padding: 5px 25px 5px 8px; /* Tăng padding-right để nhường chỗ cho mũi tên */
+                padding: 5px 25px 5px 8px;
                 border-radius: 6px;
                 border: 1px solid #ccc;
                 font-size: 0.85em;
@@ -236,7 +254,7 @@
                 background-size: 10px auto;
                 cursor: pointer;
                 min-width: 140px;
-                width: auto; /* Cho phép chiều rộng tự động điều chỉnh theo nội dung */
+                width: auto;
                 max-width: 100%;
                 box-sizing: border-box;
                 white-space: nowrap;
@@ -278,8 +296,8 @@
 
             /* Định nghĩa màu mới cho nút Save */
             :root {
-                --primary-color: #007bff; /* Màu xanh mặc định của btn-save */
-                --text-secondary: #6c757d; /* Màu mặc định của btn-back */
+                --primary-color: #007bff;
+                --text-secondary: #6c757d;
                 --danger-color: #dc3545;
                 --border-color: #e0e0e0;
                 --background-color: #f8f9fa;
@@ -287,16 +305,16 @@
                 --text-primary: #333;
 
                 /* THÊM MÀU XANH THEO YÊU CẦU */
-                --custom-green-teal: #3b9c9c; /* Một ví dụ màu xanh teal */
+                --custom-green-teal: #3b9c9c;
             }
 
             .btn-save {
-                background-color: var(--custom-green-teal); /* Sử dụng màu xanh teal */
+                background-color: var(--custom-green-teal);
                 color: var(--white);
                 border: none;
             }
             .btn-save:hover {
-                background-color: #307e7e; /* Màu hover tối hơn một chút */
+                background-color: #307e7e;
             }
 
             /* CSS for current attachment display */
@@ -334,7 +352,8 @@
                     <div class="detail-container">
                         <div class="detail-header">
                             <h2>Chỉnh sửa: <c:out value="${campaign.name}" /></h2>
-                            <a href="${pageContext.request.contextPath}/list-campaign" class="btn-action btn-back" title="Quay lại">
+                            <%-- ĐÃ SỬA: Loại bỏ lớp btn-action và title để tránh ghi đè CSS, chỉ dùng btn-back --%>
+                            <a href="${pageContext.request.contextPath}/list-campaign" class="btn-back">
                                 <i data-feather="arrow-left"></i> 
                             </a>
                         </div>
@@ -403,58 +422,59 @@
                                     <div class="detail-group">
                                             <label>Ngày tạo:</label>
                                             <div class="detail-value">
-                                    <fmt:formatDate value="${campaign.createdAt}" pattern="HH:mm dd/MM/yyyy" />
+                                        <fmt:formatDate value="${campaign.createdAt}" pattern="HH:mm dd/MM/yyyy" />
+                                    </div>
+                                    <small class="text-muted">Ngày tạo không thể thay đổi.</small>
                                 </div>
-                                <small class="text-muted">Ngày tạo không thể thay đổi.</small>
-                            </div>
 
-                            <div class="detail-group">
-                                <label>Ngày cập nhật:</label>
-                                <div class="detail-value">
-                                    <fmt:formatDate value="${campaign.updatedAt}" pattern="HH:mm dd/MM/yyyy" />
+                                <div class="detail-group">
+                                    <label>Ngày cập nhật:</label>
+                                    <div class="detail-value">
+                                        <fmt:formatDate value="${campaign.updatedAt}" pattern="HH:mm dd/MM/yyyy" />
+                                    </div>
+                                    <small class="text-muted">Ngày cập nhật sẽ tự động thay đổi khi lưu.</small>
                                 </div>
-                                <small class="text-muted">Ngày cập nhật sẽ tự động thay đổi khi lưu.</small>
-                            </div>
 
-                            <div class="detail-group">
-                                <label for="description">Mô tả:</label>
-                                <textarea id="description" name="description" class="detail-textarea"><c:out value="${campaign.description}" /></textarea>
-                            </div>
+                                <div class="detail-group">
+                                    <label for="description">Mô tả:</label>
+                                    <textarea id="description" name="description" class="detail-textarea"><c:out value="${campaign.description}" /></textarea>
+                                </div>
 
-                            <%-- ========================================================================= --%>
-                            <%-- THAY ĐỔI 2: Cập nhật phần Đính kèm để cho phép upload file             --%>
-                            <%-- ========================================================================= --%>
-                            <div class="detail-group">
-                                <label for="attachmentFile">Tệp đính kèm:</label>
+                                <%-- ========================================================================= --%>
+                                <%-- THAY ĐỔI 2: Cập nhật phần Đính kèm để cho phép upload file           --%>
+                                <%-- ========================================================================= --%>
+                                <div class="detail-group">
+                                    <label for="attachmentFile">Tệp đính kèm:</label>
 
-                                <%-- Hiển thị tệp hiện tại nếu có --%>
-                                <c:choose>
-                                    <c:when test="${not empty campaign.attachmentFileName}">
-                                        <div class="current-attachment-info">
-                                            <i data-feather="file-text"></i>
-                                            <span>Tệp hiện tại: 
-                                                <%-- Giả sử bạn có một servlet để tải file --%>
-                                                <a href="${pageContext.request.contextPath}/download-attachment?file=${campaign.attachmentFileName}" target="_blank">
-                                                    <c:out value="${campaign.attachmentFileName}"/>
-                                                </a>
-                                            </span>
-                                        </div>
-                                        <small class="text-muted">Tải lên tệp mới sẽ thay thế tệp hiện tại.</small>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <p class="text-muted">Không có tệp đính kèm.</p>
-                                    </c:otherwise>
-                                </c:choose>
-                                
-                                <%-- Input để tải lên tệp mới --%>
-                                <input type="file" id="attachmentFile" name="attachmentFile" class="detail-input" style="margin-top: 5px;">
-                                <input type="hidden" name="currentAttachment" value="${campaign.attachmentFileName}">
-                            </div>
+                                    <%-- Hiển thị tệp hiện tại nếu có --%>
+                                    <c:choose>
+                                        <c:when test="${not empty campaign.attachmentFileName}">
+                                            <div class="current-attachment-info">
+                                                <i data-feather="file-text"></i>
+                                                <span>Tệp hiện tại: 
+                                                    <%-- Giả sử bạn có một servlet để tải file --%>
+                                                    <a href="${pageContext.request.contextPath}/download-attachment?file=${campaign.attachmentFileName}" target="_blank">
+                                                        <c:out value="${campaign.attachmentFileName}"/>
+                                                    </a>
+                                                </span>
+                                            </div>
+                                            <small class="text-muted">Tải lên tệp mới sẽ thay thế tệp hiện tại.</small>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <p class="text-muted">Không có tệp đính kèm.</p>
+                                        </c:otherwise>
+                                    </c:choose>
+                                    
+                                    <%-- Input để tải lên tệp mới --%>
+                                    <input type="file" id="attachmentFile" name="attachmentFile" class="detail-input" style="margin-top: 5px;">
+                                    <input type="hidden" name="currentAttachment" value="${campaign.attachmentFileName}">
+                                </div>
 
 
                                 <div class="detail-footer">
-                                    <a href="${pageContext.request.contextPath}/view-campaign-detail?id=${campaign.campaignId}" class="btn-action btn-back">
-                                        <i data-feather="x"></i> Hủy
+                                    <%-- ĐÃ SỬA: Thay đổi nút "Hủy" thành một liên kết chỉ có icon "X" màu xám --%>
+                                    <a href="${pageContext.request.contextPath}/view-campaign-detail?id=${campaign.campaignId}" class="btn-cancel-link">
+                                        <i data-feather="x" style="width: 1.5em; height: 1.5em;"></i> 
                                     </a>
                                     <button type="submit" class="btn-action btn-save">
                                         <i data-feather="save"></i> Lưu Thay Đổi
