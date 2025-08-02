@@ -1,5 +1,7 @@
-/* Document   : style.css
-    Description: CSS trung tâm cho toàn bộ ứng dụng DPCRM.
+/*
+    Document    : style.css
+    Description : CSS trung tâm cho toàn bộ ứng dụng DPCRM.
+                  Bao gồm các style chung cho layout, form, button, card, table...
 */
 
 /* --- BIẾN MÀU SẮC VÀ FONT CHỮ --- */
@@ -24,19 +26,20 @@ body {
     background-color: var(--background-color);
     color: var(--text-color);
     margin: 0;
-    display: flex;
 }
 
 a {
     text-decoration: none;
     color: var(--primary-color);
+    transition: color 0.2s ease;
 }
 
 a:hover {
-    text-decoration: underline;
+    color: #0056b3;
+    text-decoration: none;
 }
 
-/* --- LAYOUT CHÍNH --- */
+/* --- LAYOUT CHÍNH (DÙNG KHI CÓ SIDEBAR) --- */
 .wrapper {
     display: flex;
     width: 100%;
@@ -47,7 +50,7 @@ a:hover {
     flex-grow: 1;
     padding: 2rem;
     transition: margin-left .3s;
-    margin-left: 260px; /* Bằng chiều rộng của sidebar */
+    margin-left: 260px; /* Bằng chiều rộng mặc định của sidebar */
 }
 
 /* Khi sidebar thu gọn */
@@ -64,12 +67,14 @@ body.sidebar-collapsed .main-content {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
+    border-radius: 0.5rem;
 }
 
 .header .page-title {
     font-size: 1.75rem;
     font-weight: 700;
     color: var(--dark-color);
+    margin: 0;
 }
 
 /* --- CARD TIÊU CHUẨN --- */
@@ -86,6 +91,9 @@ body.sidebar-collapsed .main-content {
     border-bottom: 1px solid var(--border-color);
     font-size: 1.1rem;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
 }
 
 .card-body {
@@ -104,24 +112,31 @@ body.sidebar-collapsed .main-content {
     border: 1px solid transparent;
     cursor: pointer;
     transition: all 0.2s ease;
+    line-height: 1.5;
+    text-align: center;
+    vertical-align: middle;
 }
 
 .btn-primary {
     background-color: var(--primary-color);
     color: #fff;
+    border-color: var(--primary-color);
 }
 .btn-primary:hover {
     background-color: #0056b3;
+    border-color: #0056b3;
 }
 
 .btn-secondary {
     background-color: var(--secondary-color);
     color: #fff;
+    border-color: var(--secondary-color);
 }
 
 .btn-danger {
     background-color: var(--danger-color);
     color: #fff;
+    border-color: var(--danger-color);
 }
 
 .btn-outline-primary {
@@ -134,10 +149,14 @@ body.sidebar-collapsed .main-content {
     color: #fff;
 }
 
+.btn-sm {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+}
 
 /* --- FORM TIÊU CHUẨN --- */
 .form-group {
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
 }
 
 .form-group label {
@@ -152,21 +171,35 @@ body.sidebar-collapsed .main-content {
     border: 1px solid var(--border-color);
     border-radius: 0.3rem;
     box-sizing: border-box; /* Quan trọng */
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    outline: none;
 }
 
 /* --- TABLE TIÊU CHUẨN --- */
 .table {
     width: 100%;
     border-collapse: collapse;
+    background-color: #fff;
 }
 
 .table th, .table td {
     padding: 1rem;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
 }
 
 .table thead th {
     font-weight: 700;
     background-color: var(--light-color);
+    border-bottom-width: 2px;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.05);
 }
