@@ -100,22 +100,39 @@ public class EnterpriseDAO extends DBContext {
                 + "WHERE e.is_deleted = 0 "
         );
 
-        // Dynamically build the WHERE clause for searching to find matching enterprise IDs
         if (isSearching) {
-            sql.append(" AND (e.name LIKE ? OR e.fax LIKE ? OR CONCAT_WS(', ', a.street_address, w.name, d.name, p.name) LIKE ?) ");
+            // 1. Tạo một subquery để tìm ID của các doanh nghiệp phù hợp với bất kỳ tiêu chí nào.
+            //    DISTINCT để đảm bảo mỗi ID chỉ xuất hiện một lần.
+            String subQuery = "SELECT DISTINCT e_sub.id FROM Enterprises e_sub "
+                    + "LEFT JOIN Addresses a_sub ON e_sub.address_id = a_sub.id "
+                    + "LEFT JOIN Wards w_sub ON a_sub.ward_id = w_sub.id "
+                    + "LEFT JOIN Districts d_sub ON a_sub.district_id = d_sub.id "
+                    + "LEFT JOIN Provinces p_sub ON a_sub.province_id = p_sub.id "
+                    + "LEFT JOIN EnterpriseAssignments ea_sub ON e_sub.id = ea_sub.enterprise_id "
+                    + "LEFT JOIN Users u_sub ON ea_sub.user_id = u_sub.id "
+                    + "WHERE e_sub.is_deleted = 0 AND ("
+                    + "  e_sub.name LIKE ? "
+                    + "  OR e_sub.fax LIKE ? "
+                    + "  OR CONCAT_WS(', ', a_sub.street_address, w_sub.name, d_sub.name, p_sub.name) LIKE ? "
+                    + "  OR CONCAT_WS(' ', u_sub.last_name, u_sub.middle_name, u_sub.first_name) LIKE ? "
+                    + // <-- Tìm theo tên nhân viên
+                    ")";
+
+            // 2. Nối subquery vào câu truy vấn chính
+            sql.append(" AND e.id IN (").append(subQuery).append(") ");
         }
 
         sql.append(" ORDER BY e.name, u.id");
 
-        // The try-with-resources statement now only handles Connection and PreparedStatement
         try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
-            // Set parameters ONLY if searching
+            // Đặt tham số cho subquery CHỈ KHI đang tìm kiếm
             if (isSearching) {
                 String searchPattern = "%" + searchQuery + "%";
-                ps.setString(1, searchPattern); // Cho e.name
-                ps.setString(2, searchPattern); // Cho e.fax
-                ps.setString(3, searchPattern); // Cho địa chỉ full_address
+                ps.setString(1, searchPattern); // Cho e_sub.name
+                ps.setString(2, searchPattern); // Cho e_sub.fax
+                ps.setString(3, searchPattern); // Cho địa chỉ
+                ps.setString(4, searchPattern); // Cho tên nhân viên
             }
 
             // Execute the query and process the results in a separate try block
@@ -278,24 +295,51 @@ public class EnterpriseDAO extends DBContext {
     }
 
     /**
-     * Retrieves a list of customer names for search suggestions.
+     * Lấy danh sách gợi ý tìm kiếm từ nhiều trường: tên doanh nghiệp, fax, tên
+     * nhân viên, và địa chỉ. Sử dụng UNION để kết hợp kết quả từ các nguồn khác
+     * nhau.
      *
-     * @param query The partial name to search for.
-     * @return A list of up to 10 matching customer names.
+     * @param query Chuỗi ký tự người dùng nhập vào.
+     * @return Một danh sách các chuỗi gợi ý duy nhất.
      * @throws Exception
      */
     public List<String> getCustomerNameSuggestions(String query) throws Exception {
         List<String> suggestions = new ArrayList<>();
-        // Lấy tối đa 10 kết quả phù hợp nhất
-        String sql = "SELECT name FROM Enterprises WHERE name LIKE ? AND is_deleted = 0 LIMIT 10";
+
+        // Câu lệnh SQL sử dụng UNION để gộp kết quả từ nhiều nguồn
+        // UNION tự động loại bỏ các giá trị trùng lặp.
+        String sql
+                = // 1. Gợi ý theo tên Doanh nghiệp
+                "(SELECT name AS suggestion FROM Enterprises WHERE name LIKE ? AND is_deleted = 0) "
+                + "UNION "
+                + // 2. Gợi ý theo số Fax
+                "(SELECT fax AS suggestion FROM Enterprises WHERE fax LIKE ? AND is_deleted = 0 AND fax IS NOT NULL AND fax != '') "
+                + "UNION "
+                + // 3. Gợi ý theo tên Nhân viên phụ trách
+                "(SELECT CONCAT_WS(' ', last_name, middle_name, first_name) AS suggestion FROM Users "
+                + " WHERE CONCAT_WS(' ', last_name, middle_name, first_name) LIKE ? AND is_deleted = 0) "
+                + "UNION "
+                + // 4. Gợi ý theo địa chỉ (chỉ lấy các địa chỉ có gán cho doanh nghiệp)
+                "(SELECT DISTINCT CONCAT_WS(', ', a.street_address, w.name, d.name, p.name) AS suggestion "
+                + " FROM Enterprises e "
+                + " JOIN Addresses a ON e.address_id = a.id "
+                + " JOIN Wards w ON a.ward_id = w.id "
+                + " JOIN Districts d ON a.district_id = d.id "
+                + " JOIN Provinces p ON a.province_id = p.id "
+                + " WHERE e.is_deleted = 0 AND CONCAT_WS(', ', a.street_address, w.name, d.name, p.name) LIKE ?) "
+                + "LIMIT 15"; // Giới hạn tổng số gợi ý trả về
 
         try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setString(1, "%" + query + "%");
+            String searchPattern = "%" + query + "%";
+            ps.setString(1, searchPattern); // cho tên doanh nghiệp
+            ps.setString(2, searchPattern); // cho số fax
+            ps.setString(3, searchPattern); // cho tên nhân viên
+            ps.setString(4, searchPattern); // cho địa chỉ
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    suggestions.add(rs.getString("name"));
+                    suggestions.add(rs.getString("suggestion"));
                 }
             }
         }

@@ -89,7 +89,7 @@
                                     <i data-feather="search"></i>
                                     <%-- Thêm id="searchInput" để dễ dàng truy cập bằng JS --%>
                                     <input type="text" id="searchInput" name="search" 
-                                           placeholder="Tìm theo tên, địa chỉ hoặc số fax" 
+                                           placeholder="Tìm theo tên, địa chỉ, số fax hoặc nhân viên phụ trách" 
                                            value="<c:out value='${searchQuery}'/>" autocomplete="off">
                                 </div>
                                 <%-- Container để hiển thị các gợi ý --%>
