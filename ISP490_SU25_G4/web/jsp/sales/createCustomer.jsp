@@ -130,7 +130,7 @@
                                         <div class="form-group"><label for="hotline">Fax/Hotline (*)</label><input type="tel" id="hotline" name="hotline" class="form-control" required></div>
                                         <div class="form-group"><label for="businessEmail">Email doanh nghiệp (*)</label><input type="email" id="businessEmail" name="businessEmail" class="form-control" required></div>
                                         <div class="form-group"><label for="taxCode">Mã số thuế</label><input type="text" id="taxCode" name="taxCode" class="form-control"></div>
-                                        <div class="form-group"><label for="bankNumber">Số tài khoản ngân hàng</label><input type="text" id="bankNumber" name="bankNumber" class="form-control"></div>
+                                        <div class="form-group"><label for="bankNumber">Số tài khoản ngân hàng</label><input type="text" id="bankNumber" name="bankNumber" class="form-control" placeholder="Tên ngân hàng - Số tài khoản"></div>
                                     </div>
 
                                     <hr style="margin: 1.5rem 0;">
