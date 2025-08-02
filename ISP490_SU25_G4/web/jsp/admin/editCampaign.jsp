@@ -439,7 +439,7 @@
                                                 </a>
                                             </span>
                                         </div>
-                                        <small class="text-muted">Tải lên tệp mới sẽ thay thế tệp hiện tại.</small>
+                                        <small class="text-muted">Tải lên tệp mới sẽ thay thế tệp hiện tại của bạn.</small>
                                     </c:when>
                                     <c:otherwise>
                                         <p class="text-muted">Không có tệp đính kèm.</p>
