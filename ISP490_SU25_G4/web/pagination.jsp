@@ -19,21 +19,38 @@
 
 <c:if test="${totalPages > 1}">
     <%-- Logic tính toán sliding window giữ nguyên --%>
-    <c:set var="begin" value="${currentPage - 1}" />
-    <c:if test="${totalPages > 3 && currentPage >= totalPages - 1}"><c:set var="begin" value="${totalPages - 2}" /></c:if>
-    <c:if test="${begin < 1}"><c:set var="begin" value="1" /></c:if>
-    <c:set var="end" value="${begin + 2}" />
-    <c:if test="${end > totalPages}"><c:set var="end" value="${totalPages}" /></c:if>
+    <%-- Điều chỉnh sliding window cho 5 trang thay vì 3 để hiển thị nhiều trang hơn --%>
+    <c:set var="pagesToShow" value="5" /> <%-- Số lượng nút trang muốn hiển thị --%>
+    <c:set var="halfPagesToShow" value="${pagesToShow div 2}" />
+
+    <c:set var="begin" value="${currentPage - halfPagesToShow}" />
+    <c:set var="end" value="${currentPage + halfPagesToShow}" />
+
+    <%-- Điều chỉnh cho các trường hợp ở đầu và cuối --%>
+    <c:if test="${begin < 1}">
+        <c:set var="begin" value="1" />
+        <c:set var="end" value="${pagesToShow}" />
+    </c:if>
+    <c:if test="${end > totalPages}">
+        <c:set var="end" value="${totalPages}" />
+        <c:set var="begin" value="${totalPages - pagesToShow + 1}" />
+        <c:if test="${begin < 1}"><c:set var="begin" value="1" /></c:if>
+    </c:if>
 
     <nav aria-label="Page navigation">
         <ul class="pagination justify-content-center">
 
-            <%-- Nút First & Previous --%>
+            <%-- Nút First --%>
             <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
-                <a class="page-link" href="?page=1${extraParams}" aria-label="First">&laquo;</a>
+                <a class="page-link" href="?page=1${extraParams}" aria-label="First">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
             </li>
+            <%-- Nút Previous --%>
             <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
-                <a class="page-link" href="?page=${currentPage - 1}${extraParams}" aria-label="Previous">&lsaquo;</a>
+                <a class="page-link" href="?page=${currentPage - 1}${extraParams}" aria-label="Previous">
+                    <span aria-hidden="true">&lsaquo;</span>
+                </a>
             </li>
 
             <%-- Các trang ở giữa --%>
@@ -43,12 +60,17 @@
                 </li>
             </c:forEach>
 
-            <%-- Nút Next & Last --%>
+            <%-- Nút Next --%>
             <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
-                <a class="page-link" href="?page=${currentPage + 1}${extraParams}" aria-label="Next">&rsaquo;</a>
+                <a class="page-link" href="?page=${currentPage + 1}${extraParams}" aria-label="Next">
+                    <span aria-hidden="true">&rsaquo;</span>
+                </a>
             </li>
+            <%-- Nút Last --%>
             <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
-                <a class="page-link" href="?page=${totalPages}${extraParams}" aria-label="Last">&raquo;</a>
+                <a class="page-link" href="?page=${totalPages}${extraParams}" aria-label="Last">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
             </li>
 
         </ul>
