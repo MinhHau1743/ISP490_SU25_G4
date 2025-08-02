@@ -1,0 +1,75 @@
+/*
+    Document    : dashboard.css
+    Description : CSS dành riêng cho trang Bảng điều khiển (dashboard).
+*/
+
+.welcome-header {
+    margin-bottom: 24px;
+}
+.welcome-header h1 {
+    font-size: 24px;
+    font-weight: 600;
+}
+.welcome-header p {
+    font-size: 16px;
+    color: #6c757d;
+}
+
+.dashboard-grid {
+    display: grid;
+    gap: 24px;
+    /* Bố cục lưới linh hoạt, tự động điều chỉnh số cột */
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.main-chart-card {
+    /* Biểu đồ chính luôn chiếm toàn bộ chiều rộng */
+    grid-column: 1 / -1;
+}
+
+.kpi-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.kpi-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.kpi-item:last-child {
+    border-bottom: none;
+}
+
+.kpi-item .label {
+    color: #6c757d;
+}
+
+.kpi-item .value {
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+/* Sử dụng các biến màu từ style.css để nhất quán */
+.value.success {
+    color: var(--success-color, #28a745);
+}
+.value.warning {
+    color: var(--warning-color, #ffc107);
+}
+.value.danger {
+    color: var(--danger-color, #dc3545);
+}
+
+.no-data-message {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 250px;
+    color: #868e96;
+    font-style: italic;
+}

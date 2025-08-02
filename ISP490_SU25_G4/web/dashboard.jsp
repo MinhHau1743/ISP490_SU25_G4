@@ -1,9 +1,8 @@
 <%--
     Document    : dashboard.jsp
-    Description : Trang tổng quan (phiên bản độc lập, đã được chuẩn hóa và sửa lỗi).
+    Description : Trang tổng quan (phiên bản độc lập, đã sửa lỗi và cải thiện giao diện).
 --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
-<%-- Khai báo JSTL đúng chuẩn cho Tomcat 11 / Jakarta EE --%>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
 
@@ -18,41 +17,56 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/feather-icons"></script>
     
     <%-- Nạp các tệp CSS chính của ứng dụng --%>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/sidebar.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
 
     <%-- Thư viện biểu đồ --%>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <%-- CSS riêng của trang dashboard --%>
+    <%-- CSS riêng và cải tiến cho trang dashboard --%>
     <style>
         .wrapper { display: flex; }
-        .main-content { flex-grow: 1; padding: 2rem; transition: margin-left .3s; margin-left: 260px; }
-        body.sidebar-collapsed .main-content { margin-left: 80px; }
+        .main-content { 
+            flex-grow: 1; 
+            padding: 2rem; 
+            transition: margin-left .3s; 
+            margin-left: 260px; /* Phải khớp với chiều rộng của .sidebar trong mainMenu.css */
+        }
+        body.sidebar-collapsed .main-content { margin-left: 80px; } /* Phải khớp với chiều rộng thu gọn */
+        
         .welcome-header { margin-bottom: 24px; }
         .welcome-header h1 { font-size: 24px; font-weight: 600; }
         .welcome-header p { font-size: 16px; color: #6c757d; }
-        .dashboard-grid { display: grid; gap: 24px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
-        .main-chart-card { grid-column: 1 / -1; }
+
+        .dashboard-grid { 
+            display: grid; 
+            gap: 24px; 
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); 
+        }
+        .main-chart-card { 
+            grid-column: 1 / -1; 
+        }
+
         .kpi-list { list-style: none; padding: 0; margin: 0; }
         .kpi-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
         .kpi-item:last-child { border-bottom: none; }
         .kpi-item .label { color: #6c757d; }
-        .kpi-item .value { font-weight: 600; font-size: 1.2rem; }
-        .value.success { color: #28a745; }
-        .value.warning { color: #ffc107; }
-        .value.danger { color: #dc3545; }
+        .kpi-item .value { font-weight: 700; font-size: 1.25rem; }
+        .value.success { color: var(--success-color, #28a745); }
+        .value.warning { color: var(--warning-color, #ffc107); }
+        .value.danger { color: var(--danger-color, #dc3545); }
+        
         .no-data-message { display: flex; justify-content: center; align-items: center; height: 250px; color: #868e96; font-style: italic; }
     </style>
 </head>
 <body>
     <div class="wrapper">
         <%-- 2. Nhúng menu vào trang --%>
-        <%-- Đảm bảo bạn đã di chuyển tệp mainMenu.jsp vào thư mục /jsp/ --%>
-        <jsp:include page="/jsp/mainMenu.jsp" />
+        <%-- Đảm bảo tệp mainMenu.jsp nằm ở thư mục gốc web (ngang hàng với css, js) --%>
+        <jsp:include page="/mainMenu.jsp" />
 
         <main class="main-content">
             <header class="header">
@@ -112,6 +126,19 @@
                     </div>
                 </div>
                 <div class="card">
+                    <div class="card-header"><i data-feather="user-plus"></i>Xu hướng Khách hàng mới</div>
+                    <div class="card-body">
+                        <c:choose>
+                            <c:when test="${not empty customerTrendJson and customerTrendJson ne '[]'}">
+                                 <canvas id="customerTrendChart" style="height: 250px;"></canvas>
+                            </c:when>
+                            <c:otherwise>
+                                <div class="no-data-message">Không có khách hàng mới trong khoảng thời gian này.</div>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
+                </div>
+                <div class="card">
                     <div class="card-header"><i data-feather="tool"></i>Yêu cầu sửa chữa</div>
                     <div class="card-body">
                         <ul class="kpi-list">
@@ -126,14 +153,19 @@
     </div>
 
     <%-- 4. JavaScript --%>
-    <script src="${pageContext.request.contextPath}/js/sidebar.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            feather.replace(); // Kích hoạt icon
+            // Kích hoạt icon
+            feather.replace(); 
 
             let revenueTrendData = [];
+            let customerTrendData = [];
             try { revenueTrendData = JSON.parse('${revenueTrendJson}'); } catch (e) { console.error("Lỗi phân tích dữ liệu doanh thu:", e); }
+            try { customerTrendData = JSON.parse('${customerTrendJson}'); } catch (e) { console.error("Lỗi phân tích dữ liệu khách hàng:", e); }
 
+            // Biểu đồ Doanh thu
             const revenueCanvas = document.getElementById('revenueTrendChart');
             if (revenueCanvas && revenueTrendData && revenueTrendData.length > 0) {
                 new Chart(revenueCanvas.getContext('2d'), {
@@ -156,11 +188,33 @@
                             legend: { display: false },
                             tooltip: {
                                 callbacks: {
-                                    // Sửa lỗi xung đột cú pháp JSP và JS
                                     label: context => `\${context.dataset.label}: \${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(context.parsed.y)}`
                                 }
                             }
                         }
+                    }
+                });
+            }
+
+            // Biểu đồ Khách hàng mới
+            const customerCanvas = document.getElementById('customerTrendChart');
+            if (customerCanvas && customerTrendData && customerTrendData.length > 0) {
+                 new Chart(customerCanvas.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: customerTrendData.map(d => new Date(d.date).toLocaleDateString('vi-VN')),
+                        datasets: [{
+                            label: 'Khách hàng mới',
+                            data: customerTrendData.map(d => d.count),
+                            backgroundColor: 'rgba(255, 193, 7, 0.7)',
+                            borderColor: 'rgba(255, 193, 7, 1)'
+                        }]
+                    },
+                    options: { 
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, 
+                        plugins: { legend: { display: false } } 
                     }
                 });
             }
