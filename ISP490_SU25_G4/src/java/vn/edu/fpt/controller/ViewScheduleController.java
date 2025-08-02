@@ -201,8 +201,6 @@ public class ViewScheduleController extends HttpServlet {
         // ========== 5. Timeline các giờ (Weekly/Month View) ==========
         List<String> hours = new ArrayList<>();
         List<String> hourLabels = new ArrayList<>();
-        hours.add("");
-        hourLabels.add("Cả ngày"); // Slot all-day
         for (int h = 0; h <= 23; h++) {
             hours.add(String.format("%02d:00", h));
             hourLabels.add(String.format("%02d:00", h));
