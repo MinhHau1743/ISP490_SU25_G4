@@ -23,25 +23,27 @@ public class ListFeedbackController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        // Không cần tham số "action" nữa vì controller này chỉ làm một việc
-        listFeedbacks(request, response);
-    }
-
-    private void listFeedbacks(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
         FeedbackDAO feedbackDAO = new FeedbackDAO();
 
-        // 1. Lấy danh sách feedback
-        List<FeedbackView> feedbackList = feedbackDAO.getAllFeedback();
+        // SỬA 1: Lấy các tham số lọc và tìm kiếm từ request
+        String query = request.getParameter("query");
+        String ratingFilter = request.getParameter("ratingFilter");
+        
+        // Đặt giá trị mặc định cho bộ lọc nếu người dùng vào trang lần đầu
+        if (ratingFilter == null || ratingFilter.trim().isEmpty()) {
+            ratingFilter = "all";
+        }
 
-        // 2. Lấy các số liệu thống kê
+        // SỬA 2: Gọi phương thức DAO mới để lấy danh sách đã được lọc
+        List<FeedbackView> feedbackList = feedbackDAO.getFilteredFeedback(query, ratingFilter);
+
+        // Phần lấy các số liệu thống kê giữ nguyên
         int totalCount = feedbackDAO.getTotalFeedbackCount();
         int goodCount = feedbackDAO.getFeedbackCountByRatingRange(4, 5); // 4-5 sao
         int normalCount = feedbackDAO.getFeedbackCountByRatingRange(3, 3); // 3 sao
         int badCount = feedbackDAO.getFeedbackCountByRatingRange(1, 2);   // 1-2 sao
 
-        // 3. Gửi tất cả dữ liệu sang JSP
+        // Gửi tất cả dữ liệu sang JSP
         request.setAttribute("feedbackList", feedbackList);
         request.setAttribute("totalCount", totalCount);
         request.setAttribute("goodCount", goodCount);
@@ -51,7 +53,7 @@ public class ListFeedbackController extends HttpServlet {
         // Đặt thuộc tính để menu active đúng
         request.setAttribute("activeMenu", "feedback");
 
-        // 4. Chuyển tiếp đến trang JSP
+        // Chuyển tiếp đến trang JSP
         request.getRequestDispatcher("/jsp/customerSupport/listFeedback.jsp").forward(request, response);
     }
 }
