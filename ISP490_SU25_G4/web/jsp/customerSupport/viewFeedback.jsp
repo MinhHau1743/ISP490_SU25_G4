@@ -34,10 +34,10 @@
                 flex-grow: 1;
                 display: flex;
                 flex-direction: column;
-                background-color: #f3f4f6; /* Nền xám nhạt cho khu vực nội dung */
+                background-color: #f3f4f6;
             }
             .page-header {
-                background-color: #ffffff; /* Header luôn là nền trắng */
+                background-color: #ffffff;
                 padding: 1.5rem 2rem;
                 border-bottom: 1px solid #e5e7eb;
                 display: flex;
@@ -58,13 +58,17 @@
                 font-weight: 500;
                 color: #374151;
             }
+            .page-header .actions-group {
+                display: flex;
+                gap: 12px;
+            }
             .page-content {
                 padding: 1.5rem 2rem;
                 flex-grow: 1;
                 overflow-y: auto;
             }
 
-            /* === CÁC THÀNH PHẦN KHÁC === */
+            /* === MODIFICATION START: Thiết kế lại hệ thống nút bấm === */
             .btn {
                 padding: 9px 16px;
                 border-radius: 8px;
@@ -74,15 +78,36 @@
                 gap: 8px;
                 cursor: pointer;
                 text-decoration: none;
-                border: 1px solid #d1d5db;
+                border: 1px solid transparent; /* Mặc định trong suốt */
+                transition: all 0.2s ease-in-out;
+            }
+            .btn span {
+                line-height: 1;
+            }
+            
+            /* Nút chính: nổi bật, có bóng mờ */
+            .btn-primary {
+                background-color: #2563eb;
+                color: #fff;
+                border-color: #2563eb;
+                box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            }
+            .btn-primary:hover {
+                background-color: #1d4ed8;
+            }
+
+            /* Nút phụ: nhẹ nhàng, nền trắng */
+            .btn-secondary {
                 background-color: #fff;
                 color: #374151;
+                border-color: #d1d5db;
             }
-            .btn-primary {
-                background-color: #3b82f6;
-                color: #fff;
-                border-color: #3b82f6;
+            .btn-secondary:hover {
+                background-color: #f9fafb;
+                border-color: #aab2bd;
             }
+            /* === MODIFICATION END === */
+
             .details-layout {
                 display: grid;
                 grid-template-columns: 2fr 1fr;
@@ -91,8 +116,9 @@
             }
             .card {
                 background-color: #fff;
-                border: 1px solid #d1d5db; /* Thay đổi màu viền ở đây */
+                border: 1px solid #d1d5db;
                 border-radius: 12px;
+                overflow: hidden;
             }
             .main-content-column {
                 display: flex;
@@ -128,27 +154,63 @@
                 font-style: italic;
             }
             .internal-notes {
+                padding: 0;
+            }
+            .internal-notes .notes-content {
                 padding: 24px;
             }
-            .internal-notes h3 {
-                font-size: 18px;
-                margin-top: 0;
-                margin-bottom: 16px;
-                border-bottom: 1px solid #e5e7eb;
-                padding-bottom: 12px;
-            }
-            .details-sidebar {
-                display: flex;
-                flex-direction: column;
-                gap: 24px;
-            }
-            .details-sidebar .card-header {
-                padding: 16px;
-                border-bottom: 1px solid #e5e7eb;
+            
+            /* === MODIFICATION START: Phân màu cho từng thanh tiêu đề === */
+            .details-sidebar .card-header, .internal-notes h3 {
+                padding: 12px 16px;
                 font-weight: 600;
                 display: flex;
                 align-items: center;
                 gap: 8px;
+                font-size: 16px;
+                margin: 0;
+            }
+            .details-sidebar .card-header i, .internal-notes h3 i {
+                stroke-width: 2;
+            }
+
+            /* Màu cho Thảo luận (xanh dương) */
+            .internal-notes h3 {
+                background-color: #eff6ff; /* blue-50 */
+                color: #1e40af; /* blue-800 */
+                border-bottom: 1px solid #dbeafe; /* blue-200 */
+            }
+            .internal-notes h3 i { color: #1e40af; }
+            
+            /* Màu cho Trạng thái (xanh lá) */
+            .card-status .card-header {
+                background-color: #f0fdf4; /* green-50 */
+                color: #166534; /* green-800 */
+                border-bottom: 1px solid #dcfce7; /* green-200 */
+            }
+            .card-status .card-header i { color: #166534; }
+            
+            /* Màu cho Khách hàng (vàng cam) */
+            .card-customer .card-header {
+                background-color: #fffbeb; /* amber-50 */
+                color: #92400e; /* amber-800 */
+                border-bottom: 1px solid #fef3c7; /* amber-200 */
+            }
+            .card-customer .card-header i { color: #92400e; }
+
+            /* Màu cho Công việc (tím) */
+            .card-related-work .card-header {
+                background-color: #eef2ff; /* indigo-50 */
+                color: #3730a3; /* indigo-800 */
+                border-bottom: 1px solid #e0e7ff; /* indigo-200 */
+            }
+            .card-related-work .card-header i { color: #3730a3; }
+            /* === MODIFICATION END === */
+            
+            .details-sidebar {
+                display: flex;
+                flex-direction: column;
+                gap: 24px;
             }
             .details-sidebar .card-body {
                 padding: 16px;
@@ -181,8 +243,8 @@
                 font-size: 12px;
             }
             .details-sidebar .status-new {
-                background-color: #dbeafe;
-                color: #1e40af;
+                background-color: #dcfce7;
+                color: #166534;
             }
         </style>
     </head>
@@ -197,11 +259,16 @@
                         <div class="title">Chi tiết Phản hồi</div>
                         <div class="breadcrumb">Phản hồi / <span>${feedback.enterpriseName}</span></div>
                     </div>
+                    <%-- MODIFICATION: Thiết kế lại nhóm nút hành động --%>
                     <div class="actions-group">
-                        <a href="${pageContext.request.contextPath}/listFeedback" class="btn">
-                            <i data-feather="arrow-left"></i> Quay lại danh sách
+                        <a href="${pageContext.request.contextPath}/listFeedback" class="btn btn-secondary">
+                            <i data-feather="arrow-left"></i>
+                            <span>Quay lại</span>
                         </a>
-                        <button class="btn"><i data-feather="archive"></i> Lưu trữ</button>
+                        <button class="btn btn-primary">
+                            <i data-feather="archive"></i>
+                            <span>Lưu trữ</span>
+                        </button>
                     </div>
                 </header>
 
@@ -225,33 +292,36 @@
                                     </div>
                                 </div>
                                 <div class="card internal-notes">
-                                    <h3>Thảo luận nội bộ</h3>
-                                    <div class="notes-list" style="margin-bottom: 24px;">
-                                        <c:if test="${empty internalNotes}">
-                                            <p style="color: #9ca3af; font-style: italic;">Chưa có ghi chú nào.</p>
-                                        </c:if>
-                                        <c:forEach var="note" items="${internalNotes}">
-                                            <div class="note-item" style="margin-bottom: 16px; border-bottom: 1px solid #f3f4f6; padding-bottom: 12px;">
-                                                <p style="margin: 0 0 8px 0;">${note.noteText}</p>
-                                                <div class="note-meta" style="font-size: 12px; color: #9ca3af;">
-                                                    <strong>${note.userName}</strong> - 
-                                                    <fmt:formatDate value="${note.createdAt}" pattern="dd/MM/yyyy HH:mm"/>
+                                    <h3><i data-feather="message-square"></i> Thảo luận nội bộ</h3>
+                                    <div class="notes-content">
+                                        <div class="notes-list" style="margin-bottom: 24px;">
+                                            <c:if test="${empty internalNotes}">
+                                                <p style="color: #9ca3af; font-style: italic;">Chưa có ghi chú nào.</p>
+                                            </c:if>
+                                            <c:forEach var="note" items="${internalNotes}">
+                                                <div class="note-item" style="margin-bottom: 16px; border-bottom: 1px solid #f3f4f6; padding-bottom: 12px;">
+                                                    <p style="margin: 0 0 8px 0;">${note.noteText}</p>
+                                                    <div class="note-meta" style="font-size: 12px; color: #9ca3af;">
+                                                        <strong>${note.userName}</strong> - 
+                                                        <fmt:formatDate value="${note.createdAt}" pattern="dd/MM/yyyy HH:mm"/>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </c:forEach>
-                                    </div>
-                                    <div class="add-note-form">
-                                        <form action="${pageContext.request.contextPath}/addNote" method="POST">
-                                            <input type="hidden" name="feedbackId" value="${feedback.id}">
-                                            <textarea name="noteText" rows="3" placeholder="Thêm ghi chú nội bộ..." required style="width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; margin-bottom: 12px; resize: vertical;"></textarea>
-                                            <button type="submit" class="btn btn-primary" style="width: 100%;">Thêm ghi chú</button>
-                                        </form>
+                                            </c:forEach>
+                                        </div>
+                                        <div class="add-note-form">
+                                            <form action="${pageContext.request.contextPath}/addNote" method="POST">
+                                                <input type="hidden" name="feedbackId" value="${feedback.id}">
+                                                <textarea name="noteText" rows="3" placeholder="Thêm ghi chú nội bộ..." required style="width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; margin-bottom: 12px; resize: vertical;"></textarea>
+                                                <button type="submit" class="btn btn-primary" style="width: 100%;">Thêm ghi chú</button>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="details-sidebar">
-                                <div class="card">
-                                    <div class="card-header"><i data-feather="info"></i> Trạng thái</div>
+                                <%-- MODIFICATION: Thêm class để phân màu --%>
+                                <div class="card card-status">
+                                    <div class="card-header"><i data-feather="activity"></i> Trạng thái</div>
                                     <div class="card-body">
                                         <ul>
                                             <li><span class="label">Trạng thái:</span> <span class="value"><span class="status-tag status-new">${feedback.status}</span></span></li>
@@ -259,7 +329,7 @@
                                         </ul>
                                     </div>
                                 </div>
-                                <div class="card">
+                                <div class="card card-customer">
                                     <div class="card-header"><i data-feather="user"></i> Khách hàng</div>
                                     <div class="card-body">
                                         <ul>
@@ -269,13 +339,18 @@
                                         </ul>
                                     </div>
                                 </div>
-                                <div class="card">
+                                <div class="card card-related-work">
                                     <div class="card-header"><i data-feather="tool"></i> Công việc liên quan</div>
                                     <div class="card-body">
                                         <ul>
                                             <li><span class="label">Dịch vụ:</span> <span class="value">${not empty feedback.serviceName ? feedback.serviceName : 'N/A'}</span></li>
                                             <li><span class="label">Nhân viên:</span> <span class="value">${not empty feedback.technicianName ? feedback.technicianName : 'N/A'}</span></li>
-                                            <li><span class="label">Mã YC:</span> <a href="${pageContext.request.contextPath}/ticket?action=view&id=${feedback.relatedRequestId}" class="value">Xem YC gốc</a></li>
+                                            <li>
+                                                <span class="label">Mã YC:</span> 
+                                                <a href="${pageContext.request.contextPath}/ticket?action=view&id=${feedback.relatedRequestId}" class="value" style="color: #2563eb; text-decoration: underline;">
+                                                   ${not empty feedback.requestCode ? feedback.requestCode : 'N/A'}
+                                                </a>
+                                            </li>
                                         </ul>
                                     </div>
                                 </div>
@@ -290,7 +365,7 @@
         </div>
         <script>
             document.addEventListener('DOMContentLoaded', () => {
-                feather.replace({'stroke-width': 1.5});
+                feather.replace({'stroke-width': 1.7}); // Tăng độ dày icon cho dễ nhìn hơn
             });
         </script>
     </body>
