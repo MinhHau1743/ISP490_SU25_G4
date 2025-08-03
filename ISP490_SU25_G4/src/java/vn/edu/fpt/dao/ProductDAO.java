@@ -32,7 +32,6 @@ public class ProductDAO extends DBContext {
                 + "description = ?, "
                 + "category_id = ?, "
                 + "is_deleted = ?, "
-                + "created_at = ?, "
                 + "updated_at = ?, "
                 + "updated_by = ? "
                 + "WHERE id = ?";
@@ -46,10 +45,9 @@ public class ProductDAO extends DBContext {
             st.setString(6, p.getDescription());
             st.setInt(7, p.getCategoryId());
             st.setBoolean(8, p.isIsDeleted());
-            st.setString(9, p.getCreatedAt());
-            st.setString(10, p.getUpdatedAt());
-            st.setString(11, p.getUpdatedBy());
-            st.setInt(12, p.getId()); // Giá trị cuối cùng là id WHERE
+            st.setString(9, p.getUpdatedAt());
+            st.setString(10, p.getUpdatedBy());
+            st.setInt(11, p.getId()); // Giá trị cuối cùng là id WHERE
             int rows = st.executeUpdate();
             return rows > 0;
         } catch (SQLException e) {

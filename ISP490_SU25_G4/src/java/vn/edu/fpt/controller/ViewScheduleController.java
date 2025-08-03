@@ -138,24 +138,23 @@ public class ViewScheduleController extends HttpServlet {
         }
 
         // ========== 3. Xử lý chế độ TUẦN ==========
-        List<String> days = Arrays.asList("sun", "mon", "tue", "wed", "thu", "fri", "sat");
-        int daysFromSunday = today.getDayOfWeek().getValue() % 7;
-        LocalDate sunday = today.minusDays(daysFromSunday);
-        if (today.getDayOfWeek() == DayOfWeek.SUNDAY) {
-            sunday = sunday.minusWeeks(1);
-        }
+// Sử dụng lại WeekFields đã khai báo ở trên để đảm bảo tính nhất quán
+// WeekFields weekFields = WeekFields.of(new Locale("vi", "VN")); // đã có ở trên
+// 1. Dùng WeekFields để xác định ngày bắt đầu tuần một cách chính xác (Thứ Hai)
+        LocalDate startOfWeek = today.with(weekFields.dayOfWeek(), 1);
 
-        DateTimeFormatter weekFormatter = DateTimeFormatter.ofPattern("dd/MM");
+// 2. Chuẩn bị các list và formatter
+        List<String> days = Arrays.asList("mon", "tue", "wed", "thu", "fri", "sat", "sun"); // Cập nhật thứ tự cho đúng
+        DateTimeFormatter weekHeaderFormatter = DateTimeFormatter.ofPattern("EEE dd/MM", new Locale("vi", "VN")); // Ví dụ: "Th 2 04/08"
         List<String> dayHeaders = new ArrayList<>();
         List<LocalDate> weekDates = new ArrayList<>();
-        for (int i = 0; i < 7; i++) {
-            LocalDate day = sunday.plusDays(i);
-            weekDates.add(day);
-            String dayOfWeek = day.getDayOfWeek().toString().substring(0, 3); // MON, TUE, ...
-            String formattedDate = day.format(weekFormatter);
-            dayHeaders.add(dayOfWeek + " " + formattedDate);
-        }
 
+// 3. Vòng lặp 7 ngày từ Thứ Hai
+        for (int i = 0; i < 7; i++) {
+            LocalDate currentDayInWeek = startOfWeek.plusDays(i);
+            weekDates.add(currentDayInWeek); // Thêm ngày (yyyy-MM-dd) vào list
+            dayHeaders.add(currentDayInWeek.format(weekHeaderFormatter)); // Thêm header đã định dạng
+        }
         // ========== 4. Xử lý chế độ THÁNG ==========
         int year = today.getYear();
         int month = today.getMonthValue();

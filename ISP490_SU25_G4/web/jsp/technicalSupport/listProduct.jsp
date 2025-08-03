@@ -206,7 +206,7 @@
                                                     <td><fmt:formatNumber value="${p.price}" type="currency" currencyCode="VND"/></td>
                                                     <td>${p.createdAt}</td>
                                                     <td>${p.updatedAt}</td>
-                                                    <td>${p.updatedBy}</td>
+                                                    <td>${p.createdBy}</td>
                                                     <td>${p.updatedBy}</td>
                                                     <td class="text-center">
                                                         <div class="btn-group" role="group" aria-label="Hành động sản phẩm">
