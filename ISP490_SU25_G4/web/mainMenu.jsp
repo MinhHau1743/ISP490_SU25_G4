@@ -4,7 +4,10 @@
 --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-
+   <%-- 1. TÍCH HỢP BOOTSTRAP 5 --%>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
 <%-- Lấy tên của trang hoặc servlet hiện tại để làm nổi bật menu --%>
 <c:set var="rawPage" value="${pageContext.request.servletPath.substring(1)}" />
 <c:set var="currentPage" value="${rawPage.replace('.jsp', '')}" />

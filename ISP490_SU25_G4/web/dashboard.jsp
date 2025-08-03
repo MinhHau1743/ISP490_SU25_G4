@@ -14,6 +14,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bảng điều khiển - DPCRM</title>
 
+   
     <%-- Các link CSS và font --%>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,9 +29,6 @@
     <%-- Thư viện biểu đồ Chart.js --%>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <%-- ======================================================= --%>
-    <%-- === KHỐI STYLE CỦA BẠN ĐÃ ĐƯỢC GIỮ LẠI NGUYÊN VẸN === --%>
-    <%-- ======================================================= --%>
     <style>
         .welcome-header {
             margin-bottom: 24px;
@@ -62,11 +60,13 @@
         .kpi-card {
             grid-column: span 2; /* Trải dài 2 cột */
         }
+        
+        /* === SỬA LẠI CSS CHO BỘ LỌC === */
         .quick-filters {
             display: flex;
             gap: 8px;
             align-items: center;
-            margin-left: auto;
+            margin-bottom: 24px; /* Tạo khoảng cách với nội dung bên dưới */
         }
         .quick-filter-btn {
             display: inline-block;
@@ -81,14 +81,14 @@
             transition: all 0.2s ease-in-out;
         }
         .quick-filter-btn:hover {
-            border-color: #007bff;
-            color: #007bff;
-            background-color: #e7f1ff;
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            background-color: var(--primary-color-light);
         }
         .quick-filter-btn.active {
-            background-color: #007bff;
+            background-color: var(--primary-color);
             color: #ffffff;
-            border-color: #007bff;
+            border-color: var(--primary-color);
         }
         .no-data-message {
             display: flex;
@@ -101,26 +101,30 @@
             text-align: center;
             padding: 20px;
         }
+
+        /* Xóa bỏ các CSS cũ cho header */
     </style>
 </head>
 <body>
-    <%-- **SỬA LỖI LAYOUT:** Áp dụng cấu trúc HTML chuẩn với "app-container" và "main-content" --%>
     <div class="app-container">
         <jsp:include page="mainMenu.jsp"/>
 
         <main class="main-content">
+            <%-- Header bây giờ chỉ chứa tiêu đề --%>
             <header class="main-top-bar">
                 <div class="page-title">Bảng điều khiển</div>
+            </header>
+
+            <section class="main-content-body">
+                <%-- **THAY ĐỔI:** Bộ lọc đã được di chuyển vào đây --%>
                 <div class="quick-filters">
                     <a href="dashboard?period=last7days" class="quick-filter-btn ${period == 'last7days' ? 'active' : ''}">7 ngày qua</a>
                     <a href="dashboard?period=thismonth" class="quick-filter-btn ${period == 'thismonth' ? 'active' : ''}">Tháng này</a>
                     <a href="dashboard?period=lastmonth" class="quick-filter-btn ${period == 'lastmonth' ? 'active' : ''}">Tháng trước</a>
                     <a href="dashboard?period=thisyear" class="quick-filter-btn ${period == 'thisyear' ? 'active' : ''}">Năm nay</a>
                 </div>
-            </header>
 
-            <section class="main-content-body">
-                <%-- NỘI DUNG CỦA BẠN ĐƯỢC GIỮ NGUYÊN --%>
+                <%-- NỘI DUNG CÒN LẠI GIỮ NGUYÊN --%>
                 <c:if test="${not empty errorMessage}"><p class="error-message">${errorMessage}</p></c:if>
                 <div class="welcome-header">
                     <h1>Chào mừng quay trở lại, <c:out value="${user.firstName} ${user.lastName}"/>!</h1>
@@ -185,7 +189,6 @@
         </main>
     </div>
 
-    <%-- **SỬA LỖI JAVASCRIPT:** Chuyển script xuống cuối trang và sửa lỗi cú pháp --%>
     <script src="https://unpkg.com/feather-icons"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
