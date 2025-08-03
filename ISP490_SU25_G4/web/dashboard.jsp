@@ -19,15 +19,92 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <%-- Các file CSS chung (đã loại bỏ style cục bộ) --%>
+    <%-- Các file CSS chung --%>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/header.css">
     <link rel="stylesheet" href="css/mainMenu.css">
     <link rel="stylesheet" href="css/report.css">
 
+    <%-- Thư viện biểu đồ Chart.js --%>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <%-- ======================================================= --%>
+    <%-- === KHỐI STYLE CỦA BẠN ĐÃ ĐƯỢC GIỮ LẠI NGUYÊN VẸN === --%>
+    <%-- ======================================================= --%>
+    <style>
+        .welcome-header {
+            margin-bottom: 24px;
+        }
+        .welcome-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #212529;
+            margin: 0;
+        }
+        .welcome-header p {
+            font-size: 16px;
+            color: #6c757d;
+            margin-top: 4px;
+        }
+        .dashboard-grid {
+            display: grid;
+            gap: 24px;
+            grid-template-columns: repeat(4, 1fr); /* Lưới 4 cột */
+        }
+        .main-chart-card {
+            grid-column: 1 / -1; /* Trải dài toàn bộ 4 cột */
+            height: 350px;
+        }
+        .secondary-chart-card {
+            grid-column: span 2; /* Trải dài 2 cột */
+            height: 350px;
+        }
+        .kpi-card {
+            grid-column: span 2; /* Trải dài 2 cột */
+        }
+        .quick-filters {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-left: auto;
+        }
+        .quick-filter-btn {
+            display: inline-block;
+            padding: 8px 16px;
+            border: 1px solid #dee2e6;
+            border-radius: 20px;
+            background-color: #f8f9fa;
+            color: #495057;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s ease-in-out;
+        }
+        .quick-filter-btn:hover {
+            border-color: #007bff;
+            color: #007bff;
+            background-color: #e7f1ff;
+        }
+        .quick-filter-btn.active {
+            background-color: #007bff;
+            color: #ffffff;
+            border-color: #007bff;
+        }
+        .no-data-message {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            color: #868e96;
+            font-size: 14px;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
 </head>
 <body>
-    <%-- Áp dụng cấu trúc HTML chuẩn --%>
+    <%-- **SỬA LỖI LAYOUT:** Áp dụng cấu trúc HTML chuẩn với "app-container" và "main-content" --%>
     <div class="app-container">
         <jsp:include page="mainMenu.jsp"/>
 
@@ -42,30 +119,20 @@
                 </div>
             </header>
 
-            <%-- ======================================================= --%>
-            <%-- === PHẦN NỘI DUNG CODE CỦA BẠN ĐƯỢC GIỮ NGUYÊN === --%>
-            <%-- ======================================================= --%>
             <section class="main-content-body">
-                <c:if test="${not empty errorMessage}">
-                    <p class="error-message">${errorMessage}</p>
-                </c:if>
-
+                <%-- NỘI DUNG CỦA BẠN ĐƯỢC GIỮ NGUYÊN --%>
+                <c:if test="${not empty errorMessage}"><p class="error-message">${errorMessage}</p></c:if>
                 <div class="welcome-header">
                     <h1>Chào mừng quay trở lại, <c:out value="${user.firstName} ${user.lastName}"/>!</h1>
                     <p>Đây là tổng quan nhanh về hoạt động của bạn.</p>
                 </div>
-
                 <div class="dashboard-grid">
                     <div class="report-card main-chart-card">
                         <div class="report-card-header"><i data-feather="trending-up" class="icon"></i><h3>Xu hướng Doanh thu (${summaryPeriod})</h3></div>
                         <div class="report-card-body">
                             <c:choose>
-                                <c:when test="${not empty revenueTrendJson and revenueTrendJson ne '[]'}">
-                                    <canvas id="revenueTrendChart"></canvas>
-                                </c:when>
-                                <c:otherwise>
-                                    <div class="no-data-message"><p>Không có dữ liệu doanh thu trong khoảng thời gian này.</p></div>
-                                </c:otherwise>
+                                <c:when test="${not empty revenueTrendJson and revenueTrendJson ne '[]'}"><canvas id="revenueTrendChart"></canvas></c:when>
+                                <c:otherwise><div class="no-data-message"><p>Không có dữ liệu doanh thu trong khoảng thời gian này.</p></div></c:otherwise>
                             </c:choose>
                         </div>
                     </div>
@@ -88,12 +155,8 @@
                         <div class="report-card-header"><i data-feather="user-plus" class="icon"></i><h3>Xu hướng Khách hàng mới (${summaryPeriod})</h3></div>
                         <div class="report-card-body">
                             <c:choose>
-                                <c:when test="${not empty customerTrendJson and customerTrendJson ne '[]'}">
-                                    <canvas id="customerTrendChart"></canvas>
-                                </c:when>
-                                <c:otherwise>
-                                    <div class="no-data-message"><p>Không có khách hàng mới trong khoảng thời gian này.</p></div>
-                                </c:otherwise>
+                                <c:when test="${not empty customerTrendJson and customerTrendJson ne '[]'}"><canvas id="customerTrendChart"></canvas></c:when>
+                                <c:otherwise><div class="no-data-message"><p>Không có khách hàng mới trong khoảng thời gian này.</p></div></c:otherwise>
                             </c:choose>
                         </div>
                     </div>
@@ -122,14 +185,12 @@
         </main>
     </div>
 
-    <%-- Các script đặt ở cuối trang --%>
+    <%-- **SỬA LỖI JAVASCRIPT:** Chuyển script xuống cuối trang và sửa lỗi cú pháp --%>
     <script src="https://unpkg.com/feather-icons"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             feather.replace();
 
-            // Vẽ biểu đồ doanh thu
             try {
                 const revenueTrendJson = '${revenueTrendJson}';
                 if (revenueTrendJson && revenueTrendJson.trim() !== '[]' && revenueTrendJson.trim() !== '') {
@@ -142,12 +203,9 @@
                             datasets: [{
                                 label: 'Doanh thu',
                                 data: revenueData.map(d => d.revenue),
-                                /* === ĐÃ SỬA MÀU TẠI ĐÂY === */
-                                borderColor: 'rgba(13, 148, 136, 1)',      /* Xanh lá cây đậm */
-                                backgroundColor: 'rgba(13, 148, 136, 0.1)',  /* Xanh lá cây nhạt */
-                                tension: 0.3,
-                                fill: true,
-                                borderWidth: 2
+                                borderColor: 'rgba(13, 148, 136, 1)',
+                                backgroundColor: 'rgba(13, 148, 136, 0.1)',
+                                tension: 0.3, fill: true, borderWidth: 2
                             }]
                         },
                         options: {
@@ -166,11 +224,8 @@
                         }
                     });
                 }
-            } catch (e) {
-                console.error("Lỗi khi vẽ biểu đồ doanh thu:", e);
-            }
-            
-            // Vẽ biểu đồ khách hàng mới
+            } catch (e) { console.error("Lỗi vẽ biểu đồ doanh thu:", e); }
+
             try {
                 const customerTrendJson = '${customerTrendJson}';
                 if (customerTrendJson && customerTrendJson.trim() !== '[]' && customerTrendJson.trim() !== '') {
@@ -183,7 +238,7 @@
                             datasets: [{
                                 label: 'Khách hàng mới',
                                 data: customerData.map(d => d.count),
-                                backgroundColor: 'rgba(13, 148, 136, 0.7)', /* Dùng màu xanh lá cây */
+                                backgroundColor: 'rgba(13, 148, 136, 0.7)',
                                 borderColor: 'rgba(13, 148, 136, 1)',
                                 borderWidth: 1
                             }]
@@ -195,9 +250,7 @@
                         }
                     });
                 }
-            } catch (e) {
-                console.error("Lỗi khi vẽ biểu đồ khách hàng:", e);
-            }
+            } catch (e) { console.error("Lỗi vẽ biểu đồ khách hàng:", e); }
         });
     </script>
     <script src="js/mainMenu.js"></script>

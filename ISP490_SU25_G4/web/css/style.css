@@ -1,14 +1,9 @@
 /*
-Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
-Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
+    File: style.css
+    Description: File CSS chung, đã được sửa lỗi trùng lặp và chuẩn hóa.
 */
-/* 
-    Created on : Jun 6, 2025, 1:49:28 PM
-    Author     : NGUYEN MINH
-*/
-/* ---- TIÊU CHUẨN MÀU SẮC TOÀN WEBSITE ---- */
-/* Đặt ở đầu file /web/css/style.css */
 
+/* ---- TIÊU CHUẨN MÀU SẮC TOÀN WEBSITE ---- */
 :root {
     /* 1. MÀU CHỦ ĐẠO: Xanh lá cây (mòng két) từ trang Khách hàng */
     --primary-color: #0d9488;
@@ -16,23 +11,15 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
 
     /* 2. Các màu phụ trợ */
     --white: #ffffff;
+    --black: #000000;
     --border-color: #dee2e6;       /* Màu viền */
     --background-color: #f8f9fa;    /* Màu nền chung */
     --text-primary: #212529;        /* Màu chữ chính */
     --text-secondary: #6c757d;       /* Màu chữ phụ */
+    --text-inactive: #A0AEC0;       /* Màu chữ không hoạt động */
 }
 
-:root {
-    --primary-color: #298E94;
-    --primary-color-light: #79d5db;
-    --background-color: #F7F8FA;
-    --white: #FFFFFF;
-    --black: #000000;
-    --text-primary: #1A202C;
-    --text-secondary: #718096;
-    --text-inactive: #A0AEC0;
-    --border-color: #E2E8F0;
-}
+/* Khối :root thứ hai đã được xóa bỏ để tránh xung đột */
 
 * {
     margin: 0;
@@ -51,7 +38,6 @@ html, body {
 .app-container {
     display: flex;
     height: 100vh;
-
 }
 
 .main-content {
@@ -61,16 +47,25 @@ html, body {
     overflow-y: auto;
 }
 
+.content-body {
+    padding: 24px 32px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
 .table-toolbar {
     display: flex;
     gap: 16px;
     margin-bottom: 24px;
 }
+
 .search-bar {
     flex-grow: 1;
     max-width: 320px;
     position: relative;
 }
+
 .search-bar .feather {
     position: absolute;
     left: 14px;
@@ -79,6 +74,7 @@ html, body {
     color: var(--text-inactive);
     width: 20px;
 }
+
 .search-bar input {
     width: 100%;
     height: 44px;
@@ -88,6 +84,7 @@ html, body {
     font-size: 14px;
     background-color: var(--white);
 }
+
 .search-bar input::placeholder {
     color: var(--text-inactive);
 }
@@ -104,20 +101,18 @@ html, body {
     gap: 8px;
     font-size: 14px;
     font-weight: 600;
+    text-decoration: none; /* Thêm để đảm bảo nút bấm không bị gạch chân */
+    transition: opacity 0.2s;
 }
-.btn .feather {
-    width: 18px;
-    height: 18px;
+
+.btn:hover {
+    opacity: 0.9;
+    text-decoration: none;
 }
+
 .btn-primary {
     background-color: var(--primary-color);
     color: var(--white);
-}
-.content-body {
-    padding: 24px 32px;
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
 }
 
 .empty-state {
