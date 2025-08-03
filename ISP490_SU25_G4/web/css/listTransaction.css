@@ -434,3 +434,16 @@
     pointer-events: none;
     cursor: default;
 }
+.table-toolbar {
+    display: flex;
+    flex-wrap: wrap; /* Cho phép xuống dòng nếu màn hình quá nhỏ */
+    justify-content: space-between; /* Đẩy nhóm tìm kiếm và nút Reset ra 2 phía */
+    align-items: center; /* Căn các nhóm thẳng hàng với nhau theo chiều dọc */
+    gap: 16px;
+}
+
+.search-group {
+    display: flex;
+    align-items: center; /* ĐÂY LÀ DÒNG QUAN TRỌNG NHẤT: Đảm bảo ô tìm kiếm và nút nằm trên cùng một hàng */
+    gap: 12px; /* Khoảng cách giữa ô tìm kiếm và nút */
+}
