@@ -110,10 +110,10 @@
         <jsp:include page="mainMenu.jsp"/>
 
         <main class="main-content">
-            <%-- Header bây giờ chỉ chứa tiêu đề --%>
-            <header class="main-top-bar">
-                <div class="page-title">Bảng điều khiển</div>
-            </header>
+         
+              <jsp:include page="header.jsp">
+                <jsp:param name="pageTitle" value="Bảng điều khiển"/>
+            </jsp:include>
 
             <section class="main-content-body">
                 <%-- **THAY ĐỔI:** Bộ lọc đã được di chuyển vào đây --%>
