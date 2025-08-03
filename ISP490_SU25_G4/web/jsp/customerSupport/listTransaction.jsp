@@ -38,18 +38,23 @@
 
                 <div class="page-content">
                     <div class="content-card">
-                        
+
                         <%-- CẬP NHẬT: Sửa action của form và link "Tạo Phiếu" --%>
                         <form class="table-toolbar" action="${pageContext.request.contextPath}/ticket" method="get">
                             <input type="hidden" name="action" value="list">
-                            <div class="search-box">
-                                <i data-feather="search" class="feather-search"></i>
-                                <input type="text" name="query" placeholder="Tìm kiếm theo mã phiếu, khách hàng...">
+
+                            <%-- Chỉ giữ lại ô tìm kiếm --%>
+                            <div class="search-group">
+                                <div class="search-box">
+                                    <i data-feather="search" class="feather-search"></i>
+                                    <input type="text" name="query" placeholder="Tìm theo mã phiếu, khách hàng..." value="${param.query}">
+                                </div>
+                                <button type="submit" class="btn btn-primary"><i data-feather="search"></i> Tìm kiếm</button>
                             </div>
-                            <%-- Phần lọc sẽ được phát triển sau --%>
-                            <button type="submit" class="btn btn-secondary"><i data-feather="search"></i>Tìm kiếm</button>
                             <div class="toolbar-actions">
-                                <a href="${pageContext.request.contextPath}/ticket?action=create" class="btn btn-primary"><i data-feather="plus"></i>Tạo Phiếu</a>
+                                <a href="${pageContext.request.contextPath}/ticket?action=list" class="btn btn-secondary">
+                                    <i data-feather="refresh-cw"></i> Reset
+                                </a>
                             </div>
                         </form>
 
@@ -132,7 +137,7 @@
                                 <div class="pagination">
                                     <%-- Nút Previous --%>
                                     <c:if test="${currentPage > 1}">
-                                        <a href="${pageContext.request.contextPath}/ticket?action=list&page=${currentPage - 1}">&laquo;</a>
+                                        <a href="${pageContext.request.contextPath}/ticket?action=list&page=${currentPage - 1}&query=${param.query}">&laquo;</a>
                                     </c:if>
                                     <c:if test="${currentPage == 1}">
                                         <a href="#" class="disabled">&laquo;</a>
@@ -145,14 +150,13 @@
                                                 <a href="#" class="active">${i}</a>
                                             </c:when>
                                             <c:otherwise>
-                                                <a href="${pageContext.request.contextPath}/ticket?action=list&page=${i}">${i}</a>
-                                            </c:otherwise>
+                                                <a href="${pageContext.request.contextPath}/ticket?action=list&page=${i}&query=${param.query}">${i}</a>                                            </c:otherwise>
                                         </c:choose>
                                     </c:forEach>
 
                                     <%-- Nút Next --%>
                                     <c:if test="${currentPage < totalPages}">
-                                        <a href="${pageContext.request.contextPath}/ticket?action=list&page=${currentPage + 1}">&raquo;</a>
+                                        <a href="${pageContext.request.contextPath}/ticket?action=list&page=${currentPage + 1}&query=${param.query}">&raquo;</a>
                                     </c:if>
                                     <c:if test="${currentPage == totalPages}">
                                         <a href="#" class="disabled">&raquo;</a>
