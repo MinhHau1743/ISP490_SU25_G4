@@ -43,42 +43,76 @@ public class FeedbackDAO {
     }
 
     // Phương thức để lấy danh sách phản hồi hiển thị ra listFeedback.jsp
-    public List<FeedbackView> getAllFeedback() {
+    public List<FeedbackView> getFilteredFeedback(String query, String ratingFilter) {
     List<FeedbackView> list = new ArrayList<>();
+    List<Object> params = new ArrayList<>(); // Danh sách để chứa các tham số cho PreparedStatement
+    
+    // Xây dựng câu lệnh SQL cơ bản
+    StringBuilder sql = new StringBuilder(
+        "SELECT f.id, f.rating, f.comment, f.status, f.created_at, "
+      + "e.name AS enterpriseName, tr.title AS serviceName, tr.request_code "
+      + "FROM Feedbacks f "
+      + "JOIN Enterprises e ON f.enterprise_id = e.id "
+      + "LEFT JOIN TechnicalRequests tr ON f.technical_request_id = tr.id "
+      + "WHERE f.is_deleted = 0"
+    );
 
-    // SỬA CÂU LỆNH SQL: Thêm "tr.request_code"
-    String sql = "SELECT f.id, f.rating, f.comment, f.status, f.created_at, "
-               + "e.name AS enterpriseName, tr.title AS serviceName, tr.request_code " // <--- THÊM VÀO ĐÂY
-               + "FROM Feedbacks f "
-               + "JOIN Enterprises e ON f.enterprise_id = e.id "
-               + "LEFT JOIN TechnicalRequests tr ON f.technical_request_id = tr.id "
-               + "WHERE f.is_deleted = 0 ORDER BY f.created_at DESC";
+    // 1. Thêm điều kiện tìm kiếm (query)
+    if (query != null && !query.trim().isEmpty()) {
+        sql.append(" AND (e.name LIKE ? OR tr.request_code LIKE ?)");
+        params.add("%" + query.trim() + "%");
+        params.add("%" + query.trim() + "%");
+    }
 
+    // 2. Thêm điều kiện lọc theo rating (ratingFilter)
+    if (ratingFilter != null && !ratingFilter.equals("all")) {
+        switch (ratingFilter) {
+            case "good":
+                sql.append(" AND f.rating >= ?");
+                params.add(4);
+                break;
+            case "normal":
+                sql.append(" AND f.rating = ?");
+                params.add(3);
+                break;
+            case "bad":
+                sql.append(" AND f.rating <= ?");
+                params.add(2);
+                break;
+        }
+    }
+
+    // Luôn sắp xếp kết quả
+    sql.append(" ORDER BY f.created_at DESC");
+
+    // Thực thi câu lệnh
     try (Connection conn = new DBContext().getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql);
-         ResultSet rs = ps.executeQuery()) {
+         PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
-        while (rs.next()) {
-            FeedbackView fb = new FeedbackView();
-            fb.setId(rs.getInt("id"));
-            fb.setRating(rs.getInt("rating"));
-            fb.setComment(rs.getString("comment"));
-            fb.setStatus(rs.getString("status"));
-            fb.setCreatedAt(rs.getTimestamp("created_at"));
-            fb.setEnterpriseName(rs.getString("enterpriseName"));
-            fb.setServiceName(rs.getString("serviceName"));
-            
-            // SỬA Ở ĐÂY: Gán giá trị cho requestCode
-            fb.setRequestCode(rs.getString("request_code")); // <--- THÊM DÒNG NÀY
+        // Gán các tham số vào PreparedStatement
+        for (int i = 0; i < params.size(); i++) {
+            ps.setObject(i + 1, params.get(i));
+        }
 
-            list.add(fb);
+        try (ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                FeedbackView fb = new FeedbackView();
+                fb.setId(rs.getInt("id"));
+                fb.setRating(rs.getInt("rating"));
+                fb.setComment(rs.getString("comment"));
+                fb.setStatus(rs.getString("status"));
+                fb.setCreatedAt(rs.getTimestamp("created_at"));
+                fb.setEnterpriseName(rs.getString("enterpriseName"));
+                fb.setServiceName(rs.getString("serviceName"));
+                fb.setRequestCode(rs.getString("request_code"));
+                list.add(fb);
+            }
         }
     } catch (Exception ex) {
         ex.printStackTrace();
     }
     return list;
 }
-
 
     public List<Enterprise> getAllEnterprises() {
         List<Enterprise> list = new ArrayList<>();
@@ -159,48 +193,53 @@ public class FeedbackDAO {
     }
 
     public FeedbackView getFeedbackById(int feedbackId) {
-        FeedbackView feedback = null;
-        // Câu lệnh SQL này join các bảng để lấy đủ thông tin cần thiết
-        String sql = "SELECT f.*, "
-                + "e.name AS enterpriseName, e.business_email AS enterpriseEmail, "
-                + "tr.title AS serviceName, "
-                + "CONCAT_WS(' ', u.first_name, u.middle_name, u.last_name) AS technicianName "
-                + "FROM Feedbacks f "
-                + "JOIN Enterprises e ON f.enterprise_id = e.id "
-                + "LEFT JOIN TechnicalRequests tr ON f.technical_request_id = tr.id "
-                + "LEFT JOIN Users u ON tr.assigned_to_id = u.id "
-                + "WHERE f.id = ?";
+    FeedbackView feedback = null;
+    
+    // Đã xóa "e.phone" khỏi câu lệnh SQL
+    String sql = "SELECT f.*, "
+            + "e.name AS enterpriseName, e.business_email AS enterpriseEmail, "
+            // 1. LẤY TÊN DỊCH VỤ TỪ BẢNG SERVICES (s.name) THAY VÌ tr.title
+            + "s.name AS serviceName, "
+            + "tr.request_code, "
+            + "CONCAT_WS(' ', u.first_name, u.middle_name, u.last_name) AS technicianName "
+            + "FROM Feedbacks f "
+            + "JOIN Enterprises e ON f.enterprise_id = e.id "
+            + "LEFT JOIN TechnicalRequests tr ON f.technical_request_id = tr.id "
+            // 2. JOIN THÊM BẢNG SERVICES VÀO ĐÂY
+            + "LEFT JOIN Services s ON tr.service_id = s.id "
+            + "LEFT JOIN Users u ON tr.assigned_to_id = u.id "
+            + "WHERE f.id = ?";
 
-        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+    try (Connection conn = new DBContext().getConnection(); 
+         PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            // 1. Đặt tham số ID vào câu lệnh SQL
-            ps.setInt(1, feedbackId);
+        ps.setInt(1, feedbackId);
 
-            // 2. Thực thi câu lệnh và lấy kết quả
-            try (ResultSet rs = ps.executeQuery()) {
-                // 3. Nếu tìm thấy một dòng kết quả
-                if (rs.next()) {
-                    // 4. Tạo đối tượng FeedbackView và gán dữ liệu từ ResultSet
-                    feedback = new FeedbackView();
-                    feedback.setId(rs.getInt("id"));
-                    feedback.setRating(rs.getInt("rating"));
-                    feedback.setComment(rs.getString("comment"));
-                    feedback.setStatus(rs.getString("status"));
-                    feedback.setCreatedAt(rs.getTimestamp("created_at"));
-                    feedback.setEnterpriseName(rs.getString("enterpriseName"));
-                    feedback.setEnterpriseEmail(rs.getString("enterpriseEmail"));
-                    feedback.setServiceName(rs.getString("serviceName"));
-                    feedback.setTechnicianName(rs.getString("technicianName"));
-                    feedback.setRelatedRequestId(rs.getInt("technical_request_id"));
-                }
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                feedback = new FeedbackView();
+                feedback.setId(rs.getInt("id"));
+                feedback.setRating(rs.getInt("rating"));
+                feedback.setComment(rs.getString("comment"));
+                feedback.setStatus(rs.getString("status"));
+                feedback.setCreatedAt(rs.getTimestamp("created_at"));
+                feedback.setEnterpriseName(rs.getString("enterpriseName"));
+                feedback.setEnterpriseEmail(rs.getString("enterpriseEmail"));
+                
+                // Phần gán giá trị serviceName không cần thay đổi vì chúng ta đã dùng alias
+                feedback.setServiceName(rs.getString("serviceName")); 
+                
+                feedback.setTechnicianName(rs.getString("technicianName"));
+                feedback.setRelatedRequestId(rs.getInt("technical_request_id"));
+                feedback.setRequestCode(rs.getString("request_code"));
             }
-        } catch (Exception ex) {
-            ex.printStackTrace(); // In lỗi ra console để debug
         }
-
-        // 5. Trả về đối tượng feedback (sẽ là null nếu không tìm thấy)
-        return feedback;
+    } catch (Exception ex) {
+        ex.printStackTrace(); 
     }
+
+    return feedback;
+}
 
     /**
      * Lấy danh sách các ghi chú nội bộ cho một feedback cụ thể.
@@ -252,7 +291,6 @@ public class FeedbackDAO {
             return false;
         }
     }
-    
 
     // Bạn có thể thêm các phương thức khác ở đây như:
     // getFeedbackDetailById(int id), updateFeedbackStatus(int id, String status), softDeleteFeedback(int id)...
