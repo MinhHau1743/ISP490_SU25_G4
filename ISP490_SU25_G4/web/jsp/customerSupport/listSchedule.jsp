@@ -782,7 +782,9 @@
                 border-bottom: 1px solid #ddd;
             }
 
-
+            .week-nav.hidden {
+                display: none;
+            }
         </style>
     </head>
     <body>
@@ -1053,6 +1055,16 @@
             var contextPath = window.location.pathname.split('/')[1] ? '/' + window.location.pathname.split('/')[1] : '';
 
             feather.replace();
+            document.addEventListener('DOMContentLoaded', () => {
+                const weekNav = document.querySelector('.week-nav');
+                if (weekNav) {
+                    if (currentView === 'list-view') {
+                        weekNav.classList.add('hidden');
+                    } else {
+                        weekNav.classList.remove('hidden');
+                    }
+                }
+            });
             const schedules = [
             <c:forEach var="schedule" items="${schedules}" varStatus="status">
             {
