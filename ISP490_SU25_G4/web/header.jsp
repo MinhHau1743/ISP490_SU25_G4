@@ -2,9 +2,14 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 
+<%-- 
+    File: header.jsp
+    Description: Thanh header trên cùng, bao gồm tiêu đề trang, menu thông báo và menu người dùng.
+--%>
+
 <header class="main-top-bar">
     <div class="page-title">${param.pageTitle}</div>
-
+    
     <div class="header-actions">
         <%-- Nút Thông báo --%>
         <div class="notification-wrapper">
@@ -12,15 +17,15 @@
                 <i data-feather="bell"></i>
                 <span class="notification-badge">4</span>
             </button>
-
+            
             <%-- Dropdown Thông báo --%>
             <div class="notification-dropdown">
                 <div class="notification-header">
                     <h3 class="notification-title">Notifications</h3>
-                    <button class="notification-settings-btn" type="button"><i data-feather="settings"></i></button>
+                    <%-- Nút cài đặt đã được xóa bỏ theo yêu cầu --%>
                 </div>
                 <ul class="notification-list">
-                    <%-- Dữ liệu thông báo mẫu --%>
+                    <%-- Mẫu thông báo 1 --%>
                     <li class="notification-item">
                         <div class="notification-avatar user-avatar-img">
                             <img src="https://i.pravatar.cc/40?u=morgan" alt="Morgan Freeman">
@@ -31,6 +36,16 @@
                             </p>
                             <span class="notification-tag collaboration">Collaboration</span>
                             <span class="notification-time">Today, 10:14 PM</span>
+                        </div>
+                    </li>
+                    <%-- Mẫu thông báo 2 --%>
+                    <li class="notification-item">
+                        <div class="notification-avatar icon-avatar message">
+                            <i data-feather="message-square"></i>
+                        </div>
+                        <div class="notification-content">
+                            <p class="notification-text">New message received from <strong>Alan Rickman</strong></p>
+                            <span class="notification-time">Today, 7:51 AM</span>
                         </div>
                     </li>
                 </ul>
@@ -49,8 +64,7 @@
                     </c:if>
                 </span>
             </button>
-
-            <%-- **BẮT ĐẦU PHẦN CODE MỚI ĐƯỢC THÊM VÀO** --%>
+            
             <div class="dropdown-content">
                 <div class="dropdown-header">
                     <div class="user-avatar-large">
@@ -71,7 +85,7 @@
                     <i data-feather="user"></i>
                     <span>Thông tin cá nhân</span>
                 </a>
-
+                
                 <div class="dropdown-divider"></div>
 
                 <div class="dropdown-section-title">Quản lý tài khoản</div>
@@ -80,7 +94,6 @@
                     <span>Đổi mật khẩu</span>
                 </a>
             </div>
-            <%-- **KẾT THÚC PHẦN CODE MỚI** --%>
         </div>
     </div>
 </header>
