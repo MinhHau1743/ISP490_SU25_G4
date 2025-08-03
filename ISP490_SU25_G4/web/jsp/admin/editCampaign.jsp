@@ -439,7 +439,7 @@
                                                 </a>
                                             </span>
                                         </div>
-                                        <small class="text-muted">Tải lên tệp mới sẽ thay thế tệp hiện tại.</small>
+                                        <small class="text-muted">Tải lên tệp mới sẽ thay thế tệp hiện tại của bạn.</small>
                                     </c:when>
                                     <c:otherwise>
                                         <p class="text-muted">Không có tệp đính kèm.</p>
@@ -457,7 +457,7 @@
                                         <i data-feather="x"></i> Hủy
                                     </a>
                                     <button type="submit" class="btn-action btn-save">
-                                        <i data-feather="save"></i> Lưu Thay Đổi
+                                        <i data-feather="save"></i> Lưu 
                                     </button>
                                 </div>
                             </form>

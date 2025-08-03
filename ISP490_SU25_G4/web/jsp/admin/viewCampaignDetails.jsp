@@ -29,7 +29,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/listCampaign.css">
 
         <style>
-            /* THIẾT KẾ MỚI DỰA TRÊN HÌNH ẢNH CUNG CẤP */
+            /* THIẾT KẾ MỚI DỰ TRÊN HÌNH ẢNH CUNG CẤP */
             .main-content {
                 padding: 20px 30px;
                 background-color: #f4f7f9; /* Thêm màu nền cho khu vực nội dung chính */
@@ -61,23 +61,32 @@
                 font-weight: 600;
             }
 
+            /* ĐÃ SỬA: CSS cho nút Quay lại */
             .btn-back {
-                padding: 8px 16px;
-                border-radius: 6px;
-                font-size: 0.9em;
-                font-weight: 500;
-                text-decoration: none;
-                display: inline-flex;
+                /* Loại bỏ padding, border, background để chỉ hiển thị icon */
+                padding: 0; /* Xóa padding */
+                border: none; /* Xóa border */
+                background-color: transparent; /* Xóa nền */
+                
+                font-size: 1.5em; /* Tăng kích thước icon nếu muốn */
+                color: #6c757d; /* Màu icon */
+                cursor: pointer;
+                display: inline-flex; /* Đảm bảo icon căn giữa */
                 align-items: center;
-                gap: 6px;
-                background-color: #e9ecef;
-                color: #495057;
-                border: 1px solid #dee2e6;
-                transition: background-color 0.2s, border-color 0.2s;
+                justify-content: center;
+                width: 30px; /* Đặt chiều rộng và cao để căn giữa tốt hơn */
+                height: 30px;
+                border-radius: 50%; /* Có thể làm tròn nếu muốn */
+                transition: color 0.2s, background-color 0.2s; /* Thêm hiệu ứng hover */
             }
             .btn-back:hover {
-                background-color: #dee2e6;
-                border-color: #ced4da;
+                color: #212529; /* Đậm hơn khi hover */
+                background-color: #e9ecef; /* Có thể thêm nền mờ khi hover */
+            }
+            /* Đảm bảo icon Feather vẫn được hiển thị đúng */
+            .btn-back i {
+                 width: 1em; /* Sử dụng em để kích thước theo font-size của parent */
+                 height: 1em;
             }
             
             .detail-body {
@@ -195,8 +204,9 @@
                         <c:if test="${not empty campaign}">
                             <div class="detail-header">
                                 <h1>Chi tiết: <c:out value="${campaign.name}"/></h1>
+                                <%-- ĐÃ SỬA: Xóa chữ "Quay lại" và chỉ giữ lại icon --%>
                                 <a href="${pageContext.request.contextPath}/list-campaign" class="btn-back">
-                                    <i data-feather="arrow-left" style="width: 16px; height: 16px;"></i> Quay lại
+                                    <i data-feather="arrow-left" style="width: 16px; height: 16px;"></i> 
                                 </a>
                             </div>
                             
@@ -294,9 +304,9 @@
                                 </div>
                                 
                                 <div class="detail-footer">
-                                      <a href="${pageContext.request.contextPath}/edit-campaign?id=${campaign.campaignId}" class="btn-edit">
-                                          <i data-feather="edit" style="width: 16px; height: 16px;"></i> Sửa
-                                      </a>
+                                    <a href="${pageContext.request.contextPath}/edit-campaign?id=${campaign.campaignId}" class="btn-edit">
+                                        <i data-feather="edit" style="width: 16px; height: 16px;"></i> Sửa
+                                    </a>
                                 </div>
 
                             </div>
