@@ -6,6 +6,22 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     Created on : Jun 6, 2025, 1:49:28 PM
     Author     : NGUYEN MINH
 */
+/* ---- TIÊU CHUẨN MÀU SẮC TOÀN WEBSITE ---- */
+/* Đặt ở đầu file /web/css/style.css */
+
+:root {
+    /* 1. MÀU CHỦ ĐẠO: Xanh lá cây (mòng két) từ trang Khách hàng */
+    --primary-color: #0d9488;
+    --primary-color-light: #ccfbf1; /* Màu highlight nhạt tương ứng */
+
+    /* 2. Các màu phụ trợ */
+    --white: #ffffff;
+    --border-color: #dee2e6;       /* Màu viền */
+    --background-color: #f8f9fa;    /* Màu nền chung */
+    --text-primary: #212529;        /* Màu chữ chính */
+    --text-secondary: #6c757d;       /* Màu chữ phụ */
+}
+
 :root {
     --primary-color: #298E94;
     --primary-color-light: #79d5db;

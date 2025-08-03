@@ -35,16 +35,20 @@
                     <i data-feather="file-text"></i><span>Hợp đồng</span>
                 </a>
             </li>
+
             <li>
                 <a href="${pageContext.request.contextPath}/ProductController" class="${currentPage.contains('Product') ? 'active' : ''}">
                     <i data-feather="box"></i><span>Hàng hóa</span>
                 </a>
             </li>
-
+            <li>
+                <a href="${pageContext.request.contextPath}/listSchedule" class="${currentPage.contains('Schedule') ? 'active' : ''}">
+                    <i data-feather="check-square"></i><span>Lịch bảo trì</span>
+                </a>
+            </li>
             <%-- ===== NHÓM QUẢN TRỊ (CHỈ ADMIN THẤY) ===== --%>
             <c:if test="${sessionScope.userRole == 'Admin'}">
                 <li>
-                    <%-- Đảm bảo đường dẫn ở đây là "/listEmployee" --%>
                     <a href="${pageContext.request.contextPath}/listEmployee" class="${currentPage.contains('Employee') ? 'active' : ''}">
                         <i data-feather="briefcase"></i><span>Nhân viên</span>
                     </a>
@@ -52,7 +56,8 @@
             </c:if>
 
             <%-- ===== NHÓM NGHIỆP VỤ ===== --%>
-            <c:set var="isSupportSection" value="${currentPage == 'ticket' || currentPage == 'createTicket'}" />
+            <%-- Cập nhật: Chỉ mở rộng menu khi ở các trang liên quan đến Ticket --%>
+            <c:set var="isSupportSection" value="${currentPage.contains('ticket')}" />
             <li class="nav-item-dropdown ${isSupportSection ? 'open' : ''}">
                 <a href="#" class="${isSupportSection ? 'active' : ''}">
                     <i data-feather="tool"></i><span>Hỗ trợ Kỹ thuật</span><i data-feather="chevron-down" class="dropdown-icon"></i>
@@ -61,6 +66,13 @@
                     <li><a href="${pageContext.request.contextPath}/ticket" class="${currentPage == 'ticket' ? 'active' : ''}">Danh sách Phiếu</a></li>
                     <li><a href="${pageContext.request.contextPath}/ticket?action=create" class="${currentPage == 'createTicket' ? 'active' : ''}">Tạo Phiếu mới</a></li>
                 </ul>
+            </li>
+
+            <%-- THÊM MỚI: Mục Phản hồi được tách ra riêng --%>
+            <li>
+                <a href="${pageContext.request.contextPath}/listFeedback" class="${currentPage.contains('Feedback') ? 'active' : ''}">
+                    <i data-feather="message-square"></i><span>Phản hồi</span>
+                </a>
             </li>
 
             <li class="nav-item ${currentPage == 'report' ? 'active' : ''}">
