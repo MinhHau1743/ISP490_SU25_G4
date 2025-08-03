@@ -1,5 +1,5 @@
 <%--
-    Document   : createSchedule.jsp
+    Document   : listSchedule.jsp
     Created on : Jun 21, 2025
     Author     : NGUYEN MINH / Gemini
 --%>
@@ -14,7 +14,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Lịch bảo trì - DPCRM</title>
+        <title>Lịch bảo trì</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">

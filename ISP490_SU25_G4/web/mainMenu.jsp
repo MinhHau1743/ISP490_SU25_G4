@@ -37,6 +37,13 @@
                 </a>
             </li>
             
+            <%-- **ĐÃ THÊM LẠI MỤC "LỊCH BẢO TRÌ" VÀO ĐÂY** --%>
+            <li>
+                <a href="${pageContext.request.contextPath}/listSchedule" class="${currentPage.contains('Schedule') ? 'active' : ''}">
+                    <i data-feather="check-square"></i><span>Lịch bảo trì</span>
+                </a>
+            </li>
+            
             <%-- ===== NHÓM QUẢN TRỊ (CHỈ ADMIN THẤY) ===== --%>
             <c:if test="${sessionScope.userRole == 'Admin'}">
                 <li>
@@ -78,8 +85,8 @@
             
         </ul>
     </nav>
-
+<!--
     <div class="sidebar-footer">
         <p>© 2025 DPCRM from ISP490_SU25_GR4</p>
-    </div>
+    </div>-->
 </aside>

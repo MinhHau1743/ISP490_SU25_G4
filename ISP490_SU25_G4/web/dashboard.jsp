@@ -12,7 +12,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bảng điều khiển - DPCRM</title>
+    <title>Bảng điều khiển</title>
+
 
    
     <%-- Các link CSS và font --%>
@@ -111,7 +112,7 @@
 
         <main class="main-content">
          
-              <jsp:include page="header.jsp">
+            <jsp:include page="header.jsp">
                 <jsp:param name="pageTitle" value="Bảng điều khiển"/>
             </jsp:include>
 

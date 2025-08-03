@@ -26,56 +26,88 @@
         <link rel="stylesheet" href="${BASE_URL}/css/style.css">
         <link rel="stylesheet" href="${BASE_URL}/css/mainMenu.css">
         <link rel="stylesheet" href="${BASE_URL}/css/listCustomer.css">
+        <link rel="stylesheet" href="css/header.css">
 
         <style>
             .no-results-message {
-                text-align: center; padding: 40px 20px; margin: 20px;
-                border: 1px dashed #ccc; border-radius: 8px;
-                background-color: #f9f9f9; color: #555;
+                text-align: center;
+                padding: 40px 20px;
+                margin: 20px;
+                border: 1px dashed #ccc;
+                border-radius: 8px;
+                background-color: #f9f9f9;
+                color: #555;
             }
             .no-results-message .feather-info {
-                width: 48px; height: 48px; color: #888; margin-bottom: 16px;
+                width: 48px;
+                height: 48px;
+                color: #888;
+                margin-bottom: 16px;
             }
-            .no-results-message p { margin: 5px 0; font-size: 1.1rem; }
-            
+            .no-results-message p {
+                margin: 5px 0;
+                font-size: 1.1rem;
+            }
+
             .filter-toolbar {
-                display: flex; flex-wrap: wrap; gap: 16px; padding: 16px;
-                background-color: #f8f9fa; border: 1px solid #dee2e6;
-                border-radius: 8px; margin-top: 16px; align-items: flex-end;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 16px;
+                padding: 16px;
+                background-color: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 8px;
+                margin-top: 16px;
+                align-items: flex-end;
             }
-            .filter-group { display: flex; flex-direction: column; gap: 4px; }
-            .filter-group label { font-size: 13px; font-weight: 500; color: #4b5563; }
+            .filter-group {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+            .filter-group label {
+                font-size: 13px;
+                font-weight: 500;
+                color: #4b5563;
+            }
             .filter-group select {
-                min-width: 180px; height: 38px; padding: 0 12px;
-                border-radius: 6px; border: 1px solid #d1d5db; background-color: #fff;
+                min-width: 180px;
+                height: 38px;
+                padding: 0 12px;
+                border-radius: 6px;
+                border: 1px solid #d1d5db;
+                background-color: #fff;
             }
-            .filter-actions { display: flex; gap: 8px; margin-left: auto; }
+            .filter-actions {
+                display: flex;
+                gap: 8px;
+                margin-left: auto;
+            }
         </style>
     </head>
     <body>
         <div class="app-container">
             <jsp:include page="/mainMenu.jsp"/>
 
-            <main class="main-content">
-                <header class="page-header">
-                    <div class="title-section"><h1 class="title">Danh sách Khách hàng</h1></div>
-                    <div class="header-actions"><button class="notification-btn"><i data-feather="bell"></i></button></div>
-                </header>
 
+            <main class="main-content">
+                <jsp:include page="/header.jsp">
+                    <jsp:param name="pageTitle" value="Danh sách Khách hàng"/>
+                </jsp:include>
                 <div class="page-content">
                     <%-- Display messages --%>
                     <c:if test="${not empty sessionScope.successMessage}">
                         <div class="success-message"><i data-feather="check-circle" class="icon"></i><span>${sessionScope.successMessage}</span></div>
-                        <c:remove var="successMessage" scope="session"/>
-                    </c:if>
-                    <c:if test="${not empty sessionScope.errorMessage}">
+                                <c:remove var="successMessage" scope="session"/>
+                            </c:if>
+                            <c:if test="${not empty sessionScope.errorMessage}">
                         <div class="error-message">${sessionScope.errorMessage}</div>
                         <c:remove var="errorMessage" scope="session"/>
                     </c:if>
 
                     <form class="search-and-filter-form" action="${BASE_URL}/listCustomer" method="GET">
                         <div class="table-toolbar">
-                             <div class="search-container" style="flex-grow: 1;">
+                            <div class="search-container" style="flex-grow: 1;">
                                 <div style="position: relative;">
                                     <div class="search-box">
                                         <i data-feather="search"></i>
@@ -95,18 +127,18 @@
                                 </c:choose>
                             </div>
                         </div>
-                        
+
                         <div class="filter-toolbar">
                             <div class="filter-group">
                                 <label for="province">Tỉnh/Thành phố</label>
                                 <select id="province" name="provinceId">
                                     <option value="">Tất cả</option>
                                     <c:forEach var="p" items="${allProvinces}"><option value="${p.id}" ${p.id == selectedProvinceId ? 'selected' : ''}>${p.name}</option></c:forEach>
-                                </select>
-                            </div>
-                            <div class="filter-group">
-                                <label for="district">Quận/Huyện</label>
-                                <select id="district" name="districtId" ${empty selectedProvinceId ? 'disabled' : ''}><option value="">Tất cả</option></select>
+                                    </select>
+                                </div>
+                                <div class="filter-group">
+                                    <label for="district">Quận/Huyện</label>
+                                    <select id="district" name="districtId" ${empty selectedProvinceId ? 'disabled' : ''}><option value="">Tất cả</option></select>
                             </div>
                             <div class="filter-group">
                                 <label for="ward">Phường/Xã</label>
@@ -117,18 +149,18 @@
                                 <select id="customerType" name="customerTypeId">
                                     <option value="">Tất cả</option>
                                     <c:forEach var="type" items="${allCustomerTypes}"><option value="${type.id}" ${type.id == selectedCustomerTypeId ? 'selected' : ''}>${type.name}</option></c:forEach>
-                                </select>
-                            </div>
-                             <div class="filter-group">
-                                <label for="employee">Nhân viên phụ trách</label>
-                                <select id="employee" name="employeeId">
-                                    <option value="">Tất cả</option>
+                                    </select>
+                                </div>
+                                <div class="filter-group">
+                                    <label for="employee">Nhân viên phụ trách</label>
+                                    <select id="employee" name="employeeId">
+                                        <option value="">Tất cả</option>
                                     <c:forEach var="emp" items="${allEmployees}"><option value="${emp.id}" ${emp.id == selectedEmployeeId ? 'selected' : ''}>${emp.fullName}</option></c:forEach>
-                                </select>
-                            </div>
-                            <div class="filter-actions">
-                                <button type="submit" class="btn btn-primary"><i data-feather="filter" style="margin-right: 4px;"></i>Lọc</button>
-                                <a href="${BASE_URL}/listCustomer" class="btn btn-secondary">Xóa lọc</a>
+                                    </select>
+                                </div>
+                                <div class="filter-actions">
+                                    <button type="submit" class="btn btn-primary"><i data-feather="filter" style="margin-right: 4px;"></i>Lọc</button>
+                                    <a href="${BASE_URL}/listCustomer" class="btn btn-secondary">Xóa lọc</a>
                             </div>
                         </div>
                     </form>
@@ -136,16 +168,16 @@
                     <%-- KANBAN BOARD & MESSAGES --%>
                     <c:if test="${not empty noResultsFound}">
                         <div class="no-results-message"><i data-feather="info"></i><p>Không tìm thấy khách hàng nào phù hợp với các tiêu chí đã chọn.</p></div>
-                    </c:if>
-                    <c:if test="${empty noResultsFound}">
+                            </c:if>
+                            <c:if test="${empty noResultsFound}">
                         <div class="customer-board-container">
                             <div class="customer-board">
                                 <jsp:include page="kanbanColumn.jsp"><jsp:param name="columnKey" value="potential"/><jsp:param name="columnTitle" value="Khách hàng Tiềm năng"/></jsp:include>
                                 <jsp:include page="kanbanColumn.jsp"><jsp:param name="columnKey" value="other"/><jsp:param name="columnTitle" value="Khách hàng Mới"/></jsp:include>
                                 <jsp:include page="kanbanColumn.jsp"><jsp:param name="columnKey" value="loyal"/><jsp:param name="columnTitle" value="Khách hàng Thân thiết"/></jsp:include>
                                 <jsp:include page="kanbanColumn.jsp"><jsp:param name="columnKey" value="vip"/><jsp:param name="columnTitle" value="Khách hàng VIP"/></jsp:include>
+                                </div>
                             </div>
-                        </div>
                     </c:if>    
                 </div>
             </main>
@@ -180,7 +212,7 @@
                         alert(disabledLink.getAttribute('data-error') || 'Bạn không có quyền thực hiện chức năng này.');
                     }
                 });
-                
+
                 // --- Search suggestions ---
                 const searchInput = document.getElementById('searchInput');
                 const suggestionsContainer = document.getElementById('suggestionsContainer');
@@ -188,10 +220,14 @@
                 if (searchInput && suggestionsContainer && searchForm) {
                     searchInput.addEventListener('input', async function () {
                         const query = this.value.trim();
-                        if (query.length < 2) { suggestionsContainer.style.display = 'none'; return; }
+                        if (query.length < 2) {
+                            suggestionsContainer.style.display = 'none';
+                            return;
+                        }
                         try {
                             const response = await fetch('${BASE_URL}/searchSuggestions?query=' + encodeURIComponent(query));
-                            if (!response.ok) throw new Error('Network error');
+                            if (!response.ok)
+                                throw new Error('Network error');
                             const suggestions = await response.json();
                             suggestionsContainer.innerHTML = '';
                             if (suggestions.length > 0) {
@@ -207,8 +243,13 @@
                                     suggestionsContainer.appendChild(item);
                                 });
                                 suggestionsContainer.style.display = 'block';
-                            } else { suggestionsContainer.style.display = 'none'; }
-                        } catch (error) { console.error('Suggestion fetch error:', error); suggestionsContainer.style.display = 'none'; }
+                            } else {
+                                suggestionsContainer.style.display = 'none';
+                            }
+                        } catch (error) {
+                            console.error('Suggestion fetch error:', error);
+                            suggestionsContainer.style.display = 'none';
+                        }
                     });
                     document.addEventListener('click', function (event) {
                         if (!searchInput.contains(event.target) && !suggestionsContainer.contains(event.target)) {
@@ -216,7 +257,7 @@
                         }
                     });
                 }
-                
+
                 // --- Dynamic address dropdowns ---
                 const provinceSelect = document.getElementById('province');
                 const districtSelect = document.getElementById('district');
@@ -229,40 +270,47 @@
                     districtSelect.disabled = true;
                     wardSelect.innerHTML = '<option value="">Tất cả</option>';
                     wardSelect.disabled = true;
-                    if (!provinceId) return;
+                    if (!provinceId)
+                        return;
 
                     const response = await fetch('${BASE_URL}/getDistricts?provinceId=' + provinceId);
                     const data = await response.json();
                     districtSelect.disabled = false;
                     data.forEach(d => {
                         const option = new Option(d.name, d.id);
-                        if (d.id == selectedDistrictId) option.selected = true;
+                        if (d.id == selectedDistrictId)
+                            option.selected = true;
                         districtSelect.add(option);
                     });
-                    if (districtSelect.value) await fetchWards(districtSelect.value);
+                    if (districtSelect.value)
+                        await fetchWards(districtSelect.value);
                 }
 
                 async function fetchWards(districtId) {
                     wardSelect.innerHTML = '<option value="">Tất cả</option>';
                     wardSelect.disabled = true;
-                    if (!districtId) return;
+                    if (!districtId)
+                        return;
 
                     const response = await fetch('${BASE_URL}/getWards?districtId=' + districtId);
                     const data = await response.json();
                     wardSelect.disabled = false;
                     data.forEach(w => {
                         const option = new Option(w.name, w.id);
-                        if (w.id == selectedWardId) option.selected = true;
+                        if (w.id == selectedWardId)
+                            option.selected = true;
                         wardSelect.add(option);
                     });
                 }
 
                 provinceSelect.addEventListener('change', () => fetchDistricts(provinceSelect.value));
                 districtSelect.addEventListener('change', () => fetchWards(districtSelect.value));
-                if (provinceSelect.value) { fetchDistricts(provinceSelect.value); }
+                if (provinceSelect.value) {
+                    fetchDistricts(provinceSelect.value);
+                }
             });
         </script>
-        
+
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
         <script src="${pageContext.request.contextPath}/js/delete-modal-handler.js"></script>
     </body>
