@@ -11,19 +11,15 @@ import vn.edu.fpt.dao.AddressDAO;
 import vn.edu.fpt.dao.CustomerTypeDAO;
 import vn.edu.fpt.dao.EnterpriseDAO;
 import vn.edu.fpt.dao.UserDAO;
-import vn.edu.fpt.model.CustomerType;
 import vn.edu.fpt.model.Enterprise;
-import vn.edu.fpt.model.Province;
-import vn.edu.fpt.model.User;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @WebServlet(name = "ListCustomerController", urlPatterns = {"/listCustomer"})
 public class ListCustomerController extends HttpServlet {
+
+    private static final int PAGE_SIZE = 10; // Số khách hàng mỗi trang
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -36,61 +32,53 @@ public class ListCustomerController extends HttpServlet {
         }
 
         try {
-            // Lấy tất cả các tham số lọc từ request
+            // Lấy tham số lọc và phân trang
             String searchQuery = request.getParameter("search");
             String customerTypeId = request.getParameter("customerTypeId");
             String employeeId = request.getParameter("employeeId");
             String provinceId = request.getParameter("provinceId");
             String districtId = request.getParameter("districtId");
             String wardId = request.getParameter("wardId");
+            String pageStr = request.getParameter("page");
 
-            boolean isFilteringOrSearching = (searchQuery != null && !searchQuery.trim().isEmpty())
-                    || (customerTypeId != null && !customerTypeId.isEmpty())
-                    || (employeeId != null && !employeeId.isEmpty())
-                    || (provinceId != null && !provinceId.isEmpty())
-                    || (districtId != null && !districtId.isEmpty())
-                    || (wardId != null && !wardId.isEmpty());
-
-            EnterpriseDAO enterpriseDAO = new EnterpriseDAO();
-            // Truyền tất cả tham số lọc vào DAO
-            List<Enterprise> allEnterprises = enterpriseDAO.getAllActiveEnterprises(searchQuery, customerTypeId, employeeId, provinceId, districtId, wardId);
-
-            // Chỉ đặt cờ "noResultsFound" khi người dùng đang lọc/tìm kiếm và danh sách trả về rỗng
-            if (isFilteringOrSearching && allEnterprises.isEmpty()) {
-                request.setAttribute("noResultsFound", true);
-            }
-
-            // Phân loại khách hàng vào các cột Kanban
-            Map<String, List<Enterprise>> customerColumns = new HashMap<>();
-            customerColumns.put("vip", new ArrayList<>());
-            customerColumns.put("loyal", new ArrayList<>());
-            customerColumns.put("potential", new ArrayList<>());
-            customerColumns.put("other", new ArrayList<>());
-
-            for (Enterprise enterprise : allEnterprises) {
-                String typeName = enterprise.getCustomerTypeName() != null ? enterprise.getCustomerTypeName().toLowerCase() : "";
-                if (typeName.contains("vip")) {
-                    customerColumns.get("vip").add(enterprise);
-                } else if (typeName.contains("thân thiết")) {
-                    customerColumns.get("loyal").add(enterprise);
-                } else if (typeName.contains("tiềm năng")) {
-                    customerColumns.get("potential").add(enterprise);
-                } else {
-                    customerColumns.get("other").add(enterprise);
+            int page = 1;
+            if (pageStr != null && !pageStr.isEmpty()) {
+                try {
+                    page = Integer.parseInt(pageStr);
+                } catch (NumberFormatException e) {
+                    page = 1; // Mặc định về trang 1 nếu tham số không hợp lệ
                 }
             }
 
+            EnterpriseDAO enterpriseDAO = new EnterpriseDAO();
+
+            // Lấy danh sách khách hàng đã được phân trang
+            List<Enterprise> customerList = enterpriseDAO.getPaginatedActiveEnterprises(
+                    searchQuery, customerTypeId, employeeId, provinceId, districtId, wardId, page, PAGE_SIZE);
+
+            // Đếm tổng số khách hàng thỏa mãn điều kiện lọc để tính tổng số trang
+            int totalCustomers = enterpriseDAO.countActiveEnterprises(
+                    searchQuery, customerTypeId, employeeId, provinceId, districtId, wardId);
+            
+            int totalPages = (int) Math.ceil((double) totalCustomers / PAGE_SIZE);
+
+            // Kiểm tra và đặt thông báo "Không tìm thấy kết quả"
+            boolean isAction = (searchQuery != null && !searchQuery.isEmpty()) || (customerTypeId != null && !customerTypeId.isEmpty()) || (employeeId != null && !employeeId.isEmpty()) || (provinceId != null && !provinceId.isEmpty());
+            if (isAction && customerList.isEmpty()) {
+                request.setAttribute("noResultsFound", true);
+            }
+
             // Lấy dữ liệu cho các dropdown bộ lọc
-            AddressDAO addressDAO = new AddressDAO();
-            CustomerTypeDAO customerTypeDAO = new CustomerTypeDAO();
-            UserDAO userDAO = new UserDAO();
+            request.setAttribute("allProvinces", new AddressDAO().getAllProvinces());
+            request.setAttribute("allCustomerTypes", new CustomerTypeDAO().getAllCustomerTypes());
+            request.setAttribute("allEmployees", new UserDAO().getAllEmployees());
 
-            request.setAttribute("allProvinces", addressDAO.getAllProvinces());
-            request.setAttribute("allCustomerTypes", customerTypeDAO.getAllCustomerTypes());
-            request.setAttribute("allEmployees", userDAO.getAllEmployees());
-
-            // Gửi dữ liệu và các giá trị filter đã chọn sang JSP
-            request.setAttribute("customerColumns", customerColumns);
+            // Gửi dữ liệu sang JSP
+            request.setAttribute("customerList", customerList);
+            request.setAttribute("totalPages", totalPages);
+            request.setAttribute("currentPage", page);
+            
+            // Gửi lại các giá trị đã lọc để hiển thị trên form
             request.setAttribute("searchQuery", searchQuery);
             request.setAttribute("selectedCustomerTypeId", customerTypeId);
             request.setAttribute("selectedEmployeeId", employeeId);
