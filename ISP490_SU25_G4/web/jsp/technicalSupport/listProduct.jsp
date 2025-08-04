@@ -27,30 +27,22 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pagination.css">
     </head>
     <body>
-        <style>
-
-        </style>
         <div class="app-container">
-            <jsp:include page="../../mainMenu.jsp"/>
+            <jsp:include page="/mainMenu.jsp"/>
+            
             <main class="main-content">
-                <header class="page-header mb-4">
-                    <div class="title-section">
-                        <div class="title">Danh sách Sản phẩm</div>
-                        
+                <jsp:include page="/header.jsp">
+                    <jsp:param name="pageTitle" value="Danh sách Sản phẩm"/>
+                </jsp:include>
 
-                    </div>
-                    <button class="notification-btn"><i data-feather="bell"></i><span class="notification-badge"></span></button>
-                </header>
                 <c:if test="${not empty error}">
                     <div id="customAlert" class="alert alert-danger alert-dismissible fade show" role="alert" 
-                         style="max-width: 1600px; margin-bottom: 20px; padding-right: 3rem; position: relative;">
+                         style="max-width: 1600px; margin: 0 24px 20px; padding-right: 3rem; position: relative;">
                         ${error}
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close" 
                                 style="position: absolute; top: 10px; right: 10px;">
                             <span aria-hidden="true">&times;</span>
                         </button>
-
-                        <!-- Progress bar -->
                         <div class="progress mt-2" style="height: 4px;">
                             <div id="alertProgressBar" class="progress-bar bg-danger" role="progressbar" 
                                  style="width: 100%; transition: width 5s linear;"></div>
@@ -64,8 +56,8 @@
                         <form action="ProductController" method="get">
                             <div class="table-toolbar">
                                 <div class="search-box">
-                                    <i data-feather="search"></i>
                                     <input type="text" name="keyword" placeholder="Tìm kiếm tên, mã SP..." value="${param.keyword}">
+                                    <i data-feather="search"></i>
                                 </div>
                                 <button type="button" class="filter-button" id="filterBtn">
                                     <i data-feather="filter"></i><span>Bộ lọc</span>
@@ -74,12 +66,9 @@
                                     <a href="createProduct" class="btn btn-primary">
                                         <i data-feather="plus"></i><span>Thêm Sản phẩm</span>
                                     </a>
-                                    <!-- Nút mở modal -->
                                     <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addGroupModal">
                                         <i data-feather="plus-square"></i><span> Thêm nhóm hàng</span>
                                     </button>
-
-
                                     <div class="btn-group ml-3 view-toggle">
                                         <button type="button" class="btn btn-outline-secondary btn-sm active" id="gridViewBtn" title="Xem dạng lưới">
                                             <i data-feather="grid"></i>
@@ -91,7 +80,7 @@
                                 </div>
                             </div>
 
-                            <!-- Bộ lọc -->
+                            <!-- **BẮT ĐẦU NỘI DUNG BỘ LỌC** -->
                             <div class="filter-container" id="filterContainer" style="display: none;">
                                 <div class="filter-controls">
                                     <div class="filter-group">
@@ -126,8 +115,10 @@
                                     <button type="submit" class="btn-apply-filter">Áp dụng</button>
                                 </div>
                             </div>
+                            <!-- **KẾT THÚC NỘI DUNG BỘ LỌC** -->
                         </form>
 
+                        <!-- **BẮT ĐẦU NỘI DUNG DANH SÁCH SẢN PHẨM** -->
                         <div class="product-grid">
                             <div class="view-mode-container">
                                 <!-- Dạng lưới -->
@@ -169,7 +160,6 @@
                                                             <i data-feather="trash-2" style="stroke: #dc3545;"></i>
                                                         </a>
                                                     </div>
-
                                                 </div>
                                             </div>
                                         </div>
@@ -210,20 +200,9 @@
                                                     <td>${p.updatedBy}</td>
                                                     <td class="text-center">
                                                         <div class="btn-group" role="group" aria-label="Hành động sản phẩm">
-                                                            <!-- Xem -->
-                                                            <a href="getProductById?id=${p.id}" title="Xem" class="btn btn-sm btn-info" data-toggle="tooltip">
-                                                                <i data-feather="eye"></i>
-                                                            </a>
-
-                                                            <!-- Sửa -->
-                                                            <a href="editProduct?id=${p.id}" title="Sửa" class="btn btn-sm btn-warning text-white" data-toggle="tooltip">
-                                                                <i data-feather="edit-2"></i>
-                                                            </a>
-
-                                                            <!-- Xóa -->
-                                                            <a href="deleteProduct" data-id="${p.id}" title="Xóa" class="btn btn-sm btn-danger delete-trigger-btn" data-toggle="tooltip">
-                                                                <i data-feather="trash-2"></i>
-                                                            </a>
+                                                            <a href="getProductById?id=${p.id}" title="Xem" class="btn btn-sm btn-info" data-toggle="tooltip"><i data-feather="eye"></i></a>
+                                                            <a href="editProduct?id=${p.id}" title="Sửa" class="btn btn-sm btn-warning text-white" data-toggle="tooltip"><i data-feather="edit-2"></i></a>
+                                                            <a href="deleteProduct" data-id="${p.id}" title="Xóa" class="btn btn-sm btn-danger delete-trigger-btn" data-toggle="tooltip"><i data-feather="trash-2"></i></a>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -233,9 +212,10 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- **KẾT THÚC NỘI DUNG DANH SÁCH SẢN PHẨM** -->
 
                         <jsp:include page="/pagination.jsp"/>
-                        <jsp:include page="../technicalSupport/createGroupProduct.jsp" />
+                        <jsp:include page="/jsp/technicalSupport/createGroupProduct.jsp" />
                     </div>
                 </div>
             </main>
@@ -251,8 +231,12 @@
         </div>
 
         <!-- Scripts -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                feather.replace();
+            });
+        </script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
         <script src="${pageContext.request.contextPath}/js/listProduct.js"></script>
-
     </body>
 </html>

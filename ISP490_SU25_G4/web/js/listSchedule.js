@@ -6,30 +6,10 @@ document.addEventListener('DOMContentLoaded', function () {
     feather.replace();
 
     // --- 1. LOGIC CHUYỂN ĐỔI VIEW (TUẦN/THÁNG) ---
-    
+
 
     // --- 2. LOGIC POPOVER CHO LỊCH THÁNG ---
-    const popover = document.getElementById('month-task-popover');
-    const taskItems = document.querySelectorAll('.task-item');
-    taskItems.forEach(item => {
-        item.addEventListener('click', function (event) {
-            event.stopPropagation();
-            const taskId = item.getAttribute('data-task-id');
-            const taskName = item.getAttribute('data-item-name');
-
-            document.getElementById('popover-view').href = `/your-app/schedule/view?id=${taskId}`;
-            document.getElementById('popover-edit').href = `/your-app/schedule/edit?id=${taskId}`;
-            const popoverDeleteBtn = document.getElementById('popover-delete');
-            popoverDeleteBtn.setAttribute('data-item-id', taskId);
-            popoverDeleteBtn.setAttribute('data-item-name', taskName);
-
-            const rect = item.getBoundingClientRect();
-            popover.style.display = 'block';
-            popover.style.top = `${rect.bottom + window.scrollY + 5}px`;
-            popover.style.left = `${rect.left + window.scrollX}px`;
-            feather.replace(); // Re-render icons in popover
-        });
-    });
+    
     document.addEventListener('click', function (event) {
         if (popover && popover.style.display === 'block' && !popover.contains(event.target) && !event.target.closest('.task-item')) {
             popover.style.display = 'none';

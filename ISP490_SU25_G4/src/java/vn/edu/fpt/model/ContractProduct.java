@@ -181,3 +181,6 @@ public class ContractProduct {
                 '}';
     }
 }
+
+
+// Have You Ever Race UmaMusume Cost Your Life ?

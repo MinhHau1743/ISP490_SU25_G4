@@ -24,6 +24,34 @@
 
         <script src="https://unpkg.com/feather-icons"></script>
     </head>
+
+    <style>
+        .info-text {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 16px;
+            font-family: Arial, sans-serif;
+        }
+
+        .info-text label {
+            font-weight: bold;
+            margin-bottom: 6px;
+            color: #333;
+        }
+
+        .info-text input[type="date"] {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+            color: #333;
+            background-color: #fff;
+            width: 100%;
+            max-width: 300px; /* optional */
+            box-sizing: border-box;
+        }
+    </style>
     <body>
         <div class="app-container">
             <jsp:include page="/mainMenu.jsp"/>
@@ -58,7 +86,7 @@
                                             <i data-feather="calendar"></i>
                                             <div class="info-text">
                                                 <label>Ngày sinh</label>
-                                                <span><fmt:formatDate value="${employee.dateOfBirth}" pattern="dd/MM/yyyy" /></span>
+                                                <input type="date" name="dateOfBirth" value="${employee.dateOfBirth}" />
                                             </div>
                                         </div>
                                         <div class="info-item">
@@ -146,12 +174,13 @@
                             </div>
                         </div>
                     </c:if>
+                   
 
                     <c:if test="${empty employee}">
                         <p>Không tìm thấy thông tin nhân viên.</p>
                     </c:if>
                 </section>
-
+               
                 <footer class="page-actions-footer">
                     <button type="button" class="btn btn-secondary" onclick="window.location.href = '${pageContext.request.contextPath}/listEmployee'">Quay lại danh sách</button>
                     <a href="${pageContext.request.contextPath}/editEmployee?id=${employee.id}" class="btn btn-primary" role="button">Sửa thông tin</a>

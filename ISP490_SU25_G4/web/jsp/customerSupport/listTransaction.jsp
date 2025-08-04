@@ -1,7 +1,6 @@
 <%-- File: /view/customerSupport/listTransaction.jsp --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-<%-- CẬP NHẬT: Thêm thư viện JSTL format để định dạng ngày tháng --%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
 <!DOCTYPE html>
@@ -14,9 +13,7 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-        <script src="https://unpkg.com/feather-icons"></script>
-
-        <%-- CẬP NHẬT: Sửa tất cả đường dẫn CSS để dùng contextPath --%>
+        
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
@@ -25,29 +22,29 @@
     </head>
     <body>
         <div class="app-container">
-            <%-- CẬP NHẬT: Sửa đường dẫn để dùng contextPath --%>
             <jsp:include page="/mainMenu.jsp"/>
             <main class="main-content">
-                <header class="page-header">
-                    <div class="title-section">
-                        <div class="title">Lịch sử giao dịch</div>
-                        <div class="breadcrumb">Yêu cầu / <span>Lịch sử giao dịch</span></div>
-                    </div>
-                </header>
+                
+                <%-- **THAY ĐỔI:** Thêm header mới vào đây --%>
+                <jsp:include page="/header.jsp">
+                    <jsp:param name="pageTitle" value="Lịch sử Giao dịch"/>
+                </jsp:include>
 
                 <div class="page-content">
                     <div class="content-card">
-                        <%-- CẬP NHẬT: Sửa action của form và link "Tạo Phiếu" --%>
                         <form class="table-toolbar" action="${pageContext.request.contextPath}/ticket" method="get">
                             <input type="hidden" name="action" value="list">
-                            <div class="search-box">
-                                <i data-feather="search" class="feather-search"></i>
-                                <input type="text" name="query" placeholder="Tìm kiếm theo mã phiếu, khách hàng...">
+                            <div class="search-group">
+                                <div class="search-box">
+                                    <i data-feather="search" class="feather-search"></i>
+                                    <input type="text" name="query" placeholder="Tìm theo mã phiếu, khách hàng..." value="${param.query}">
+                                </div>
+                                <button type="submit" class="btn btn-primary"><i data-feather="search"></i> Tìm kiếm</button>
                             </div>
-                            <%-- Phần lọc sẽ được phát triển sau --%>
-                            <button type="submit" class="btn btn-secondary"><i data-feather="search"></i>Tìm kiếm</button>
                             <div class="toolbar-actions">
-                                <a href="${pageContext.request.contextPath}/ticket?action=create" class="btn btn-primary"><i data-feather="plus"></i>Tạo Phiếu</a>
+                                <a href="${pageContext.request.contextPath}/ticket?action=list" class="btn btn-secondary">
+                                    <i data-feather="refresh-cw"></i> Reset
+                                </a>
                             </div>
                         </form>
 
@@ -59,12 +56,9 @@
                             <c:forEach var="tx" items="${transactions}">
                                 <div class="transaction-card">
                                     <div class="card-header">
-                                        <%-- CẬP NHẬT: Sử dụng requestCode từ model --%>
                                         <a href="${pageContext.request.contextPath}/ticket?action=view&id=${tx.id}" class="transaction-code-link">
                                             <span class="transaction-code">${tx.requestCode}</span>
                                         </a>
-
-                                        <%-- CẬP NHẬT: Chuyển đổi status sang tiếng Việt và thêm class màu --%>
                                         <c:choose>
                                             <c:when test="${tx.status == 'new'}"><span class="status-pill status-new">Mới</span></c:when>
                                             <c:when test="${tx.status == 'assigned'}"><span class="status-pill status-assigned">Đã giao</span></c:when>
@@ -72,35 +66,29 @@
                                             <c:when test="${tx.status == 'resolved'}"><span class="status-pill status-resolved">Đã xử lý</span></c:when>
                                             <c:when test="${tx.status == 'closed'}"><span class="status-pill status-closed">Đã đóng</span></c:when>
                                             <c:when test="${tx.status == 'rejected'}"><span class="status-pill status-rejected">Từ chối</span></c:when>
-
                                             <c:otherwise><span class="status-pill">${tx.status}</span></c:otherwise>
                                         </c:choose>
                                     </div>
                                     <div class="card-body">
                                         <div class="card-info-row">
                                             <i data-feather="briefcase"></i>
-                                            <%-- CẬP NHẬT: Kiểm tra nếu hợp đồng có tồn tại --%>
                                             <span class="info-value">${not empty tx.contractCode ? tx.contractCode : 'Không có hợp đồng'}</span>
                                         </div>
                                         <div class="card-info-row">
                                             <i data-feather="user"></i>
-                                            <%-- CẬP NHẬT: Sử dụng enterpriseName từ model --%>
                                             <span class="info-value">${tx.enterpriseName}</span>
                                         </div>
                                         <div class="card-info-row">
                                             <i data-feather="tool"></i>
-                                            <%-- CẬP NHẬT: Sử dụng serviceName từ model --%>
                                             <span class="info-value">${tx.serviceName}</span>
                                         </div>
                                         <div class="card-info-row">
                                             <i data-feather="calendar"></i>
-                                            <%-- CẬP NHẬT: Định dạng lại ngày tạo cho đẹp hơn --%>
                                             <span class="info-value"><fmt:formatDate value="${tx.createdAt}" pattern="HH:mm dd/MM/yyyy" /></span>
                                         </div>
                                     </div>
                                     <div class="card-footer">
                                         <div class="billing-status">
-                                            <%-- CẬP NHẬT: Sử dụng isIsBillable() theo model của bạn --%>
                                             <c:choose>
                                                 <c:when test="${tx.isBillable}">
                                                     <i data-feather="dollar-sign" class="icon-billable" title="Có tính phí"></i>
@@ -110,68 +98,44 @@
                                                 </c:when>
                                                 <c:otherwise>
                                                     <i data-feather="dollar-sign" class="icon-non-billable" title="Miễn phí (Bảo hành)"></i>
-                                                    <%-- Thêm văn bản để làm rõ --%>
                                                     <span class="cost-value" style="color: #6c757d;">Miễn phí</span>
                                                 </c:otherwise>
                                             </c:choose>
                                         </div>
                                         <div class="action-buttons">
-                                            <%-- Các link này sẽ được làm sau --%>
                                             <a href="${pageContext.request.contextPath}/ticket?action=view&id=${tx.id}" title="Xem chi tiết"><i data-feather="eye" class="icon-view"></i></a>
-
                                             <a href="${pageContext.request.contextPath}/ticket?action=edit&id=${tx.id}" title="Sửa"><i data-feather="edit-2" class="icon-edit"></i></a>
                                             <a href="javascript:void(0);" class="delete-link" data-id="${tx.id}" data-name="${tx.requestCode}" title="Xóa">
                                                 <i data-feather="trash-2" class="icon-delete"></i>
-                                            </a>                                    </div>
+                                            </a>                                        
+                                        </div>
                                     </div>
                                 </div>
                             </c:forEach>
                             <c:if test="${totalPages > 1}">
                                 <div class="pagination">
-                                    <%-- Nút Previous --%>
-                                    <c:if test="${currentPage > 1}">
-                                        <a href="${pageContext.request.contextPath}/ticket?action=list&page=${currentPage - 1}">&laquo;</a>
-                                    </c:if>
-                                    <c:if test="${currentPage == 1}">
-                                        <a href="#" class="disabled">&laquo;</a>
-                                    </c:if>
-
-                                    <%-- Các nút số trang --%>
+                                    <c:if test="${currentPage > 1}"><a href="${pageContext.request.contextPath}/ticket?action=list&page=${currentPage - 1}&query=${param.query}">&laquo;</a></c:if>
+                                    <c:if test="${currentPage == 1}"><a href="#" class="disabled">&laquo;</a></c:if>
                                     <c:forEach begin="1" end="${totalPages}" var="i">
                                         <c:choose>
-                                            <c:when test="${currentPage eq i}">
-                                                <a href="#" class="active">${i}</a>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <a href="${pageContext.request.contextPath}/ticket?action=list&page=${i}">${i}</a>
-                                            </c:otherwise>
+                                            <c:when test="${currentPage eq i}"><a href="#" class="active">${i}</a></c:when>
+                                            <c:otherwise><a href="${pageContext.request.contextPath}/ticket?action=list&page=${i}&query=${param.query}">${i}</a></c:otherwise>
                                         </c:choose>
                                     </c:forEach>
-
-                                    <%-- Nút Next --%>
-                                    <c:if test="${currentPage < totalPages}">
-                                        <a href="${pageContext.request.contextPath}/ticket?action=list&page=${currentPage + 1}">&raquo;</a>
-                                    </c:if>
-                                    <c:if test="${currentPage == totalPages}">
-                                        <a href="#" class="disabled">&raquo;</a>
-                                    </c:if>
+                                    <c:if test="${currentPage < totalPages}"><a href="${pageContext.request.contextPath}/ticket?action=list&page=${currentPage + 1}&query=${param.query}">&raquo;</a></c:if>
+                                    <c:if test="${currentPage == totalPages}"><a href="#" class="disabled">&raquo;</a></c:if>
                                 </div>
                             </c:if>
                         </div>
-                        <%-- <jsp:include page="/view/pagination.jsp" /> --%>
                     </div>
                 </div>
             </main>
         </div>
         <div class="modal-overlay" id="delete-confirm-modal">
             <div class="modal-content">
-                <div class="modal-icon">
-                    <i data-feather="alert-triangle"></i>
-                </div>
+                <div class="modal-icon"><i data-feather="alert-triangle"></i></div>
                 <h3 class="modal-title">Xác nhận xóa</h3>
-                <p class="modal-message">
-                    Bạn có chắc chắn muốn xóa phiếu yêu cầu <br> <strong id="item-to-delete-name" style="color: #d32f2f; font-size: 1.1em;"></strong>?
-                </p>
+                <p class="modal-message">Bạn có chắc chắn muốn xóa phiếu yêu cầu <br> <strong id="item-to-delete-name" style="color: #d32f2f; font-size: 1.1em;"></strong>?</p>
                 <div class="modal-actions">
                     <button class="modal-btn btn-cancel" id="cancel-delete-btn">Hủy</button>
                     <button class="modal-btn btn-confirm-delete" id="confirm-delete-btn">Xóa</button>
@@ -179,16 +143,16 @@
             </div>
         </div>
 
-        <%-- 2. JavaScript --%>
+        <script src="https://unpkg.com/feather-icons"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                feather.replace();
+            });
+        </script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
         <script>
-            // Gán contextPath vào một biến toàn cục để file JS bên ngoài có thể dùng
             window.APP_CONTEXT_PATH = "${pageContext.request.contextPath}";
         </script>
-
-        <%-- Sau đó mới gọi file JS xử lý logic --%>
         <script src="${pageContext.request.contextPath}/js/listTransaction.js"></script>
     </body>
-</html>
-</body>
 </html>

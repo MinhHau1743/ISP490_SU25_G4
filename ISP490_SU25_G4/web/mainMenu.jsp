@@ -1,7 +1,3 @@
-<%--
-    Document    : mainMenu.jsp
-    Description : Thanh điều hướng chính của ứng dụng (phiên bản tối ưu).
---%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
@@ -40,11 +36,17 @@
                     <i data-feather="box"></i><span>Hàng hóa</span>
                 </a>
             </li>
-
+            
+            <%-- **ĐÃ THÊM LẠI MỤC "LỊCH BẢO TRÌ" VÀO ĐÂY** --%>
+            <li>
+                <a href="${pageContext.request.contextPath}/listSchedule" class="${currentPage.contains('Schedule') ? 'active' : ''}">
+                    <i data-feather="check-square"></i><span>Lịch bảo trì</span>
+                </a>
+            </li>
+            
             <%-- ===== NHÓM QUẢN TRỊ (CHỈ ADMIN THẤY) ===== --%>
             <c:if test="${sessionScope.userRole == 'Admin'}">
                 <li>
-                    <%-- Đảm bảo đường dẫn ở đây là "/listEmployee" --%>
                     <a href="${pageContext.request.contextPath}/listEmployee" class="${currentPage.contains('Employee') ? 'active' : ''}">
                         <i data-feather="briefcase"></i><span>Nhân viên</span>
                     </a>
@@ -52,7 +54,7 @@
             </c:if>
 
             <%-- ===== NHÓM NGHIỆP VỤ ===== --%>
-            <c:set var="isSupportSection" value="${currentPage == 'ticket' || currentPage == 'createTicket'}" />
+            <c:set var="isSupportSection" value="${currentPage.contains('ticket')}" />
             <li class="nav-item-dropdown ${isSupportSection ? 'open' : ''}">
                 <a href="#" class="${isSupportSection ? 'active' : ''}">
                     <i data-feather="tool"></i><span>Hỗ trợ Kỹ thuật</span><i data-feather="chevron-down" class="dropdown-icon"></i>
@@ -62,34 +64,29 @@
                     <li><a href="${pageContext.request.contextPath}/ticket?action=create" class="${currentPage == 'createTicket' ? 'active' : ''}">Tạo Phiếu mới</a></li>
                 </ul>
             </li>
-
+            <li>
+                <a href="${pageContext.request.contextPath}/listFeedback" class="${currentPage.contains('Feedback') ? 'active' : ''}">
+                    <i data-feather="message-square"></i><span>Phản hồi</span>
+                </a>
+            </li>
             <li class="nav-item ${currentPage == 'report' ? 'active' : ''}">
                 <a href="${pageContext.request.contextPath}/report" class="${currentPage == 'report' ? 'active' : ''}">
                     <i data-feather="pie-chart"></i><span>Báo cáo</span>
                 </a>
             </li>
-
-            <%-- ===== NHÓM HỆ THỐNG & TÀI KHOẢN ===== --%>
-            <c:set var="isProfileSection" value="${currentPage == 'viewProfile' || currentPage == 'changePassword'}" />
-            <li class="nav-item-dropdown ${isProfileSection ? 'open' : ''}">
-                <a href="#" class="${isProfileSection ? 'active' : ''}">
-                    <i data-feather="settings"></i><span>Tài khoản</span><i data-feather="chevron-down" class="dropdown-icon"></i>
-                </a>
-                <ul class="sub-menu">
-                    <li><a href="${pageContext.request.contextPath}/viewProfile" class="${currentPage == 'viewProfile' ? 'active' : ''}">Thông tin cá nhân</a></li>
-                    <li><a href="${pageContext.request.contextPath}/changePassword" class="${currentPage == 'changePassword' ? 'active' : ''}">Đổi mật khẩu</a></li>
-                </ul>
-            </li>
-
-            <li>
-                <a href="${pageContext.request.contextPath}/logout">
-                    <i data-feather="log-out"></i><span>Đăng xuất</span>
+            <li class="main-menu-item">
+                <a href="${pageContext.request.contextPath}/list-campaign" class="main-menu-link">
+                    <i data-feather="clipboard"></i>
+                    <span>Chiến dịch</span>
                 </a>
             </li>
+
+            <%-- ===== CÁC MỤC TÀI KHOẢN VÀ ĐĂNG XUẤT ĐÃ ĐƯỢC XÓA BỎ ===== --%>
+            
         </ul>
     </nav>
-
+<!--
     <div class="sidebar-footer">
         <p>© 2025 DPCRM from ISP490_SU25_GR4</p>
-    </div>
+    </div>-->
 </aside>

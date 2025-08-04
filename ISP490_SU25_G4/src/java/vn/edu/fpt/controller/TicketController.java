@@ -16,7 +16,9 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import vn.edu.fpt.dao.FeedbackDAO;
 import vn.edu.fpt.model.ContractProduct;
+import vn.edu.fpt.model.Service;
 
 @WebServlet(name = "TicketController", urlPatterns = {"/ticket"})
 public class TicketController extends HttpServlet {
@@ -84,36 +86,49 @@ public class TicketController extends HttpServlet {
     }
 
     private void listTickets(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
-        // 1. Xác định trang hiện tại
-        int page = 1;
-        final int LIMIT = 12; // Số lượng thẻ mỗi trang
-        String pageStr = request.getParameter("page");
-        if (pageStr != null) {
-            try {
-                page = Integer.parseInt(pageStr);
-            } catch (NumberFormatException e) {
-                // Bỏ qua nếu tham số trang không hợp lệ, giữ nguyên page = 1
-            }
-        }
-
-        // 2. Tính toán tổng số trang
-        int totalItems = dao.getTotalTechnicalRequestCount();
-        int totalPages = (int) Math.ceil((double) totalItems / LIMIT);
-
-        // 3. Tính offset để truy vấn CSDL
-        int offset = (page - 1) * LIMIT;
-
-        // 4. Lấy danh sách giao dịch cho trang hiện tại
-        List<TechnicalRequest> transactionList = dao.getAllTechnicalRequests(LIMIT, offset);
-
-        // 5. Gửi dữ liệu phân trang sang JSP
-        request.setAttribute("transactions", transactionList);
-        request.setAttribute("totalPages", totalPages);
-        request.setAttribute("currentPage", page);
-        request.setAttribute("activeMenu", "ticket");
-
-        request.getRequestDispatcher("/jsp/customerSupport/listTransaction.jsp").forward(request, response);
+    // 1. Lấy tất cả tham số lọc và phân trang
+    String query = request.getParameter("query");
+    String status = request.getParameter("status");
+    String serviceIdStr = request.getParameter("serviceId");
+    int serviceId = 0;
+    if (serviceIdStr != null && !serviceIdStr.isEmpty()) {
+        try { serviceId = Integer.parseInt(serviceIdStr); } catch (NumberFormatException e) { /* Bỏ qua */ }
     }
+    
+    int page = 1;
+    final int LIMIT = 9; // Hiển thị 9 thẻ mỗi trang (3x3 grid)
+    String pageStr = request.getParameter("page");
+    if (pageStr != null && !pageStr.isEmpty()) {
+        try { page = Integer.parseInt(pageStr); } catch (NumberFormatException e) { page = 1; }
+    }
+
+    // 2. Lấy tổng số item với bộ lọc để tính toán số trang
+    int totalItems = dao.getTotalFilteredRequestCount(query, status, serviceId);
+    int totalPages = (int) Math.ceil((double) totalItems / LIMIT);
+    if (totalPages == 0) totalPages = 1;
+    if (page > totalPages) page = totalPages;
+
+    // 3. Tính offset
+    int offset = (page - 1) * LIMIT;
+
+    // 4. Lấy danh sách giao dịch đã lọc
+    List<TechnicalRequest> transactionList = dao.getFilteredTechnicalRequests(query, status, serviceId, LIMIT, offset);
+
+    // 5. Lấy danh sách cho các dropdown bộ lọc
+    List<Service> serviceList = dao.getAllServices();
+    List<String> statusList = dao.getDistinctStatuses();
+
+    // 6. Gửi tất cả dữ liệu sang JSP
+    request.setAttribute("transactions", transactionList);
+    request.setAttribute("totalPages", totalPages);
+    request.setAttribute("currentPage", page);
+    request.setAttribute("totalItems", totalItems); // Gửi thêm tổng số item
+    request.setAttribute("serviceList", serviceList); // Gửi danh sách dịch vụ
+    request.setAttribute("statusList", statusList);   // Gửi danh sách trạng thái
+    request.setAttribute("activeMenu", "ticket");
+
+    request.getRequestDispatcher("/jsp/customerSupport/listTransaction.jsp").forward(request, response);
+}
 
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
         request.setAttribute("customerList", dao.getAllEnterprises());
@@ -129,9 +144,23 @@ public class TicketController extends HttpServlet {
         try {
             int id = Integer.parseInt(request.getParameter("id"));
             TechnicalRequest ticket = dao.getTechnicalRequestById(id);
+
             if (ticket != null) {
+
+                // --- PHẦN CODE CẬP NHẬT ---
+                // 1. Khởi tạo FeedbackDAO
+                FeedbackDAO feedbackDAO = new FeedbackDAO();
+
+                // 2. Kiểm tra xem feedback đã tồn tại cho ticket này chưa
+                boolean hasFeedback = feedbackDAO.feedbackExistsForTechnicalRequest(id);
+
+                // 3. Gửi cả ticket và kết quả kiểm tra sang JSP
                 request.setAttribute("ticket", ticket);
+                request.setAttribute("hasFeedback", hasFeedback); // <-- Gửi biến này sang JSP
+
                 request.getRequestDispatcher("/jsp/customerSupport/viewTransaction.jsp").forward(request, response);
+                // --- KẾT THÚC PHẦN CẬP NHẬT ---
+
             } else {
                 response.sendRedirect("ticket?action=list&error=notFound");
             }

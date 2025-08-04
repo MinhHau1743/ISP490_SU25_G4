@@ -8,9 +8,11 @@ public class DBContext {
 
     // Các thông số kết nối CSDL đã được cập nhật
 
+
 //    private static final String DB_URL = "jdbc:mysql://isp490-su25-g4-mysql-server.mysql.database.azure.com:3306/ISP490_SU25_G4?useSSL=true&requireSSL=false";
 //    private static final String DB_USER_NAME = "crmadmin";
 //    private static final String DB_PASSWORD = "Admin12#$";
+
 
     private static final String DB_URL = "jdbc:mysql://localhost:3306/datn";
     private static final String DB_USER_NAME = "root";

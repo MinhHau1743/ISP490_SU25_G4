@@ -43,7 +43,7 @@ html, body {
 }
 .view-toggle {
     display: flex;
-    background-color: #f0f0f0;
+    background-color: #e0f2f1;
     border-radius: 8px;
     padding: 4px;
 }
@@ -59,9 +59,55 @@ html, body {
 }
 .view-toggle .btn-toggle.active {
     background-color: #fff;
-    color: #8B4513;
+    color: #009688;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
+
+/* Date Navigation Styles */
+.date-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 4px;
+    margin-left: 16px;
+}
+.date-nav .date-range {
+    font-weight: 500;
+    padding: 0 12px;
+    font-size: 14px;
+    color: #333;
+    min-width: 120px;
+    text-align: center;
+}
+.date-nav .btn-nav {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background-color: transparent;
+    cursor: pointer;
+    color: #555;
+    transition: all 0.2s ease-in-out;
+}
+.date-nav .btn-nav:hover {
+    background-color: #f0f0f0;
+    color: #333;
+}
+.date-nav .btn-nav i {
+    width: 16px;
+    height: 16px;
+}
+
+/* Hide date navigation in list view */
+.date-nav.hidden {
+    display: none !important;
+}
+
 .week-nav {
     display: flex;
     align-items: center;
@@ -316,87 +362,4 @@ html, body {
 }
 .popover-action.delete:hover {
     background-color: #fbebeb;
-}
-
-.modal-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
-    justify-content: center;
-    align-items: center;
-    z-index: 2000;
-}
-.modal-content {
-    background-color: white;
-    border-radius: 12px;
-    width: 420px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-    overflow: hidden;
-}
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 24px;
-    border-bottom: 1px solid #eee;
-}
-.modal-header h3 {
-    font-size: 18px;
-    margin: 0;
-}
-.modal-close-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    color: #888;
-}
-.modal-body {
-    padding: 32px 24px;
-    text-align: center;
-}
-.modal-body .warning-icon {
-    color: #f59e0b;
-    margin-bottom: 16px;
-}
-.modal-body p {
-    margin: 0;
-    font-size: 15px;
-    line-height: 1.6;
-    color: #444;
-}
-.modal-footer {
-    display: flex;
-    gap: 12px;
-    padding: 16px 24px;
-    background-color: #f9fafb;
-}
-.modal-footer .btn {
-    flex: 1;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    font-weight: 600;
-    cursor: pointer;
-    text-decoration: none;
-    text-align: center;
-    font-size: 14px;
-}
-.modal-footer .btn-cancel {
-    background-color: #fff;
-}
-.modal-footer .btn-cancel:hover {
-    background-color: #f5f5f5;
-}
-.modal-footer .btn-confirm-delete {
-    background-color: #ef4444;
-    color: white;
-    border-color: #ef4444;
-}
-.modal-footer .btn-confirm-delete:hover {
-    background-color: #dc2626;
 }

@@ -1,18 +1,29 @@
+<%--
+    Document   : listSchedule.jsp
+    Created on : Jun 21, 2025
+    Author     : NGUYEN MINH / Gemini
+--%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <c:set var="currentPage" value="dashboard" />
+<c:set var="viewMode" value="${param.viewMode != null ? param.viewMode : 'day-view'}" />
 <!DOCTYPE html>
 <html lang="vi">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Lịch bảo trì - DPCRM</title>
+        <title>Lịch bảo trì</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <script src="https://unpkg.com/feather-icons"></script>
-
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
@@ -29,7 +40,7 @@
             .app-container {
                 background: #fff;
                 width: 100%;
-                min-height: 100vh; /* Ensures it covers the full viewport height */
+                min-height: 100vh;
                 box-sizing: border-box;
             }
 
@@ -43,8 +54,8 @@
             /* Header section with full-width white background */
             .main-top-bar {
                 background: #fff;
-                padding: 10px 0; /* Add padding for spacing */
-                border-bottom: 1px solid #ddd; /* Optional: subtle separation */
+                padding: 10px 0;
+                border-bottom: 1px solid #ddd;
                 width: 100%;
                 box-sizing: border-box;
             }
@@ -64,36 +75,27 @@
                 top: 0;
                 z-index: 1000;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-
-                /* Bổ sung dòng này để ::before định vị được */
-                position: sticky; /* vẫn cần */
             }
 
-            /* Thêm vào cuối file */
+            /* Pseudo-element to cover space above toolbar */
             .calendar-toolbar::before {
                 content: "";
                 position: absolute;
-                top: -30px; /* Chiều cao nền cần lấp lên phía trên */
+                top: -30px;
                 left: 0;
                 right: 0;
                 height: 30px;
                 background: #fff;
-                z-index: -1; /* Đảm bảo nằm dưới nội dung chính */
+                z-index: -1;
             }
 
-            /* Cần khai báo lại position: relative để pseudo-element hoạt động đúng */
-            .calendar-toolbar {
-                position: sticky;
-            }
-
-
-            /* Title styling (aligned with .page-header .title-section .title) */
+            /* Title styling */
             .calendar-toolbar .title {
                 margin: 0;
-                font-size: 20px; /* Matches the title font size */
-                font-weight: 700; /* Matches the title font weight */
-                color: var(--text-primary); /* Matches the title text color */
-                margin-bottom: 8px; /* Matches the title margin-bottom */
+                font-size: 20px;
+                font-weight: 700;
+                color: var(--text-primary);
+                margin-bottom: 8px;
             }
 
             /* View toggle buttons */
@@ -102,10 +104,10 @@
                 border: none;
                 padding: 5px 10px;
                 margin: 0 2px;
-                border-radius: 8px; /* Increased for more rounded buttons */
+                border-radius: 8px;
                 cursor: pointer;
                 transition: background 0.3s;
-                color: var(--text-primary); /* Align with title text color */
+                color: var(--text-primary);
             }
 
             .calendar-toolbar .view-toggle button.active {
@@ -124,17 +126,17 @@
                 border: none;
                 cursor: pointer;
                 padding: 5px;
-                color: var(--text-primary); /* Align with title text color */
+                color: var(--text-primary);
             }
 
             .calendar-toolbar .week-nav .date-range {
                 font-weight: bold;
-                color: var(--text-primary); /* Align with title text color */
+                color: var(--text-primary);
             }
 
             /* Toolbar spacer */
             .calendar-toolbar .toolbar-spacer {
-                flex-grow: 1; /* Pushes the button to the right */
+                flex-grow: 1;
             }
 
             /* Add schedule button */
@@ -152,34 +154,34 @@
                 background: #0056b3;
             }
 
-            /* Calendar container with rounded edges and white background */
+            /* Calendar container */
             .calendar-content {
                 display: flex;
                 background: #fff;
-                border-radius: 16px; /* Increased for more rounded edges */
-                overflow: hidden; /* Ensures child elements respect rounded corners */
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Match toolbar shadow for consistency */
-                width: 100%; /* Full width */
+                border-radius: 16px;
+                overflow: visible;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                width: 100%;
                 box-sizing: border-box;
             }
 
-            /* Individual calendar views with white background */
+            /* Individual calendar views */
             #day-view, #week-view, #month-view, #list-view {
                 background: #fff;
             }
 
-            /* Time grid, month grid, and list grid with white background */
+            /* Time grid, month grid, and list grid */
             .time-grid, .month-grid, .list-grid {
                 background: #fff;
             }
 
-            /* Time slots with rounded edges and white background */
+            /* Time slots */
             .time-slot {
-                min-height: 60px; /* Minimum for empty slots */
-                height: auto; /* Allow expansion for multiple events */
+                min-height: 60px;
+                height: auto;
                 border-bottom: 1px solid #eee;
                 border-left: 1px solid #eee;
-                border-radius: 8px; /* Added for rounded edges */
+                border-radius: 8px;
                 position: relative;
                 display: flex;
                 flex-direction: column;
@@ -187,13 +189,13 @@
                 background: #fff;
             }
 
-            /* All-day slots with rounded edges and white background */
+            /* All-day slots */
             .all-day-slot {
                 min-height: 40px;
-                background: #fff; /* Changed from #f9f9f9 to match white background */
+                background: #fff;
                 border-bottom: 1px solid #ddd;
                 border-left: 1px solid #eee;
-                border-radius: 8px; /* Added for rounded edges */
+                border-radius: 8px;
                 position: relative;
                 display: flex;
                 flex-direction: column;
@@ -201,7 +203,7 @@
                 height: auto;
             }
 
-            /* All-day event container with rounded edges */
+            /* All-day event container */
             .all-day-event-container {
                 grid-row: 1;
                 grid-column: 2 / -1;
@@ -210,9 +212,9 @@
                 min-height: 40px;
                 height: auto;
                 padding: 5px;
-                background: #fff; /* Changed from #f9f9f9 to match white background */
+                background: #fff;
                 border-bottom: 1px solid #ddd;
-                border-radius: 8px; /* Added for rounded edges */
+                border-radius: 8px;
                 z-index: 1;
                 position: relative;
             }
@@ -235,26 +237,16 @@
                 grid-auto-rows: minmax(60px, auto);
             }
 
-            /* Time labels */
-            .time-label {
-                text-align: right;
-                padding-right: 10px;
-                color: #666;
-                font-size: 12px;
-                height: 60px;
-                line-height: 60px;
-                border-bottom: 1px solid #eee;
-            }
 
-            /* Events with more rounded edges */
+
+            /* Events */
             .event {
                 position: relative;
                 left: 0;
                 right: 0;
-                background: teal;
                 color: white;
                 padding: 5px;
-                border-radius: 10px; /* Increased from 4px/8px for more rounded edges */
+                border-radius: 10px;
                 font-size: 14px;
                 cursor: pointer;
                 top: 0;
@@ -264,10 +256,10 @@
                 box-sizing: border-box;
             }
 
-            /* All-day events with rounded edges */
+            /* All-day events */
             .event.all-day {
                 position: relative;
-                border-radius: 10px; /* Match .event for consistency */
+                border-radius: 10px;
                 height: auto;
                 top: 0;
                 margin: 5px 0;
@@ -307,6 +299,9 @@
             .calendar-left {
                 flex: 1;
                 overflow-y: auto;
+                overflow-x: auto;
+                max-height: 80vh;
+                position: relative;
             }
 
             /* Event details panel */
@@ -314,15 +309,16 @@
                 display: none;
                 width: 350px;
                 border-left: 1px solid #ddd;
-                padding: 20px;
+                padding: 20px 20px 10px;
                 background: #fff;
-                box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+                box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
                 position: sticky;
-                top: 0;
+                top: 5px;
                 align-self: flex-start;
-                height: fit-content;
+                height: 80vh;
+                overflow-y: auto;
                 z-index: 10;
-                border-radius: 12px; /* Added for rounded edges */
+                border-radius: 12px;
             }
 
             .event-details.show {
@@ -330,15 +326,20 @@
             }
 
             .event-details .header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 20px;
+                position: sticky;
+                top: 0;
+                background: #fff;
+                z-index: 2;
+                padding: 10px 0;
+                border-bottom: 1px solid #ddd;
             }
 
             .event-details .actions {
                 display: flex;
                 gap: 10px;
+                margin-bottom: 24px;
+                margin-top: 16px;
+                justify-content: flex-end;
             }
 
             .event-details .actions a {
@@ -355,11 +356,6 @@
             .event-details .event-title {
                 font-size: 18px;
                 font-weight: bold;
-            }
-
-            .event-details .event-type {
-                color: #666;
-                margin-left: 10px;
             }
 
             .event-details .event-info {
@@ -380,7 +376,8 @@
 
             .event-details .guests-list {
                 display: flex;
-                gap: 10px;
+                gap: 5px;
+                flex-wrap: wrap;
             }
 
             .event-details .guest {
@@ -388,7 +385,7 @@
                 align-items: center;
                 background: #e6f7ff;
                 padding: 5px 10px;
-                border-radius: 20px; /* Already rounded, kept as is */
+                border-radius: 20px;
             }
 
             .event-details .guest img {
@@ -398,9 +395,19 @@
                 margin-right: 5px;
             }
 
-            .event-details .event-description {
-                margin-top: 20px;
-                color: #333;
+            .event-header {
+                margin-bottom: 10px;
+            }
+
+            .event-details .event-description,
+            .event-details .event-notes,
+            .event-details .event-logistics,
+            .event-details .event-contacts,
+            .event-details .event-agenda,
+            .event-details .event-resources {
+                margin-top: 15px;
+                padding-bottom: 10px;
+                font-size: 14px;
             }
 
             .event-details .dot {
@@ -410,38 +417,58 @@
                 background: purple;
                 margin-right: 10px;
             }
+            .event-info i {
+                font-size: 1.5em; /* Điều chỉnh giá trị này để tăng hoặc giảm kích thước, ví dụ: 1.2em, 1.8em */
+                margin-right: 0.5em; /* Điều chỉnh khoảng cách giữa icon và chữ nếu cần */
+            }
+            .actions i {
+                font-size: 1.8em; /* Điều chỉnh kích thước tùy ý, ví dụ 24px */
+                color: #666;     /* Tùy chỉnh màu sắc nếu muốn */
+            }
 
-            /* Remove margin for last event */
+            .actions a:hover i {
+                color: #000; /* Đổi màu khi di chuột qua cho đẹp hơn */
+            }
             .event:last-child {
                 margin-bottom: 0;
             }
 
-            /* Maintenance cards and task items with rounded edges */
+            /* Maintenance cards and task items */
             .maintenance-card, .task-item {
                 background: #fff;
-                border-radius: 12px; /* Increased for more rounded edges */
+                border-radius: 12px;
                 cursor: pointer;
                 margin-bottom: 10px;
                 padding: 10px;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             }
 
             /* Day header row */
             .day-header-row {
+                position: sticky;
+                top: 0;
+                background: #fff;
+                z-index: 2;
                 display: grid;
                 grid-template-columns: auto repeat(7, 1fr);
                 text-align: center;
+                border-bottom: 1px solid #ddd;
             }
 
             .day-header-cell {
                 font-weight: bold;
                 padding: 10px;
+                border-right: 1px solid #eee;
             }
 
-            /* Remove redundant border for adjacent all-day slots */
-            .time-grid .all-day-slot + .all-day-slot {
-                border-left: none;
+            .day-header-row .day-header-cell:first-child {
+                position: sticky;
+                left: 0;
+                background: #fff;
+                z-index: 3;
+                border-right: 1px solid #eee;
             }
+
 
             /* Month grid */
             .month-grid {
@@ -456,7 +483,7 @@
                 font-weight: bold;
                 border: 1px solid #ddd;
                 padding: 5px;
-                border-radius: 8px; /* Added for rounded headers */
+                border-radius: 8px;
             }
 
             .month-day {
@@ -466,7 +493,7 @@
                 border: 1px solid #ddd;
                 padding-top: 25px;
                 background: #fff;
-                border-radius: 8px; /* Added for rounded month-day cells */
+                border-radius: 8px;
             }
 
             .day-number {
@@ -484,10 +511,9 @@
 
             /* Month view events */
             #month-view .event {
-                background: teal;
                 color: white;
                 padding: 5px;
-                border-radius: 10px; /* Increased for more rounded edges */
+                border-radius: 10px;
                 font-size: 14px;
                 cursor: pointer;
                 margin: 2px;
@@ -500,7 +526,7 @@
                 margin: 25px 0 2px 0;
                 position: relative;
                 top: 0;
-                border-radius: 10px; /* Match .event for consistency */
+                border-radius: 10px;
             }
 
             .resize-handle {
@@ -512,6 +538,253 @@
                 cursor: ew-resize;
                 background: transparent;
             }
+
+            .time-grid {
+                position: relative;
+                min-height: 0;
+            }
+
+            .time-label {
+                position: sticky;
+                left: 0;
+                background: #fff;
+                z-index: 1;
+                border-right: 1px solid #eee;
+                text-align: right;
+                padding-right: 10px;
+                color: #666;
+                font-size: 12px;
+                height: 60px;
+                line-height: 60px;
+                border-bottom: 1px solid #eee;
+            }
+
+            .all-day-event-container {
+                position: sticky;
+                top: 0;
+                z-index: 1;
+                background: #fff;
+            }
+
+            .event[draggable="true"] {
+                cursor: grab !important;
+            }
+
+            .event[draggable="true"]:active {
+                cursor: grabbing !important;
+            }
+
+            /* Highlight cho ngày hiện tại trong week-view */
+            .day-header-cell.today-highlight {
+                background-color: #e0f2f1;
+                border-bottom: 2px solid #008080;
+                box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
+            }
+
+            /* Highlight cho số ngày hiện tại trong month-view với hình tròn */
+            .month-day.today-highlight .day-number {
+                /* Thay đổi màu nền thành màu xanh mòng két rất nhạt */
+                background-color: #e0f2f1;
+                /* Thay đổi màu viền thành màu xanh mòng két đậm */
+                border: 2px solid #008080;
+                border-radius: 50%;
+                width: 24px;
+                height: 24px;
+                line-height: 24px;
+                text-align: center;
+                /* Thay đổi màu chữ thành màu xanh mòng két đậm */
+                color: #008080;
+                font-weight: bold;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                position: absolute;
+                top: 5px;
+                right: 5px;
+            }
+
+            /* Loại bỏ highlight nền cho toàn ô trong month-view */
+            .month-day.today-highlight {
+                background-color: transparent;
+                border: none;
+                box-shadow: none;
+            }
+            /* Chỉ áp dụng cho list-view, không ảnh hưởng event-details */
+            #list-view .view-title {
+                margin-bottom: 8px;
+                font-size: 1.5em;
+                color: #333;
+            }
+
+            #list-view .schedule-count {
+                margin-bottom: 16px;
+                color: #666;
+                font-size: 0.95em;
+            }
+
+            #list-view .event-list {
+                display: flex;
+                flex-direction: column;
+            }
+
+            #list-view .event-item {
+                display: flex;
+                align-items: center;
+                padding: 12px 16px;
+                margin-bottom: 10px;
+                border: 1px solid #e0e0e0;
+                border-radius: 4px;
+                background-color: #fff;
+                transition: background-color 0.2s, box-shadow 0.2s;
+                cursor: pointer;
+            }
+
+            #list-view .event-item:hover {
+                background-color: #f9f9f9;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            }
+
+            #list-view .event-color-dot {
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                margin-right: 12px;
+                flex-shrink: 0;
+            }
+
+            #list-view .event-info {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+            }
+
+            #list-view .event-title {
+                font-weight: 600;
+                color: #2c3e50;
+                margin-bottom: 4px;
+            }
+
+            #list-view .event-meta {
+                font-size: 0.85em;
+                color: #757575;
+            }
+
+            #list-view .event-actions {
+                display: flex;
+                gap: 8px;
+            }
+
+            #list-view .event-actions a {
+                color: #757575;
+                text-decoration: none;
+                font-size: 1.1em;
+                padding: 4px;
+                transition: color 0.2s;
+            }
+
+            #list-view .event-actions a:hover {
+                color: #1976d2;
+            }
+            .modal-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.6);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity 0.3s, visibility 0.3s;
+                pointer-events: none;
+            }
+            .modal-overlay.show {
+                opacity: 1;
+                visibility: visible;
+                display: flex;
+                pointer-events: auto;
+            }
+            .modal-overlay.show .modal-content {
+                transform: scale(1);
+            }
+            .modal-content {
+                background-color: white;
+                border-radius: 12px;
+                width: 420px;
+                box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+                overflow: hidden;
+                transform: scale(0.9);
+                transition: transform 0.3s;
+                position: relative;
+                z-index: 10000;
+                max-width: 90vw;
+                max-height: 90vh;
+            }
+            .modal-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 20px 20px 0;
+            }
+            .modal-header .close-modal-btn {
+                background: none;
+                border: none;
+                cursor: pointer;
+                padding: 5px;
+                color: #666;
+            }
+            .modal-header .close-modal-btn:hover {
+                color: #000;
+            }
+            .modal-body {
+                padding: 20px;
+                text-align: center;
+                min-height: 100px;
+            }
+            .modal-title {
+                font-size: 18px;
+                font-weight: 600;
+                margin: 0;
+            }
+            .warning-icon {
+                width: 50px;
+                height: 50px;
+                color: #f59e0b;
+                margin-bottom: 15px;
+            }
+            .modal-footer {
+                display: flex;
+                justify-content: flex-end;
+                gap: 10px;
+                padding: 15px 20px;
+                background-color: #f7fafc;
+            }
+            #add-schedule-btn {
+                background-color: #e0f2f1 !important;
+                color: #000;
+                border: none;
+                transition: background-color 0.3s ease;
+            }
+
+            #add-schedule-btn:hover {
+                background-color: #b2dfdb !important; /* Màu xanh nhạt đậm hơn khi hover */
+                color: #000; /* Giữ màu chữ hoặc đổi tùy ý */
+                cursor: pointer;
+            }
+            /* --- CSS ĐỂ CHIA HÀNG "CẢ NGÀY" THÀNH 7 Ô --- */
+            .all-day-row-container {
+                grid-column: 2 / -1;
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                border-bottom: 1px solid #ddd;
+            }
+
+            .week-nav.hidden {
+                display: none;
+            }
         </style>
     </head>
     <body>
@@ -522,542 +795,808 @@
                     <div class="calendar-toolbar">
                         <h1 class="title">Lịch bảo trì</h1>
                         <div class="view-toggle">
-                            <button id="view-day-btn" class="btn-toggle active" data-view="day-view">Ngày</button>
-                            <button id="view-week-btn" class="btn-toggle" data-view="week-view">Tuần</button>
-                            <button id="view-month-btn" class="btn-toggle" data-view="month-view">Tháng</button>
-                            <button id="view-list-btn" class="btn-toggle" data-view="list-view">Danh sách</button>
-                        </div>
-                        <!-- HIDDEN FORM TO SUBMIT NEXT/PREV DAY -->
-                        <form id="dayNavForm" method="get" action="listSchedule">
-                            <input type="hidden" name="controllerDay" id="controllerDay">
-                            <input type="hidden" name="currentDay" id="currentDay">
-                        </form>
+                            <button id="view-day-btn" class="btn-toggle <c:if test="${viewMode == 'day-view'}">active</c:if>" data-view="day-view">Ngày</button>
+                            <button id="view-week-btn" class="btn-toggle <c:if test="${viewMode == 'week-view'}">active</c:if>" data-view="week-view">Tuần</button>
+                            <button id="view-month-btn" class="btn-toggle <c:if test="${viewMode == 'month-view'}">active</c:if>" data-view="month-view">Tháng</button>
+                            <button id="view-list-btn" class="btn-toggle <c:if test="${viewMode == 'list-view'}">active</c:if>" data-view="list-view">Danh sách</button>
+                            </div>
+                            <!-- HIDDEN FORM TO SUBMIT NEXT/PREV DAY -->
+                            <form id="dayNavForm" method="get" action="listSchedule">
+                                <input type="hidden" name="controllerDay" id="controllerDay">
+                                <input type="hidden" name="currentDay" id="currentDay">
+                                <input type="hidden" name="viewMode" id="viewMode">
+                            </form>
 
-                        <!-- WEEK NAVIGATION -->
-                        <div class="week-nav">
-                            <button class="btn-nav" id="prevDayBtn"><i data-feather="chevron-left"></i></button>
-
-                            <span class="date-range" id="currentDate" data-date="${isoDayDate}">
+                            <!-- WEEK NAVIGATION -->
+                            <div class="week-nav">
+                                <button class="btn-nav" id="prevDayBtn"><i data-feather="chevron-left"></i></button>
+                                <span class="date-range" id="currentDate" data-date="${isoDayDate}">
                                 ${displayDate}
                             </span>
-
-
                             <button class="btn-nav" id="nextDayBtn"><i data-feather="chevron-right"></i></button>
                         </div>
                         <div class="toolbar-spacer"></div>
-                        <button class="btn-primary" id="add-schedule-btn">
-                            <i data-feather="plus"></i>
-                            Lên lịch bảo trì
-                        </button>
+                        <form action="createSchedule">
+                            <button class="btn-primary" id="add-schedule-btn" style="background-color: #e0f2f1; color: #000; border: none;">
+                                <i data-feather="plus"></i>
+                                Lên lịch bảo trì
+                            </button>
+                        </form>
                     </div>
 
                     <div class="calendar-content">
                         <div class="calendar-left">
-                            <div id="day-view" class="calendar-view active">
-                                <div class="day-nav">
-                                    <span class="date">${dayDate}</span>
+                            <div id="day-view" class="calendar-view <c:if test="${viewMode == 'day-view'}">active</c:if>">
+                                    <div class="day-nav">
+                                        <span class="date">${dayDate}</span>
                                 </div>
                                 <div class="day-header"><h3>${dayHeader}</h3></div>
                                 <div class="time-grid">
                                     <c:forEach var="label" items="${dayTimeLabels}" varStatus="status">
                                         <div class="time-label">${label}</div>
                                         <c:set var="startTime" value="${dayStartTimes[status.index]}"/>
-                                        <div class="${startTime == 'all-day' ? 'time-slot all-day-slot' : 'time-slot'}"
-                                             <c:if test="${startTime != 'all-day'}">data-start-time="${startTime}"</c:if>
+                                        <div class="${startTime == '' ? 'time-slot all-day-slot' : 'time-slot'}" data-date="${isoDayDate}"
+                                             <c:if test="${startTime != ''}">data-start-time="${startTime}"</c:if>
                                                  ondragover="allowDrop(event)" ondrop="drop(event)">
-                                             <c:if test="${startTime == '9:30'}">
-                                                 <div class="event" id="event1" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" onclick="showDetails(this)">
-                                                     <span class="event-time">9:30</span><br>Follow-up call with client
-                                                 </div>
-                                             </c:if>
-                                             <c:if test="${startTime == '11:30'}">
-                                                 <div class="event" id="event2" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" onclick="showDetails(this)">
-                                                     <span class="event-time">11:30</span><br>Follow-up call with client
-                                                 </div>
-                                             </c:if>
+                                             <c:forEach var="schedule" items="${schedules}">
+                                                 <!-- All-day: startTime (DB) == null <=> slot có startTime == ""  -->
+                                                 <c:if test="${schedule.scheduledDate.equals(today) && (startTime == '' ? schedule.startTime == null : (schedule.startTime != null && schedule.startTime.toString() == startTime))}">
+                                                     <div class="event ${startTime == '' ? 'all-day' : ''}" id="event-${schedule.id}" data-schedule-id="${schedule.id}" draggable="true"
+                                                          ondragstart="drag(event)" onclick="showDetails(this)" style="background-color: ${schedule.color};">
+                                                         <span class="event-time">${schedule.startTime != null ? schedule.startTime : 'Cả ngày'}</span>
+                                                         <br>${schedule.title}
+                                                     </div>
+                                                 </c:if>
+                                             </c:forEach>
                                         </div>
                                     </c:forEach>
                                 </div>
                             </div>
 
-                            <div id="week-view" class="calendar-view">
-                                <div class="day-header-row">
-                                    <div class="day-header-cell"></div>
-                                    <c:forEach var="label" items="${dayHeaders}">
+                            <div id="week-view" class="calendar-view <c:if test="${viewMode == 'week-view'}">active</c:if>">
+                                    <div class="day-header-row">
+                                        <div class="day-header-cell" style="width:63px; min-width:63px;"></div>
+                                    <c:forEach var="label" items="${dayHeaders}" varStatus="status">
                                         <div class="day-header-cell">${label}</div>
                                     </c:forEach>
                                 </div>
 
                                 <div class="time-grid">
-                                    <!-- All-day row -->
-                                    <div class="time-label">all-day</div>
-                                    <div class="all-day-event-container" ondragover="allowDrop(event)" ondrop="drop(event)">
-                                        <!-- Events placed here with grid-column -->
-                                        <c:forEach var="event" items="${allDayEvents}">
-                                            <div class="event all-day" style="grid-column: ${event.startColumn} / ${event.endColumn};" draggable="true" ondragstart="drag(event)" onclick="showDetails(this)">
-                                                ${event.title}
-                                            </div>
-                                        </c:forEach>
-                                    </div>
-
-                                    <!-- Time slots per hour -->
-                                    <c:forEach var="hour" items="${hours}">
-                                        <div class="time-label">${hour}</div>
-                                        <c:forEach var="day" items="${days}">
-                                            <div class="time-slot" data-start-time="${hour}" data-day="${day}" ondragover="allowDrop(event)" ondrop="drop(event)">
-                                                <!-- Timed events -->
-                                                <c:if test="${hour == '03:00' && day == 'fri'}">
-                                                    <div class="event" id="grocery-event" draggable="true" ondragstart="drag(event)" ondragover="allowDrop(event)" onclick="showDetails(this)">
-                                                        <span class="event-time">${hour}</span><br/>Grocery Day
+                                    <!-- Row ALL DAY: label + 7 day-cells (all-day-slot) -->
+                                    <div class="time-label">Cả ngày</div>
+                                    <c:forEach var="weekDate" items="${weekDates}" varStatus="ws">
+                                        <div class="all-day-slot"
+                                             data-date="${weekDate}"
+                                             ondragover="allowDrop(event)" ondrop="drop(event)">
+                                            <c:forEach var="schedule" items="${schedules}">
+                                                <c:if test="${schedule.startTime == null && schedule.scheduledDate.equals(weekDate)}">
+                                                    <div class="event all-day" id="event-${schedule.id}"
+                                                         style="background-color: ${schedule.color};"
+                                                         data-schedule-id="${schedule.id}" draggable="true"
+                                                         ondragstart="drag(event)" onclick="showDetails(this)">
+                                                        <span class="event-time">Cả ngày</span>
+                                                        <br>${schedule.title}
+                                                        <div class="resize-handle"></div>
                                                     </div>
                                                 </c:if>
+                                            </c:forEach>
+                                        </div>
+                                    </c:forEach>
+
+                                    <!-- Các dòng slot giờ (label + 7 ô/ngày) -->
+                                    <c:forEach var="hour" items="${hours}" varStatus="status">
+                                        <div class="time-label">${hourLabels[status.index]}</div>
+                                        <c:forEach var="day" items="${days}" varStatus="ds">
+                                            <div class="time-slot"
+                                                 data-start-time="${hour}"
+                                                 data-date="${weekDates[ds.index]}"
+                                                 ondragover="allowDrop(event)" ondrop="drop(event)">
+                                                <c:forEach var="schedule" items="${schedules}">
+                                                    <c:if test="${schedule.scheduledDate.equals(weekDates[ds.index]) 
+                                                                  && schedule.startTime != null 
+                                                                  && schedule.startTime.toString() == hour}">
+                                                          <div class="event"
+                                                               id="event-${schedule.id}"
+                                                               data-schedule-id="${schedule.id}"
+                                                               draggable="true"
+                                                               ondragstart="drag(event)"
+                                                               onclick="showDetails(this)"
+                                                               style="background-color: ${schedule.color};">
+                                                              <span class="event-time">${hour.substring(0,5)}</span>
+                                                              <br>${schedule.title}
+                                                          </div>
+                                                    </c:if>
+                                                </c:forEach>
                                             </div>
                                         </c:forEach>
                                     </c:forEach>
                                 </div>
                             </div>
 
-                            <div id="month-view" class="calendar-view">
-                                <div class="month-grid">
-                                    <div class="month-grid-header">Thứ Hai</div><div class="month-grid-header">Thứ Ba</div><div class="month-grid-header">Thứ Tư</div><div class="month-grid-header">Thứ Năm</div><div class="month-grid-header">Thứ Sáu</div><div class="month-grid-header">Thứ Bảy</div><div class="month-grid-header">Chủ Nhật</div>
+                            <div id="month-view" class="calendar-view <c:if test="${viewMode == 'month-view'}">active</c:if>">
+                                    <div class="month-grid">
+                                        <div class="month-grid-header">Thứ Hai</div><div class="month-grid-header">Thứ Ba</div><div class="month-grid-header">Thứ Tư</div><div class="month-grid-header">Thứ Năm</div><div class="month-grid-header">Thứ Sáu</div><div class="month-grid-header">Thứ Bảy</div><div class="month-grid-header">Chủ Nhật</div>
                                     <c:forEach var="dayNum" items="${dayNumbers}" varStatus="status">
-                                        <div class="month-day ${isCurrentMonths[status.index] ? '' : 'other-month'}">
+                                        <div class="month-day ${isCurrentMonths[status.index] ? '' : 'other-month'}" data-date="${monthDates[status.index]}">
                                             <div class="day-number">${dayNum}</div>
-                                            <c:if test="${dayNum == 16 && isCurrentMonths[status.index]}">
-                                                <div class="tasks-list">
-                                                    <div class="task-item status-inprogress" data-task-id="101" data-item-name="Kiểm tra hệ thống PCCC" title="Kiểm tra hệ thống PCCC" onclick="showDetails(this)">Kiểm tra PCCC</div>
-                                                </div>
-                                            </c:if>
-                                            <c:if test="${dayNum == 17 && isCurrentMonths[status.index]}">
-                                                <div class="tasks-list">
-                                                    <div class="task-item status-upcoming" data-task-id="102" data-item-name="Bảo trì điều hòa trung tâm" title="Bảo trì điều hòa trung tâm" onclick="showDetails(this)">Bảo trì điều hòa</div>
-                                                </div>
-                                            </c:if>
-                                            <c:if test="${dayNum == 19 && isCurrentMonths[status.index]}">
-                                                <div class="tasks-list">
-                                                    <div class="task-item status-completed" data-task-id="103" data-item-name="Bảo dưỡng thang máy" title="Bảo dưỡng thang máy" onclick="showDetails(this)">Bảo dưỡng thang máy</div>
-                                                </div>
-                                            </c:if>
+                                            <div class="tasks-list">
+                                                <c:forEach var="schedule" items="${schedules}">
+                                                    <c:if test="${schedule.scheduledDate.equals(monthDates[status.index])}">
+                                                        <div class="task-item status-${fn:toLowerCase(schedule.status)}" data-task-id="${schedule.id}" data-schedule-id="${schedule.id}" data-item-name="${schedule.title}" title="${schedule.title}" onclick="showDetails(this)" draggable="true" ondragstart="drag(event)" style="background-color: ${schedule.color}; color: white;">
+                                                            ${fn:substring(schedule.title, 0, 10)}...
+                                                        </div>
+                                                    </c:if>
+                                                </c:forEach>
+                                            </div>
                                         </div>
                                     </c:forEach>
                                 </div>
                             </div>
 
-                            <div id="list-view" class="calendar-view">
+                            <div id="list-view" class="calendar-view active">
                                 <div class="list-grid">
-                                    <h2>Tất cả lịch bảo trì</h2>
-                                    <div class="maintenance-list">
-                                        <div class="maintenance-card status-inprogress" onclick="showDetails(this)">
-                                            <div class="card-content"><p class="title">Kiểm tra hệ thống PCCC</p><p class="info"><i data-feather="calendar"></i> 16/07/2025</p><p class="info"><i data-feather="briefcase"></i> Tòa nhà Keangnam</p><p class="info"><i data-feather="users"></i> Đội kỹ thuật số 1</p></div>
-                                            <div class="card-actions">
-                                                <a href="#" title="Xem"><i data-feather="eye"></i></a>
-                                                <a href="#" title="Sửa"><i data-feather="edit-2"></i></a>
-                                                <a href="#" class="delete-trigger" data-item-id="101" data-item-name="Kiểm tra hệ thống PCCC" title="Xóa"><i data-feather="trash-2"></i></a>
+                                    <h2 class="view-title">Tất cả lịch bảo trì</h2>
+                                    <p class="schedule-count">Có tổng <strong>${schedules.size()}</strong> lịch</p>
+
+                                    <div class="grouped-schedule-list">
+                                        <!-- Lặp qua từng nhóm ngày -->
+                                        <c:forEach var="dateGroup" items="${groupedSchedules}">
+
+                                            <!-- Header ngày -->
+                                            <div class="date-group-header">
+                                                <h3 class="date-title">${dateGroup.key}</h3>
+
                                             </div>
-                                        </div>
-                                        <div class="maintenance-card status-upcoming" onclick="showDetails(this)">
-                                            <div class="card-content"><p class="title">Bảo trì điều hòa trung tâm</p><p class="info"><i data-feather="calendar"></i> 17/07/2025</p><p class="info"><i data-feather="briefcase"></i> Công ty An Phát</p><p class="info"><i data-feather="user"></i> Nguyễn Văn An</p></div>
-                                            <div class="card-actions">
-                                                <a href="#" title="Xem"><i data-feather="eye"></i></a>
-                                                <a href="#" title="Sửa"><i data-feather="edit-2"></i></a>
-                                                <a href="#" class="delete-trigger" data-item-id="102" data-item-name="Bảo trì điều hòa trung tâm" title="Xóa"><i data-feather="trash-2"></i></a>
+
+                                            <!-- Danh sách events trong ngày -->
+                                            <div class="date-group-content">
+                                                <c:forEach var="schedule" items="${dateGroup.value}">
+                                                    <div class="event-item"
+                                                         data-schedule-id="${schedule.id}"
+                                                         onclick="showDetails(this)">
+                                                        <div class="event-color-dot" 
+                                                             style="background-color: ${schedule.color}; margin-right: 16px;"></div>
+                                                        <div class="event-time" 
+                                                             style="margin-right: 16px;">
+                                                            <c:if test="${schedule.startTime != null}">
+                                                                ${schedule.startTime}
+                                                            </c:if>
+                                                            <c:if test="${schedule.startTime == null}">
+                                                                Cả ngày
+                                                            </c:if>
+                                                        </div>
+
+                                                        <div class="event-info">
+                                                            <div class="event-title">${schedule.title}</div>
+                                                            <div class="event-meta">
+                                                                <span class="event-location">${schedule.location}</span>
+                                                                <c:if test="${schedule.notes != null && !empty schedule.notes}">
+                                                                    <span class="event-notes">· ${schedule.notes}</span>
+                                                                </c:if>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </c:forEach>
                                             </div>
-                                        </div>
-                                        <div class="maintenance-card status-completed" onclick="showDetails(this)">
-                                            <div class="card-content"><p class="title">Bảo dưỡng thang máy</p><p class="info"><i data-feather="calendar"></i> 19/07/2025</p><p class="info"><i data-feather="briefcase"></i> Khách sạn Grand Plaza</p><p class="info"><i data-feather="users"></i> Đội kỹ thuật số 2</p></div>
-                                            <div class="card-actions">
-                                                <a href="#" title="Xem"><i data-feather="eye"></i></a>
-                                                <a href="#" title="Sửa"><i data-feather="edit-2"></i></a>
-                                                <a href="#" class="delete-trigger" data-item-id="103" data-item-name="Bảo dưỡng thang máy" title="Xóa"><i data-feather="trash-2"></i></a>
-                                            </div>
-                                        </div>
+
+                                        </c:forEach>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
+
+                        </div>
                         <div class="event-details" id="event-details-panel">
-                            <div class="header">
-                                <div>
-                                    <span class="dot"></span>
-                                    <span class="event-time-detail">9:30 AM - 8:00 PM</span>
-                                    <span class="event-title">Awards Conference</span>
-                                    <span class="event-type">Event</span>
-                                </div>
-                                <div class="actions">
-                                    <a href="#" onclick="editEvent()" title="Sửa"><i data-feather="edit"></i></a>
-                                    <a href="#" onclick="deleteEvent()" title="Xóa"><i data-feather="trash-2"></i></a>
-                                    <a href="#" onclick="closeDetails()" title="Đóng"><i data-feather="x"></i></a>
-                                </div>
+                            <div class="actions">
+                                <a href="#"  title="Sửa"><i class="bi bi-pencil" aria-label="Edit Icon"></i></a>
+                                <a href="#" onclick="openDeleteModal(event)" title="Xóa"><i class="bi bi-trash" aria-label="Delete Icon"></i></a>
+                                <a href="#" onclick="closeDetails()" title="Đóng"><i class="bi bi-x-lg" aria-label="Close Icon"></i></a>
+                            </div>
+                            <div class="event-header">
+                                <span class="dot"></span>
+                                <span class="event-time-detail"></span>
+                                <span class="event-title"></span>
                             </div>
                             <div class="event-info">
-                                <i data-feather="calendar"></i> Aug 18, 2020 - Aug 19, 2020
+                                <i class="bi bi-hash" aria-label="ID Icon"></i> ID: <span class="event-id"></span>
                             </div>
                             <div class="event-info">
-                                <i data-feather="clock"></i> 8:40 AM - 5:40 PM
+                                <i class="bi bi-link" aria-label="Link Icon"></i> Technical Request ID: <span class="event-technical-request-id"></span>
                             </div>
                             <div class="event-info">
-                                <i data-feather="map-pin"></i> Oslo, Canada
+                                <i class="bi bi-calendar" aria-label="Date Icon"></i> <span class="event-date"></span>
                             </div>
                             <div class="event-info">
-                                <i data-feather="mail"></i> Meeting
+                                <i class="bi bi-clock" aria-label="Time Icon"></i> <span class="event-time-range"></span>
                             </div>
                             <div class="event-info">
-                                <i data-feather="eye"></i> Default Visibility
+                                <i class="bi bi-geo-alt" aria-label="Location Icon"></i> <span class="event-location"></span>
                             </div>
-                            <div class="event-guests">
-                                <i data-feather="users"></i> Guests:
-                                <div class="guests-list">
-                                    <div class="guest">Morgan Winston</div>
-                                    <div class="guest">Charlie</div>
-                                </div>
+                            <div class="event-info">
+                                <i class="bi bi-pencil-square" aria-label="Notes Icon"></i> <span class="event-notes"></span>
                             </div>
-                            <div class="event-description">
-                                <i data-feather="file-text"></i> Annual meeting with global branch teams & bosses about growth planning and fiscal year reports.
+                            <div class="event-info">
+                                <i class="bi bi-activity" aria-label="Status Icon"></i> Status:  <span class="event-status"></span>
+                            </div>
+                            <div class="event-info">
+                                <!-- Differentiated: Upload icon for Created At -->
+                                <i class="bi bi-upload" aria-label="Created At Icon"></i>Created at:  <span class="event-created-at"></span>
+                            </div>
+                            <div class="event-info">
+                                <!-- Differentiated: Arrow-repeat icon for Updated At -->
+                                <i class="bi bi-arrow-repeat" aria-label="Updated At Icon"></i> Updated at:  <span class="event-updated-at"></span>
                             </div>
                         </div>
-                    </div>
 
-                    <div id="month-task-popover">
-                        <a href="#" class="popover-action" id="popover-view"><i data-feather="eye"></i> Xem chi tiết</a>
-                        <a href="#" class="popover-action" id="popover-edit"><i data-feather="edit-2"></i> Chỉnh sửa</a>
-                        <a href="#" class="popover-action delete delete-trigger" id="popover-delete"><i data-feather="trash-2"></i> Xóa công việc</a>
-                    </div>
-
-                    <div id="delete-confirm-modal" class="modal-overlay">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h3>Xác nhận xóa</h3>
-                                <button type="button" class="modal-close-btn"><i data-feather="x"></i></button>
-                            </div>
-                            <div class="modal-body">
-                                <i class="warning-icon" data-feather="alert-triangle" width="48" height="48"></i>
-                                <p>Bạn có chắc chắn muốn xóa công việc <br><strong id="item-name-to-delete"></strong>?</p>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-cancel">Hủy</button>
-                                <a href="#" id="confirm-delete-btn" class="btn btn-confirm-delete">Xóa</a>
+                        <div id="deleteConfirmModal" class="modal-overlay">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h3 class="modal-title">Xác nhận xóa</h3>
+                                    <button class="close-modal-btn"><i data-feather="x"></i></button>
+                                </div>
+                                <div class="modal-body">
+                                    <i data-feather="alert-triangle" class="warning-icon"></i>
+                                    <p id="deleteMessage"></p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" id="cancelDeleteBtn">Hủy</button>
+                                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Xóa</button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-
-                    <div id="add-schedule-modal" class="modal-overlay">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h3>Thêm lịch bảo trì</h3>
-                                <button type="button" class="modal-close-btn"><i data-feather="x"></i></button>
-                            </div>
-                            <div class="modal-body">
-                                <form id="add-schedule-form" action="addSchedule" method="post">
-                                    <label for="title">Tiêu đề:</label>
-                                    <input type="text" id="title" name="title" required>
-
-                                    <label for="date">Ngày (dd/MM/yyyy):</label>
-                                    <input type="date" id="date" name="date" required>
-
-                                    <label for="start_time">Giờ bắt đầu:</label>
-                                    <input type="time" id="start_time" name="start_time" required>
-
-                                    <label for="end_time">Giờ kết thúc:</label>
-                                    <input type="time" id="end_time" name="end_time" required>
-
-                                    <label for="client">Khách hàng:</label>
-                                    <input type="text" id="client" name="client" required>
-
-                                    <label for="responsible">Người chịu trách nhiệm:</label>
-                                    <input type="text" id="responsible" name="responsible" required>
-
-                                    <label for="status">Trạng thái:</label>
-                                    <select id="status" name="status" required>
-                                        <option value="upcoming">Sắp tới</option>
-                                        <option value="inprogress">Đang tiến hành</option>
-                                        <option value="completed">Hoàn thành</option>
-                                    </select>
-                                </form>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-cancel">Hủy</button>
-                                <button type="submit" form="add-schedule-form" class="btn btn-primary">Thêm</button>
-                            </div>
-                        </div>
-                    </div>
                 </section>
             </div>
         </div>
-
         <script>
+            const currentView = '${viewMode}';
+            const isoDayDate = '${isoDayDate}';
+                    const weekDates = [<c:forEach items="${weekDates}" var="d" varStatus="status">'${d}'<c:if test="${!status.last}">,</c:if></c:forEach>];
+                    const monthDates = [<c:forEach items="${monthDates}" var="d" varStatus="status">'${d}'<c:if test="${!status.last}">,</c:if></c:forEach>];
+            var contextPath = window.location.pathname.split('/')[1] ? '/' + window.location.pathname.split('/')[1] : '';
+
             feather.replace();
+            document.addEventListener('DOMContentLoaded', () => {
+                const weekNav = document.querySelector('.week-nav');
+                if (weekNav) {
+                    if (currentView === 'list-view') {
+                        weekNav.classList.add('hidden');
+                    } else {
+                        weekNav.classList.remove('hidden');
+                    }
+                }
+            });
+            const schedules = [
+            <c:forEach var="schedule" items="${schedules}" varStatus="status">
+            {
+            id: ${schedule.id},
+                    technicalRequestId: ${schedule.technicalRequestId},
+                    title: "${schedule.title}",
+                    scheduledDate: "${schedule.scheduledDate}",
+                    endDate: "${schedule.endDate != null ? schedule.endDate : ''}",
+                    startTime: "${schedule.startTime != null ? schedule.startTime : ''}",
+                    endTime: "${schedule.endTime != null ? schedule.endTime : ''}",
+                    location: "${schedule.location}",
+                    status: "${schedule.status}",
+                    notes: "${schedule.notes}",
+                    createdAt: "${schedule.createdAt}",
+                    updatedAt: "${schedule.updatedAt}"
+            }<c:if test="${!status.last}">,</c:if>
+            </c:forEach>
+            ];
+// ====================================================================
+
+            var contextPath = window.location.pathname.split('/')[1] ? '/' + window.location.pathname.split('/')[1] : '';
+
+            feather.replace();
+// Gọi AJAX tới backend khi sự kiện drop hoàn tất
+            function updateEvent(scheduleId, newScheduledDate, newEndDate, newStartTime, newEndTime) {
+                // Sửa lỗi URL - thêm contextPath nếu cần
+                const url = contextPath + '/updateScheduleTime';
+
+                console.log('Updating event:', {
+                    id: scheduleId,
+                    scheduledDate: newScheduledDate,
+                    endDate: newEndDate,
+                    startTime: newStartTime,
+                    endTime: newEndTime
+                });
+
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        id: parseInt(scheduleId), // Đảm bảo id là số
+                        scheduledDate: newScheduledDate,
+                        endDate: newEndDate,
+                        startTime: newStartTime,
+                        endTime: newEndTime
+                    }),
+                    success: function (response) {
+                        console.log('Update successful:', response);
+                        showToast('Cập nhật lịch trình thành công!', 'success');
+                        // Có thể reload trang hoặc cập nhật UI
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Update failed:', xhr.responseText);
+                        let errorMessage = 'Có lỗi khi cập nhật lịch trình!';
+
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        } else if (xhr.statusText) {
+                            errorMessage += ' ' + xhr.statusText;
+                        }
+
+                        showToast(errorMessage, 'error');
+                    }
+                });
+            }
 
             let isInteracting = false;
+            let scrollSpeed = 0;
+            let scrollContainer = null;
+            let scrollInterval = null;
 
-            function drag(ev) {
-                ev.dataTransfer.setData("text", ev.target.id);
-                isInteracting = true;
+            function startAutoScroll() {
+                scrollContainer = document.querySelector('.calendar-left');
+                if (!scrollContainer)
+                    return;
+                if (!scrollInterval) {
+                    scrollInterval = setInterval(() => {
+                        if (scrollSpeed !== 0) {
+                            scrollContainer.scrollTop += scrollSpeed;
+                        }
+                    }, 20);
+                }
             }
 
-            function allowDrop(ev) {
-                ev.preventDefault();
+            function updateScrollDirection(ev) {
+                if (!scrollContainer)
+                    return;
+                const rect = scrollContainer.getBoundingClientRect();
+                const edgeSize = 50;
+                const maxSpeed = 20;
+                const distTop = ev.clientY - rect.top;
+                const distBottom = rect.bottom - ev.clientY;
+                if (distTop < edgeSize) {
+                    scrollSpeed = -Math.round(maxSpeed * (1 - distTop / edgeSize));
+                } else if (distBottom < edgeSize) {
+                    scrollSpeed = Math.round(maxSpeed * (1 - distBottom / edgeSize));
+                } else {
+                    scrollSpeed = 0;
+                }
             }
 
-            function drop(ev) {
-                ev.preventDefault();
-                const data = ev.dataTransfer.getData("text");
-                const eventElement = document.getElementById(data);
-                if (!eventElement)
-                    return;
+            function stopAutoScroll() {
+                scrollSpeed = 0;
+                if (scrollInterval) {
+                    clearInterval(scrollInterval);
+                    scrollInterval = null;
+                }
+                document.removeEventListener('mousemove', updateScrollDirection);
+                document.removeEventListener('dragend', stopAutoScroll);
+                document.removeEventListener('drop', stopAutoScroll);
+            }
 
-                let slot = ev.target.closest('.time-slot, .all-day-slot, .all-day-event-container, .month-day');
-                if (!slot)
-                    return;
-                const view = slot.closest('.calendar-view').id;
+            function parseTime(timeStr) {
+                if (!timeStr)
+                    return 0;
+                const [h, m] = timeStr.split(':').map(Number);
+                return h * 60 + m;
+            }
 
-                if (view === 'month-view') {
-                    let tasksList = slot.querySelector('.tasks-list');
-                    if (!tasksList) {
-                        tasksList = document.createElement('div');
-                        tasksList.classList.add('tasks-list');
-                        slot.appendChild(tasksList);
+            function formatTime(minutes) {
+                const h = Math.floor(minutes / 60) % 24;
+                const m = minutes % 60;
+                return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
                     }
-                    tasksList.appendChild(eventElement);
-                } else if (slot.classList.contains('all-day-slot') || slot.classList.contains('all-day-event-container')) {
-                    eventElement.classList.add('all-day');
-                    const timeText = eventElement.querySelector('.event-time');
-                    if (timeText)
-                        timeText.textContent = '';  // Remove time for all-day
 
-                    if (view === 'day-view') {
-                        // Append to slot for day view (no spanning)
+                    function addDays(dateStr, days) {
+                        const date = new Date(dateStr);
+                        date.setDate(date.getDate() + days);
+                        return date.toISOString().split('T')[0];
+                    }
+
+                    function drag(ev) {
+                        ev.dataTransfer.setData("text", ev.target.id);
+                        isInteracting = true;
+
+                        // --- SỬA LỖI ---
+                        // 1. Lưu lại element đang được kéo
+                        draggedElement = ev.target;
+                        // --- HẾT SỬA LỖI ---
+
+                        startAutoScroll();
+                        document.addEventListener('mousemove', updateScrollDirection);
+                        document.addEventListener('dragend', () => {
+                            // 2. Khi kết thúc kéo, xóa biến tạm đi
+                            draggedElement = null;
+                            stopAutoScroll();
+                        });
+                        document.addEventListener('drop', stopAutoScroll);
+                    }
+
+                    function allowDrop(ev) {
+                        ev.preventDefault();
+                    }
+
+                    function drop(ev) {
+                        ev.preventDefault();
+                        const data = ev.dataTransfer.getData("text");
+                        let eventElement = document.getElementById(data);
+                        if (!eventElement)
+                            return;
+
+                        // Ngăn bug nhân bản
+                        document.querySelectorAll('#' + CSS.escape(data)).forEach((el) => {
+                            if (el !== eventElement && el.parentNode) {
+                                el.parentNode.removeChild(el);
+                            }
+                        });
+
+                        let slot = ev.target.closest('.time-slot, .all-day-slot, .all-day-event-container, .month-day');
+                        if (!slot)
+                            return;
+
+                        // Di chuyển element
+                        if (eventElement.parentNode) {
+                            eventElement.parentNode.removeChild(eventElement);
+                        }
                         slot.appendChild(eventElement);
-                        eventElement.style.gridColumn = '';
-                        eventElement.style.gridRow = '';
-                        eventElement.style.height = 'auto';
-                        eventElement.style.top = '0';
-                        // Remove resize handle if present
-                        const handle = eventElement.querySelector('.resize-handle');
-                        if (handle)
-                            handle.remove();
-                    } else {
-                        const container = document.querySelector('#week-view .all-day-event-container');
-                        if (container) {
-                            const rect = container.getBoundingClientRect();
-                            const numDays = 7;
-                            const dayWidth = rect.width / numDays;
+
+                        const scheduleId = eventElement.id.split('-')[1];
+                        let newScheduledDate = null, newEndDate = null, newStartTime = null, newEndTime = null;
+
+                        // Tính toán ngày giờ mới dựa trên vị trí thả
+                        const view = slot.closest('.calendar-view').id;
+                        if (slot.classList.contains('all-day-event-container') && view === 'week-view') {
+                            const rect = slot.getBoundingClientRect();
+                            const dayWidth = rect.width / 7;
                             const x = ev.clientX - rect.left;
                             let startCol = Math.floor(x / dayWidth) + 1;
+                            startCol = Math.max(1, Math.min(startCol, 7));
+                            eventElement.style.gridColumn = `${startCol} / span 1`;
+                            newScheduledDate = weekDates[startCol - 1];
+                            newStartTime = null;
+                            eventElement.dataset.date = newScheduledDate;
+                        } else if (slot.classList.contains('time-slot') && !slot.classList.contains('all-day-slot')) {
+                            newScheduledDate = slot.dataset.date;
+                            newStartTime = slot.dataset.startTime;
+                        } else {
+                            newScheduledDate = slot.dataset.date;
+                            newStartTime = null;
+                        }
 
-                            let span = 1;
-                            if (eventElement.classList.contains('all-day') && eventElement.dataset.span) {
-                                span = parseInt(eventElement.dataset.span);
+                        // Cập nhật text trên event UI
+                        const eventTimeElement = eventElement.querySelector('.event-time');
+                        if (eventTimeElement) {
+                            eventTimeElement.textContent = newStartTime ? newStartTime : 'Cả ngày';
+                        }
+
+                        // Cập nhật dữ liệu trong mảng `schedules` toàn cục
+                        if (scheduleId) {
+                            const scheduleToUpdate = schedules.find(s => s.id == scheduleId);
+                            if (scheduleToUpdate) {
+                                scheduleToUpdate.scheduledDate = newScheduledDate;
+                                scheduleToUpdate.startTime = newStartTime || '';
+                                // Khi kéo thả, coi như event chỉ kéo dài 1 ngày/1 slot, reset endDate và endTime
+                                scheduleToUpdate.endDate = '';
+                                scheduleToUpdate.endTime = '';
+                                scheduleToUpdate.updatedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
                             }
+                        }
 
-                            let endCol = startCol + span;
-                            if (endCol > numDays + 1) {
-                                endCol = numDays + 1;
-                                startCol = endCol - span;
+                        // Cập nhật detail panel nếu đang hiển thị
+                        const detailsPanel = document.getElementById('event-details-panel');
+                        if (detailsPanel && detailsPanel.classList.contains('show') && detailsPanel.querySelector('.event-id').textContent == scheduleId) {
+                            const updatedSchedule = schedules.find(s => s.id == scheduleId);
+                            if (updatedSchedule)
+                                showDetails(eventElement, updatedSchedule); // Gọi lại showDetails với dữ liệu mới
+                        }
+
+                        // Gửi AJAX lên server
+                        if (scheduleId && newScheduledDate) {
+                            updateEvent(scheduleId, newScheduledDate, newEndDate, newStartTime, newEndTime);
+                        }
+
+                        stopAutoScroll();
+                    }
+                    // Các hàm phụ cho kéo thả
+                    function startAutoScroll() {
+                        scrollContainer = document.querySelector('.calendar-left');
+                        if (!scrollContainer || scrollInterval)
+                            return;
+                        scrollInterval = setInterval(() => {
+                            if (scrollSpeed !== 0) {
+                                scrollContainer.scrollTop += scrollSpeed;
                             }
-                            if (startCol < 1)
-                                startCol = 1;
+                        }, 20);
+                    }
 
-                            eventElement.style.gridColumn = startCol + ' / ' + endCol;
-                            eventElement.dataset.startCol = startCol;
-                            eventElement.dataset.span = endCol - startCol;
+                    function stopAutoScroll() {
+                        scrollSpeed = 0;
+                        if (scrollInterval) {
+                            clearInterval(scrollInterval);
+                            scrollInterval = null;
+                        }
+                        document.removeEventListener('mousemove', updateScrollDirection);
+                        document.removeEventListener('dragend', stopAutoScroll);
+                        document.removeEventListener('drop', stopAutoScroll);
+                    }
 
-                            container.appendChild(eventElement);
+                    function updateScrollDirection(ev) {
+                        if (!scrollContainer)
+                            return;
+                        const rect = scrollContainer.getBoundingClientRect();
+                        const edgeSize = 50;
+                        const maxSpeed = 20;
+                        const distTop = ev.clientY - rect.top;
+                        const distBottom = rect.bottom - ev.clientY;
 
-                            // Add resize handle if not present
-                            if (!eventElement.querySelector('.resize-handle')) {
+                        if (distTop < edgeSize) {
+                            scrollSpeed = -Math.round(maxSpeed * (1 - distTop / edgeSize));
+                        } else if (distBottom < edgeSize) {
+                            scrollSpeed = Math.round(maxSpeed * (1 - distBottom / edgeSize));
+                        } else {
+                            scrollSpeed = 0;
+                        }
+                    }
+
+                    function initResize(e) {
+                        e.preventDefault();
+                        isInteracting = true;
+                        const eventElement = e.target.parentElement;
+                        const container = eventElement.parentElement;
+                        const rect = container.getBoundingClientRect();
+                        const numDays = 7;
+                        const dayWidth = rect.width / numDays;
+                        let startCol = parseInt(eventElement.dataset.startCol) || 1;
+                        let currentSpan = parseInt(eventElement.dataset.span) || 1;
+                        function resize(e) {
+                            const x = e.clientX - rect.left;
+                            let newEndCol = Math.ceil(x / dayWidth) + 1;
+                            let newSpan = newEndCol - startCol;
+                            if (newSpan < 1)
+                                newSpan = 1;
+                            newEndCol = startCol + newSpan;
+                            if (newEndCol > numDays + 1)
+                                newEndCol = numDays + 1;
+                            eventElement.style.gridColumn = startCol + ' / ' + newEndCol;
+                            eventElement.dataset.span = newEndCol - startCol;
+                        }
+
+                        function stopResize() {
+                            window.removeEventListener('mousemove', resize);
+                            window.removeEventListener('mouseup', stopResize);
+                            setTimeout(() => isInteracting = false, 0);
+                            // Cập nhật data backend sau resize
+                            const scheduleId = eventElement.id.split('-')[1];
+                            const newStartCol = parseInt(eventElement.dataset.startCol);
+                            const newSpan = parseInt(eventElement.dataset.span);
+                            const newScheduledDate = weekDates[newStartCol - 1];
+                            const newEndDate = (newSpan > 1) ? weekDates[newStartCol + newSpan - 2] : null;
+                            const newStartTime = null;
+                            const newEndTime = null; // All-day nên endTime null
+                            updateEvent(scheduleId, newScheduledDate, newEndDate, newStartTime, newEndTime);
+                        }
+
+                        window.addEventListener('mousemove', resize);
+                        window.addEventListener('mouseup', stopResize);
+                    }
+
+                    function showDetails(element) {
+                        if (isInteracting)
+                            return;
+                        const detailsPanel = document.getElementById('event-details-panel');
+                        if (!detailsPanel)
+                            return;
+
+                        let scheduleId = element.dataset.scheduleId || element.id?.split('-')[1];
+                        if (!scheduleId)
+                            return;
+
+                        // *** BỎ KHAI BÁO schedules Ở ĐÂY ***
+                        // Hàm này giờ sẽ đọc từ mảng schedules toàn cục đã được cập nhật
+                        const schedule = schedules.find(s => s.id == scheduleId);
+
+                        if (schedule) {
+                            detailsPanel.querySelector('.event-id').textContent = schedule.id;
+                            detailsPanel.querySelector('.event-technical-request-id').textContent = schedule.technicalRequestId || '0';
+                            detailsPanel.querySelector('.event-title').textContent = schedule.title;
+
+                            // --- CẢI TIẾN ĐỂ NHẤT QUÁN ---
+                            // Tất cả các trường đều đọc từ đối tượng 'schedule'
+                            detailsPanel.querySelector('.event-time-detail').textContent = schedule.startTime ? schedule.startTime : 'Cả ngày';
+                            detailsPanel.querySelector('.event-date').textContent = schedule.scheduledDate + (schedule.endDate ? ' - ' + schedule.endDate : '');
+                            detailsPanel.querySelector('.event-time-range').textContent = schedule.startTime ? schedule.startTime + (schedule.endTime ? ' - ' + schedule.endTime : '') : 'Cả ngày';
+
+                            detailsPanel.querySelector('.event-location').textContent = schedule.location || 'Không xác định';
+                            detailsPanel.querySelector('.event-notes').textContent = schedule.notes || 'Không có ghi chú';
+                            detailsPanel.querySelector('.event-status').textContent = schedule.status || 'Không xác định';
+                            detailsPanel.querySelector('.event-created-at').textContent = schedule.createdAt || 'N/A';
+                            detailsPanel.querySelector('.event-updated-at').textContent = schedule.updatedAt || 'N/A';
+
+                            const editBtn = detailsPanel.querySelector('a[title="Sửa"]');
+                            editBtn.href = contextPath + '/updateSchedule?id=' + encodeURIComponent(schedule.id);
+                            detailsPanel.classList.add('show');
+                        } else {
+                            console.error('Schedule not found for ID', scheduleId);
+                        }
+                    }
+
+                    function closeDetails() {
+                        const detailsPanel = document.getElementById('event-details-panel');
+                        if (detailsPanel)
+                            detailsPanel.classList.remove('show');
+                    }
+
+                    // View toggle và lưu localStorage
+                    document.querySelectorAll('.btn-toggle').forEach(button => {
+                        button.addEventListener('click', () => {
+                            const viewId = button.getAttribute('data-view');
+                            document.querySelectorAll('.calendar-view').forEach(view => view.classList.remove('active'));
+                            document.getElementById(viewId).classList.add('active');
+                            document.querySelectorAll('.btn-toggle').forEach(btn => btn.classList.remove('active'));
+                            button.classList.add('active');
+                            localStorage.setItem('selectedView', viewId);
+                            const form = document.getElementById("dayNavForm");
+                            const viewModeInput = document.getElementById("viewMode");
+                            const currentDayInput = document.getElementById("currentDay");
+                            currentDayInput.value = document.getElementById("currentDate").getAttribute("data-date");
+                            viewModeInput.value = viewId;
+                            form.submit();
+                        });
+                    });
+                    // Init view từ localStorage
+                    document.addEventListener('DOMContentLoaded', () => {
+                        const savedView = localStorage.getItem('selectedView') || 'day-view';
+                        document.querySelectorAll('.calendar-view').forEach(view => {
+                            view.classList.remove('active');
+                        });
+                        const selectedViewElement = document.getElementById(savedView);
+                        if (selectedViewElement)
+                            selectedViewElement.classList.add('active');
+                        document.querySelectorAll('.btn-toggle').forEach(button => {
+                            button.classList.remove('active');
+                            if (button.getAttribute('data-view') === savedView) {
+                                button.classList.add('active');
+                            }
+                        });
+                    });
+                    // Init các event khác
+                    document.addEventListener('DOMContentLoaded', () => {
+                        document.querySelectorAll('#week-view .event.all-day').forEach(event => {
+                            if (!event.querySelector('.resize-handle')) {
                                 const handle = document.createElement('div');
                                 handle.classList.add('resize-handle');
-                                eventElement.appendChild(handle);
+                                event.appendChild(handle);
                                 handle.addEventListener('mousedown', initResize);
                                 handle.addEventListener('click', (e) => e.stopPropagation());
                             }
-                        }
-                    }
-                } else {
-                    // Normal time slot handling
-                    slot.appendChild(eventElement);
-                    eventElement.classList.remove('all-day');
-                    eventElement.style.gridColumn = '';
-                    eventElement.style.gridRow = '';
-                    eventElement.style.height = 'auto';
-                    eventElement.style.top = '0';
-                    const time = slot.getAttribute('data-start-time');
-                    const timeText = eventElement.querySelector('.event-time');
-                    if (timeText && time)
-                        timeText.textContent = time;
-                    // Remove resize handle if present
-                    const handle = eventElement.querySelector('.resize-handle');
-                    if (handle)
-                        handle.remove();
-                }
-            }
-
-            function initResize(e) {
-                e.preventDefault();
-                isInteracting = true;
-                const eventElement = e.target.parentElement;
-                const container = eventElement.parentElement;
-                const rect = container.getBoundingClientRect();
-                const numDays = 7;
-                const dayWidth = rect.width / numDays;
-                let startCol = parseInt(eventElement.dataset.startCol) || 1;
-                let currentSpan = parseInt(eventElement.dataset.span) || 1;
-
-                function resize(e) {
-                    const x = e.clientX - rect.left;
-                    let newEndCol = Math.ceil(x / dayWidth) + 1;
-                    let newSpan = newEndCol - startCol;
-                    if (newSpan < 1)
-                        newSpan = 1;
-                    newEndCol = startCol + newSpan;
-                    if (newEndCol > numDays + 1)
-                        newEndCol = numDays + 1;
-                    eventElement.style.gridColumn = startCol + ' / ' + newEndCol;
-                    eventElement.dataset.span = newEndCol - startCol;
-                }
-
-                function stopResize() {
-                    window.removeEventListener('mousemove', resize);
-                    window.removeEventListener('mouseup', stopResize);
-                    setTimeout(() => isInteracting = false, 0);
-                }
-
-                window.addEventListener('mousemove', resize);
-                window.addEventListener('mouseup', stopResize);
-            }
-
-            function showDetails(element) {
-                if (isInteracting)
-                    return;
-                const detailsPanel = document.getElementById('event-details-panel');
-
-                // (Optional) custom info filling
-                const time = element.querySelector('.event-time')?.textContent || '';
-                const title = element.querySelector('.title')?.textContent || element.textContent.trim();
-
-                detailsPanel.querySelector('.event-time-detail').textContent = time;
-                detailsPanel.querySelector('.event-title').textContent = title;
-
-                detailsPanel.classList.add('show');
-            }
-
-            function closeDetails() {
-                const detailsPanel = document.getElementById('event-details-panel');
-                if (detailsPanel) {
-                    detailsPanel.classList.remove('show');
-                }
-            }
-
-            function editEvent() {
-                alert('Edit event');
-            }
-
-            function deleteEvent() {
-                alert('Delete event');
-            }
-
-            // View toggle functionality
-            document.addEventListener('DOMContentLoaded', () => {
-                // Xử lý khôi phục view từ localStorage
-                const savedView = localStorage.getItem('selectedView') || 'day-view';
-
-                document.querySelectorAll('.calendar-view').forEach(view => {
-                    view.classList.remove('active');
-                });
-
-                const selectedViewElement = document.getElementById(savedView);
-                if (selectedViewElement) {
-                    selectedViewElement.classList.add('active');
-                }
-                document.querySelectorAll('.btn-toggle').forEach(button => {
-                    button.classList.remove('active');
-                    if (button.getAttribute('data-view') === savedView) {
-                        button.classList.add('active');
-                    }
-                });
-            });
-// Gắn sự kiện lưu trạng thái
-            document.querySelectorAll('.btn-toggle').forEach(button => {
-                button.addEventListener('click', () => {
-                    const viewId = button.getAttribute('data-view');
-                    document.querySelectorAll('.calendar-view').forEach(view => view.classList.remove('active'));
-                    document.getElementById(viewId).classList.add('active');
-                    document.querySelectorAll('.btn-toggle').forEach(btn => btn.classList.remove('active'));
-                    button.classList.add('active');
-                    localStorage.setItem('selectedView', viewId);
-                });
-            });
-            // Initialize resize handles for existing all-day events
-            document.addEventListener('DOMContentLoaded', () => {
-                document.querySelectorAll('#week-view .event.all-day').forEach(event => {
-                    if (!event.querySelector('.resize-handle')) {
-                        const handle = document.createElement('div');
-                        handle.classList.add('resize-handle');
-                        event.appendChild(handle);
-                        handle.addEventListener('mousedown', initResize);
-                        handle.addEventListener('click', (e) => e.stopPropagation());
-                    }
-                    // Set dataset if not present
-                    if (!event.dataset.startCol) {
-                        const col = event.style.gridColumn || '1 / 2';
-                        const [start, end] = col.split('/').map(s => parseInt(s.trim()));
-                        event.dataset.startCol = start;
-                        event.dataset.span = end - start;
-                    }
-                });
-                document.addEventListener('dragend', (e) => {
-                    if (e.target.classList.contains('event')) {
-                        setTimeout(() => isInteracting = false, 0);
-                    }
-                });
-
-                // Enable drag and drop for month view
-                document.querySelectorAll('#month-view .task-item').forEach(item => {
-                    item.id = item.dataset.taskId ? 'task-' + item.dataset.taskId : 'task-' + Math.random().toString(36).substring(7);
-                    item.draggable = true;
-                    item.addEventListener('dragstart', drag);
-                    item.addEventListener('dragend', (e) => {
-                        setTimeout(() => isInteracting = false, 0);
+                            if (!event.dataset.startCol) {
+                                const col = event.style.gridColumn || '1 / 2';
+                                const [start, end] = col.split('/').map(s => parseInt(s.trim()));
+                                event.dataset.startCol = start;
+                                event.dataset.span = end - start;
+                            }
+                        });
+                        document.addEventListener('dragend', (e) => {
+                            if (e.target.classList.contains('event')) {
+                                setTimeout(() => isInteracting = false, 0);
+                            }
+                        });
+                        document.querySelectorAll('#month-view .task-item').forEach(item => {
+                            item.id = item.dataset.taskId ? 'task-' + item.dataset.taskId : 'task-' + Math.random().toString(36).substring(7);
+                            item.draggable = true;
+                            item.addEventListener('dragstart', drag);
+                            item.addEventListener('dragend', (e) => {
+                                setTimeout(() => isInteracting = false, 0);
+                            });
+                        });
+                        document.querySelectorAll('#month-view .month-day').forEach(day => {
+                            day.addEventListener('dragover', allowDrop);
+                            day.addEventListener('drop', drop);
+                        });
+                        // Lấy ngày hiện tại và highlight
+                        const today = new Date().toISOString().split('T')[0];
+                        // Highlight ngày hiện tại trong week-view
+                        const weekHeaders = document.querySelectorAll('#week-view .day-header-cell:not(:first-child)');
+                        weekHeaders.forEach((header, index) => {
+                            if (weekDates[index] === today) {
+                                header.classList.add('today-highlight');
+                            }
+                        });
+                        // Highlight ngày hiện tại trong month-view với hình tròn quanh số
+                        const monthDays = document.querySelectorAll('#month-view .month-day');
+                        monthDays.forEach((day) => {
+                            if (day.dataset.date === today) {
+                                day.classList.add('today-highlight');
+                            }
+                        });
                     });
-                });
-                document.querySelectorAll('#month-view .month-day').forEach(day => {
-                    day.addEventListener('dragover', allowDrop);
-                    day.addEventListener('drop', drop);
-                });
-            });
-            document.addEventListener("DOMContentLoaded", function () {
-                const form = document.getElementById("dayNavForm");
-                const controllerDayInput = document.getElementById("controllerDay");
-                const currentDayInput = document.getElementById("currentDay");
+                    // Navigation (prev/next) với xử lý viewMode
+                    document.addEventListener("DOMContentLoaded", function () {
+                        const form = document.getElementById("dayNavForm");
+                        const controllerDayInput = document.getElementById("controllerDay");
+                        const currentDayInput = document.getElementById("currentDay");
+                        const viewModeInput = document.getElementById("viewMode");
+                        const currentDateElem = document.getElementById("currentDate");
+                        const currentFullDate = currentDateElem.getAttribute("data-date");
+                        let currentViewMode = localStorage.getItem("selectedView") || "day-view";
+                        function calculateNewDate(baseDateStr, offsetDays) {
+                            const date = new Date(baseDateStr);
+                            date.setDate(date.getDate() + offsetDays);
+                            return date.toISOString().split("T")[0];
+                        }
 
-                // Lấy ngày hiện tại đang hiển thị từ một span (có thể gán thêm attribute data-date="2025-07-21")
-                const currentDateElem = document.getElementById("currentDate");
-                const currentFullDate = currentDateElem.getAttribute("data-date");  // bạn truyền từ backend ra dạng yyyy-MM-dd
-                const realDate = parseDate(currentFullDate); // chuyển sang ISO nếu cần xử lý định dạng
+                        function handleNav(direction) {
+                            let newDate = currentFullDate;
+                            controllerDayInput.value = "";
+                            if (currentViewMode === "week-view") {
+                                newDate = calculateNewDate(currentFullDate, direction === "prev" ? -7 : 7);
+                            } else {
+                                controllerDayInput.value = direction;
+                            }
 
-                // Bắt sự kiện nút << (prev)
-                document.getElementById("prevDayBtn").addEventListener("click", function () {
-                    controllerDayInput.value = "prev";
-                    currentDayInput.value = realDate;
-                    form.submit();
-                });
+                            currentDayInput.value = newDate;
+                            viewModeInput.value = currentViewMode;
+                            localStorage.setItem("selectedView", currentViewMode);
+                            form.submit();
+                        }
 
-                // Bắt sự kiện nút >> (next)
-                document.getElementById("nextDayBtn").addEventListener("click", function () {
-                    controllerDayInput.value = "next";
-                    currentDayInput.value = realDate;
-                    form.submit();
-                });
+                        document.getElementById("prevDayBtn").addEventListener("click", function () {
+                            handleNav("prev");
+                        });
+                        document.getElementById("nextDayBtn").addEventListener("click", function () {
+                            handleNav("next");
+                        });
+                    });
+                    function openDeleteModal(e) {
+                        e.preventDefault(); // Ngăn chặn hành vi mặc định của link
+                        const detailsPanel = document.getElementById('event-details-panel');
+                        const scheduleId = detailsPanel.querySelector('.event-id').textContent;
+                        const title = detailsPanel.querySelector('.event-title').textContent;
+                        const message = `Bạn có chắc chắn muốn xóa lịch bảo trì ?`;
+                        document.getElementById('deleteMessage').textContent = message;
+                        document.getElementById('deleteConfirmModal').classList.add('show');
+                    }
 
-                // Hàm parse nếu cần (giả sử date hiển thị là "July 22, 2025")
-                function parseDate(str) {
-                    // Nếu bạn đã truyền đúng ISO từ backend thì chỉ cần return str
-                    return str;
-                }
-            });
-        </script>
+// Hàm đóng modal
+                    function closeDeleteModal() {
+                        document.getElementById('deleteConfirmModal').classList.remove('show');
+                    }
+
+// Event listener cho nút close và hủy
+                    document.querySelector('.close-modal-btn').addEventListener('click', closeDeleteModal);
+                    document.getElementById('cancelDeleteBtn').addEventListener('click', closeDeleteModal);
+// Event listener cho nút xác nhận xóa
+                    document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
+                        const detailsPanel = document.getElementById('event-details-panel');
+                        const scheduleId = detailsPanel.querySelector('.event-id').textContent;
+                        fetch('deleteSchedule', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({id: scheduleId}),
+                        }).then(response => {
+                            if (response.ok) {
+                                location.reload(); // Reload trang để cập nhật danh sách
+                            } else {
+                                alert('Xóa thất bại!');
+                            }
+                        }).catch(error => {
+                            console.error('Error:', error);
+                            alert('Đã xảy ra lỗi khi xóa!');
+                        });
+                        closeDeleteModal(); // Đóng modal ngay lập tức
+                    });</script>
         <script src="${pageContext.request.contextPath}/js/listSchedule.js"></script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>
+
+

@@ -320,3 +320,13 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     align-items: flex-start; /* Căn nội dung lên đầu (khi có nhiều dòng) */
     word-wrap: break-word; /* Ngắt từ nếu từ quá dài để tránh tràn */
 }
+.btn-teal {
+    background-color: #298E94; /* Màu xanh ngọc giống nút In */
+    color: #fff;
+    border-color: #2caeba; /* Đồng bộ màu viền */
+}
+
+.btn-teal:hover {
+    background-color: #249aa0; /* Làm màu đậm hơn một chút khi di chuột vào */
+    border-color: #249aa0;
+}

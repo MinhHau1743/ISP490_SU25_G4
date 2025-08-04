@@ -1,0 +1,184 @@
+/*
+    Tác giả   : PHAM HAI HUY
+    Ngày cập nhật: 31/07/2025
+*/
+
+
+html, body {
+    height: 100%;
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    background-color: #f9fafb;
+}
+.content-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    overflow: hidden;
+}
+.main-content-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 24px 32px;
+}
+
+/* CSS CHUNG CHO FORM VÀ VIEW DETAILS */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e5e7eb;
+}
+.page-header h1 {
+    font-size: 24px;
+    margin: 0;
+}
+.page-header .actions .btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+.btn-edit {
+    background-color: #3b82f6;
+    color: white;
+}
+.btn-delete {
+    background-color: #ef4444;
+    color: white;
+}
+
+.form-container, .details-container {
+    background-color: white;
+    padding: 32px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.form-grid, .details-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px 32px;
+}
+
+.form-group, .detail-item {
+    margin-bottom: 20px;
+}
+.form-group label, .detail-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #374151;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #00897b;
+    border-radius: 8px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+.form-control:focus {
+    border-color: #00897b;
+    box-shadow: 0 0 0 2px rgba(139, 69, 19, 0.2);
+    outline: none;
+}
+textarea.form-control {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.color-picker-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.color-preview {
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    border: 1px solid #d1d5db;
+    display: inline-block;
+}
+
+.detail-value {
+    font-size: 16px;
+    color: #111827;
+}
+.detail-value .status {
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.detail-value .status.status-upcoming {
+    background-color: #fff8e1;
+    color: #ffa000;
+}
+.detail-value .status.status-inprogress {
+    background-color: #e3f2fd;
+    color: #1565c0;
+}
+.detail-value .status.status-completed {
+    background-color: #e3f4e3;
+    color: #2e7d32;
+}
+
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.color-picker {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.form-actions {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+.form-actions .btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+}
+.btn-secondary {
+    background-color: #e5e7eb;
+    color: #374151;
+    border: none;
+}
+.btn-primary {
+    background-color: #8B4513;
+    color: white;
+    border: none;
+}
+
+/* Màu trong ảnh */
+.form-control {
+    border-color: #d1d5db; /* Màu viền form */
+}
+.btn-primary {
+    background-color: #008080; /* Màu nút add */
+    color: white;
+    border: none;
+}

@@ -44,21 +44,18 @@ public class EditEmployeeServlet extends HttpServlet {
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            int employeeId = Integer.parseInt(request.getParameter("id"));
+        throws ServletException, IOException {
+    try {
+        int employeeId = Integer.parseInt(request.getParameter("id"));
 
-            UserDAO userDAO = new UserDAO();
-            DepartmentDAO departmentDAO = new DepartmentDAO();
-            PositionDAO positionDAO = new PositionDAO();
+        UserDAO userDAO = new UserDAO();
+        DepartmentDAO departmentDAO = new DepartmentDAO();
+        PositionDAO positionDAO = new PositionDAO();
 
-            User employee = userDAO.getUserById(employeeId);
+        User employee = userDAO.getUserById(employeeId);
 
-            if (employee == null) {
-                response.sendRedirect("listEmployee?error=notfound");
-                return;
-            }
-
+        // KIỂM TRA ĐÚNG: Phải tồn tại VÀ đang hoạt động (isDeleted == 0)
+        if (employee != null && employee.getIsDeleted() == 0) {
             List<Department> departmentList = departmentDAO.getAllDepartments();
             List<Position> positionList = positionDAO.getAllPositions();
 
@@ -67,13 +64,21 @@ public class EditEmployeeServlet extends HttpServlet {
             request.setAttribute("positions", positionList);
 
             request.getRequestDispatcher("/jsp/admin/editEmployee.jsp").forward(request, response);
-
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            e.printStackTrace();
-            response.sendRedirect("errorPage.jsp");
+        } else {
+            // Xử lý khi nhân viên không tồn tại hoặc đã bị xóa
+            request.getSession().setAttribute("errorMessage", "Không thể sửa. Nhân viên không tồn tại hoặc đã bị vô hiệu hóa.");
+            response.sendRedirect(request.getContextPath() + "/listEmployee");
         }
+
+    } catch (NumberFormatException e) {
+        request.getSession().setAttribute("errorMessage", "ID nhân viên không hợp lệ.");
+        response.sendRedirect(request.getContextPath() + "/listEmployee");
+    } catch (Exception e) {
+        e.printStackTrace();
+        request.getSession().setAttribute("errorMessage", "Đã có lỗi xảy ra. Vui lòng thử lại.");
+        response.sendRedirect(request.getContextPath() + "/listEmployee");
     }
+}
 
     /**
      * Xử lý việc lưu các thay đổi và chuyển hướng về trang danh sách nhân viên.
