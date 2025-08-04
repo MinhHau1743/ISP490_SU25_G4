@@ -20,6 +20,7 @@
         <link rel="stylesheet" href="${BASE_URL}/css/mainMenu.css">
         <link rel="stylesheet" href="${BASE_URL}/css/listCustomer.css">
         <link rel="stylesheet" href="${BASE_URL}/css/pagination.css">
+        <link rel="stylesheet" href="css/header.css">
 
         <style>
             .filter-container {
@@ -125,10 +126,9 @@
             <jsp:include page="/mainMenu.jsp"/>
 
             <main class="main-content">
-                <header class="page-header">
-                    <div class="title-section"><h1 class="title">Danh sách Khách hàng</h1></div>
-                    <div class="header-actions"><button class="notification-btn"><i data-feather="bell"></i></button></div>
-                </header>
+                 <jsp:include page="/header.jsp">
+                <jsp:param name="pageTitle" value="Danh sách Khách hàng"/>
+            </jsp:include>
 
                 <div class="page-content">
                     <c:if test="${not empty sessionScope.successMessage}"><div class="success-message">${sessionScope.successMessage}</div><c:remove var="successMessage" scope="session"/></c:if>
