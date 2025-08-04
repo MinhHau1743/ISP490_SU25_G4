@@ -358,4 +358,122 @@ public class EnterpriseDAO extends DBContext {
         return enterpriseList;
     }
 
+    /**
+     * Helper method to build dynamic WHERE clause for customer filtering.
+     */
+    private void buildCustomerWhereClause(StringBuilder sql, List<Object> params, String searchQuery, String customerTypeId, String employeeId, String provinceId, String districtId, String wardId) {
+        if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+            sql.append("AND (e.name LIKE ? OR e.fax LIKE ? OR e.enterprise_code LIKE ?) ");
+            String searchPattern = "%" + searchQuery.trim() + "%";
+            params.add(searchPattern);
+            params.add(searchPattern);
+            params.add(searchPattern);
+        }
+        if (customerTypeId != null && !customerTypeId.isEmpty()) {
+            sql.append("AND e.customer_type_id = ? ");
+            params.add(Integer.parseInt(customerTypeId));
+        }
+        if (employeeId != null && !employeeId.isEmpty()) {
+            // This requires a subquery or a join to check assignments
+            sql.append("AND e.id IN (SELECT ea.enterprise_id FROM EnterpriseAssignments ea WHERE ea.user_id = ?) ");
+            params.add(Integer.parseInt(employeeId));
+        }
+        if (provinceId != null && !provinceId.isEmpty()) {
+            sql.append("AND a.province_id = ? ");
+            params.add(Integer.parseInt(provinceId));
+        }
+        if (districtId != null && !districtId.isEmpty()) {
+            sql.append("AND a.district_id = ? ");
+            params.add(Integer.parseInt(districtId));
+        }
+        if (wardId != null && !wardId.isEmpty()) {
+            sql.append("AND a.ward_id = ? ");
+            params.add(Integer.parseInt(wardId));
+        }
+    }
+
+    /**
+     * Counts the total number of active enterprises based on filter criteria.
+     */
+    public int countActiveEnterprises(String searchQuery, String customerTypeId, String employeeId, String provinceId, String districtId, String wardId) throws Exception {
+        List<Object> params = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(DISTINCT e.id) "
+                + "FROM Enterprises e "
+                + "LEFT JOIN Addresses a ON e.address_id = a.id "
+                + "WHERE e.is_deleted = 0 ");
+
+        buildCustomerWhereClause(sql, params, searchQuery, customerTypeId, employeeId, provinceId, districtId, wardId);
+
+        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Retrieves a paginated list of active enterprises based on filter
+     * criteria.
+     */
+    public List<Enterprise> getPaginatedActiveEnterprises(String searchQuery, String customerTypeId, String employeeId, String provinceId, String districtId, String wardId, int page, int pageSize) throws Exception {
+        Map<Integer, Enterprise> enterpriseMap = new HashMap<>();
+        List<Object> params = new ArrayList<>();
+
+        StringBuilder sql = new StringBuilder(
+                "SELECT e.id AS enterprise_id, e.name AS enterprise_name, e.enterprise_code, e.avatar_url, e.business_email, e.fax, "
+                + "CONCAT_WS(', ', a.street_address, w.name, d.name, p.name) AS full_address, "
+                + "GROUP_CONCAT(DISTINCT CONCAT_WS(' ', u.last_name, u.first_name) SEPARATOR ', ') AS assigned_users "
+                + "FROM Enterprises e "
+                + "LEFT JOIN Addresses a ON e.address_id = a.id "
+                + "LEFT JOIN Wards w ON a.ward_id = w.id "
+                + "LEFT JOIN Districts d ON a.district_id = d.id "
+                + "LEFT JOIN Provinces p ON a.province_id = p.id "
+                + "LEFT JOIN EnterpriseAssignments ea ON e.id = ea.enterprise_id "
+                + "LEFT JOIN Users u ON ea.user_id = u.id AND u.is_deleted = 0 "
+                + "WHERE e.is_deleted = 0 "
+        );
+
+        buildCustomerWhereClause(sql, params, searchQuery, customerTypeId, employeeId, provinceId, districtId, wardId);
+
+        sql.append(" GROUP BY e.id ORDER BY e.name LIMIT ? OFFSET ?");
+        params.add(pageSize);
+        params.add((page - 1) * pageSize);
+
+        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Enterprise enterprise = new Enterprise();
+                    enterprise.setId(rs.getInt("enterprise_id"));
+                    enterprise.setName(rs.getString("enterprise_name"));
+                    enterprise.setEnterpriseCode(rs.getString("enterprise_code"));
+                    enterprise.setFax(rs.getString("fax"));
+                    enterprise.setBusinessEmail(rs.getString("business_email"));
+                    enterprise.setFullAddress(rs.getString("full_address"));
+                    enterprise.setAvatarUrl(rs.getString("avatar_url"));
+
+                    // Gán danh sách nhân viên phụ trách (tạm thời dưới dạng String)
+                    User tempUser = new User();
+                    tempUser.setFirstName(rs.getString("assigned_users"));
+                    enterprise.setAssignedUsers(List.of(tempUser));
+
+                    enterpriseMap.put(enterprise.getId(), enterprise);
+                }
+            }
+        }
+        return new ArrayList<>(enterpriseMap.values());
+    }
 }
