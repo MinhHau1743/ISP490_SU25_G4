@@ -136,6 +136,8 @@ public class ViewScheduleController extends HttpServlet {
             dayTimeLabels.add("");
             dayStartTimes.add(String.format("%02d:30", h + 12));
         }
+        dayTimeLabels.add("");
+        dayStartTimes.add("23:30");
 
         // ========== 3. Xử lý chế độ TUẦN ==========
 // Sử dụng lại WeekFields đã khai báo ở trên để đảm bảo tính nhất quán
@@ -200,12 +202,38 @@ public class ViewScheduleController extends HttpServlet {
         // ========== 5. Timeline các giờ (Weekly/Month View) ==========
         List<String> hours = new ArrayList<>();
         List<String> hourLabels = new ArrayList<>();
-        for (int h = 0; h <= 23; h++) {
+
+        for (int h = 0; h < 24; h++) {
             hours.add(String.format("%02d:00", h));
-            hourLabels.add(String.format("%02d:00", h));
             hours.add(String.format("%02d:30", h));
+
+            String amPm;
+            int displayHour;
+
+            if (h == 0) {
+                displayHour = 12;
+                amPm = "am";
+            } else if (h < 12) {
+                displayHour = h;
+                amPm = "am";
+            } else if (h == 12) {
+                displayHour = 12;
+                amPm = "pm";
+            } else {
+                displayHour = h - 12;
+                amPm = "pm";
+            }
+
+            // Label nguyên giờ
+            hourLabels.add(displayHour + ":00 " + amPm);
+            // Label rỗng cho nửa giờ
             hourLabels.add("");
         }
+
+// *** Thêm thủ công 11:30 pm ở cuối ***
+        hours.add("23:30");
+        hourLabels.add("");
+
         // ========== 6. Truyền dữ liệu ra JSP ==========
         List<MaintenanceSchedule> schedules = dao.getAllMaintenanceSchedules();
 // Vì scheduledDate là LocalDate, bỏ toLocalDate()
