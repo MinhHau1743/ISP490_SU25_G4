@@ -30,7 +30,6 @@ public class ProductDAO extends DBContext {
                 + "origin = ?, "
                 + "price = ?, "
                 + "description = ?, "
-                + "category_id = ?, "
                 + "is_deleted = ?, "
                 + "updated_at = ?, "
                 + "updated_by = ? "
@@ -43,11 +42,10 @@ public class ProductDAO extends DBContext {
             st.setString(4, p.getOrigin());
             st.setDouble(5, p.getPrice());
             st.setString(6, p.getDescription());
-            st.setInt(7, p.getCategoryId());
-            st.setBoolean(8, p.isIsDeleted());
-            st.setString(9, p.getUpdatedAt());
-            st.setString(10, p.getUpdatedBy());
-            st.setInt(11, p.getId()); // Giá trị cuối cùng là id WHERE
+            st.setBoolean(7, p.isIsDeleted());
+            st.setString(8, p.getUpdatedAt());
+            st.setString(9, p.getUpdatedBy());
+            st.setInt(10, p.getId()); // Giá trị cuối cùng là id WHERE
             int rows = st.executeUpdate();
             return rows > 0;
         } catch (SQLException e) {
@@ -71,7 +69,6 @@ public class ProductDAO extends DBContext {
                 p.setOrigin(rs.getString("origin"));
                 p.setPrice(rs.getDouble("price"));
                 p.setDescription(rs.getString("description"));
-                p.setCategoryId(rs.getInt("category_id"));
                 p.setIsDeleted(rs.getBoolean("is_deleted"));
                 p.setCreatedAt(rs.getString("created_at"));
                 p.setUpdatedAt(rs.getString("updated_at"));
@@ -119,21 +116,20 @@ public class ProductDAO extends DBContext {
 
     public int insertProduct(Product p) {
         String sql = "INSERT INTO Products "
-                + "(name, category_id, product_code, image, origin, price, description, is_deleted, created_at, updated_at, created_by) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "(name, product_code, image, origin, price, description, is_deleted, created_at, updated_at, created_by) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try {
             PreparedStatement st = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
             st.setString(1, p.getName());
-            st.setInt(2, p.getCategoryId());
-            st.setString(3, p.getProductCode());
-            st.setString(4, p.getImage());
-            st.setString(5, p.getOrigin());
-            st.setDouble(6, p.getPrice());
-            st.setString(7, p.getDescription());
-            st.setBoolean(8, p.isIsDeleted());
-            st.setString(9, p.getCreatedAt());
-            st.setString(10, p.getUpdatedAt());
-            st.setString(11, p.getCreatedBy());
+            st.setString(2, p.getProductCode());
+            st.setString(3, p.getImage());
+            st.setString(4, p.getOrigin());
+            st.setDouble(5, p.getPrice());
+            st.setString(6, p.getDescription());
+            st.setBoolean(7, p.isIsDeleted());
+            st.setString(8, p.getCreatedAt());
+            st.setString(9, p.getUpdatedAt());
+            st.setString(10, p.getCreatedBy());
 
             int rows = st.executeUpdate();
             if (rows == 0) {
@@ -201,7 +197,6 @@ public class ProductDAO extends DBContext {
                 Product p = new Product();
                 p.setId(rs.getInt("id"));
                 p.setName(rs.getString("name"));
-                p.setCategoryId(rs.getInt("category_id"));
                 p.setProductCode(rs.getString("product_code"));
                 p.setImage(rs.getString("image")); // Thêm dòng này
                 p.setOrigin(rs.getString("origin"));
@@ -302,7 +297,6 @@ public class ProductDAO extends DBContext {
                 Product p = new Product();
                 p.setId(rs.getInt("id"));
                 p.setName(rs.getString("name"));
-                p.setCategoryId(rs.getInt("category_id"));
                 p.setProductCode(rs.getString("product_code"));
                 p.setImage(rs.getString("image"));
                 p.setOrigin(rs.getString("origin"));
@@ -364,25 +358,43 @@ public class ProductDAO extends DBContext {
 
     public static void main(String[] args) {
         ProductDAO productDAO = new ProductDAO();
-        // Tạo đối tượng Product mẫu
-        Product p = new Product();
-        p.setName("Sản phẩm test");
-        p.setCategoryId(1);
-        p.setProductCode("SP_TEST_001");
-        p.setOrigin("Việt Nam");
-        p.setPrice(123456.78);
-        p.setDescription("Đây là sản phẩm test insert");
-        p.setIsDeleted(false);
-        p.setCreatedAt("2024-06-21 12:00:00");
-        p.setUpdatedAt("2024-06-21 12:00:00");
-        // Nếu có trường image: p.setImage("test_image.jpg");
-        int result = productDAO.insertProduct(p);
-        if (result > 1) {
-            System.out.println("Thêm sản phẩm thành công!");
-        } else {
-            System.out.println("Thêm sản phẩm thất bại!");
+        // ==== Test case 1: Lấy tất cả sản phẩm trang 1, 5 sản phẩm/trang ====
+        List<Product> products1 = productDAO.getProductsWithFilter(null, null, null, null, null, 1, 5);
+        System.out.println("== Các sản phẩm trang 1 ==");
+        for (Product p : products1) {
+            System.out.println(p);
         }
 
+        // ==== Test case 2: Lọc sản phẩm theo từ khóa, có phân trang ====
+        List<Product> products2 = productDAO.getProductsWithFilter("test", null, null, null, null, 1, 10);
+        System.out.println("== Các sản phẩm chứa tên 'test' ==");
+        for (Product p : products2) {
+            System.out.println(p);
+        }
+
+        // ==== Test case 3: Lọc theo origin & price ====
+        List<Product> products3 = productDAO.getProductsWithFilter(
+                null, // keyword
+                10000.0, // minPrice
+                1500000.0, // maxPrice
+                "Việt Nam", // origin
+                null, // categoryId
+                1, // page
+                10 // pageSize
+        );
+        System.out.println("== Các sản phẩm từ 'Việt Nam', giá từ 10,000 đến 1,500,000 ==");
+        for (Product p : products3) {
+            System.out.println(p);
+        }
+
+        // ==== Test case 4: Lọc theo categoryId ====
+        List<Product> products4 = productDAO.getProductsWithFilter(
+                null, null, null, null, 1, 1, 10
+        );
+        System.out.println("== Các sản phẩm categoryId = 1 ==");
+        for (Product p : products4) {
+            System.out.println(p);
+        }
     }
 
     public List<Product> getAllActiveProducts() {
@@ -398,7 +410,6 @@ public class ProductDAO extends DBContext {
                 p.setOrigin(rs.getString("origin"));
                 p.setPrice(rs.getDouble("price"));
                 p.setDescription(rs.getString("description"));
-                p.setCategoryId(rs.getInt("category_id"));
                 products.add(p);
             }
         } catch (SQLException e) {

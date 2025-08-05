@@ -55,11 +55,9 @@ public class ProductCreateServlet extends HttpServlet {
             String origin = request.getParameter("origin");
             String priceRaw = request.getParameter("price");
             String description = request.getParameter("description");
-            String categoryIdRaw = request.getParameter("categoryId");
             Part filePart = request.getPart("image");
             String userName = (String) session.getAttribute("userName");
             double price = 0;
-            int categoryId = 0;
 
             // ==== VALIDATE INPUT ====
             if (name == null || name.trim().isEmpty()) {
@@ -90,15 +88,6 @@ public class ProductCreateServlet extends HttpServlet {
                 }
             }
 
-            if (categoryIdRaw == null || categoryIdRaw.trim().isEmpty()) {
-                errors.add("Danh mục không được để trống!");
-            } else {
-                try {
-                    categoryId = Integer.parseInt(categoryIdRaw);
-                } catch (NumberFormatException ex) {
-                    errors.add("Danh mục không hợp lệ!");
-                }
-            }
 
             // === Nếu có lỗi validate ===
             if (!errors.isEmpty()) {
@@ -108,7 +97,6 @@ public class ProductCreateServlet extends HttpServlet {
                 request.setAttribute("origin", origin);
                 request.setAttribute("price", priceRaw);
                 request.setAttribute("description", description);
-                request.setAttribute("categoryId", categoryIdRaw);
                 request.setAttribute("categories", new ProductCategoriesDAO().getAllCategories());
                 request.getRequestDispatcher("/jsp/technicalSupport/createProduct.jsp").forward(request, response);
                 return;
@@ -122,7 +110,6 @@ public class ProductCreateServlet extends HttpServlet {
             p.setOrigin(origin);
             p.setPrice(price);
             p.setDescription(description);
-            p.setCategoryId(categoryId);
             p.setIsDeleted(false);
             p.setCreatedAt(createdAt);
             p.setUpdatedAt(null);

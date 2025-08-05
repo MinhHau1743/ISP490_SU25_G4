@@ -59,17 +59,10 @@
                                 </div>
 
                                 <div class="product-info">
-
-
-                                    <%-- Định dạng giá tiền --%>
-                                    <div class="price-section">
-                                        <fmt:formatNumber value="${product.price}" type="currency" currencyCode="VND"/>
-                                    </div>
-
                                     <div class="info-snippets">
                                         <div class="snippet"><span class="snippet-label">Tên sản phẩm</span><span class="snippet-value">${product.name}</span></div>
                                         <div class="snippet"><span class="snippet-label">Mã sản phẩm</span><span class="snippet-value">${product.productCode}</span></div>
-                                        <div class="snippet"><span class="snippet-label">Danh mục</span><span class="snippet-value">${categoryMap[product.categoryId]}</span></div>
+                                        <div class="snippet"><span class="snippet-label">Giá</span><span class="snippet-value"><fmt:formatNumber value="${product.price}" type="currency" currencyCode="VND"/></span></div>
                                         <div class="snippet"><span class="snippet-label">Xuất xứ</span><span class="snippet-value">${product.origin}</span></div>
                                         <div class="snippet"><span class="snippet-label">Ngày tạo</span><span class="snippet-value">${product.createdAt}</span></div>
                                         <div class="snippet"><span class="snippet-label">Cập nhật</span><span class="snippet-value">${product.updatedAt}</span></div>
@@ -88,7 +81,6 @@
                                 <div class="product-details-tabs">
                                     <nav class="tab-nav">
                                         <span class="tab-link active" data-tab="description">Mô tả chi tiết</span>
-                                        <span class="tab-link" data-tab="specs">Thông số kỹ thuật</span>
                                     </nav>
                                     <div id="description" class="tab-content active">
                                         <%-- Dùng c:out để hiển thị nội dung HTML từ database --%>
