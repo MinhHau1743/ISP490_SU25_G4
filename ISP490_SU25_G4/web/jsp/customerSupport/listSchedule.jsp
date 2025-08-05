@@ -1512,7 +1512,7 @@
                         if (!slot)
                             return;
 
-                        // Di chuyển element
+                        // Di chuyển event vào slot mới
                         if (eventElement.parentNode) {
                             eventElement.parentNode.removeChild(eventElement);
                         }
@@ -1521,7 +1521,7 @@
                         const scheduleId = eventElement.id.split('-')[1];
                         let newScheduledDate = null, newEndDate = null, newStartTime = null, newEndTime = null;
 
-                        // Tính toán ngày giờ mới dựa trên vị trí thả
+                        // --- Tính toán ngày giờ mới dựa trên vị trí thả ---
                         const view = slot.closest('.calendar-view').id;
                         if (slot.classList.contains('all-day-event-container') && view === 'week-view') {
                             const rect = slot.getBoundingClientRect();
@@ -1541,47 +1541,91 @@
                             newStartTime = null;
                         }
 
-                        // Cập nhật text trên event UI
-                        const eventTimeElement = eventElement.querySelector('.event-time');
-                        if (eventTimeElement) {
-                            eventTimeElement.textContent = newStartTime ? newStartTime : 'Cả ngày';
-                        }
-                        // Cập nhật lại thuộc tính data-start-time cho event vừa di chuyển
-                        eventElement.setAttribute('data-start-time', newStartTime || '');
+                        // Cập nhật UI và đối tượng schedule
+                        const scheduleToUpdate = schedules.find(s => s.id == scheduleId);
 
-                        // Cập nhật dữ liệu trong mảng `schedules`
-                        if (scheduleId) {
-                            const scheduleToUpdate = schedules.find(s => s.id == scheduleId);
+                        if (newStartTime) {
+                            // 1. Cập nhật time range
+                            let durationMinutes = 0;
+                            if (scheduleToUpdate && scheduleToUpdate.startTime && scheduleToUpdate.endTime) {
+                                // duration cũ
+                                const [sh, sm] = scheduleToUpdate.startTime.split(':').map(Number);
+                                const [eh, em] = scheduleToUpdate.endTime.split(':').map(Number);
+                                durationMinutes = (eh * 60 + em) - (sh * 60 + sm);
+                            } else {
+                                durationMinutes = 30;
+                            }
+                            // Tính endTime mới
+                            let [nh, nm] = newStartTime.split(':').map(Number);
+                            let newEndTotalMin = nh * 60 + nm + durationMinutes;
+                            let newEndH = Math.floor(newEndTotalMin / 60) % 24;
+                            let newEndM = newEndTotalMin % 60;
+                            newEndTime = ("0" + newEndH).slice(-2) + ":" + ("0" + newEndM).slice(-2);
+
+                            // 2. Nếu kéo giữa các ngày (multi-day event), cập nhật endDate luôn nếu cần (bằng JS, lấy chênh lệch ngày cũ nếu có)
+                            if (scheduleToUpdate && scheduleToUpdate.scheduledDate && scheduleToUpdate.endDate) {
+                                // Lấy số ngày (durationDate) cũ
+                                let date1 = new Date(scheduleToUpdate.scheduledDate);
+                                let date2 = new Date(scheduleToUpdate.endDate);
+                                let durationDate = Math.round((date2 - date1) / (24 * 60 * 60 * 1000));
+                                if (durationDate > 0) {
+                                    let slotDate = new Date(newScheduledDate);
+                                    slotDate.setDate(slotDate.getDate() + durationDate);
+                                    // Format lại yyyy-mm-dd
+                                    newEndDate = slotDate.toISOString().split('T')[0];
+                                }
+                            }
+
+                            // Cập nhật UI event
+                            const eventTimeElement = eventElement.querySelector('.event-time');
+                            if (eventTimeElement) {
+                                eventTimeElement.textContent = newStartTime + " - " + newEndTime;
+                            }
+
+                            // Cập nhật lại object schedule
                             if (scheduleToUpdate) {
                                 scheduleToUpdate.scheduledDate = newScheduledDate;
-                                scheduleToUpdate.startTime = newStartTime || '';
-                                scheduleToUpdate.endDate = '';
-                                scheduleToUpdate.endTime = '';
+                                scheduleToUpdate.startTime = newStartTime;
+                                scheduleToUpdate.endTime = newEndTime;
+                                if (newEndDate)
+                                    scheduleToUpdate.endDate = newEndDate;
+                                else
+                                    scheduleToUpdate.endDate = "";
+                                scheduleToUpdate.updatedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
+                            }
+                        } else {
+                            const eventTimeElement = eventElement.querySelector('.event-time');
+                            if (eventTimeElement) {
+                                eventTimeElement.textContent = 'Cả ngày';
+                            }
+                            if (scheduleToUpdate) {
+                                scheduleToUpdate.scheduledDate = newScheduledDate;
+                                scheduleToUpdate.startTime = null;
+                                scheduleToUpdate.endTime = null;
+                                scheduleToUpdate.endDate = "";
                                 scheduleToUpdate.updatedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
                             }
                         }
 
-                        // Cập nhật detail panel nếu đang hiển thị
+                        // Gửi AJAX server
+                        if (typeof updateEvent === "function" && scheduleId && newScheduledDate) {
+                            updateEvent(scheduleId, newScheduledDate, newEndDate, newStartTime, null); // endTime null để backend tự xử lý duration
+                        }
+
+                        // Update detail panel nếu đang mở
                         const detailsPanel = document.getElementById('event-details-panel');
-                        if (detailsPanel && detailsPanel.classList.contains('show') &&
-                                detailsPanel.querySelector('.event-id').textContent == scheduleId) {
+                        if (
+                                detailsPanel && detailsPanel.classList.contains('show') &&
+                                detailsPanel.querySelector('.event-id').textContent == scheduleId
+                                ) {
                             const updatedSchedule = schedules.find(s => s.id == scheduleId);
                             if (updatedSchedule)
                                 showDetails(eventElement, updatedSchedule);
                         }
 
-                        // Gửi AJAX lên server (nếu có)
-                        if (typeof updateEvent === "function" && scheduleId && newScheduledDate) {
-                            updateEvent(scheduleId, newScheduledDate, newEndDate, newStartTime, newEndTime);
-                        }
-
                         stopAutoScroll();
-
-                        // Đợi DOM cập nhật xong rồi mới set lại class right-half cho event ở giữa
                         setTimeout(setRightHalfForMiddleEvents, 0);
                     }
-
-
                     // Các hàm phụ cho kéo thả
                     function startAutoScroll() {
                         scrollContainer = document.querySelector('.calendar-left');

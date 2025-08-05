@@ -60,36 +60,92 @@ public class MaintenanceScheduleDAO extends DBContext {
 
         return schedules;
     }
-    public boolean updateScheduleByDragDrop(int id, LocalDate scheduledDate, LocalDate endDate, LocalTime startTime, LocalTime endTime) {
-    // Sửa lại câu SQL
-    String sql = "UPDATE MaintenanceSchedules SET scheduled_date = ?, end_date = ?, start_time = ?, end_time = ?, updated_at = NOW() WHERE id = ?";
 
-    try (Connection conn = new DBContext().getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql)) {
+    public boolean updateScheduleByDragDrop(
+            int id,
+            LocalDate scheduledDate,
+            LocalDate endDate,
+            LocalTime startTime,
+            LocalTime endTime
+    ) {
+        try (Connection conn = new DBContext().getConnection()) {
 
-        ps.setDate(1, Date.valueOf(scheduledDate));
+            // --- Nếu cần auto endDate hoặc endTime ---
+            boolean autoEndDate = (endDate == null && scheduledDate != null);
+            boolean autoEndTime = (endTime == null && startTime != null);
 
-        if (endDate != null) ps.setDate(2, Date.valueOf(endDate));
-        else ps.setNull(2, java.sql.Types.DATE);
+            // Chỉ truy vấn DB nếu cần tính duration
+            if (autoEndDate || autoEndTime) {
+                String sqlGetOld = "SELECT scheduled_date, end_date, start_time, end_time FROM MaintenanceSchedules WHERE id = ?";
+                try (PreparedStatement psGet = conn.prepareStatement(sqlGetOld)) {
+                    psGet.setInt(1, id);
+                    try (ResultSet rs = psGet.executeQuery()) {
+                        if (rs.next()) {
+                            // --- Tính endDate mới nếu cần ---
+                            if (autoEndDate) {
+                                Date oldSchDate = rs.getDate("scheduled_date");
+                                Date oldEndDate = rs.getDate("end_date");
+                                if (oldSchDate != null && oldEndDate != null) {
+                                    // duration (số ngày), kể cả âm (nếu dữ liệu sai)
+                                    long duration = oldEndDate.toLocalDate().toEpochDay() - oldSchDate.toLocalDate().toEpochDay();
+                                    if (duration >= 0) {
+                                        endDate = scheduledDate.plusDays(duration);
+                                    }
+                                }
+                            }
 
-        if (startTime != null) ps.setTime(3, Time.valueOf(startTime));
-        else ps.setNull(3, java.sql.Types.TIME);
+                            // --- Tính endTime mới nếu cần ---
+                            if (autoEndTime) {
+                                Time oldStart = rs.getTime("start_time");
+                                Time oldEnd = rs.getTime("end_time");
+                                if (oldStart != null && oldEnd != null) {
+                                    long durationSec = oldEnd.toLocalTime().toSecondOfDay() - oldStart.toLocalTime().toSecondOfDay();
+                                    // Sửa lại để endTime mới luôn hợp lệ nếu duration > 0
+                                    if (durationSec > 0) {
+                                        endTime = startTime.plusSeconds(durationSec);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
-        // Thêm logic cho endTime
-        if (endTime != null) ps.setTime(4, Time.valueOf(endTime));
-        else ps.setNull(4, java.sql.Types.TIME);
+            String sql = "UPDATE MaintenanceSchedules SET scheduled_date = ?, end_date = ?, start_time = ?, end_time = ?, updated_at = NOW() WHERE id = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
-        // Tham số ID giờ là thứ 5
-        ps.setInt(5, id);
+                ps.setDate(1, Date.valueOf(scheduledDate));
 
-        int affectedRows = ps.executeUpdate();
-        return affectedRows > 0;
+                if (endDate != null) {
+                    ps.setDate(2, Date.valueOf(endDate));
+                } else {
+                    ps.setNull(2, java.sql.Types.DATE);
+                }
 
-    } catch (Exception e) {
-        e.printStackTrace();
-        return false;
+                if (startTime != null) {
+                    ps.setTime(3, Time.valueOf(startTime));
+                } else {
+                    ps.setNull(3, java.sql.Types.TIME);
+                }
+
+                if (endTime != null) {
+                    ps.setTime(4, Time.valueOf(endTime));
+                } else {
+                    ps.setNull(4, java.sql.Types.TIME);
+                }
+
+                ps.setInt(5, id);
+
+                int affectedRows = ps.executeUpdate();
+                return affectedRows > 0;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
-}
+
     public boolean deleteMaintenanceSchedule(int scheduleId) {
         String sql = "DELETE FROM MaintenanceSchedules WHERE id = ?";
 
