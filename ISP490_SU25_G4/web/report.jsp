@@ -118,12 +118,13 @@
         <div class="app-container">
             <jsp:include page="mainMenu.jsp"/>
 
-            <div class="content-wrapper">
-                <header class="main-top-bar">
-                    <div class="page-title">Báo cáo & Thống kê</div>
-                </header>
+            <main class="main-content">
+                <%-- Sử dụng lại cấu trúc header giống listCustomer.jsp nếu có thể --%>
+                <jsp:include page="/header.jsp">
+                    <jsp:param name="pageTitle" value="Báo cáo & Thống kê"/>
+                </jsp:include>
 
-                <section class="main-content-body">
+                <div class="page-content">
                     <c:if test="${not empty errorMessage}">
                         <p style="color: red; font-weight: bold;">${errorMessage}</p>
                     </c:if>
@@ -488,225 +489,226 @@
                                 </div>
                         </c:otherwise>
                     </c:choose>
-                </section>
-            </div>
+                </div>
+            </main>
         </div>
+    </div>
 
 
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-            // Luôn gọi feather.replace() để render icon
-            feather.replace();
-            // Lấy reportType từ JSP
-            const reportType = '${reportType}';
-            // ===================================================================
-            // HÀM VẼ BIỂU ĐỒ DOANH THU (LINE CHART)
-            // ===================================================================
-            if (reportType === 'doanhthu') {
-            const ctx = document.getElementById('revenueChart').getContext('2d');
-            const revenueData = [<c:forEach var="item" items="${revenueTrend}">{date: '${item.date}', revenue: ${item.revenue}},</c:forEach>];
-            new Chart(ctx, {
-            type: 'line',
-                    data: {
-                    labels: revenueData.map(item => new Date(item.date).toLocaleDateString('vi-VN')),
-                            datasets: [{
-                            label: 'Doanh thu',
-                                    data: revenueData.map(item => item.revenue),
-                                    borderColor: 'rgba(54, 162, 235, 1)',
-                                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                                    borderWidth: 2,
-                                    fill: true,
-                                    tension: 0.1
-                            }]
-                    },
-                    options: {
-                    responsive: true, maintainAspectRatio: false,
-                            scales: {
-                            y: {
-                            beginAtZero: true,
-                                    ticks: {callback: value => new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(value)}
-                            }
-                            },
-                            plugins: {
-                            tooltip: {
-                            callbacks: {
-                            label: context => `\${context.dataset.label || ''}: \${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(context.parsed.y)}`
-                            }
-                            }
-                            }
-                    }
-            });
-            // 2. Vẽ biểu đồ cột cho top sản phẩm theo doanh thu
-            const topProductsData = JSON.parse('${topProductsByRevenueJson}');
-            if (topProductsData.length > 0) {
-            const barCtx = document.getElementById('revenueByProductChart').getContext('2d');
-            new Chart(barCtx, {
-            type: 'bar',
-                    data: {
-                    labels: topProductsData.map(p => p.name),
-                            datasets: [{
-                            label: 'Doanh thu',
-                                    data: topProductsData.map(p => p.revenue),
-                                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                                    borderColor: 'rgba(75, 192, 192, 1)',
-                                    borderWidth: 1
-                            }]
-                    },
-                    options: {
-                    responsive: true,
-                            maintainAspectRatio: false,
-                            scales: {
-                            y: {
-                            beginAtZero: true,
-                                    ticks: { callback: value => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value) }
-                            }
-                            },
-                            plugins: {
-                            tooltip: {
-                            callbacks: {
-                            label: context => `${context.dataset.label || ''}: \${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(context.parsed.y)}`
-                            }
-                            }
-                            }
-                    }
-            });
-            }
-            }
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+        // Luôn gọi feather.replace() để render icon
+        feather.replace();
+        // Lấy reportType từ JSP
+        const reportType = '${reportType}';
+        // ===================================================================
+        // HÀM VẼ BIỂU ĐỒ DOANH THU (LINE CHART)
+        // ===================================================================
+        if (reportType === 'doanhthu') {
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        const revenueData = [<c:forEach var="item" items="${revenueTrend}">{date: '${item.date}', revenue: ${item.revenue}},</c:forEach>];
+        new Chart(ctx, {
+        type: 'line',
+                data: {
+                labels: revenueData.map(item => new Date(item.date).toLocaleDateString('vi-VN')),
+                        datasets: [{
+                        label: 'Doanh thu',
+                                data: revenueData.map(item => item.revenue),
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.1
+                        }]
+                },
+                options: {
+                responsive: true, maintainAspectRatio: false,
+                        scales: {
+                        y: {
+                        beginAtZero: true,
+                                ticks: {callback: value => new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(value)}
+                        }
+                        },
+                        plugins: {
+                        tooltip: {
+                        callbacks: {
+                        label: context => `\${context.dataset.label || ''}: \${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(context.parsed.y)}`
+                        }
+                        }
+                        }
+                }
+        });
+        // 2. Vẽ biểu đồ cột cho top sản phẩm theo doanh thu
+        const topProductsData = JSON.parse('${topProductsByRevenueJson}');
+        if (topProductsData.length > 0) {
+        const barCtx = document.getElementById('revenueByProductChart').getContext('2d');
+        new Chart(barCtx, {
+        type: 'bar',
+                data: {
+                labels: topProductsData.map(p => p.name),
+                        datasets: [{
+                        label: 'Doanh thu',
+                                data: topProductsData.map(p => p.revenue),
+                                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1
+                        }]
+                },
+                options: {
+                responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                        y: {
+                        beginAtZero: true,
+                                ticks: { callback: value => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value) }
+                        }
+                        },
+                        plugins: {
+                        tooltip: {
+                        callbacks: {
+                        label: context => `${context.dataset.label || ''}: \${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(context.parsed.y)}`
+                        }
+                        }
+                        }
+                }
+        });
+        }
+        }
 
 
-            // ===================================================================
-            // HÀM VẼ BIỂU ĐỒ SẢN PHẨM (BAR & PIE CHARTS)
-            // ===================================================================
-            else if (reportType === 'sanpham') {
-            const topProductsData = [<c:forEach var="p" items="${topProducts}">{name: '${p.name}', sales: ${p.sales}},</c:forEach>];
-            if (topProductsData.length > 0) {
-            const labels = topProductsData.map(p => p.name);
-            const data = topProductsData.map(p => p.sales);
-            // 1. Biểu đồ cột
-            const barCtx = document.getElementById('productBarChart').getContext('2d');
-            new Chart(barCtx, {
-            type: 'bar',
-                    data: {
-                    labels: labels,
-                            datasets: [{
-                            label: 'Số lượt mua',
-                                    data: data,
-                                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                                    borderColor: 'rgba(75, 192, 192, 1)',
-                                    borderWidth: 1
-                            }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
-            });
-            // 2. Biểu đồ tròn
-            const pieCtx = document.getElementById('productPieChart').getContext('2d');
-            new Chart(pieCtx, {
-            type: 'pie',
-                    data: {
-                    labels: labels,
-                            datasets: [{
-                            label: 'Tỷ trọng sản phẩm',
-                                    data: data,
-                                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#C9CBCF', '#E7E9ED', '#7C7F82', '#A6A9AD'],
-                                    hoverOffset: 4
-                            }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
-            });
-            }
-            }
+        // ===================================================================
+        // HÀM VẼ BIỂU ĐỒ SẢN PHẨM (BAR & PIE CHARTS)
+        // ===================================================================
+        else if (reportType === 'sanpham') {
+        const topProductsData = [<c:forEach var="p" items="${topProducts}">{name: '${p.name}', sales: ${p.sales}},</c:forEach>];
+        if (topProductsData.length > 0) {
+        const labels = topProductsData.map(p => p.name);
+        const data = topProductsData.map(p => p.sales);
+        // 1. Biểu đồ cột
+        const barCtx = document.getElementById('productBarChart').getContext('2d');
+        new Chart(barCtx, {
+        type: 'bar',
+                data: {
+                labels: labels,
+                        datasets: [{
+                        label: 'Số lượt mua',
+                                data: data,
+                                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1
+                        }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+        });
+        // 2. Biểu đồ tròn
+        const pieCtx = document.getElementById('productPieChart').getContext('2d');
+        new Chart(pieCtx, {
+        type: 'pie',
+                data: {
+                labels: labels,
+                        datasets: [{
+                        label: 'Tỷ trọng sản phẩm',
+                                data: data,
+                                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#C9CBCF', '#E7E9ED', '#7C7F82', '#A6A9AD'],
+                                hoverOffset: 4
+                        }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+        });
+        }
+        }
 
-            // ===================================================================
-            // HÀM VẼ BIỂU ĐỒ HỢP ĐỒNG (PIE CHART)
-            // ===================================================================
-            else if (reportType === 'hopdong') {
-            const contractData = {
-            active: ${contractStatus.active ne null ? contractStatus.active : 0},
-                    expiring: ${contractStatus.expiring ne null ? contractStatus.expiring : 0},
-                    expired: ${contractStatus.expired ne null ? contractStatus.expired : 0}
-            };
-            const total = contractData.active + contractData.expiring + contractData.expired;
-            if (total > 0) {
-            const pieCtx = document.getElementById('contractStatusChart').getContext('2d');
-            new Chart(pieCtx, {
-            type: 'pie',
-                    data: {
-                    labels: ['Đang hiệu lực', 'Sắp hết hạn', 'Đã hết hạn'],
-                            datasets: [{
-                            data: [contractData.active, contractData.expiring, contractData.expired],
-                                    backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
-                                    hoverOffset: 4
-                            }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
-            });
-            }
-            }
+        // ===================================================================
+        // HÀM VẼ BIỂU ĐỒ HỢP ĐỒNG (PIE CHART)
+        // ===================================================================
+        else if (reportType === 'hopdong') {
+        const contractData = {
+        active: ${contractStatus.active ne null ? contractStatus.active : 0},
+                expiring: ${contractStatus.expiring ne null ? contractStatus.expiring : 0},
+                expired: ${contractStatus.expired ne null ? contractStatus.expired : 0}
+        };
+        const total = contractData.active + contractData.expiring + contractData.expired;
+        if (total > 0) {
+        const pieCtx = document.getElementById('contractStatusChart').getContext('2d');
+        new Chart(pieCtx, {
+        type: 'pie',
+                data: {
+                labels: ['Đang hiệu lực', 'Sắp hết hạn', 'Đã hết hạn'],
+                        datasets: [{
+                        data: [contractData.active, contractData.expiring, contractData.expired],
+                                backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
+                                hoverOffset: 4
+                        }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+        });
+        }
+        }
 
-            // ===================================================================
-            // HÀM VẼ BIỂU ĐỒ SỬA CHỮA (PIE CHART)
-            // ===================================================================
-            else if (reportType === 'suachua') {
-            const requestData = {
-            completed: ${requestStatus.completed ne null ? requestStatus.completed : 0},
-                    in_progress: ${requestStatus.in_progress ne null ? requestStatus.in_progress : 0},
-                    pending: ${requestStatus.pending ne null ? requestStatus.pending : 0}
-            };
-            const total = requestData.completed + requestData.in_progress + requestData.pending;
-            if (total > 0) {
-            const pieCtx = document.getElementById('requestStatusChart').getContext('2d');
-            new Chart(pieCtx, {
-            type: 'pie',
-                    data: {
-                    labels: ['Đã hoàn thành', 'Đang tiến hành', 'Chờ xử lý'],
-                            datasets: [{
-                            data: [requestData.completed, requestData.in_progress, requestData.pending],
-                                    backgroundColor: ['#28a745', '#ffc107', '#6c757d'],
-                                    hoverOffset: 4
-                            }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
-            });
-            }
-            }
-            // Thêm khối này vào trong script chính
-            else if (reportType === 'khachhang') {
-            const newCustomers = ${newCustomers ne null ? newCustomers : 0};
-            const totalCustomers = ${totalCustomers ne null ? totalCustomers : 0};
-            const existingCustomers = totalCustomers - newCustomers;
-            if (totalCustomers > 0) {
-            const pieCtx = document.getElementById('customerPieChart').getContext('2d');
-            new Chart(pieCtx, {
-            type: 'pie',
-                    data: {
-                    labels: ['Khách hàng mới', 'Khách hàng cũ'],
-                            datasets: [{
-                            data: [newCustomers, existingCustomers],
-                                    backgroundColor: ['#36A2EB', '#FFCE56'],
-                                    hoverOffset: 4
-                            }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
-            });
-            }
-            }
-            });</script>
-            <%-- Thêm đoạn script này vào cuối file report.jsp, trước </body> --%>
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-            // Tìm đến form lọc bằng ID
-            const filterForm = document.getElementById('reportFilterForm');
-            // Tìm tất cả các input và select có class 'auto-submit-filter'
-            const filterInputs = document.querySelectorAll('.auto-submit-filter');
-            // Gắn sự kiện 'change' cho mỗi bộ lọc
-            filterInputs.forEach(function (input) {
-            input.addEventListener('change', function () {
-            // Khi giá trị của bất kỳ bộ lọc nào thay đổi, tự động gửi form
-            filterForm.submit();
-            });
-            });
-            });
-        </script>
-        <script src="js/mainMenu.js"></script>
-    </body>
+        // ===================================================================
+        // HÀM VẼ BIỂU ĐỒ SỬA CHỮA (PIE CHART)
+        // ===================================================================
+        else if (reportType === 'suachua') {
+        const requestData = {
+        completed: ${requestStatus.completed ne null ? requestStatus.completed : 0},
+                in_progress: ${requestStatus.in_progress ne null ? requestStatus.in_progress : 0},
+                pending: ${requestStatus.pending ne null ? requestStatus.pending : 0}
+        };
+        const total = requestData.completed + requestData.in_progress + requestData.pending;
+        if (total > 0) {
+        const pieCtx = document.getElementById('requestStatusChart').getContext('2d');
+        new Chart(pieCtx, {
+        type: 'pie',
+                data: {
+                labels: ['Đã hoàn thành', 'Đang tiến hành', 'Chờ xử lý'],
+                        datasets: [{
+                        data: [requestData.completed, requestData.in_progress, requestData.pending],
+                                backgroundColor: ['#28a745', '#ffc107', '#6c757d'],
+                                hoverOffset: 4
+                        }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+        });
+        }
+        }
+        // Thêm khối này vào trong script chính
+        else if (reportType === 'khachhang') {
+        const newCustomers = ${newCustomers ne null ? newCustomers : 0};
+        const totalCustomers = ${totalCustomers ne null ? totalCustomers : 0};
+        const existingCustomers = totalCustomers - newCustomers;
+        if (totalCustomers > 0) {
+        const pieCtx = document.getElementById('customerPieChart').getContext('2d');
+        new Chart(pieCtx, {
+        type: 'pie',
+                data: {
+                labels: ['Khách hàng mới', 'Khách hàng cũ'],
+                        datasets: [{
+                        data: [newCustomers, existingCustomers],
+                                backgroundColor: ['#36A2EB', '#FFCE56'],
+                                hoverOffset: 4
+                        }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+        });
+        }
+        }
+        });</script>
+        <%-- Thêm đoạn script này vào cuối file report.jsp, trước </body> --%>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+        // Tìm đến form lọc bằng ID
+        const filterForm = document.getElementById('reportFilterForm');
+        // Tìm tất cả các input và select có class 'auto-submit-filter'
+        const filterInputs = document.querySelectorAll('.auto-submit-filter');
+        // Gắn sự kiện 'change' cho mỗi bộ lọc
+        filterInputs.forEach(function (input) {
+        input.addEventListener('change', function () {
+        // Khi giá trị của bất kỳ bộ lọc nào thay đổi, tự động gửi form
+        filterForm.submit();
+        });
+        });
+        });
+    </script>
+    <script src="js/mainMenu.js"></script>
+</body>
 </html>
