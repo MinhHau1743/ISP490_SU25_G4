@@ -2,11 +2,6 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 
-<%-- 
-    File: header.jsp
-    Description: Thanh header trên cùng, bao gồm tiêu đề trang, menu thông báo và menu người dùng.
---%>
-
 <header class="main-top-bar">
     <div class="page-title">${param.pageTitle}</div>
     
@@ -22,7 +17,6 @@
             <div class="notification-dropdown">
                 <div class="notification-header">
                     <h3 class="notification-title">Notifications</h3>
-                    <%-- Nút cài đặt đã được xóa bỏ theo yêu cầu --%>
                 </div>
                 <ul class="notification-list">
                     <%-- Mẫu thông báo 1 --%>
@@ -79,20 +73,27 @@
                     </div>
                 </div>
 
+                <%-- ===== NHÓM THÔNG TIN CÁ NHÂN VÀ MẬT KHẨU ===== --%>
                 <div class="dropdown-divider"></div>
-
                 <a href="${pageContext.request.contextPath}/viewProfile" class="dropdown-item">
                     <i data-feather="user"></i>
                     <span>Thông tin cá nhân</span>
                 </a>
-                
-                <div class="dropdown-divider"></div>
-
-                <div class="dropdown-section-title">Quản lý tài khoản</div>
                 <a href="${pageContext.request.contextPath}/changePassword" class="dropdown-item">
                     <i data-feather="lock"></i>
                     <span>Đổi mật khẩu</span>
                 </a>
+                
+                <%-- ===== NHÓM QUẢN TRỊ (CHỈ ADMIN THẤY) ===== --%>
+                <c:if test="${sessionScope.userRole == 'Admin'}">
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-section-title">Quản trị</div>
+                    <a href="${pageContext.request.contextPath}/listEmployee" class="dropdown-item">
+                        <i data-feather="briefcase"></i>
+                        <span>Nhân viên</span>
+                    </a>
+                </c:if>
+                
             </div>
         </div>
     </div>

@@ -123,3 +123,7 @@ html, body {
     color: var(--text-secondary);
     font-size: 14px;
 }
+/* Áp dụng font chữ Inter cho toàn bộ trang */
+body {
+    font-family: 'Inter', sans-serif;
+}
