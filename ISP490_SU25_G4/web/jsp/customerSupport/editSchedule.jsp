@@ -1,66 +1,71 @@
 <%--
     Document   : editSchedule.jsp
     Created on : Jun 21, 2025
-    Author     : NGUYEN MINH / Updated by Grok
+    Author     : NGUYEN MINH / Gemini (Refactored)
 --%>
-
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <c:set var="currentPage" value="dashboard" />
+
 <!DOCTYPE html>
 <html lang="vi">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Chỉnh sửa Lịch bảo trì - DPCRM</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-        <script src="https://unpkg.com/feather-icons"></script>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
-        <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.slim.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/editSchedule.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
-    </head>
-    <body>
-        <div class="app-container">
-            <jsp:include page="../../mainMenu.jsp"/>
-            <div class="content-wrapper">
-                <c:if test="${not empty error}">
-                    <div class="alert alert-warning alert-dismissible fade show">
-                        <button type="button" class="close" data-dismiss="alert">&times;</button>
-                        <strong></strong>${error}
-                    </div>
-                </c:if>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chỉnh sửa Lịch bảo trì - DPCRM</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/createSchedule.css"> <%-- Can reuse create CSS --%>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
+</head>
+<body>
+    <div class="app-container">
+
+        <jsp:include page="/mainMenu.jsp"/>
+
+        <div class="main-panel">
+            <jsp:include page="/header.jsp">
+                <jsp:param name="pageTitle" value="Chỉnh sửa lịch bảo trì"/>
+            </jsp:include>
+
+            <main class="content-wrapper">
                 <section class="main-content-body">
                     <div class="page-header">
-                        <h1>Chỉnh sửa Lịch bảo trì</h1>
+                        <h1>Chỉnh sửa Lịch bảo trì #${schedule.id}</h1>
                     </div>
+                    
+                    <c:if test="${not empty error}">
+                        <div class="alert alert-danger" role="alert">${error}</div>
+                    </c:if>
 
-                    <form action="${pageContext.request.contextPath}/updateSchedule" method="post" class="form-container">
+                    <form action="updateSchedule" method="post" class="form-container">
                         <input type="hidden" name="id" value="${schedule.id}">
 
                         <div class="form-grid">
+                            
                             <div class="form-group">
-                                <label for="title">Tên công việc <span style="color: red;">*</span></label>
+                                <label for="title">Tiêu đề (*)</label>
                                 <input type="text" id="title" name="title" class="form-control" value="${schedule.title}" required>
                             </div>
+
                             <div class="form-group">
-                                <label for="technicalRequestId">ID Yêu cầu kỹ thuật</label>
+                                <label for="technicalRequestId">Yêu cầu kỹ thuật</label>
                                 <select id="technicalRequestId" name="technicalRequestId" class="form-control">
-                                    <option value="">Không liên kết</option>
-                                    <c:forEach var="request" items="${technicalRequests}">
-                                        <option value="${request.id}" <c:if test="${request.id == schedule.technicalRequestId}">selected</c:if>>${request.title}</option>
+                                    <option value="">-- Chọn yêu cầu kỹ thuật --</option>
+                                    <c:forEach var="techRequest" items="${technicalRequests}">
+                                        <option value="${techRequest.id}" ${techRequest.id == schedule.technicalRequestId ? 'selected' : ''}>${techRequest.title}</option>
                                     </c:forEach>
                                 </select>
                             </div>
 
                             <div class="form-group">
-                                <label for="scheduledDate">Ngày bắt đầu <span style="color: red;">*</span></label>
+                                <label for="scheduledDate">Ngày bắt đầu (*)</label>
                                 <input type="date" id="scheduledDate" name="scheduledDate" class="form-control" value="${schedule.scheduledDate}" required>
                             </div>
                             <div class="form-group">
@@ -75,36 +80,92 @@
                                 <label for="endTime">Giờ kết thúc</label>
                                 <input type="time" id="endTime" name="endTime" class="form-control" value="${schedule.endTime}">
                             </div>
+
                             <div class="form-group">
-                                <label for="location">Địa điểm</label>
-                                <input type="text" id="location" name="location" class="form-control" value="${schedule.location}">
+                                <label for="province">Tỉnh/Thành phố (*)</label>
+                                <select id="province" name="province" class="form-control" required>
+                                    <option value="">-- Chọn Tỉnh/Thành --</option>
+                                    <c:forEach var="p" items="${provinces}">
+                                        <option value="${p.id}" ${p.id == schedule.fullAddress.provinceId ? 'selected' : ''}>${p.name}</option>
+                                    </c:forEach>
+                                </select>
                             </div>
                             <div class="form-group">
-                                <label for="status">Trạng thái <span style="color: red;">*</span></label>
-                                <select id="status" name="status" class="form-control" required>
-                                    <option value="upcoming" <c:if test="${schedule.status == 'upcoming'}">selected</c:if>>Sắp tới</option>
-                                    <option value="inprogress" <c:if test="${schedule.status == 'inprogress'}">selected</c:if>>Đang thực hiện</option>
-                                    <option value="completed" <c:if test="${schedule.status == 'completed'}">selected</c:if>>Hoàn thành</option>
-                                    </select>
+                                <label for="district">Quận/Huyện (*)</label>
+                                <select id="district" name="district" class="form-control" required>
+                                    <option value="">-- Chọn Quận/Huyện --</option>
+                                    <c:forEach var="d" items="${districts}">
+                                        <option value="${d.id}" ${d.id == schedule.fullAddress.districtId ? 'selected' : ''}>${d.name}</option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="ward">Phường/Xã (*)</label>
+                                <select id="ward" name="ward" class="form-control" required>
+                                    <option value="">-- Chọn Phường/Xã --</option>
+                                    <c:forEach var="w" items="${wards}">
+                                        <option value="${w.id}" ${w.id == schedule.fullAddress.wardId ? 'selected' : ''}>${w.name}</option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+                             <div class="form-group">
+                                <label for="streetAddress">Địa chỉ cụ thể</label>
+                                <input type="text" id="streetAddress" name="streetAddress" class="form-control" value="${schedule.fullAddress.streetAddress}" placeholder="Số nhà, tên đường...">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="status">Trạng thái</label>
+                                <select id="status" name="status" class="form-control">
+                                    <option value="upcoming" ${schedule.status == 'upcoming' ? 'selected' : ''}>Sắp tới</option>
+                                    <option value="inprogress" ${schedule.status == 'inprogress' ? 'selected' : ''}>Đang thực hiện</option>
+                                    <option value="completed" ${schedule.status == 'completed' ? 'selected' : ''}>Hoàn thành</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                    <label>Màu sắc</label>
+                                    <div class="color-palette">
+                                        <span class="color-swatch" data-color="#007bff" style="background-color: #007bff;"></span>
+                                        <span class="color-swatch" data-color="#dc3545" style="background-color: #dc3545;"></span>
+                                        <span class="color-swatch" data-color="#28a745" style="background-color: #28a745;"></span>
+                                        <span class="color-swatch" data-color="#ffc107" style="background-color: #ffc107;"></span>
+                                        <span class="color-swatch" data-color="#fd7e14" style="background-color: #fd7e14;"></span>
+                                        <span class="color-swatch" data-color="#17a2b8" style="background-color: #17a2b8;"></span>
+                                        <span class="color-swatch" data-color="#6610f2" style="background-color: #6610f2;"></span>
+                                        <span class="color-swatch" data-color="#343a40" style="background-color: #343a40;"></span>
+                                    </div>
+                                    <input type="hidden" id="color" name="color" value="${not empty color ? color : '#007bff'}">
                                 </div>
-                                <div class="form-group">
-                                    <label for="color">Màu sắc</label>
-                                    <input type="color" id="color" name="color" class="form-control color-picker" value="${schedule.color != null ? schedule.color : '#007bff'}">
-                            </div>
-                            <div class="form-group full-width">
+
+                            <div class="form-group form-group-full-width">
                                 <label for="notes">Ghi chú</label>
-                                <textarea id="notes" name="notes" class="form-control" rows="5">${schedule.notes}</textarea>
+                                <textarea id="notes" name="notes" class="form-control" rows="4" placeholder="Thêm mô tả chi tiết...">${schedule.notes}</textarea>
                             </div>
                         </div>
 
                         <div class="form-actions">
-                            <a href="${pageContext.request.contextPath}/listSchedule" class="btn btn-secondary">Hủy bỏ</a>
-                            <button type="submit" class="btn btn-primary">Cập nhật</button>
+                            <a href="listSchedule" class="btn btn-secondary">Hủy bỏ</a>
+                            <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
                         </div>
                     </form>
                 </section>
-            </div>
+            </main>
         </div>
-        <script src="${pageContext.request.contextPath}/js/editSchedule.js"></script>               
-    </body>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    
+    <script>
+            window.addressConfig = {
+                contextPath: '${pageContext.request.contextPath}',
+                preselected: {
+                    districtId: '${districtId}',
+                    wardId: '${wardId}'
+                }
+            };
+        </script>
+    <script src="${pageContext.request.contextPath}/js/addressHandler.js"></script>
+    <script src="${pageContext.request.contextPath}/js/createSchedule.js"></script> <%-- Can reuse create script --%>
+    <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
+</body>
 </html>

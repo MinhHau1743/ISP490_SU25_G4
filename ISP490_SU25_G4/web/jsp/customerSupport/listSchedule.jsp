@@ -23,6 +23,7 @@
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <script src="https://unpkg.com/feather-icons"></script>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
@@ -660,78 +661,79 @@
             /* Chỉ áp dụng cho list-view, không ảnh hưởng event-details */
             #list-view .view-title {
                 margin-bottom: 8px;
-                font-size: 1.5em;
+                font-size: 1.8em;
                 color: #333;
             }
-
             #list-view .schedule-count {
-                margin-bottom: 16px;
+                margin-bottom: 24px;
                 color: #666;
-                font-size: 0.95em;
+                font-size: 1em;
             }
 
-            #list-view .event-list {
-                display: flex;
-                flex-direction: column;
+            /* Header cho mỗi nhóm ngày */
+            .date-group-header {
+                background-color: #f7f8fa; /* Màu nền xám nhạt */
+                padding: 12px 16px;
+                border-bottom: 1px solid #e9ecef;
+                border-top: 1px solid #e9ecef;
             }
 
-            #list-view .event-item {
+            .date-group-header .date-title {
+                margin: 0;
+                font-size: 1rem;
+                font-weight: 600;
+                color: #343a40;
+            }
+
+            /* Kiểu dáng cho mỗi dòng sự kiện */
+            .event-item {
+                display: flex; /* Quan trọng: Dùng Flexbox để xếp các cột theo hàng ngang */
+                align-items: center; /* Căn giữa các mục theo chiều dọc */
+                padding: 14px 16px;
+                border-bottom: 1px solid #e9ecef; /* Đường kẻ phân cách giữa các sự kiện */
+                cursor: pointer;
+                transition: background-color 0.2s ease;
+            }
+
+            .event-item:hover {
+                background-color: #f8f9fa; /* Hiệu ứng khi di chuột qua */
+            }
+
+            /* Cột 1: Cột thời gian */
+            .event-item .event-time-col {
+                flex-basis: 150px; /* Chiều rộng cố định cho cột thời gian */
+                flex-shrink: 0; /* Ngăn cột này bị co lại */
+                color: #555;
+                font-size: 0.9rem;
+                padding-right: 16px; /* Khoảng cách với cột tiếp theo */
+            }
+
+            /* Cột 2: Cột thông tin chi tiết */
+            .event-item .event-details-col {
+                flex-grow: 1; /* Quan trọng: Cho phép cột này chiếm hết không gian còn lại */
                 display: flex;
                 align-items: center;
-                padding: 12px 16px;
-                margin-bottom: 10px;
-                border: 1px solid #bbb;
-                border-radius: 4px;
-                background-color: #fff;
-                transition: background-color 0.2s, box-shadow 0.2s;
-                cursor: pointer;
             }
 
-            #list-view .event-item:hover {
-                background-color: #f9f9f9;
-                box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-            }
-
-            #list-view .event-color-dot {
-                width: 12px;
-                height: 12px;
+            /* Chấm màu */
+            .event-details-col .event-color-dot {
+                width: 10px;
+                height: 10px;
                 border-radius: 50%;
                 margin-right: 12px;
                 flex-shrink: 0;
             }
 
-            #list-view .event-info {
-                flex: 1;
+            /* Thông tin chính (tiêu đề...) */
+            .event-details-col .event-info {
                 display: flex;
-                flex-direction: column;
+                flex-direction: column; /* Sắp xếp tiêu đề và thông tin phụ (nếu có) theo chiều dọc */
             }
 
-            #list-view .event-title {
-                font-weight: 600;
-                color: #2c3e50;
-                margin-bottom: 4px;
-            }
-
-            #list-view .event-meta {
-                font-size: 0.85em;
-                color: #757575;
-            }
-
-            #list-view .event-actions {
-                display: flex;
-                gap: 8px;
-            }
-
-            #list-view .event-actions a {
-                color: #757575;
-                text-decoration: none;
-                font-size: 1.1em;
-                padding: 4px;
-                transition: color 0.2s;
-            }
-
-            #list-view .event-actions a:hover {
-                color: #1976d2;
+            .event-info .event-title {
+                font-weight: 500;
+                color: #212529;
+                margin-top: 8px;
             }
             .modal-overlay {
                 position: fixed;
@@ -1037,6 +1039,17 @@
             .employee-tag:nth-child(4) .avatar {
                 background-color: #ffc107;
             } /* Vàng */
+            /* Thêm vào file CSS của bạn */
+            .date-range {
+                cursor: pointer;
+                text-decoration: underline;
+                text-decoration-style: dotted;
+                text-decoration-thickness: 1px;
+            }
+
+            .date-range:hover {
+                color: #007bff; /* Thay đổi màu khi di chuột qua */
+            }
         </style>
     </head>
     <body>
@@ -1202,27 +1215,17 @@
                                         <p class="schedule-count">Có tổng <strong>${schedules.size()}</strong> lịch</p>
 
                                         <div class="grouped-schedule-list">
-                                            <!-- Lặp qua từng nhóm ngày -->
                                             <c:forEach var="dateGroup" items="${groupedSchedules}">
 
-                                                <!-- Header ngày -->
                                                 <div class="date-group-header">
                                                     <h3 class="date-title">${dateGroup.key}</h3>
-
                                                 </div>
 
-                                                <!-- Danh sách events trong ngày -->
                                                 <div class="date-group-content">
                                                     <c:forEach var="schedule" items="${dateGroup.value}">
-                                                        <div class="event-item"
-                                                             data-schedule-id="${schedule.id}"
-                                                             onclick="showDetails(this)">
+                                                        <div class="event-item" data-schedule-id="${schedule.id}" onclick="showDetails(this)">
 
-                                                            <div class="event-color-dot" 
-                                                                 style="background-color: ${schedule.color}; margin-right: 16px;"></div>
-
-                                                            <div class="event-time" 
-                                                                 style="margin-right: 16px;">
+                                                            <div class="event-time-col">
                                                                 <c:if test="${schedule.startTime != null}">
                                                                     ${schedule.startTime}
                                                                 </c:if>
@@ -1231,28 +1234,16 @@
                                                                 </c:if>
                                                             </div>
 
-                                                            <div class="event-info">
-                                                                <div class="event-title">${schedule.title}</div>
-                                                                <div class="event-meta">
-                                                                    <span class="event-location">${schedule.location}</span>
-                                                                    <c:if test="${schedule.notes != null && !empty schedule.notes}">
-                                                                        <span class="event-notes">· ${schedule.notes}</span>
-                                                                    </c:if>
+                                                            <div class="event-details-col">
+                                                                <div class="event-color-dot" style="background-color: ${schedule.color};"></div>
+                                                                <div class="event-info">
+                                                                    <span class="event-title">${schedule.title}</span>
                                                                 </div>
-                                                                <!-- Thêm danh sách nhân sự/thành viên phân công tại đây -->
-                                                                <c:if test="${schedule.assignments != null && !schedule.assignments.isEmpty()}">
-                                                                    <div class="event-assignments" style="margin-top: 4px; color: #374151; font-size: 13px;">
-                                                                        <i class="bi bi-people" style="margin-right: 4px;" aria-label="Users"></i>
-                                                                        <c:forEach var="asg" items="${schedule.assignments}" varStatus="status">
-                                                                            <span class="assignment-name">${asg.fullName}</span><c:if test="${!status.last}">, </c:if>
-                                                                        </c:forEach>
-                                                                    </div>
-                                                                </c:if>
                                                             </div>
+
                                                         </div>
                                                     </c:forEach>
                                                 </div>
-
 
                                             </c:forEach>
                                         </div>
@@ -1410,7 +1401,7 @@
                     endDate: "${schedule.endDate != null ? schedule.endDate : ''}",
                     startTime: "${schedule.startTime != null ? schedule.startTime : ''}",
                     endTime: "${schedule.endTime != null ? schedule.endTime : ''}",
-                    location: "${schedule.location}",
+                    location: "${schedule.fullAddress != null ? fn:escapeXml(schedule.fullAddress.fullAddress) : 'Không xác định'}",
                     status: "${schedule.status}",
                     notes: "${schedule.notes}",
                     createdAt: "${schedule.createdAt}",
@@ -2020,11 +2011,42 @@
                 alert('Đã xảy ra lỗi khi xóa!');
                 });
                 closeDeleteModal(); // Đóng modal ngay lập tức
-                });</script>
+                });
+                document.addEventListener('DOMContentLoaded', function() {
+                // Tìm đến phần tử hiển thị ngày
+                const dateDisplay = document.getElementById('currentDate');
+                // Nếu phần tử tồn tại, khởi tạo Flatpickr
+                if (dateDisplay) {
+                flatpickr(dateDisplay, {
+                // Tùy chọn cho bộ chọn ngày
+                dateFormat: "Y-m-d", // Định dạng ngày mà Flatpickr sẽ trả về (năm-tháng-ngày)
+                        defaultDate: dateDisplay.dataset.date, // Lấy ngày mặc định từ thuộc tính data-date
+
+                        // Hàm sẽ chạy KHI người dùng chọn một ngày mới
+                        onChange: function(selectedDates, dateStr, instance) {
+                        // selectedDates: mảng các đối tượng Date được chọn
+                        // dateStr: ngày được chọn dưới dạng chuỗi (theo dateFormat ở trên)
+
+                        console.log('Ngày được chọn:', dateStr);
+                        // 1. Cập nhật giá trị cho các input ẩn trong form
+                        document.getElementById('controllerDay').value = dateStr;
+                        document.getElementById('currentDay').value = dateStr;
+                        // 2. Tự động submit form để tải lại trang với ngày mới
+                        document.getElementById('dayNavForm').submit();
+                        }
+                });
+                }
+                });
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
         <script src="${pageContext.request.contextPath}/js/listSchedule.js"></script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>
+
+
+
+
 
 
 

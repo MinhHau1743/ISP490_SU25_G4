@@ -23,17 +23,18 @@ public class MaintenanceSchedule {
     private LocalDate endDate;
     private LocalTime startTime;
     private LocalTime endTime;
-    private String location;
+    private Integer addressId;
     private String status;
     private String notes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<MaintenanceAssignments> assignments;
+    private Address fullAddress;
 
     public MaintenanceSchedule() {
     }
 
-    public MaintenanceSchedule(int id, int technicalRequestId, String title, String color, LocalDate scheduledDate, LocalDate endDate, LocalTime startTime, LocalTime endTime, String location, String status, String notes, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public MaintenanceSchedule(int id, int technicalRequestId, String title, String color, LocalDate scheduledDate, LocalDate endDate, LocalTime startTime, LocalTime endTime, Integer addressId, String status, String notes, LocalDateTime createdAt, LocalDateTime updatedAt, List<MaintenanceAssignments> assignments, Address fullAddress) {
         this.id = id;
         this.technicalRequestId = technicalRequestId;
         this.title = title;
@@ -42,11 +43,13 @@ public class MaintenanceSchedule {
         this.endDate = endDate;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.location = location;
+        this.addressId = addressId;
         this.status = status;
         this.notes = notes;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.assignments = assignments;
+        this.fullAddress = fullAddress;
     }
 
     public int getId() {
@@ -61,7 +64,7 @@ public class MaintenanceSchedule {
         return technicalRequestId;
     }
 
-    public void setTechnicalRequestId(int technicalRequestId) {
+    public void setTechnicalRequestId(Integer technicalRequestId) {
         this.technicalRequestId = technicalRequestId;
     }
 
@@ -113,12 +116,20 @@ public class MaintenanceSchedule {
         this.endTime = endTime;
     }
 
-    public String getLocation() {
-        return location;
+    public Integer getAddressId() {
+        return addressId;
     }
 
-    public void setLocation(String location) {
-        this.location = location;
+    public void setAddressId(Integer addressId) {
+        this.addressId = addressId;
+    }
+
+    public Address getFullAddress() {
+        return fullAddress;
+    }
+
+    public void setFullAddress(Address fullAddress) {
+        this.fullAddress = fullAddress;
     }
 
     public String getStatus() {

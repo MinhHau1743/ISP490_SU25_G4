@@ -12,6 +12,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const startTimeGroup = startTimeInput.closest('.form-group');
     const endTimeGroup = endTimeInput.closest('.form-group');
 
+    // --- PHẦN ĐÃ CẬP NHẬT ---
+    // Thiết lập ngày tối thiểu cho scheduled_date là ngày hôm nay
+    const todayString = new Date().toISOString().split('T')[0];
+    startDateInput.min = todayString;
+
+    // Nếu giá trị ban đầu (từ server) là một ngày trong quá khứ,
+    // tự động cập nhật nó thành ngày hôm nay để tránh lỗi.
+    if (startDateInput.value && startDateInput.value < todayString) {
+        startDateInput.value = todayString;
+    }
+    // Đảm bảo min của endDate cũng được cập nhật theo
+    endDateInput.min = startDateInput.value;
+    // --- HẾT PHẦN CẬP NHẬT ---
+
     // Hàm kiểm tra và ẩn/hiện trường giờ
     function toggleTimeFields() {
         const startDate = startDateInput.value;
@@ -68,4 +82,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Kiểm tra trạng thái ban đầu khi trang load
     toggleTimeFields();
+});
+document.addEventListener('DOMContentLoaded', function() {
+    // Tìm đến các phần tử cần thiết
+    const colorPalette = document.querySelector('.color-palette');
+    const hiddenColorInput = document.getElementById('color');
+    
+    // Nếu không tìm thấy các phần tử thì không làm gì cả
+    if (!colorPalette || !hiddenColorInput) {
+        return;
+    }
+
+    const colorSwatches = colorPalette.querySelectorAll('.color-swatch');
+    
+    // Hàm để cập nhật trạng thái "selected"
+    const updateSelection = (selectedSwatch) => {
+        // 1. Xóa class 'selected' khỏi tất cả các ô
+        colorSwatches.forEach(swatch => {
+            swatch.classList.remove('selected');
+        });
+        
+        // 2. Thêm class 'selected' vào ô vừa được bấm
+        selectedSwatch.classList.add('selected');
+        
+        // 3. Cập nhật giá trị cho input ẩn
+        hiddenColorInput.value = selectedSwatch.dataset.color;
+    };
+
+    // Thiết lập trạng thái ban đầu khi tải trang (quan trọng cho form edit)
+    const initialColor = hiddenColorInput.value;
+    const initialSwatch = colorPalette.querySelector(`.color-swatch[data-color="${initialColor}"]`);
+    if (initialSwatch) {
+        initialSwatch.classList.add('selected');
+    } else if (colorSwatches.length > 0) {
+        // Nếu màu ban đầu không có trong palette, chọn màu đầu tiên
+        colorSwatches[0].classList.add('selected');
+        hiddenColorInput.value = colorSwatches[0].dataset.color;
+    }
+
+    // Gán sự kiện click cho mỗi ô màu
+    colorSwatches.forEach(swatch => {
+        swatch.addEventListener('click', function() {
+            updateSelection(this);
+        });
+    });
 });

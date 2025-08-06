@@ -1,8 +1,3 @@
-/* 
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/JavaScript.js to edit this template
- */
-
 document.addEventListener('DOMContentLoaded', () => {
     feather.replace();
 
@@ -13,6 +8,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const endTimeInput = document.getElementById('endTime');
     const startTimeGroup = startTimeInput.closest('.form-group');
     const endTimeGroup = endTimeInput.closest('.form-group');
+
+    // --- BẮT ĐẦU PHẦN THÊM MỚI ---
+    // Thiết lập ngày tối thiểu cho scheduledDate là ngày hôm nay
+    const todayString = new Date().toISOString().split('T')[0];
+    startDateInput.min = todayString;
+
+    // Nếu giá trị ban đầu (khi chỉnh sửa) là một ngày trong quá khứ,
+    // tự động cập nhật nó thành ngày hôm nay để đảm bảo tính hợp lệ.
+    if (startDateInput.value && startDateInput.value < todayString) {
+        startDateInput.value = todayString;
+    }
+    // Đảm bảo min của endDate cũng được cập nhật theo
+    if (!endDateInput.min || endDateInput.min < startDateInput.value) {
+        endDateInput.min = startDateInput.value;
+    }
+    // --- KẾT THÚC PHẦN THÊM MỚI ---
 
     // Hàm kiểm tra và ẩn/hiện trường giờ
     function toggleTimeFields() {
