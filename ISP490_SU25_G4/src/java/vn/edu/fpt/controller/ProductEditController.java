@@ -39,10 +39,7 @@ public class ProductEditController extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/ProductController?service=products");
                 return;
             }
-
-            List<ProductCategory> categoryList = new ProductCategoriesDAO().getAllCategories();
             request.setAttribute("product", p);
-            request.setAttribute("categories", categoryList);
             request.getRequestDispatcher("/jsp/technicalSupport/editProductDetail.jsp").forward(request, response);
 
         } catch (NumberFormatException e) {
@@ -117,7 +114,6 @@ public class ProductEditController extends HttpServlet {
 
                 request.setAttribute("product", p);
                 request.setAttribute("editErrors", errors);
-                request.setAttribute("categories", new ProductCategoriesDAO().getAllCategories());
                 request.getRequestDispatcher("/jsp/technicalSupport/editProductDetail.jsp").forward(request, response);
                 return;
             }
@@ -205,7 +201,6 @@ public class ProductEditController extends HttpServlet {
             } else {
                 request.setAttribute("product", p);
                 request.setAttribute("editError", "Cập nhật thất bại!");
-                request.setAttribute("categories", new ProductCategoriesDAO().getAllCategories());
                 request.getRequestDispatcher("/jsp/technicalSupport/editProductDetail.jsp").forward(request, response);
 
             }

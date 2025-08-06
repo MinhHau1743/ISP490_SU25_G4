@@ -98,18 +98,9 @@ public class ProductController extends HttpServlet {
 
         // --- Lấy danh sách sản phẩm theo filter và phân trang ---
         List<Product> listProducts = products.getProductsWithFilter(keyword, minPrice, maxPrice, origin, categoryId, page, pageSize);
-
-        // --- Lấy toàn bộ danh mục, map categoryId -> name ---
-        List<ProductCategory> categories = productCategories.getAllCategories();
-        Map<Integer, String> categoryMap = new HashMap<>();
-        for (ProductCategory c : categories) {
-            categoryMap.put(c.getId(), c.getName());
-        }
         List<String> origins = products.getAllOrigins();  // Giả định bạn có method này
         request.setAttribute("originList", origins);
         request.setAttribute("productList", listProducts);
-        request.setAttribute("categoryMap", categoryMap);
-        request.setAttribute("categories", categories);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("currentPage", page);
         request.setAttribute("pageSize", pageSize);

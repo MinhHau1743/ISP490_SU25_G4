@@ -37,9 +37,6 @@ public class ProductCreateServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Hiển thị form tạo sản phẩm
-        List<ProductCategory> categories = new ProductCategoriesDAO().getAllCategories();
-        request.setAttribute("categories", categories);
         request.getRequestDispatcher("/jsp/technicalSupport/createProduct.jsp").forward(request, response);
     }
 
@@ -97,7 +94,6 @@ public class ProductCreateServlet extends HttpServlet {
                 request.setAttribute("origin", origin);
                 request.setAttribute("price", priceRaw);
                 request.setAttribute("description", description);
-                request.setAttribute("categories", new ProductCategoriesDAO().getAllCategories());
                 request.getRequestDispatcher("/jsp/technicalSupport/createProduct.jsp").forward(request, response);
                 return;
             }
