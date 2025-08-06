@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
+import vn.edu.fpt.model.MaintenanceAssignments;
 
 @WebServlet(name = "listScheduleController", urlPatterns = {"/listSchedule"})
 public class ViewScheduleController extends HttpServlet {
@@ -235,11 +236,20 @@ public class ViewScheduleController extends HttpServlet {
         hourLabels.add("");
 
         // ========== 6. Truyền dữ liệu ra JSP ==========
+// 1. Lấy danh sách lịch và danh sách phân công
         List<MaintenanceSchedule> schedules = dao.getAllMaintenanceSchedules();
-// Vì scheduledDate là LocalDate, bỏ toLocalDate()
-        Map<LocalDate, List<MaintenanceSchedule>> groupedSchedules
-                = schedules.stream()
-                        .collect(Collectors.groupingBy(MaintenanceSchedule::getScheduledDate));
+        List<MaintenanceAssignments> assignments = dao.getAllMaintenanceAssignments();
+
+// 2. Gộp assignments theo từng MaintenanceSchedule
+        Map<Integer, List<MaintenanceAssignments>> assignmentMap
+                = assignments.stream().collect(Collectors.groupingBy(MaintenanceAssignments::getMaintenanceScheduleId));
+        for (MaintenanceSchedule schedule : schedules) {
+            schedule.setAssignments(assignmentMap.getOrDefault(schedule.getId(), new ArrayList<>()));
+        }
+
+// 3. Group schedules theo ngày (LocalDate)
+        Map<LocalDate, List<MaintenanceSchedule>> groupedSchedules = schedules.stream()
+                .collect(Collectors.groupingBy(MaintenanceSchedule::getScheduledDate));
         request.setAttribute("groupedSchedules", groupedSchedules);
         request.setAttribute("schedules", schedules);
         request.setAttribute("hourLabels", hourLabels);

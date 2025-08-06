@@ -7,12 +7,14 @@ package vn.edu.fpt.model;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 
 /**
  *
  * @author phamh
  */
 public class MaintenanceSchedule {
+
     private int id;
     private int technicalRequestId;
     private String title;
@@ -26,6 +28,7 @@ public class MaintenanceSchedule {
     private String notes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private List<MaintenanceAssignments> assignments;
 
     public MaintenanceSchedule() {
     }
@@ -45,8 +48,6 @@ public class MaintenanceSchedule {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
-
-    
 
     public int getId() {
         return id;
@@ -151,5 +152,13 @@ public class MaintenanceSchedule {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
-    
+
+    public List<MaintenanceAssignments> getAssignments() {
+        return assignments;
+    }
+
+    public void setAssignments(List<MaintenanceAssignments> assignments) {
+        this.assignments = assignments;
+    }
+
 }

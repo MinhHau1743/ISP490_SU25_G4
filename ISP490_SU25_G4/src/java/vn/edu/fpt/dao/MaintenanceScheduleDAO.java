@@ -1,7 +1,7 @@
 package vn.edu.fpt.dao;
 
 import vn.edu.fpt.model.MaintenanceSchedule;
-
+import vn.edu.fpt.model.MaintenanceAssignments;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -250,6 +250,29 @@ public class MaintenanceScheduleDAO extends DBContext {
         return schedule;
     }
 
+    public List<MaintenanceAssignments> getAllMaintenanceAssignments() {
+        List<MaintenanceAssignments> list = new ArrayList<>();
+        String sql = "SELECT ma.id, ma.maintenance_schedule_id, ma.user_id, "
+                + "TRIM(CONCAT(u.last_name, ' ', IFNULL(u.middle_name, ''), ' ', u.first_name)) AS full_name "
+                + "FROM MaintenanceAssignments ma "
+                + "JOIN Users u ON ma.user_id = u.id";
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                MaintenanceAssignments ma = new MaintenanceAssignments();
+                ma.setId(rs.getInt("id"));
+                ma.setMaintenanceScheduleId(rs.getInt("maintenance_schedule_id"));
+                ma.setUserId(rs.getInt("user_id"));
+                ma.setFullName(rs.getString("full_name"));
+                list.add(ma);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public static void main(String[] args) {
         MaintenanceScheduleDAO dao = new MaintenanceScheduleDAO();
         List<MaintenanceSchedule> schedules = dao.getAllMaintenanceSchedules();
@@ -267,6 +290,13 @@ public class MaintenanceScheduleDAO extends DBContext {
             System.out.println("Created At: " + ms.getCreatedAt());
             System.out.println("Updated At: " + ms.getUpdatedAt());
             System.out.println("----------------------");
+        }
+        List<MaintenanceAssignments> list = dao.getAllMaintenanceAssignments();
+        for (MaintenanceAssignments ma : list) {
+            System.out.println("id: " + ma.getId()
+                    + ", schedule_id: " + ma.getMaintenanceScheduleId()
+                    + ", user_id: " + ma.getUserId()
+                    + ", user_name: " + ma.getFullName());
         }
     }
 }

@@ -17,6 +17,18 @@
     padding-left: var(--sidebar-width-collapsed);
 }
 
+/* === BỔ SUNG: Cho .main-panel tự động co giãn khi menu thu gọn === */
+.app-container:not(.sidebar-collapsed) .main-panel {
+    margin-left: var(--sidebar-width);
+    width: calc(100% - var(--sidebar-width));
+    transition: margin-left var(--transition-speed), width var(--transition-speed);
+}
+.app-container.sidebar-collapsed .main-panel {
+    margin-left: var(--sidebar-width-collapsed);
+    width: calc(100% - var(--sidebar-width-collapsed));
+    transition: margin-left var(--transition-speed), width var(--transition-speed);
+}
+
 /* === SIDEBAR CHUNG === */
 .sidebar {
     position: fixed;
