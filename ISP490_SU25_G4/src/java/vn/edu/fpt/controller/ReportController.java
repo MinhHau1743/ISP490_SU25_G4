@@ -20,8 +20,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import vn.edu.fpt.dao.ReportDAO;
 
-@WebServlet(name = "ReportServlet", urlPatterns = {"/report"})
-public class ReportServlet extends HttpServlet {
+@WebServlet(name = "ReportController", urlPatterns = {"/report"})
+public class ReportController extends HttpServlet {
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -50,7 +50,7 @@ public class ReportServlet extends HttpServlet {
 
             ReportDAO reportDAO = new ReportDAO();
 
-            // Trong ReportServlet.java, cập nhật lại khối switch
+            // Trong ReportController.java, cập nhật lại khối switch
 // Dựa vào loại báo cáo để lấy dữ liệu tương ứng
             switch (reportType) {
                 case "doanhthu":

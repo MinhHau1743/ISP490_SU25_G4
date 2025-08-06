@@ -20,10 +20,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import vn.edu.fpt.dao.ReportDAO;
 
-@WebServlet(name = "DashboardServlet", urlPatterns = {"/dashboard"})
-public class DashboardServlet extends HttpServlet {
+@WebServlet(name = "DashboardController", urlPatterns = {"/dashboard"})
+public class DashboardController extends HttpServlet {
 
-    // Trong DashboardServlet.java
+    // Trong DashboardController.java
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
