@@ -22,7 +22,7 @@
 
             <%-- ===== NHÓM QUẢN LÝ ===== --%>
             <li>
-                <a href="${pageContext.request.contextPath}/listCustomer" class="${currentPage.contains('Customer') ? 'active' : ''}">
+                <a href="${pageContext.request.contextPath}/customer/list" class="${currentPage.contains('Customer') ? 'active' : ''}">
                     <i data-feather="users"></i><span>Khách hàng</span>
                 </a>
             </li>
