@@ -41,7 +41,7 @@ public class LoginController extends HttpServlet {
             session.setAttribute("email", email);                      // ✔ Email đăng nhập
             session.setAttribute("userID", user.getId());             // ✔ ID người dùng
             session.setAttribute("userRole", user.getRoleName());     // ✔ Vai trò người dùng
-            session.setAttribute("userName", user.getFullName());     // ✔ Tên đầy đủ
+            session.setAttribute("userName", user.getFullNameCombined());     // ✔ Tên đầy đủ
 
             // Kiểm tra có bắt đổi mật khẩu hay không
             int requireChange = user.isRequireChangePassword(); // giả sử trả về 0/1

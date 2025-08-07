@@ -6,17 +6,19 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 import vn.edu.fpt.dao.AddressDAO;
+import vn.edu.fpt.dao.UserDAO;
 import vn.edu.fpt.dao.MaintenanceScheduleDAO;
 import vn.edu.fpt.dao.TechnicalRequestDAO;
 import vn.edu.fpt.model.MaintenanceSchedule;
 import vn.edu.fpt.model.Province;
 import vn.edu.fpt.model.TechnicalRequest;
+import vn.edu.fpt.model.User;
 
 @WebServlet("/createSchedule")
 public class CreateScheduleController extends HttpServlet {
@@ -27,13 +29,15 @@ public class CreateScheduleController extends HttpServlet {
 
         TechnicalRequestDAO technicalDAO = new TechnicalRequestDAO();
         AddressDAO addressDAO = new AddressDAO(); // Dùng AddressDAO
-
+        MaintenanceScheduleDAO dao = new MaintenanceScheduleDAO();
+        UserDAO userDAO = new UserDAO();
         try {
             // Lấy danh sách cho cả 2 dropdown
+            List<User> assignments = userDAO.getAllTechnicalStaffIdAndFullName();
             List<TechnicalRequest> technicalRequests = technicalDAO.getAllTechnicalRequestsIdAndTitle();
             List<Province> provinces = addressDAO.getAllProvinces(); // Lấy danh sách tỉnh thành
 
-            // Đặt cả 2 danh sách vào request
+            request.setAttribute("assignments", assignments);
             request.setAttribute("technicalRequests", technicalRequests);
             request.setAttribute("provinces", provinces);
 
@@ -64,7 +68,7 @@ public class CreateScheduleController extends HttpServlet {
             String endTimeStr = request.getParameter("end_time");
             String status = request.getParameter("status");
             String notes = request.getParameter("notes");
-
+            String[] ids = request.getParameter("assignedUserIds").split(",");
             // New Address Data
             String streetAddress = request.getParameter("streetAddress");
             String provinceIdStr = request.getParameter("province");
@@ -123,9 +127,16 @@ public class CreateScheduleController extends HttpServlet {
             schedule.setNotes(notes);
 
             // === 4. SAVE TO DATABASE ===
-            boolean success = scheduleDAO.addMaintenanceSchedule(schedule);
+            int scheduleId = scheduleDAO.addMaintenanceScheduleAndReturnId(schedule);
 
-            if (success) {
+            if (scheduleId > 0) {
+                if (ids != null && ids.length > 0) {
+                    List<Integer> userIdList = new ArrayList<>();
+                    for (String userIdStr : ids) {
+                        userIdList.add(Integer.parseInt(userIdStr));
+                    }
+                    scheduleDAO.addMaintenanceAssignments(scheduleId, userIdList); // <-- Gọi 1 lần, truyền cả list userId
+                }
                 response.sendRedirect("listSchedule");
             } else {
                 throw new Exception("Không thể tạo lịch bảo trì do lỗi cơ sở dữ liệu.");

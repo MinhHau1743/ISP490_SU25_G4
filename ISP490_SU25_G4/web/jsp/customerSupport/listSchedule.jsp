@@ -1383,6 +1383,11 @@
             });
             document.addEventListener('DOMContentLoaded', () => {
             const weekNav = document.querySelector('.week-nav');
+            // Lấy view mode từ nguồn chắc chắn đúng!
+            var currentView = document.getElementById('pageViewMode')?.textContent
+                    || localStorage.getItem('selectedView')
+                    || "day-view"; // fallback
+
             if (weekNav) {
             if (currentView === 'list-view') {
             weekNav.classList.add('hidden');

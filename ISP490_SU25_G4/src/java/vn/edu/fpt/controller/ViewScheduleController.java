@@ -21,7 +21,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
+import vn.edu.fpt.dao.UserDAO;
 import vn.edu.fpt.model.MaintenanceAssignments;
+import vn.edu.fpt.model.User;
 
 @WebServlet(name = "listScheduleController", urlPatterns = {"/listSchedule"})
 public class ViewScheduleController extends HttpServlet {
@@ -33,6 +35,7 @@ public class ViewScheduleController extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         MaintenanceScheduleDAO dao = new MaintenanceScheduleDAO();
+        UserDAO userDAO = new UserDAO();
         // ========== 1. Lấy ngày hiện tại hoặc từ frontend ==========
         String controllerDay = request.getParameter("controllerDay");     // "prev", "next", or null
         String currentDayStr = request.getParameter("currentDay");        // dạng: yyyy-MM-dd
@@ -239,7 +242,18 @@ public class ViewScheduleController extends HttpServlet {
 // 1. Lấy danh sách lịch và danh sách phân công
         List<MaintenanceSchedule> schedules = dao.getAllMaintenanceSchedules();
         List<MaintenanceAssignments> assignments = dao.getAllMaintenanceAssignments();
-
+        if ("list-view".equals(viewMode)) {
+            // Lọc danh sách schedules:
+            // giữ lại những lịch:
+            //  - Có ngày thực hiện không null
+            //  - Ngày thực hiện lớn hơn hoặc bằng hôm nay
+            schedules = schedules.stream()
+                    .filter(sch -> sch.getScheduledDate() != null // Lịch phải có ngày
+                    && !sch.getScheduledDate().isBefore(now) // Và ngày >= hôm nay
+                    )
+                    .collect(Collectors.toList()); // Thu về list mới
+        }
+ 
 // 2. Gộp assignments theo từng MaintenanceSchedule
         Map<Integer, List<MaintenanceAssignments>> assignmentMap
                 = assignments.stream().collect(Collectors.groupingBy(MaintenanceAssignments::getMaintenanceScheduleId));

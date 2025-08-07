@@ -173,3 +173,55 @@ textarea.form-control {
     transform: translate(-50%, -50%);
     text-shadow: 0 0 3px rgba(0,0,0,0.5);
 }
+.address-grid {
+  display: grid;
+  /* Creates 3 columns of equal width */
+  grid-template-columns: repeat(3, 1fr); 
+  /* Adds a 1rem (16px) gap between the columns */
+  gap: 1rem; 
+}
+.form-grid .form-group-full-width {
+  /* This tells the grid item to start at the first column line (1) 
+     and end at the very last column line (-1) */
+  grid-column: 1 / -1;
+}
+.selected-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.tag {
+    display: flex;
+    align-items: center;
+    background: #f1f2f6;
+    border-radius: 18px;
+    padding: 3px 10px 3px 3px;
+    font-size: 14px;
+    margin: 2px;
+}
+.tag-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    margin-right: 6px;
+    flex-shrink: 0;
+}
+.tag-close {
+    margin-left: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #888;
+}
+.tag-close:hover {
+    color: #f5222d;
+}
+.color-swatch.selected {
+    outline: 2px solid #1976d2;
+    box-shadow: 0 0 4px 1px #1976d277;
+}

@@ -91,7 +91,7 @@ public class AddEmployeeServlet extends HttpServlet {
                     userDAO.updateUserDepartmentAndPosition(existingUser.getId(), departmentId, positionId);
 
                     // Gửi thông báo thành công qua session để hiển thị sau khi redirect
-                    request.getSession().setAttribute("successMessage", "Đã kích hoạt lại và cập nhật thông tin cho nhân viên: " + existingUser.getFullName());
+                    request.getSession().setAttribute("successMessage", "Đã kích hoạt lại và cập nhật thông tin cho nhân viên: " + existingUser.getFullNameCombined());
                 } else {
                     request.getSession().setAttribute("errorMessage", "Có lỗi khi kích hoạt lại nhân viên.");
                 }
@@ -183,7 +183,7 @@ public class AddEmployeeServlet extends HttpServlet {
                 EmailService emailService = new EmailService(emailSender);
 
                 String subject = "Chào mừng bạn gia nhập công ty!";
-                String message = "<h3>Xin chào " + newUser.getFullName() + ",</h3>"
+                String message = "<h3>Xin chào " + newUser.getFullNameCombined()+ ",</h3>"
                         + "<p>Tài khoản của bạn đã được tạo thành công.</p>"
                         + "<p>Thông tin đăng nhập:</p>"
                         + "<ul>"

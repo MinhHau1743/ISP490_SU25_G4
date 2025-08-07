@@ -83,28 +83,28 @@ document.addEventListener('DOMContentLoaded', () => {
     // Kiểm tra trạng thái ban đầu khi trang load
     toggleTimeFields();
 });
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Tìm đến các phần tử cần thiết
     const colorPalette = document.querySelector('.color-palette');
     const hiddenColorInput = document.getElementById('color');
-    
+
     // Nếu không tìm thấy các phần tử thì không làm gì cả
     if (!colorPalette || !hiddenColorInput) {
         return;
     }
 
     const colorSwatches = colorPalette.querySelectorAll('.color-swatch');
-    
+
     // Hàm để cập nhật trạng thái "selected"
     const updateSelection = (selectedSwatch) => {
         // 1. Xóa class 'selected' khỏi tất cả các ô
         colorSwatches.forEach(swatch => {
             swatch.classList.remove('selected');
         });
-        
+
         // 2. Thêm class 'selected' vào ô vừa được bấm
         selectedSwatch.classList.add('selected');
-        
+
         // 3. Cập nhật giá trị cho input ẩn
         hiddenColorInput.value = selectedSwatch.dataset.color;
     };
@@ -122,8 +122,145 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Gán sự kiện click cho mỗi ô màu
     colorSwatches.forEach(swatch => {
-        swatch.addEventListener('click', function() {
+        swatch.addEventListener('click', function () {
             updateSelection(this);
         });
+    });
+});
+
+function getColorByName(name) {
+    // Hàm tạo màu tự sinh, kiểu Facebook/Google
+    const colors = ['#1976d2', '#388e3c', '#d32f2f', '#fbc02d', '#0288d1', '#8e24aa', '#ffa726', '#43a047', '#e53935', '#3949ab'];
+    let code = 0;
+    for (let i = 0; i < name.length; i++) code += name.charCodeAt(i);
+    return colors[code % colors.length];
+}
+
+function getInitials(name) {
+    // Lấy 2 chữ cái đầu của họ và tên cuối
+    let ws = name.trim().split(' ');
+    if (ws.length === 1) return ws[0][0].toUpperCase();
+    return (ws[0][0] + ws[ws.length - 1][0]).toUpperCase();
+}
+
+$(document).ready(function () {
+    // Lấy dữ liệu từ window, không cần forEach lồng nhau
+    var users = window.SCHEDULE_USERS || [];
+    var preselectedUserIds = window.SCHEDULE_SELECTED_USER_IDS || [];
+    var selectedUsers = users.filter(u => preselectedUserIds.includes(u.id));
+    updateSelectedTags();
+
+    $('#userSearch').on('focus', function () {
+        showAvailableUsers();
+    });
+
+    $('#userSearch').on('input', function () {
+        var query = $(this).val().toLowerCase();
+        var filtered = getAvailableUsers().filter(function (user) {
+            return query === '' || user.name.toLowerCase().includes(query);
+        });
+        showDropdown(filtered);
+    });
+
+    function getAvailableUsers() {
+        return users.filter(u =>
+            !selectedUsers.some(selected => selected.id === u.id)
+        );
+    }
+
+    function showAvailableUsers() {
+        showDropdown(getAvailableUsers());
+    }
+
+    function showDropdown(filteredUsers) {
+        var dropdown = $('#userDropdown');
+        dropdown.empty();
+        if (filteredUsers.length === 0) {
+            dropdown.append('<div class="dropdown-item disabled" style="color: #999;">Đã chọn hết nhân viên</div>');
+        } else {
+            filteredUsers.forEach(function (user) {
+                var item = $('<div class="dropdown-item">')
+                    .append(
+                        $('<span>')
+                            .addClass('tag-avatar')
+                            .css('background', getColorByName(user.name))
+                            .text(getInitials(user.name))
+                    )
+                    .append($('<span style="margin-left:8px">').text(user.name))
+                    .data('user', user)
+                    .click(function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        addUser($(this).data('user'));
+                    });
+                dropdown.append(item);
+            });
+        }
+        dropdown.show();
+    }
+
+    function addUser(user) {
+        selectedUsers.push(user);
+        updateSelectedTags();
+        $('#userSearch').val('');
+        setTimeout(function () {
+            showAvailableUsers();
+            $('#userSearch').focus();
+        }, 10);
+    }
+
+    function removeUser(userId) {
+        selectedUsers = selectedUsers.filter(function (user) {
+            return user.id !== userId;
+        });
+        updateSelectedTags();
+        if ($('#userDropdown').is(':visible')) showAvailableUsers();
+    }
+
+    function updateSelectedTags() {
+        var container = $('#selectedTags');
+        container.empty();
+        selectedUsers.forEach(function (user) {
+            var tag = $('<div class="tag">')
+                .append(
+                    $('<span class="tag-avatar">')
+                        .css('background', getColorByName(user.name))
+                        .text(getInitials(user.name))
+                )
+                .append($('<span style="margin-left:5px">').text(user.name))
+                .append(
+                    $('<span class="tag-close">').text('×').click(function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        removeUser(user.id);
+                    })
+                );
+            container.append(tag);
+        });
+        var userIds = selectedUsers.map(function (user) {
+            return user.id;
+        });
+        $('#hiddenUserIds').val(userIds.join(','));
+    }
+
+    // Dismiss dropdown nếu click ngoài
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest('.tag-input-wrapper').length) {
+            $('#userDropdown').hide();
+        }
+    });
+
+    // Keyboard (Enter/Esc)
+    $('#userSearch').keydown(function (e) {
+        var $dropdown = $('#userDropdown');
+        var $items = $dropdown.find('.dropdown-item:not(.disabled)');
+        if (e.keyCode === 13) {
+            e.preventDefault();
+            var $firstItem = $items.first();
+            if ($firstItem.length) $firstItem.click();
+        } else if (e.keyCode === 27) {
+            $dropdown.hide();
+            $(this).blur();
+        }
     });
 });

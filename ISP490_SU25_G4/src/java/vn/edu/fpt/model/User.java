@@ -41,16 +41,25 @@ public class User {
     private Integer districtId;
     private Integer wardId;
     private int requireChangePassword;
+    private String fullName;
 
     // Constructors
     public User() {
     }
 
-    public String getFullName() {
+    public String getFullNameCombined() {
         if (middleName != null && !middleName.trim().isEmpty()) {
             return lastName + " " + middleName + " " + firstName;
         }
         return lastName + " " + firstName;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
     // Getters and Setters for all fields
@@ -197,7 +206,7 @@ public class User {
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
     }
-    
+
     public int getIsDeleted() {
         return isDeleted;
     }
@@ -302,5 +311,10 @@ public class User {
     public void setRequireChangePassword(int requireChangePassword) {
         this.requireChangePassword = requireChangePassword;
     }
-    
+
+    @Override
+    public String toString() {
+        return "User{" + "id=" + id + ", email=" + email + ", lastName=" + lastName + ", middleName=" + middleName + ", firstName=" + firstName + ", avatarUrl=" + avatarUrl + ", employeeCode=" + employeeCode + ", phoneNumber=" + phoneNumber + ", dateOfBirth=" + dateOfBirth + ", gender=" + gender + ", identityCardNumber=" + identityCardNumber + ", notes=" + notes + ", status=" + status + ", createdAt=" + createdAt + ", updatedAt=" + updatedAt + ", roleName=" + roleName + ", positionName=" + positionName + ", departmentName=" + departmentName + ", streetAddress=" + streetAddress + ", wardName=" + wardName + ", districtName=" + districtName + ", provinceName=" + provinceName + ", roleId=" + roleId + ", departmentId=" + departmentId + ", positionId=" + positionId + ", addressId=" + addressId + ", isDeleted=" + isDeleted + ", provinceId=" + provinceId + ", districtId=" + districtId + ", wardId=" + wardId + ", requireChangePassword=" + requireChangePassword + ", fullName=" + fullName + '}';
+    }
+
 }
