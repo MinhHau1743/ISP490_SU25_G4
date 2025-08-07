@@ -28,32 +28,30 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/createContract.css">
 
     </head>
-    <body>
+    <body data-context-path="${pageContext.request.contextPath}">
         <div class="app-container">
-            <jsp:include page="../../mainMenu.jsp" />
+            <%-- SỬA LỖI: Dùng đường dẫn gốc an toàn cho jsp:include --%>
+            <jsp:include page="/mainMenu.jsp" />
 
             <main class="main-content">
-                <form class="page-content" action="${pageContext.request.contextPath}/createContract" method="post">
-                    <input type="hidden" name="action" value="create">
+                <%-- ======================================================= --%>
+                <%-- SỬA LỖI: Form action trỏ đến controller mới           --%>
+                <%-- ======================================================= --%>
+                <form class="page-content" action="contract" method="post">
+                    <%-- Thêm input ẩn để controller biết đây là hành động "save" --%>
+                    <input type="hidden" name="action" value="save">
+
                     <div class="detail-header">
-                        <a href="${pageContext.request.contextPath}/listContract" class="back-link">
+                        <%-- SỬA LỖI: Nút Hủy trỏ về trang danh sách --%>
+                        <a href="${pageContext.request.contextPath}/contract?action=list" class="back-link">
                             <i data-feather="arrow-left"></i><span>Hủy</span>
                         </a>
                         <div class="action-buttons">
-                            <%-- ===== Bắt đầu phân quyền nút Tạo Hợp đồng ===== --%>
-                            <c:choose>
-                                <c:when test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Chánh văn phòng'}">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i data-feather="plus-circle"></i>Tạo Hợp đồng
-                                    </button>
-                                </c:when>
-                                <c:otherwise>
-                                    <button type="button" class="btn btn-primary disabled-action" data-error="Bạn không có quyền tạo hợp đồng mới.">
-                                        <i data-feather="plus-circle"></i>Tạo Hợp đồng
-                                    </button>
-                                </c:otherwise>
-                            </c:choose>
-                            <%-- ===== Kết thúc phân quyền nút Tạo Hợp đồng ===== --%>
+                            <c:if test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Chánh văn phòng'}">
+                                <button type="submit" class="btn btn-primary">
+                                    <i data-feather="plus-circle"></i>Tạo Hợp đồng
+                                </button>
+                            </c:if>
                         </div>
                     </div>
 
@@ -74,7 +72,6 @@
                                                 </c:forEach>
                                             </select>
                                         </div>
-
                                     </div>
                                     <div class="form-group">
                                         <label for="notes">Mô tả / Điều khoản chính</label>
@@ -168,24 +165,35 @@
                     </div>
                     <div id="productList" class="product-list-container">
                         <c:if test="${empty productList}">
-                            <div class="empty-list-message" style="text-align: center;">
-                                Không có sản phẩm nào để hiển thị.
-                            </div>
+                            <p style="text-align: center; color: #6b7280;">Không có sản phẩm nào.</p>
                         </c:if>
-                        <c:if test="${not empty productList}">
-                            <c:forEach var="product" items="${productList}">
-                                <div class="product-search-item" data-id="${product.id}" data-name="${product.name}" data-price="${product.price}">
-                                    <div class="product-search-info">
-                                        <div class="name">${product.name}</div>
-                                        <div class="code">${product.productCode}</div>
-                                    </div>
-                                    <div class="product-search-price">
-                                        <fmt:formatNumber value="${product.price}" pattern="###,###"/> ₫
-                                    </div>
+                        <c:forEach var="product" items="${productList}">
+                            <div class="product-search-item" data-id="${product.id}" data-name="${product.name}" data-price="${product.price}">
+                                <div class="product-search-info">
+                                    <div class="name">${product.name}</div>
+                                    <div class="code">${product.productCode}</div>
                                 </div>
-                            </c:forEach>
-                        </c:if>
+                                <div class="product-search-price">
+                                    <fmt:formatNumber value="${product.price}" pattern="###,###"/> ₫
+                                </div>
+                            </div>
+                        </c:forEach>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="errorModal" class="modal-overlay" style="display: none;">
+            <div class="modal-content" style="max-width: 420px;">
+                <div class="modal-header">
+                    <h3 class="modal-title" style="color: #dc2626;">Thông báo</h3>
+                    <button type="button" class="close-modal-btn" id="closeErrorModalBtn"><i data-feather="x"></i></button>
+                </div>
+                <div class="modal-body" style="text-align: center;">
+                    <p id="errorMessageText" style="font-size: 16px;"></p>
+                </div>
+                <div class="modal-footer" style="padding: 16px 24px; justify-content: center;">
+                    <button type="button" class="btn btn-primary" id="confirmErrorBtn">Đã hiểu</button>
                 </div>
             </div>
         </div>
@@ -207,5 +215,9 @@
         </script>
         <script src="${pageContext.request.contextPath}/js/createContract.js"></script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
+         <script>
+            feather.replace();
+        </script>
+
     </body>
 </html>

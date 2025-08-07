@@ -35,16 +35,20 @@ html, body {
 }
 
 
+/* Trong file style.css hoặc file CSS chung */
+
 .app-container {
-    display: flex;
-    height: 100vh;
+    display: flex; /* Bắt buộc: Biến thành flex container */
+    height: 100vh; /* Bắt buộc: Chiều cao bằng 100% màn hình */
+    overflow: hidden; /* Ngăn không cho cả trang bị cuộn */
 }
 
+/* Trong file style.css hoặc file CSS chung */
+
 .main-content {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
+    flex-grow: 1; /* Cho phép nó chiếm hết không gian còn lại */
+    overflow-y: auto; /* Bắt buộc: Tự động thêm thanh cuộn khi nội dung dài hơn */
+    height: 100vh; /* Chiều cao bằng 100% màn hình */
 }
 
 .content-body {

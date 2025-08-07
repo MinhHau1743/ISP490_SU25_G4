@@ -181,3 +181,10 @@
 .app-container.sidebar-collapsed .sidebar:hover .sidebar-nav a {
     justify-content: flex-start;
 }
+/* Trong file mainMenu.css hoặc file CSS chung */
+
+.main-menu { /* Hoặc tên class bao bọc menu của bạn */
+    flex-shrink: 0;       /* Ngăn không cho menu bị co lại khi không đủ không gian */
+    width: 250px;         /* Hoặc chiều rộng bạn muốn */
+    background-color: #fff; /* Đảm bảo menu có màu nền */
+}

@@ -30,12 +30,12 @@
 
             <%-- ===== NHÓM QUẢN LÝ ===== --%>
             <li>
-                <a href="${pageContext.request.contextPath}/customer/list" class="${currentPage.contains('Customer') ? 'active' : ''}">
+                <a href="${pageContext.request.contextPath}/customer" class="${currentPage.contains('Customer') ? 'active' : ''}">
                     <i data-feather="users"></i><span>Khách hàng</span>
                 </a>
             </li>
             <li>
-                <a href="${pageContext.request.contextPath}/listContract" class="${currentPage.contains('Contract') ? 'active' : ''}">
+                <a href="${pageContext.request.contextPath}/contract" class="${currentPage.contains('Contract') ? 'active' : ''}">
                     <i data-feather="file-text"></i><span>Hợp đồng</span>
                 </a>
             </li>
@@ -57,7 +57,7 @@
                 </a>
             </li>
             <li>
-                <a href="${pageContext.request.contextPath}/listFeedback" class="${currentPage.contains('Feedback') ? 'active' : ''}">
+                <a href="${pageContext.request.contextPath}/feedback" class="${currentPage.contains('Feedback') ? 'active' : ''}">
                     <i data-feather="message-square"></i><span>Phản hồi</span>
                 </a>
             </li>

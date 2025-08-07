@@ -1,32 +1,42 @@
 /*
  * File: listContract.js
- * Phiên bản hoàn thiện: Tích hợp đầy đủ logic cho bộ lọc, modal xóa,
- * và nút "Xóa lọc" hoạt động chính xác.
+ * Mô tả: Xử lý logic cho bộ lọc, modal xác nhận xóa và các hiệu ứng trên trang danh sách hợp đồng.
+ * Phiên bản: Hoàn thiện và tối ưu.
  */
 document.addEventListener('DOMContentLoaded', function () {
-    // Hàm phụ để lấy đường dẫn gốc của ứng dụng (ví dụ: /ISP490_SU25_G4)
-    function getContextPath() {
-        return window.location.pathname.substring(0, window.location.pathname.indexOf("/", 2));
-    }
 
+    // ===================================
+    // === CÀI ĐẶT CHUNG ===
+    // ===================================
+
+    // LƯU Ý QUAN TRỌNG:
+    // Để dòng code dưới đây hoạt động chính xác, bạn cần thêm thuộc tính data-context-path
+    // vào thẻ <body> trong các file JSP của mình như sau:
+    // <body data-context-path="${pageContext.request.contextPath}">
+    const contextPath = document.body.dataset.contextPath || '';
     // Kích hoạt các icon trên trang
     feather.replace();
 
-    // ===================================
-    // === 1. XỬ LÝ TỰ ĐỘNG ẨN THÔNG BÁO ===
-    // ===================================
-    const alertBox = document.querySelector('.alert');
-    if (alertBox) {
-        setTimeout(() => {
-            alertBox.classList.add('fade-out');
-            setTimeout(() => {
-                alertBox.style.display = 'none';
-            }, 500);
-        }, 5000);
-    }
 
     // ===================================
-    // === 2. KHÔI PHỤC: XỬ LÝ BẬT/TẮT BỘ LỌC ===
+    // === 1. TỰ ĐỘNG ẨN THÔNG BÁO ===
+    // ===================================
+    const alertElements = document.querySelectorAll('.alert');
+    if (alertElements.length > 0) {
+        alertElements.forEach(alertBox => {
+            setTimeout(() => {
+                alertBox.style.transition = 'opacity 0.5s ease';
+                alertBox.style.opacity = '0';
+                setTimeout(() => {
+                    alertBox.remove();
+                }, 500); // Chờ hiệu ứng mờ kết thúc rồi mới xóa
+            }, 5000); // 5 giây
+        });
+    }
+
+
+    // ===================================
+    // === 2. BẬT/TẮT BỘ LỌC ===
     // ===================================
     const filterBtn = document.getElementById('filterBtn');
     const filterContainer = document.getElementById('filterContainer');
@@ -34,64 +44,73 @@ document.addEventListener('DOMContentLoaded', function () {
     if (filterBtn && filterContainer) {
         // Mở/đóng vùng lọc khi nhấn nút "Bộ lọc"
         filterBtn.addEventListener('click', function () {
-            filterContainer.classList.toggle('open');
-            this.classList.toggle('active');
+            const isOpen = filterContainer.style.display === 'block';
+            filterContainer.style.display = isOpen ? 'none' : 'block';
+            this.classList.toggle('active', !isOpen);
         });
 
         // Tự động mở vùng lọc nếu URL có chứa tham số lọc
         const urlParams = new URLSearchParams(window.location.search);
-        const hasFilters = urlParams.get('searchQuery') || urlParams.get('status') || urlParams.get('startDateFrom') || urlParams.get('startDateTo');
-        
-        // Chỉ mở khi có giá trị thực sự (không phải chuỗi rỗng)
+        let hasFilters = false;
+        for (const [key, value] of urlParams.entries()) {
+            if (key !== 'action' && key !== 'page' && value) {
+                hasFilters = true;
+                break;
+            }
+        }
+
         if (hasFilters) {
-            filterContainer.classList.add('open');
+            filterContainer.style.display = 'block';
             filterBtn.classList.add('active');
         }
     }
 
-    // ===================================================
-    // === 3. XỬ LÝ NÚT "XÓA LỌC"                    ===
-    // ===================================================
-    const resetFilterBtn = document.getElementById('resetFilterBtn');
-    if (resetFilterBtn) {
-        resetFilterBtn.addEventListener('click', function (event) {
-            event.preventDefault();
-            // Chuyển hướng về trang gốc để xóa các tham số lọc
-            window.location.href = getContextPath() + '/listContract';
-        });
-    }
 
     // ===================================
-    // === 4. XỬ LÝ MODAL XÁC NHẬN XÓA ===
+    // === 3. MODAL XÁC NHẬN XÓA ===
     // ===================================
     const deleteModal = document.getElementById('deleteConfirmModal');
+
+    // Chỉ chạy logic modal nếu modal tồn tại trên trang
     if (deleteModal) {
-        const tableContainer = document.querySelector('.data-table-container');
-        const confirmDeleteBtn = deleteModal.querySelector('#confirmDeleteBtn');
-        const deleteMessage = deleteModal.querySelector('#deleteMessage');
-        const closeDeleteModalBtns = deleteModal.querySelectorAll('.close-modal-btn');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+        const modalCancelBtn = document.getElementById('modalCancelBtn');
+        const modalConfirmDeleteBtn = document.getElementById('modalConfirmDeleteBtn');
+        const contractNameToDelete = document.getElementById('contractNameToDelete');
+        const deleteButtons = document.querySelectorAll('.delete-btn');
 
-        if (tableContainer && confirmDeleteBtn && deleteMessage && closeDeleteModalBtns.length > 0) {
-            tableContainer.addEventListener('click', function (e) {
-                const deleteBtn = e.target.closest('.delete-btn');
-                if (deleteBtn) {
-                    const id = deleteBtn.dataset.id;
-                    const name = deleteBtn.dataset.name;
-                    deleteMessage.innerHTML = `Bạn có chắc chắn muốn xóa hợp đồng <strong>${name}</strong> không?`;
-                    confirmDeleteBtn.href = `${getContextPath()}/deleteContract?id=${id}`;
-                    deleteModal.style.display = 'flex';
-                }
-            });
+        const showModal = (id, name) => {
+            if (contractNameToDelete)
+                contractNameToDelete.textContent = name;
+            if (modalConfirmDeleteBtn)
+                modalConfirmDeleteBtn.href = `${contextPath}/contract?action=delete&id=${id}`;
+            deleteModal.style.display = 'flex';
+        };
 
-            const closeModal = () => {
-                deleteModal.style.display = 'none';
-            };
-            closeDeleteModalBtns.forEach(btn => btn.addEventListener('click', closeModal));
-            deleteModal.addEventListener('click', (e) => {
-                if (e.target === deleteModal) {
-                    closeModal();
-                }
+        const hideModal = () => {
+            deleteModal.style.display = 'none';
+        };
+
+        // Gán sự kiện cho tất cả các nút xóa có class '.delete-btn'
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const contractId = this.dataset.id;
+                const contractName = this.dataset.name;
+                showModal(contractId, contractName);
             });
-        }
+        });
+
+        // Gán sự kiện cho các nút đóng/hủy
+        if (modalCloseBtn)
+            modalCloseBtn.addEventListener('click', hideModal);
+        if (modalCancelBtn)
+            modalCancelBtn.addEventListener('click', hideModal);
+
+        // Đóng modal khi click ra ngoài vùng nền đen
+        deleteModal.addEventListener('click', (event) => {
+            if (event.target === deleteModal) {
+                hideModal();
+            }
+        });
     }
 });
