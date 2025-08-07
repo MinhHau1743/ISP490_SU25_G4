@@ -160,7 +160,8 @@
                     </p>
                 </div>
 
-                <form action="${pageContext.request.contextPath}/createFeedback" method="POST" class="feedback-form">
+                <form action="${pageContext.request.contextPath}/feedback?action=create" method="POST" class="feedback-form">
+
 
                     <%-- Các input ẩn để gửi dữ liệu cần thiết đi --%>
                     <input type="hidden" id="rating-value" name="rating" value="0">
