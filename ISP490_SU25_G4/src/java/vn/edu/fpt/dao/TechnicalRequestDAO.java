@@ -100,7 +100,6 @@ public class TechnicalRequestDAO {
 
                     // ✔️ THÊM DÒNG NÀY: Lấy enterpriseId và gán vào model
                     req.setEnterpriseId(rs.getInt("enterprise_id"));
-
                     req.setRequestCode(rs.getString("request_code"));
                     req.setTitle(rs.getString("title"));
                     req.setDescription(rs.getString("description"));
