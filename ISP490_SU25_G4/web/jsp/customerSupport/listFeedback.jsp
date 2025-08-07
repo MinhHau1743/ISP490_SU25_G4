@@ -42,7 +42,8 @@
                         <div class="stat-card"><div class="icon-wrapper bad"><i data-feather="trending-down"></i></div><div class="info"><div class="title">Chưa hài lòng</div><div class="value"><fmt:formatNumber value="${badCount}" type="number"/></div></div></div>
                     </div>
                     <div class="content-card">
-                        <form class="table-toolbar" action="${pageContext.request.contextPath}/listFeedback" method="get">
+                        <form class="table-toolbar" action="${pageContext.request.contextPath}/feedback" method="get">
+                            <input type="hidden" name="action" value="list">
                             <div class="search-box">
                                 <i data-feather="search" class="feather-search"></i>
                                 <input type="text" name="query" placeholder="Tìm theo khách hàng, mã yêu cầu..." value="${param.query}">
@@ -58,7 +59,8 @@
                             </div>
                             <div class="toolbar-actions">
                                 <button type="submit" class="btn btn-primary"><i data-feather="search"></i> Lọc / Tìm</button>
-                                <a href="${pageContext.request.contextPath}/listFeedback" class="btn btn-secondary">
+                                <a href="${pageContext.request.contextPath}/feedback?action=list" class="btn btn-secondary">
+
                                     <i data-feather="refresh-cw"></i> Reset
                                 </a>
                             </div>
@@ -76,7 +78,7 @@
                                      </c:choose>
                                      ">
                                     <div class="card-header">
-                                        <a href="${pageContext.request.contextPath}/viewFeedback?id=${fb.id}" class="customer-link">${fb.enterpriseName}</a>
+                                        <a href="${pageContext.request.contextPath}/feedback?action=view&id=${fb.id}" class="customer-link">${fb.enterpriseName}</a>
                                         <c:choose>
                                             <c:when test="${fb.rating >= 4}"><span class="status-pill">Rất hài lòng</span></c:when>
                                             <c:when test="${fb.rating == 3}"><span class="status-pill">Bình thường</span></c:when>
