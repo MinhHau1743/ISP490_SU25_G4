@@ -23,7 +23,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.Date;
 import java.util.List;
-import vn.edu.fpt.dao.AddressDAO;
+import vn.edu.fpt.dao.EnterpriseDAO;
 import vn.edu.fpt.dao.DepartmentDAO;
 import vn.edu.fpt.dao.UserDAO;
 import vn.edu.fpt.model.Department;
@@ -107,7 +107,7 @@ public class EditProfileController extends HttpServlet {
             }
         }
 
-        AddressDAO addressDAO = new AddressDAO();
+        EnterpriseDAO addressDAO = new EnterpriseDAO();
         UserDAO userDAO = new UserDAO();
         User userToEdit = userDAO.getUserById(userId);
 
@@ -165,7 +165,7 @@ public class EditProfileController extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         java.sql.Connection conn = null;
         UserDAO userDAO = new UserDAO();
-        AddressDAO addressDAO = new AddressDAO();
+        EnterpriseDAO addressDAO = new EnterpriseDAO();
 
         // Lấy dữ liệu từ form
         String employeeCode = request.getParameter("employeeCode");
