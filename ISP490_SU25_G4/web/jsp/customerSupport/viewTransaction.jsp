@@ -57,7 +57,7 @@
                                 <%-- Nếu chưa có, chỉ hiện nút khi ticket đã xong --%>
                                 <c:otherwise>
                                     <c:if test="${ticket.status == 'resolved' || ticket.status == 'closed'}">
-                                        <a href="${pageContext.request.contextPath}/createFeedback?technicalRequestId=${ticket.id}" class="btn btn-teal">
+                                        <a href="${pageContext.request.contextPath}/feedback?action=create&technicalRequestId=${ticket.id}" class="btn btn-teal">
                                             <i data-feather="star"></i>Gửi Phản Hồi
                                         </a>
                                     </c:if>

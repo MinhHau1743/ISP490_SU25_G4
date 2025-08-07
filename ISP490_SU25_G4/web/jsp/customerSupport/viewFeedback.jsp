@@ -261,7 +261,7 @@
                     </div>
                     <%-- MODIFICATION: Thiết kế lại nhóm nút hành động --%>
                     <div class="actions-group">
-                        <a href="${pageContext.request.contextPath}/listFeedback" class="btn btn-secondary">
+<a href="${pageContext.request.contextPath}/feedback?action=list" class="btn btn-secondary">
                             <i data-feather="arrow-left"></i>
                             <span>Quay lại</span>
                         </a>
@@ -309,7 +309,7 @@
                                             </c:forEach>
                                         </div>
                                         <div class="add-note-form">
-                                            <form action="${pageContext.request.contextPath}/addNote" method="POST">
+<form action="${pageContext.request.contextPath}/feedback?action=addNote" method="POST">
                                                 <input type="hidden" name="feedbackId" value="${feedback.id}">
                                                 <textarea name="noteText" rows="3" placeholder="Thêm ghi chú nội bộ..." required style="width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; margin-bottom: 12px; resize: vertical;"></textarea>
                                                 <button type="submit" class="btn btn-primary" style="width: 100%;">Thêm ghi chú</button>
