@@ -8,7 +8,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ page isELIgnored="false" %>
 
-<c:set var="currentPage" value="listCustomer" />
+<c:set var="currentPage" value="customer/list" />
 <c:set var="BASE_URL" value="${pageContext.request.contextPath}" />
 
 <!DOCTYPE html>
@@ -19,7 +19,7 @@
         <title>Chỉnh sửa: <c:out value="${customer.name}"/></title>
         <link rel="stylesheet" href="${BASE_URL}/css/style.css">
         <link rel="stylesheet" href="${BASE_URL}/css/mainMenu.css">
-        <link rel="stylesheet" href="${BASE_URL}/css/createCustomer.css"> <%-- Reusing the same CSS --%>
+        <link rel="stylesheet" href="${BASE_URL}/css/createCustomer.css"> 
         <link rel="stylesheet" href="${BASE_URL}/css/viewCustomerDetail.css">
         <script src="https://unpkg.com/feather-icons"></script>
         <style>
@@ -36,13 +36,13 @@
         <div class="app-container">
             <jsp:include page="/mainMenu.jsp"/>
             <main class="main-content">
-                <form class="page-content" id="editCustomerForm" action="${BASE_URL}/editCustomer" method="post" enctype="multipart/form-data">
+                <form class="page-content" id="editCustomerForm" action="${BASE_URL}/customer/edit" method="post" enctype="multipart/form-data">
                     <input type="hidden" name="enterpriseId" value="${customer.id}">
                     <input type="hidden" name="addressId" value="${customer.addressId}">
                     <input type="hidden" name="existingAvatarUrl" value="<c:out value='${customer.avatarUrl}'/>">
 
                     <div class="detail-header">
-                        <a href="${BASE_URL}/viewCustomer?id=${customer.id}" class="back-link"><i data-feather="arrow-left"></i><span>Hủy</span></a>
+                        <a href="${BASE_URL}/customer/view?id=${customer.id}" class="back-link"><i data-feather="arrow-left"></i><span>Hủy</span></a>
                         <div class="action-buttons">
                             <c:choose>
                                 <c:when test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Kinh doanh'}">
@@ -58,12 +58,12 @@
                     <c:if test="${not empty errorMessage}"><div class="error-message"><strong>Lỗi:</strong> ${errorMessage}</div></c:if>
 
                         <div class="detail-layout">
-                            <!-- MAIN COLUMN (LEFT) -->
-                        <%-- BẮT ĐẦU KHỐI CODE CẬP NHẬT --%>
-                        <div class="main-column">
-                            <div class="profile-header-card detail-card">
-                                <div class="card-body">
-                                    <div class="avatar-section">
+
+
+                            <div class="main-column">
+                                <div class="profile-header-card detail-card">
+                                    <div class="card-body">
+                                        <div class="avatar-section">
                                         <%-- Sửa lỗi hiển thị ảnh: Sử dụng BASE_URL và kiểm tra customer.avatarUrl --%>
                                         <c:choose>
                                             <c:when test="${not empty customer.avatarUrl}">
@@ -168,7 +168,6 @@
                                 </div>
                             </div>
                         </div>
-                        <%-- KẾT THÚC KHỐI CODE CẬP NHẬT --%>
                     </div>
                 </form>
             </main>
@@ -199,7 +198,7 @@
                     wardSelect.disabled = true;
 
                     if (provinceId) {
-                        fetch('${BASE_URL}/getDistricts?provinceId=' + provinceId)
+                        fetch('${BASE_URL}/customer/getDistricts?provinceId=' + provinceId)
                                 .then(response => response.json())
                                 .then(data => {
                                     districtSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
@@ -215,7 +214,7 @@
                     wardSelect.innerHTML = '<option value="">-- Đang tải... --</option>';
                     wardSelect.disabled = true;
                     if (districtId) {
-                        fetch('${BASE_URL}/getWards?districtId=' + districtId)
+                        fetch('${BASE_URL}/customer/getWards?districtId=' + districtId)
                                 .then(response => response.json())
                                 .then(data => {
                                     wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';

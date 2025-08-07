@@ -7,7 +7,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
-<c:set var="currentPage" value="listCustomer" />
+<c:set var="currentPage" value="customer/list" />
 <c:set var="BASE_URL" value="${pageContext.request.contextPath}" />
 
 <!DOCTYPE html>
@@ -80,9 +80,9 @@
                     </div>
                 </c:if>
 
-                <form class="page-content" id="createCustomerForm" action="${BASE_URL}/createCustomer" method="post" enctype="multipart/form-data">
+                <form class="page-content" id="createCustomerForm" action="${BASE_URL}/customer/create" method="post" enctype="multipart/form-data">
                     <div class="detail-header">
-                        <a href="${BASE_URL}/listCustomer" class="back-link">
+                        <a href="${BASE_URL}/customer/list" class="back-link">
                             <i data-feather="arrow-left"></i><span>Hủy</span>
                         </a>
                         <div class="action-buttons">
@@ -261,7 +261,7 @@
                     wardSelect.disabled = true;
 
                     if (provinceId) {
-                        fetch('${BASE_URL}/getDistricts?provinceId=' + provinceId)
+                        fetch('${BASE_URL}/customer/getDistricts?provinceId=' + provinceId)
                                 .then(response => response.json())
                                 .then(data => {
                                     districtSelect.innerHTML = '<option value="" disabled selected>-- Chọn Quận/Huyện --</option>';
@@ -283,7 +283,7 @@
                     wardSelect.disabled = true;
 
                     if (districtId) {
-                        fetch('${BASE_URL}/getWards?districtId=' + districtId)
+                        fetch('${BASE_URL}/customer/getWards?districtId=' + districtId)
                                 .then(response => response.json())
                                 .then(data => {
                                     wardSelect.innerHTML = '<option value="" disabled selected>-- Chọn Phường/Xã --</option>';
