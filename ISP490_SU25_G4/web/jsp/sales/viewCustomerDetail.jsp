@@ -10,7 +10,7 @@
 <%-- This directive tells the JSP engine to evaluate Expression Language (EL) --%>
 <%@ page isELIgnored="false" %>
 
-<c:set var="currentPage" value="listCustomer" />
+<c:set var="currentPage" value="customer/list" />
 <c:set var="BASE_URL" value="${pageContext.request.contextPath}" />
 
 <!DOCTYPE html>
@@ -32,12 +32,12 @@
                     <c:when test="${not empty customer}">
                         <div class="page-content">
                             <div class="detail-header">
-                                <a href="${BASE_URL}/listCustomer" class="back-link"><i data-feather="arrow-left"></i><span>Quay lại danh sách</span></a>
+                                <a href="${BASE_URL}/customer/list" class="back-link"><i data-feather="arrow-left"></i><span>Quay lại danh sách</span></a>
                                 <div class="header-actions">
                                     <%-- User Access Control for Edit Button --%>
                                     <c:choose>
                                         <c:when test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Kinh doanh'}">
-                                            <a href="${BASE_URL}/editCustomer?id=${customer.id}" class="btn btn-secondary"><i data-feather="edit-2"></i>Sửa</a>
+                                            <a href="${BASE_URL}/customer/edit?id=${customer.id}" class="btn btn-secondary"><i data-feather="edit-2"></i>Sửa</a>
                                         </c:when>
                                         <c:otherwise>
                                             <a href="#" class="btn btn-secondary disabled-action" data-error="Bạn không có quyền sửa khách hàng."><i data-feather="edit-2"></i>Sửa</a>
@@ -153,7 +153,7 @@
                                                 <span class="label">Nhân viên phụ trách</span>
                                                 <div class="value assignees-list">
                                                     <c:forEach var="user" items="${customer.assignedUsers}">
-                                                        <span>- <c:out value="${user.fullName}"/></span>
+                                                        <span><c:out value="${user.fullName}"/></span>
                                                     </c:forEach>
                                                 </div>
                                             </div>
@@ -216,7 +216,7 @@
                 <p id="deleteMessage"></p>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" id="cancelDeleteBtn">Hủy</button>
-                    <form id="deleteForm" action="${BASE_URL}/deleteCustomer" method="POST" style="margin:0;">
+                    <form id="deleteForm" action="${BASE_URL}/customer/delete" method="POST" style="margin:0;">
                         <input type="hidden" id="customerIdToDelete" name="customerId">
                         <button type="submit" class="btn btn-danger">Xóa</button>
                     </form>
