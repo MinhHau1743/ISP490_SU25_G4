@@ -102,10 +102,9 @@ public class EnterpriseDAO extends DBContext {
         );
 
         if (searchQuery != null && !searchQuery.trim().isEmpty()) {
-            sql.append("AND (e.name LIKE ? OR e.fax LIKE ? OR CONCAT_WS(' ', u.last_name, u.middle_name, u.first_name) LIKE ?) ");
+            // CHỈ TÌM KIẾM THEO TÊN DOANH NGHIỆP
+            sql.append("AND e.name LIKE ? ");
             String searchPattern = "%" + searchQuery + "%";
-            params.add(searchPattern);
-            params.add(searchPattern);
             params.add(searchPattern);
         }
 
@@ -308,36 +307,12 @@ public class EnterpriseDAO extends DBContext {
     public List<String> getCustomerNameSuggestions(String query) throws Exception {
         List<String> suggestions = new ArrayList<>();
 
-        // Câu lệnh SQL sử dụng UNION để gộp kết quả từ nhiều nguồn
-        // UNION tự động loại bỏ các giá trị trùng lặp.
-        String sql
-                = // 1. Gợi ý theo tên Doanh nghiệp
-                "(SELECT name AS suggestion FROM Enterprises WHERE name LIKE ? AND is_deleted = 0) "
-                + "UNION "
-                + // 2. Gợi ý theo số Fax
-                "(SELECT fax AS suggestion FROM Enterprises WHERE fax LIKE ? AND is_deleted = 0 AND fax IS NOT NULL AND fax != '') "
-                + "UNION "
-                + // 3. Gợi ý theo tên Nhân viên phụ trách
-                "(SELECT CONCAT_WS(' ', last_name, middle_name, first_name) AS suggestion FROM Users "
-                + " WHERE CONCAT_WS(' ', last_name, middle_name, first_name) LIKE ? AND is_deleted = 0) "
-                + "UNION "
-                + // 4. Gợi ý theo địa chỉ (chỉ lấy các địa chỉ có gán cho doanh nghiệp)
-                "(SELECT DISTINCT CONCAT_WS(', ', a.street_address, w.name, d.name, p.name) AS suggestion "
-                + " FROM Enterprises e "
-                + " JOIN Addresses a ON e.address_id = a.id "
-                + " JOIN Wards w ON a.ward_id = w.id "
-                + " JOIN Districts d ON a.district_id = d.id "
-                + " JOIN Provinces p ON a.province_id = p.id "
-                + " WHERE e.is_deleted = 0 AND CONCAT_WS(', ', a.street_address, w.name, d.name, p.name) LIKE ?) "
-                + "LIMIT 15"; // Giới hạn tổng số gợi ý trả về
+        String sql = "SELECT name AS suggestion FROM Enterprises WHERE name LIKE ? AND is_deleted = 0 LIMIT 15";
 
         try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             String searchPattern = "%" + query + "%";
-            ps.setString(1, searchPattern); // cho tên doanh nghiệp
-            ps.setString(2, searchPattern); // cho số fax
-            ps.setString(3, searchPattern); // cho tên nhân viên
-            ps.setString(4, searchPattern); // cho địa chỉ
+            ps.setString(1, searchPattern); // Chỉ cần set 1 tham số
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -367,10 +342,9 @@ public class EnterpriseDAO extends DBContext {
      */
     private void buildCustomerWhereClause(StringBuilder sql, List<Object> params, String searchQuery, String customerTypeId, String employeeId, String provinceId, String districtId, String wardId) {
         if (searchQuery != null && !searchQuery.trim().isEmpty()) {
-            sql.append("AND (e.name LIKE ? OR e.fax LIKE ? OR e.enterprise_code LIKE ?) ");
+            // CHỈ TÌM KIẾM THEO TÊN DOANH NGHIỆP
+            sql.append("AND e.name LIKE ? ");
             String searchPattern = "%" + searchQuery.trim() + "%";
-            params.add(searchPattern);
-            params.add(searchPattern);
             params.add(searchPattern);
         }
         if (customerTypeId != null && !customerTypeId.isEmpty()) {
@@ -435,7 +409,7 @@ public class EnterpriseDAO extends DBContext {
         StringBuilder sql = new StringBuilder(
                 "SELECT e.id AS enterprise_id, e.name AS enterprise_name, e.enterprise_code, e.avatar_url, e.business_email, e.fax, "
                 + "CONCAT_WS(', ', a.street_address, w.name, d.name, p.name) AS full_address, "
-                + "GROUP_CONCAT(DISTINCT CONCAT_WS(' ', u.last_name, u.first_name) SEPARATOR ', ') AS assigned_users "
+                + "GROUP_CONCAT(DISTINCT CONCAT_WS(' ', u.last_name, u.middle_name, u.first_name) SEPARATOR ', ') AS assigned_users "
                 + "FROM Enterprises e "
                 + "LEFT JOIN Addresses a ON e.address_id = a.id "
                 + "LEFT JOIN Wards w ON a.ward_id = w.id "
