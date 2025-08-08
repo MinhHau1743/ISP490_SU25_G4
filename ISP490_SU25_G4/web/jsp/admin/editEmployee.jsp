@@ -22,7 +22,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <%-- Link tới file CSS đã được nâng cấp, chứa style cho cả trang view và edit --%>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/viewEmployee.css">
-        
+
         <script src="https://unpkg.com/feather-icons"></script>
     </head>
     <body>
@@ -36,11 +36,11 @@
 
                 <section class="content-body">
                     <c:if test="${not empty employee}">
-                        <form id="editEmployee" action="editEmployee" method="post" enctype="multipart/form-data">
+                        <form id="editEmployee" action="${pageContext.request.contextPath}/employee?action=edit" method="post" enctype="multipart/form-data">
                             <input type="hidden" name="id" value="${employee.id}">
 
                             <div class="view-employee-page">
-                                
+
                                 <%-- === CẢI TIẾN: PANEL BÊN TRÁI GIỐNG HỆT TRANG VIEW === --%>
                                 <div class="avatar-panel">
                                     <div class="avatar-display-box">
@@ -50,10 +50,10 @@
                                         </c:if>
                                         <img src="${pageContext.request.contextPath}${avatarUrl}" alt="Ảnh đại diện" id="avatarPreview">
                                     </div>
-                                    
+
                                     <h2 class="employee-name-title">${employee.lastName} ${employee.middleName} ${employee.firstName}</h2>
                                     <p class="employee-code-title">Mã NV: ${employee.employeeCode}</p>
-                                    
+
                                     <input type="file" name="avatar" id="avatarUpload" hidden accept="image/*">
                                     <button type="button" class="btn btn-secondary" id="btnChooseAvatar">Thay đổi ảnh</button>
                                 </div>
@@ -88,7 +88,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     <div class="info-card">
                                         <h3 class="info-card-title">Thông tin định danh & Liên hệ</h3>
                                         <div class="info-grid">
@@ -137,7 +137,7 @@
                             </div>
 
                             <footer class="page-actions-footer">
-                                <a href="${pageContext.request.contextPath}/viewEmployee?id=${employee.id}" class="btn btn-secondary" role="button">Hủy</a>
+                                <a href="${pageContext.request.contextPath}/employee?action=view&id=${employee.id}" class="btn btn-secondary" role="button">Hủy</a>
                                 <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
                             </footer>
                         </form>

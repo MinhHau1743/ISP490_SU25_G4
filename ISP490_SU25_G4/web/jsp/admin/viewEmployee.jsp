@@ -174,16 +174,16 @@
                             </div>
                         </div>
                     </c:if>
-                   
+
 
                     <c:if test="${empty employee}">
                         <p>Không tìm thấy thông tin nhân viên.</p>
                     </c:if>
                 </section>
-               
+
                 <footer class="page-actions-footer">
-                    <button type="button" class="btn btn-secondary" onclick="window.location.href = '${pageContext.request.contextPath}/listEmployee'">Quay lại danh sách</button>
-                    <a href="${pageContext.request.contextPath}/editEmployee?id=${employee.id}" class="btn btn-primary" role="button">Sửa thông tin</a>
+                    <button type="button" class="btn btn-secondary" onclick="window.location.href = '${pageContext.request.contextPath}/employee?action=list'">Quay lại danh sách</button>
+                    <a href="${pageContext.request.contextPath}/employee?action=edit&id=${employee.id}" class="btn btn-primary" role="button">Sửa thông tin</a>
                 </footer>
             </main>
         </div>

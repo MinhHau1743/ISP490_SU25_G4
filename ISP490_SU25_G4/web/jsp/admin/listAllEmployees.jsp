@@ -272,14 +272,15 @@
 
                 <section class="content-body">
                     <div class="table-toolbar">
-                        <form action="${pageContext.request.contextPath}/listEmployee" method="get" class="search-form">
+                        <form action="${pageContext.request.contextPath}/employee" method="get" class="search-form">
+                            <input type="hidden" name="action" value="list">
                             <div class="search-bar">
                                 <i data-feather="search"></i>
                                 <input type="text" name="searchQuery" placeholder="Tìm theo tên hoặc mã NV..." value="${searchQuery}">
                             </div>
                             <button type="submit" class="btn btn-search">Tìm kiếm</button>
                         </form>
-                        <a href="${pageContext.request.contextPath}/addEmployee" class="btn btn-primary">
+                        <a href="${pageContext.request.contextPath}/employee?action=add" class="btn btn-primary">
                             <i data-feather="plus"></i>
                             <span>Thêm nhân viên</span>
                         </a>
@@ -338,7 +339,7 @@
                                 <div class="card-actions">
                                     <c:choose>
                                         <c:when test="${user.roleName == 'Admin'}">
-                                            <a href="${pageContext.request.contextPath}/viewEmployee?id=${user.id}" class="action-btn" title="Xem chi tiết">
+                                            <a href="${pageContext.request.contextPath}/employee?action=view&id=${user.id}" class="action-btn" title="Xem chi tiết">
                                                 <i data-feather="eye"></i>
                                             </a>
                                         </c:when>
@@ -346,17 +347,17 @@
                                             <c:choose>
                                                 <c:when test="${user.isDeleted == 1}">
                                                     <a href="javascript:void(0);"
-                                                       onclick="showReactivateConfirm('${pageContext.request.contextPath}/updateStatus?id=${user.id}&status=0&page=${currentPage}&searchQuery=${searchQuery}', '${user.lastName} ${user.middleName} ${user.firstName}')"
+                                                       onclick="showReactivateConfirm('${pageContext.request.contextPath}/employee?action=updateStatus&id=${user.id}&status=0&page=${currentPage}&searchQuery=${searchQuery}', '${user.lastName} ${user.middleName} ${user.firstName}')"
                                                        class="status-badge status-inactive" title="Kích hoạt lại">
                                                         <i data-feather="toggle-right"></i>
                                                         <span>Vô hiệu hóa</span>
                                                     </a>
                                                 </c:when>
                                                 <c:otherwise>
-                                                    <a href="${pageContext.request.contextPath}/viewEmployee?id=${user.id}" class="action-btn" title="Xem chi tiết"><i data-feather="eye"></i></a>
-                                                    <a href="${pageContext.request.contextPath}/editEmployee?id=${user.id}" class="action-btn" title="Sửa"><i data-feather="edit-2"></i></a>
+                                                    <a href="${pageContext.request.contextPath}/employee?action=view&id=${user.id}" class="action-btn" title="Xem chi tiết"><i data-feather="eye"></i></a>
+                                                    <a href="${pageContext.request.contextPath}/employee?action=edit&id=${user.id}" class="action-btn" title="Sửa"><i data-feather="edit-2"></i></a>
                                                     <a href="javascript:void(0);"
-                                                       onclick="showDeactivateConfirm('${pageContext.request.contextPath}/updateStatus?id=${user.id}&status=1&page=${currentPage}&searchQuery=${searchQuery}', '${user.lastName} ${user.middleName} ${user.firstName}')"
+                                                       onclick="showDeactivateConfirm('${pageContext.request.contextPath}/employee?action=updateStatus&id=${user.id}&status=1&page=${currentPage}&searchQuery=${searchQuery}', '${user.lastName} ${user.middleName} ${user.firstName}')"
                                                        class="status-badge status-active" title="Vô hiệu hóa">
                                                         <i data-feather="toggle-left"></i>
                                                         <span>Hoạt động</span>
