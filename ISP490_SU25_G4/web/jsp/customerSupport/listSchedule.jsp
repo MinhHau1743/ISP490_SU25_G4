@@ -43,6 +43,7 @@
             /* Điều chỉnh chiều rộng menu nếu cần */
             .main-content-body {
                 padding: 24px;
+
             }
 
             /* File: /css/style.css */
@@ -1062,6 +1063,27 @@
             .date-range:hover {
                 color: #007bff; /* Thay đổi màu khi di chuột qua */
             }
+            .event-status.badge {
+                font-weight: 500;
+                border-radius: 16px;
+                font-size: 13px;
+            }
+            .badge-upcoming {
+                background: #17a2b8;
+                color: #fff;
+            }
+            .badge-inprogress {
+                background: #ffc107;
+                color: #212529;
+            }
+            .badge-completed {
+                background: #28a745;
+                color: #fff;
+            }
+            .badge-cancelled {
+                background: #dc3545;
+                color: #fff;
+            }
 
         </style>
     </head>
@@ -1300,8 +1322,11 @@
                                 </div>
 
                                 <div class="event-info">
-                                    <i class="bi bi-activity" aria-label="Status Icon"></i> Status:  <span class="event-status"></span>
+                                    <i class="bi bi-activity" aria-label="Status Icon"></i> 
+                                    <span class="event-label">Trạng thái:</span>
+                                    <span class="event-status badge px-2 py-1" style="font-size: 13px;"></span>
                                 </div>
+
                                 <div class="event-info">
                                     <!-- Differentiated: Upload icon for Created At -->
                                     <i class="bi bi-upload" aria-label="Created At Icon"></i>Created at:  <span class="event-created-at"></span>
@@ -1341,60 +1366,6 @@
             feather.replace();
             let draggingEvent = null;
             let lastSlot = null;
-            document.querySelectorAll('.event').forEach(ev => {
-            ev.addEventListener('dragstart', function (e) {
-            draggingEvent = ev;
-            setTimeout(() => {
-            ev.style.opacity = '0.5';
-            }, 0);
-            });
-            ev.addEventListener('dragend', function (e) {
-            draggingEvent = null;
-            if (lastSlot)
-                    lastSlot.classList.remove('slot-active');
-            ev.style.opacity = '1';
-            lastSlot = null;
-            });
-            });
-            function bindSlotDnD(slot) {
-            slot.addEventListener('dragover', function (e) {
-            e.preventDefault();
-            if (!draggingEvent) return;
-            // Dọn các bản sao cùng id (chừa element đang kéo)
-            let allDups = document.querySelectorAll('.event[id="' + draggingEvent.id + '"]');
-            allDups.forEach(ev => {
-            if (ev !== draggingEvent) {
-            ev.parentElement && ev.parentElement.removeChild(ev);
-            }
-            });
-            // Move vào slot hiện tại
-            if (draggingEvent.parentElement !== slot) {
-            slot.appendChild(draggingEvent);
-            }
-
-            // Highlight slot
-            if (lastSlot && lastSlot !== slot) lastSlot.classList.remove('slot-active');
-            slot.classList.add('slot-active');
-            lastSlot = slot;
-            });
-            slot.addEventListener('dragleave', function () {
-            if (lastSlot === slot) {
-            slot.classList.remove('slot-active');
-            lastSlot = null;
-            }
-            });
-            slot.addEventListener('drop', function (e) {
-            e.preventDefault();
-            if (!draggingEvent) return;
-            slot.classList.remove('slot-active');
-            draggingEvent.style.opacity = '1';
-            draggingEvent = null;
-            lastSlot = null;
-            // phần còn lại làm trong hàm drop(e) gốc của bạn
-            drop(e);
-            });
-            }
-
             document.querySelectorAll('.time-slot, .all-day-slot').forEach(bindSlotDnD);
             document.addEventListener('DOMContentLoaded', () => {
             const weekNav = document.querySelector('.week-nav');
@@ -1497,33 +1468,75 @@
             }
             }
 
+
+
+            // ========== IMPROVED AUTO-SCROLL FUNCTIONS ==========
+
+// Khởi tạo auto-scroll với tốc độ nhanh hơn
+            function startAutoScroll() {
+            scrollContainer = document.querySelector('.calendar-left');
+            if (!scrollContainer) return;
+            if (!scrollInterval) {
+            scrollInterval = setInterval(() => {
+            if (scrollSpeed !== 0) {
+            scrollContainer.scrollTop += scrollSpeed;
+            }
+            }, 10); // Giảm interval xuống 10ms để mượt hơn
+            }
+            }
+
+// Cập nhật hướng cuộn dựa trên vị trí chuột
             function updateScrollDirection(ev) {
-            if (!scrollContainer)
-                    return;
+            if (!scrollContainer) return;
+            lastMouseY = ev.clientY;
             const rect = scrollContainer.getBoundingClientRect();
-            const edgeSize = 50;
-            const maxSpeed = 20;
-            const distTop = ev.clientY - rect.top;
-            const distBottom = rect.bottom - ev.clientY;
-            if (distTop < edgeSize) {
-            scrollSpeed = - Math.round(maxSpeed * (1 - distTop / edgeSize));
-            } else if (distBottom < edgeSize) {
-            scrollSpeed = Math.round(maxSpeed * (1 - distBottom / edgeSize));
-            } else {
+            const edgeSize = 80; // Tăng vùng edge lên 80px
+            const maxSpeed = 15; // Tốc độ cuộn tối đa
+            const minSpeed = 3; // Tốc độ cuộn tối thiểu
+
+            const distFromTop = ev.clientY - rect.top;
+            const distFromBottom = rect.bottom - ev.clientY;
+            // Kiểm tra nếu chuột ở gần edge trên
+            if (distFromTop < edgeSize && distFromTop >= 0) {
+            const intensity = 1 - (distFromTop / edgeSize);
+            scrollSpeed = - Math.max(minSpeed, maxSpeed * intensity);
+            }
+            // Kiểm tra nếu chuột ở gần edge dưới
+            else if (distFromBottom < edgeSize && distFromBottom >= 0) {
+            const intensity = 1 - (distFromBottom / edgeSize);
+            scrollSpeed = Math.max(minSpeed, maxSpeed * intensity);
+            }
+            // Kiểm tra nếu chuột ra ngoài container (trên hoặc dưới)
+            else if (ev.clientY < rect.top) {
+            // Chuột ở trên container
+            const distanceAbove = rect.top - ev.clientY;
+            const intensity = Math.min(1, distanceAbove / 100); // Tăng tốc độ khi ra xa hơn
+            scrollSpeed = - Math.max(minSpeed, maxSpeed * intensity);
+            }
+            else if (ev.clientY > rect.bottom) {
+            // Chuột ở dưới container
+            const distanceBelow = ev.clientY - rect.bottom;
+            const intensity = Math.min(1, distanceBelow / 100); // Tăng tốc độ khi ra xa hơn
+            scrollSpeed = Math.max(minSpeed, maxSpeed * intensity);
+            }
+            else {
+            // Chuột ở giữa, không cần cuộn
             scrollSpeed = 0;
             }
             }
 
+// Dừng auto-scroll và làm sạch event listeners
             function stopAutoScroll() {
             scrollSpeed = 0;
             if (scrollInterval) {
             clearInterval(scrollInterval);
             scrollInterval = null;
             }
-            document.removeEventListener('mousemove', updateScrollDirection);
+            document.removeEventListener('dragover', updateScrollDirection);
             document.removeEventListener('dragend', stopAutoScroll);
             document.removeEventListener('drop', stopAutoScroll);
             }
+
 
             function parseTime(timeStr) {
             if (!timeStr)
@@ -1544,15 +1557,88 @@
                 return date.toISOString().split('T')[0];
                 }
 
+
+// ========== DRAG AND DROP FUNCTIONS ==========
+
+// Initialize drag and drop events
+                document.querySelectorAll('.event').forEach(ev => {
+                ev.addEventListener('dragstart', function (e) {
+                draggingEvent = ev;
+                setTimeout(() => {
+                ev.style.opacity = '0.5';
+                }, 0);
+                });
+                ev.addEventListener('dragend', function (e) {
+                draggingEvent = null;
+                if (lastSlot) lastSlot.classList.remove('slot-active');
+                ev.style.opacity = '1';
+                lastSlot = null;
+                // Clean up is-other-event class
+                document.querySelectorAll('.event').forEach(event => {
+                event.classList.remove('is-other-event');
+                });
+                setTimeout(() => isInteracting = false, 0);
+                stopAutoScroll();
+                });
+                });
+                function bindSlotDnD(slot) {
+                slot.addEventListener('dragover', function (e) {
+                e.preventDefault();
+                if (!draggingEvent) return;
+                // Dọn các bản sao cùng id (chừa element đang kéo)
+                let allDups = document.querySelectorAll('.event[id="' + draggingEvent.id + '"]');
+                allDups.forEach(ev => {
+                if (ev !== draggingEvent) {
+                ev.parentElement && ev.parentElement.removeChild(ev);
+                }
+                });
+                // Move vào slot hiện tại
+                if (draggingEvent.parentElement !== slot) {
+                slot.appendChild(draggingEvent);
+                }
+
+                // Highlight slot
+                if (lastSlot && lastSlot !== slot) lastSlot.classList.remove('slot-active');
+                slot.classList.add('slot-active');
+                lastSlot = slot;
+                // Update scroll direction for auto-scroll
+                if (isInteracting) {
+                updateScrollDirection(e);
+                }
+                });
+                slot.addEventListener('dragleave', function () {
+                if (lastSlot === slot) {
+                slot.classList.remove('slot-active');
+                lastSlot = null;
+                }
+                });
+                slot.addEventListener('drop', function (e) {
+                e.preventDefault();
+                if (!draggingEvent) return;
+                slot.classList.remove('slot-active');
+                draggingEvent.style.opacity = '1';
+                draggingEvent = null;
+                lastSlot = null;
+                // Stop auto-scroll immediately
+                stopAutoScroll();
+                // Call the main drop function
+                drop(e);
+                });
+                }
+
+                document.querySelectorAll('.time-slot, .all-day-slot').forEach(bindSlotDnD);
+// Improved drag function
                 function drag(ev) {
                 ev.dataTransfer.setData("text/plain", ev.target.id);
                 ev.dataTransfer.effectAllowed = "move";
                 isInteracting = true;
-                // Bắt đầu tự động cuộn
+                // Start auto-scroll
                 startAutoScroll();
+                // Listen for mouse movement to update scroll speed
                 document.addEventListener('dragover', updateScrollDirection);
                 document.addEventListener('dragend', stopAutoScroll);
-                // Tạm vô hiệu các event khác để tránh bắt nhầm
+                document.addEventListener('drop', stopAutoScroll);
+                // Disable other events to avoid conflicts
                 const draggedId = ev.target.id;
                 document.querySelectorAll('.event').forEach(event => {
                 if (event.id !== draggedId) {
@@ -1561,16 +1647,26 @@
                 });
                 }
 
-
+// Improved allowDrop function
                 function allowDrop(ev) {
                 ev.preventDefault();
+                if (isInteracting) {
+                updateScrollDirection(ev);
+                }
                 }
 
+// Main drop function with auto-scroll cleanup
                 function drop(ev) {
                 ev.preventDefault();
+                // Stop auto-scroll immediately
+                stopAutoScroll();
                 const data = ev.dataTransfer.getData("text");
                 let eventElement = document.getElementById(data);
                 if (!eventElement) return;
+                // Clean up is-other-event class
+                document.querySelectorAll('.event').forEach(event => {
+                event.classList.remove('is-other-event');
+                });
                 // Xoá bản sao dư nếu có
                 document.querySelectorAll('#' + CSS.escape(data)).forEach((el) => {
                 if (el !== eventElement && el.parentNode) {
@@ -1663,13 +1759,13 @@
                 scheduleToUpdate.endDate = newEndDate || "";
                 scheduleToUpdate.updatedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
                 }
-
                 } else {
                 // All-day
                 const eventTimeElement = eventElement.querySelector('.event-time');
                 if (eventTimeElement) {
                 eventTimeElement.textContent = 'Cả ngày';
                 }
+
                 if (scheduleToUpdate) {
                 scheduleToUpdate.scheduledDate = newScheduledDate;
                 scheduleToUpdate.startTime = null;
@@ -1693,51 +1789,10 @@
                 if (updatedSchedule) showDetails(eventElement, updatedSchedule);
                 }
 
-                stopAutoScroll();
                 setTimeout(setRightHalfForMiddleEvents, 0);
                 }
 
-                // Các hàm phụ cho kéo thả
-                function startAutoScroll() {
-                scrollContainer = document.querySelector('.calendar-left');
-                if (!scrollContainer || scrollInterval)
-                        return;
-                scrollInterval = setInterval(() => {
-                if (scrollSpeed !== 0) {
-                scrollContainer.scrollTop += scrollSpeed;
-                }
-                }, 20);
-                }
 
-                function stopAutoScroll() {
-                clearInterval(scrollInterval);
-                scrollInterval = null;
-                isInteracting = false;
-                scrollSpeed = 0;
-                document.removeEventListener('dragover', updateScrollDirection);
-                document.removeEventListener('dragend', stopAutoScroll);
-                // === SỬA LỖI: Kích hoạt lại tất cả các event ===
-                document.querySelectorAll('.event').forEach(event => {
-                event.classList.remove('is-other-event');
-                });
-                }
-
-                function updateScrollDirection(ev) {
-                if (!scrollContainer)
-                        return;
-                const rect = scrollContainer.getBoundingClientRect();
-                const edgeSize = 50;
-                const maxSpeed = 20;
-                const distTop = ev.clientY - rect.top;
-                const distBottom = rect.bottom - ev.clientY;
-                if (distTop < edgeSize) {
-                scrollSpeed = - Math.round(maxSpeed * (1 - distTop / edgeSize));
-                } else if (distBottom < edgeSize) {
-                scrollSpeed = Math.round(maxSpeed * (1 - distBottom / edgeSize));
-                } else {
-                scrollSpeed = 0;
-                }
-                }
 // Chạy khi DOM load xong:
                 document.addEventListener('DOMContentLoaded', function () {
                 });
@@ -1803,14 +1858,32 @@
                 detailsPanel.querySelector('.event-time-range').textContent = schedule.startTime ? schedule.startTime + (schedule.endTime ? ' - ' + schedule.endTime : '') : 'Cả ngày';
                 detailsPanel.querySelector('.event-location').textContent = schedule.location || 'Không xác định';
                 detailsPanel.querySelector('.event-notes').textContent = schedule.notes || 'Không có ghi chú';
-                detailsPanel.querySelector('.event-status').textContent = schedule.status || 'Không xác định';
                 detailsPanel.querySelector('.event-created-at').textContent = schedule.createdAt || 'N/A';
                 detailsPanel.querySelector('.event-updated-at').textContent = schedule.updatedAt || 'N/A';
                 // --- BẮT ĐẦU PHẦN CẬP NHẬT ĐỂ HIỂN THỊ THẺ NHÂN VIÊN ---
 
                 const assignmentsContainer = detailsPanel.querySelector('.event-assignments');
                 assignmentsContainer.innerHTML = ''; // Bắt đầu bằng việc xóa sạch nội dung cũ
-
+                const statusSpan = detailsPanel.querySelector('.event-status');
+                const statusVal = schedule.status || '';
+                let badgeClass = 'badge-secondary', statusText = statusVal;
+                if (statusVal === 'upcoming') {
+                badgeClass = 'badge-upcoming'; statusText = 'Sắp tới';
+                }
+                else if (statusVal === 'inprogress') {
+                badgeClass = 'badge-inprogress'; statusText = 'Đang thực hiện';
+                }
+                else if (statusVal === 'completed') {
+                badgeClass = 'badge-completed'; statusText = 'Hoàn thành';
+                }
+                else if (statusVal === 'cancelled') {
+                badgeClass = 'badge-cancelled'; statusText = 'Đã huỷ';
+                }
+                else if (!statusVal || statusVal === 'unknown') {
+                badgeClass = 'badge-secondary'; statusText = 'Không xác định';
+                }
+                statusSpan.className = `event-status badge px-2 py-1 ${badgeClass}`;
+                statusSpan.textContent = statusText;
                 // Hàm trợ giúp để lấy 2 chữ cái đầu của tên
                 function getInitials(name) {
                 if (!name || typeof name !== 'string' || name.trim() === '') {
@@ -2065,13 +2138,3 @@
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>
-
-
-
-
-
-
-
-
-
-
