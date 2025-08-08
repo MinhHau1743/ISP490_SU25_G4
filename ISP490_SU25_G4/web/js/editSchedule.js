@@ -83,6 +83,51 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleTimeFields();
 });
 
+document.addEventListener('DOMContentLoaded', function () {
+    // Tìm đến các phần tử cần thiết
+    const colorPalette = document.querySelector('.color-palette');
+    const hiddenColorInput = document.getElementById('color');
+
+    // Nếu không tìm thấy các phần tử thì không làm gì cả
+    if (!colorPalette || !hiddenColorInput) {
+        return;
+    }
+
+    const colorSwatches = colorPalette.querySelectorAll('.color-swatch');
+
+    // Hàm để cập nhật trạng thái "selected"
+    const updateSelection = (selectedSwatch) => {
+        // 1. Xóa class 'selected' khỏi tất cả các ô
+        colorSwatches.forEach(swatch => {
+            swatch.classList.remove('selected');
+        });
+
+        // 2. Thêm class 'selected' vào ô vừa được bấm
+        selectedSwatch.classList.add('selected');
+
+        // 3. Cập nhật giá trị cho input ẩn
+        hiddenColorInput.value = selectedSwatch.dataset.color;
+    };
+
+    // Thiết lập trạng thái ban đầu khi tải trang (quan trọng cho form edit)
+    const initialColor = hiddenColorInput.value;
+    const initialSwatch = colorPalette.querySelector(`.color-swatch[data-color="${initialColor}"]`);
+    if (initialSwatch) {
+        initialSwatch.classList.add('selected');
+    } else if (colorSwatches.length > 0) {
+        // Nếu màu ban đầu không có trong palette, chọn màu đầu tiên
+        colorSwatches[0].classList.add('selected');
+        hiddenColorInput.value = colorSwatches[0].dataset.color;
+    }
+
+    // Gán sự kiện click cho mỗi ô màu
+    colorSwatches.forEach(swatch => {
+        swatch.addEventListener('click', function () {
+            updateSelection(this);
+        });
+    });
+});
+
 function getColorByName(name) {
     // Hàm tạo màu tự sinh, kiểu Facebook/Google
     const colors = ['#1976d2', '#388e3c', '#d32f2f', '#fbc02d', '#0288d1', '#8e24aa', '#ffa726', '#43a047', '#e53935', '#3949ab'];
@@ -101,30 +146,56 @@ function getInitials(name) {
 }
 
 $(document).ready(function () {
-    // Debug dữ liệu trước
-    console.log('SCHEDULE_USERS:', window.SCHEDULE_USERS);
-    console.log('ASSIGNED_USERS:', window.ASSIGNED_USERS);
-    
+    // ====== LẤY & CHUẨN HOÁ DỮ LIỆU ======
+    console.log('SCHEDULE_USERS (raw):', window.SCHEDULE_USERS);
+    console.log('ASSIGNED_USERS (raw):', window.ASSIGNED_USERS);
+
     // Lấy dữ liệu từ window
-    var users = window.SCHEDULE_USERS || [];
-    var assignedUsers = window.ASSIGNED_USERS || [];
-    
-    // Debug dữ liệu sau khi lấy
-    console.log('users after assignment:', users);
-    console.log('assignedUsers after assignment:', assignedUsers);
-    
-    // Kiểm tra từng assignedUser
-    assignedUsers.forEach(function(user, index) {
-        console.log('assignedUser[' + index + ']:', user);
-        console.log('- id:', user.id, typeof user.id);
-        console.log('- name:', user.name, typeof user.name);
+    var users = Array.isArray(window.SCHEDULE_USERS) ? window.SCHEDULE_USERS.slice() : [];
+    var assignedUsers = Array.isArray(window.ASSIGNED_USERS) ? window.ASSIGNED_USERS.slice() : [];
+
+    // Chuẩn hoá users: ép id về string, giữ name là string an toàn
+    users = users.map(function (u) {
+        var id = u && (u.id ?? u.userId);
+        var name =
+                (u && typeof u.name === 'string' && u.name) ||
+                (u && u.fullName) ||
+                (u && u.username) ||
+                '';
+        return {id: String(id), name: String(name)};
     });
-    
-    var selectedUsers = [...assignedUsers]; // Copy dữ liệu user đã được phân công
-    
-    console.log('selectedUsers after copy:', selectedUsers);
-    
-    // Hiển thị user cũ ngay khi load
+
+    // Tạo map tra cứu nhanh theo id
+    var userById = {};
+    users.forEach(function (u) {
+        userById[u.id] = u;
+    });
+
+    // Chuẩn hoá assignedUsers: ép id về string, nếu name boolean/invalid thì map lại từ users theo id
+    // sau khi đã có `users` và userById
+    assignedUsers = assignedUsers.map(function (u) {
+        var id = String(u && (u.id ?? u.userId));
+        // Luôn ưu tiên tên từ SCHEDULE_USERS
+        if (userById[id] && userById[id].name) {
+            return {id, name: userById[id].name};
+        }
+        // fallback cuối
+        var fallback =
+                (typeof u.fullName === 'string' && u.fullName) ||
+                (typeof u.username === 'string' && u.username) ||
+                ('User ID: ' + id);
+        return {id, name: fallback};
+    });
+
+
+    // Danh sách user đã chọn lúc load trang
+    var selectedUsers = assignedUsers.slice();
+
+    console.log('users (normalized):', users);
+    console.log('assignedUsers (normalized):', assignedUsers);
+    console.log('selectedUsers (init):', selectedUsers);
+
+    // ====== KHỞI TẠO UI BAN ĐẦU ======
     updateSelectedTags();
 
     $('#userSearch').on('focus', function () {
@@ -132,17 +203,24 @@ $(document).ready(function () {
     });
 
     $('#userSearch').on('input', function () {
-        var query = $(this).val().toLowerCase();
+        var query = ($(this).val() || '').toLowerCase().trim();
         var filtered = getAvailableUsers().filter(function (user) {
-            return query === '' || user.name.toLowerCase().includes(query);
+            return query === '' || (user.name || '').toLowerCase().includes(query);
         });
         showDropdown(filtered);
     });
 
+    // ====== HÀM TIỆN ÍCH ======
+    function sameId(a, b) {
+        return String(a) === String(b);
+    }
+
     function getAvailableUsers() {
-        return users.filter(u =>
-            !selectedUsers.some(selected => selected.id === u.id)
-        );
+        return users.filter(function (u) {
+            return !selectedUsers.some(function (selected) {
+                return sameId(selected.id, u.id);
+            });
+        });
     }
 
     function showAvailableUsers() {
@@ -152,25 +230,26 @@ $(document).ready(function () {
     function showDropdown(filteredUsers) {
         var dropdown = $('#userDropdown');
         dropdown.empty();
-        
-        if (filteredUsers.length === 0) {
-            dropdown.append('<div class="dropdown-item disabled" style="color: #999;">Đã chọn hết nhân viên</div>');
+
+        if (!filteredUsers.length) {
+            dropdown.append('<div class="dropdown-item disabled" style="color:#999;">Đã chọn hết nhân viên</div>');
         } else {
             filteredUsers.forEach(function (user) {
+                var name = String(user.name || '');
                 var item = $('<div class="dropdown-item">')
                         .append(
-                                $('<span>')
-                                .addClass('tag-avatar')
-                                .css('background', getColorByName(user.name))
-                                .text(getInitials(user.name))
+                                $('<span>').addClass('tag-avatar')
+                                .css('background', getColorByName(name))
+                                .text(getInitials(name))
                                 )
-                        .append($('<span style="margin-left:8px">').text(user.name))
+                        .append($('<span style="margin-left:8px">').text(name))
                         .data('user', user)
-                        .click(function (e) {
+                        .on('click', function (e) {
                             e.preventDefault();
                             e.stopPropagation();
                             addUser($(this).data('user'));
                         });
+
                 dropdown.append(item);
             });
         }
@@ -178,10 +257,18 @@ $(document).ready(function () {
     }
 
     function addUser(user) {
-        console.log('Adding user:', user);
-        // Kiểm tra xem user đã được chọn chưa
-        if (!selectedUsers.some(selected => selected.id === user.id)) {
-            selectedUsers.push(user);
+        if (!user)
+            return;
+        var id = String(user.id ?? user.userId);
+        var name = (typeof user.name === 'string' && user.name) ? user.name : (userById[id] ? userById[id].name : ('User ID: ' + id));
+        var normalized = {id: String(id), name: String(name)};
+
+        console.log('Adding user (normalized):', normalized);
+
+        if (!selectedUsers.some(function (s) {
+            return sameId(s.id, normalized.id);
+        })) {
+            selectedUsers.push(normalized);
             updateSelectedTags();
             $('#userSearch').val('');
             setTimeout(function () {
@@ -194,92 +281,101 @@ $(document).ready(function () {
     }
 
     function removeUser(userId) {
-        console.log('Removing user with id:', userId);
+        var id = String(userId);
+        console.log('Removing user with id:', id);
         selectedUsers = selectedUsers.filter(function (user) {
-            return user.id !== userId;
+            return !sameId(user.id, id);
         });
         updateSelectedTags();
         if ($('#userDropdown').is(':visible'))
             showAvailableUsers();
     }
 
-   function updateSelectedTags() {
-    console.log('updateSelectedTags called with selectedUsers:', selectedUsers);
-    
-    var container = $('#selectedTags');
-    container.empty();
+    function resolveUserNameById(userId) {
+        var id = String(userId);
+        if (userById[id] && userById[id].name)
+            return userById[id].name;
+        return 'User ID: ' + id;
+    }
 
-    selectedUsers.forEach(function (user, index) {
-        console.log('Creating tag for user[' + index + ']:', user);
-        
-        // Xử lý trường hợp name là boolean hoặc không hợp lệ
-        var userName = user.name;
-        var userId = user.id;
-        
-        if (typeof userName === 'boolean') {
-            console.warn('user.name is boolean:', userName);
-            // Tìm user name từ SCHEDULE_USERS dựa trên ID
-            var foundUser = users.find(u => u.id === userId);
-            userName = foundUser ? foundUser.name : 'User ID: ' + userId;
-        } else if (!userName || userName === 'undefined' || userName === 'null') {
-            console.warn('user.name is invalid:', userName);
-            var foundUser = users.find(u => u.id === userId);
-            userName = foundUser ? foundUser.name : 'User ID: ' + userId;
+    function sanitizeName(name, userId) {
+        if (typeof name === 'boolean' || !name || name === 'undefined' || name === 'null') {
+            return resolveUserNameById(userId);
         }
-        
-        console.log('Final userName:', userName);
-        
-        var tag = $('<div class="tag">')
-                .append(
-                        $('<span class="tag-avatar">')
-                        .css('background', getColorByName(userName))
-                        .text(getInitials(userName))
-                        )
-                .append($('<span style="margin-left:5px">').text(userName))
-                .append(
-                        $('<span class="tag-close">').text('×').click(function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    removeUser(userId);
-                })
-                        );
-        container.append(tag);
-    });
+        return String(name);
+    }
 
-    // Xóa tất cả các input hidden cũ có name="assignedUserIds"
-    $('input[name="assignedUserIds"]').remove();
+    function updateSelectedTags() {
+        console.log('updateSelectedTags with selectedUsers:', selectedUsers);
 
-    // Tạo một input hidden cho mỗi user ID
-    var form = $('#selectedTags').closest('form');
-    selectedUsers.forEach(function (user) {
-        if (user && user.id) {
-            console.log('Creating hidden input for user.id:', user.id);
-            form.append('<input type="hidden" name="assignedUserIds" value="' + user.id + '">');
-        }
-    });
-}
+        var container = $('#selectedTags');
+        container.empty();
 
+        selectedUsers.forEach(function (user, index) {
+            var userId = String(user && (user.id ?? user.userId));
+            var userName = sanitizeName(user && user.name, userId);
 
-    // Đóng dropdown khi click bên ngoài
+            console.log('Tag[' + index + ']:', {id: userId, name: userName});
+
+            var tag = $('<div class="tag">')
+                    .append(
+                            $('<span class="tag-avatar">')
+                            .css('background', getColorByName(userName))
+                            .text(getInitials(userName))
+                            )
+                    .append($('<span style="margin-left:5px">').text(userName))
+                    .append(
+                            $('<span class="tag-close">')
+                            .text('×')
+                            .on('click', function (e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                removeUser(userId);
+                            })
+                            );
+
+            container.append(tag);
+        });
+
+        // Xoá toàn bộ hidden input cũ
+        $('input[name="assignedUserIds"]').remove();
+
+        // Tạo lại hidden input theo selectedUsers
+        var form = $('#selectedTags').closest('form');
+        selectedUsers.forEach(function (user) {
+            if (user && user.id != null) {
+                var id = String(user.id);
+                console.log('Create hidden input for:', id);
+                form.append('<input type="hidden" name="assignedUserIds" value="' + id + '">');
+            }
+        });
+    }
+
+    // Đóng dropdown khi click ngoài
     $(document).on('click', function (e) {
         if (!$(e.target).closest('.tag-input-wrapper').length) {
             $('#userDropdown').hide();
         }
     });
 
-    // Xử lý phím Enter và Esc
-    $('#userSearch').keydown(function (e) {
+    // Xử lý Enter chọn item đầu, Esc đóng
+    $('#userSearch').on('keydown', function (e) {
         var $dropdown = $('#userDropdown');
         var $items = $dropdown.find('.dropdown-item:not(.disabled)');
-        if (e.keyCode === 13) {
+        if (e.keyCode === 13) { // Enter
             e.preventDefault();
             var $firstItem = $items.first();
             if ($firstItem.length)
                 $firstItem.click();
-        } else if (e.keyCode === 27) {
+        } else if (e.keyCode === 27) { // Esc
             $dropdown.hide();
             $(this).blur();
         }
     });
+
+    // ====== GHI CHÚ ======
+    // - Yêu cầu có các hàm getColorByName(name) và getInitials(name) ở phạm vi global.
+    // - Trên server/JSP, đảm bảo window.SCHEDULE_USERS và window.ASSIGNED_USERS là JSON chuẩn.
 });
+
 

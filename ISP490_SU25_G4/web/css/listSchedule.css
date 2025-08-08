@@ -254,9 +254,7 @@ html, body {
    Thay vào đó, chúng ta sẽ cho hàng "Cả ngày" một chiều cao tối thiểu lớn hơn một chút
    để giao diện cân đối và đồng bộ với ô góc trên bên trái. */
 
-#week-view .all-day-slot {
-    min-height: 40px; /* Tăng chiều cao tối thiểu cho hàng "Cả ngày" */
-}
+
 /* Đồng bộ chiều cao ô góc trên bên trái với hàng "Cả ngày" */
 #week-view .day-header-row .day-header-cell:first-child {
     height: 40px;

@@ -249,6 +249,7 @@
                 flex-direction: column;
                 padding: 5px;
                 height: auto;
+                 z-index: 2;
             }
 
             /* All-day event container */
@@ -280,10 +281,21 @@
             #day-view .time-grid {
                 grid-template-columns: auto 1fr;
             }
+            :root{
+                --slot-h: 30px;          /* 1 time-slot cao 30 px */
+            }
+            #week-view .time-slot{
+                height: var(--slot-h);
+            }
 
             #week-view .time-grid {
                 grid-template-columns: auto repeat(7, 1fr);
                 grid-auto-rows: minmax(30px, auto);
+                display: grid;
+                grid-template-rows: repeat(48, var(--slot-h));
+            }
+            #week-view .event{
+                height: calc(var(--slot-h) * 2 - 2px);   /* trừ 2 px để khỏi đè đường kẻ */
             }
 
             /* Thêm vào cuối khối <style> của bạn */
@@ -1050,6 +1062,7 @@
             .date-range:hover {
                 color: #007bff; /* Thay đổi màu khi di chuột qua */
             }
+            
         </style>
     </head>
     <body>
@@ -1341,29 +1354,28 @@
             lastSlot = null;
             });
             });
-            document.querySelectorAll('.time-slot').forEach(slot => {
+            function bindSlotDnD(slot) {
             slot.addEventListener('dragover', function (e) {
             e.preventDefault();
-            if (!draggingEvent)
-                    return;
-            // 1. Trước khi move, tìm toàn bộ DOM có event cùng id (ngoại trừ đúng event thực tế đang kéo), remove nó khỏi DOM
+            if (!draggingEvent) return;
+            // Dọn các bản sao cùng id (chừa element đang kéo)
             let allDups = document.querySelectorAll('.event[id="' + draggingEvent.id + '"]');
             allDups.forEach(ev => {
             if (ev !== draggingEvent) {
             ev.parentElement && ev.parentElement.removeChild(ev);
             }
             });
-            // 2. Chỉ move nếu chưa ở slot này
+            // Move vào slot hiện tại
             if (draggingEvent.parentElement !== slot) {
             slot.appendChild(draggingEvent);
             }
-            // 3. Highlight
-            if (lastSlot && lastSlot !== slot)
-                    lastSlot.classList.remove('slot-active');
+
+            // Highlight slot
+            if (lastSlot && lastSlot !== slot) lastSlot.classList.remove('slot-active');
             slot.classList.add('slot-active');
             lastSlot = slot;
             });
-            slot.addEventListener('dragleave', function (e) {
+            slot.addEventListener('dragleave', function () {
             if (lastSlot === slot) {
             slot.classList.remove('slot-active');
             lastSlot = null;
@@ -1371,16 +1383,17 @@
             });
             slot.addEventListener('drop', function (e) {
             e.preventDefault();
-            if (draggingEvent) {
-            // event đã nằm đúng slot qua dragover rồi, không cần làm gì thêm
+            if (!draggingEvent) return;
             slot.classList.remove('slot-active');
             draggingEvent.style.opacity = '1';
             draggingEvent = null;
             lastSlot = null;
-            // Update backend nếu cần ở đây
+            // phần còn lại làm trong hàm drop(e) gốc của bạn
+            drop(e);
+            });
             }
-            });
-            });
+
+            document.querySelectorAll('.time-slot, .all-day-slot').forEach(bindSlotDnD);
             document.addEventListener('DOMContentLoaded', () => {
             const weekNav = document.querySelector('.week-nav');
             // Lấy view mode từ nguồn chắc chắn đúng!
@@ -1428,7 +1441,6 @@
             feather.replace();
 // Gọi AJAX tới backend khi sự kiện drop hoàn tất
             function updateEvent(scheduleId, newScheduledDate, newEndDate, newStartTime, newEndTime) {
-            // Sửa lỗi URL - thêm contextPath nếu cần
             const url = contextPath + '/updateScheduleTime';
             console.log('Updating event:', {
             id: scheduleId,
@@ -1440,35 +1452,31 @@
             $.ajax({
             url: url,
                     type: 'POST',
-                    contentType: 'application/json',
+                    contentType: 'application/json; charset=UTF-8',
+                    dataType: 'json',
                     data: JSON.stringify({
-                    id: parseInt(scheduleId), // Đảm bảo id là số
+                    id: parseInt(scheduleId, 10),
                             scheduledDate: newScheduledDate,
-                            endDate: newEndDate,
-                            startTime: newStartTime,
-                            endTime: newEndTime
+                            endDate: newEndDate || null,
+                            startTime: newStartTime || null,
+                            endTime: newEndTime || null  // BE sẽ tự tính nếu null & có startTime
                     }),
                     success: function (response) {
                     console.log('Update successful:', response);
                     showToast('Cập nhật lịch trình thành công!', 'success');
-                    // Có thể reload trang hoặc cập nhật UI
-                    setTimeout(() => {
-                    location.reload();
-                    }, 1500);
+                    // Nếu muốn mượt: có thể cập nhật UI theo response.payload thay vì reload
+                    setTimeout(() => { location.reload(); }, 800);
                     },
-                    error: function (xhr, status, error) {
-                    console.error('Update failed:', xhr.responseText);
+                    error: function (xhr) {
+                    console.error('Update failed:', {status: xhr.status, text: xhr.responseText});
                     let errorMessage = 'Có lỗi khi cập nhật lịch trình!';
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMessage = xhr.responseJSON.message;
-                    } else if (xhr.statusText) {
-                    errorMessage += ' ' + xhr.statusText;
-                    }
-
+                    if (xhr.responseJSON && xhr.responseJSON.message) errorMessage = xhr.responseJSON.message;
+                    else if (xhr.statusText) errorMessage += ' ' + xhr.statusText;
                     showToast(errorMessage, 'error');
                     }
             });
             }
+
 
             let isInteracting = false;
             let scrollSpeed = 0;
@@ -1542,7 +1550,7 @@
                 startAutoScroll();
                 document.addEventListener('dragover', updateScrollDirection);
                 document.addEventListener('dragend', stopAutoScroll);
-                // === SỬA LỖI: Tạm thời vô hiệu hóa các event khác ===
+                // Tạm vô hiệu các event khác để tránh bắt nhầm
                 const draggedId = ev.target.id;
                 document.querySelectorAll('.event').forEach(event => {
                 if (event.id !== draggedId) {
@@ -1550,6 +1558,7 @@
                 }
                 });
                 }
+
 
                 function allowDrop(ev) {
                 ev.preventDefault();
@@ -1559,27 +1568,27 @@
                 ev.preventDefault();
                 const data = ev.dataTransfer.getData("text");
                 let eventElement = document.getElementById(data);
-                if (!eventElement)
-                        return;
-                // Ngăn bug nhân bản
+                if (!eventElement) return;
+                // Xoá bản sao dư nếu có
                 document.querySelectorAll('#' + CSS.escape(data)).forEach((el) => {
                 if (el !== eventElement && el.parentNode) {
                 el.parentNode.removeChild(el);
                 }
                 });
+                // Xác định slot mục tiêu
                 let slot = ev.target.closest('.time-slot, .all-day-slot, .all-day-event-container, .month-day');
-                if (!slot)
-                        return;
-                // Di chuyển event vào slot mới
+                if (!slot) return;
+                // Chuyển DOM sang slot mới
                 if (eventElement.parentNode) {
                 eventElement.parentNode.removeChild(eventElement);
                 }
                 slot.appendChild(eventElement);
                 const scheduleId = eventElement.id.split('-')[1];
                 let newScheduledDate = null, newEndDate = null, newStartTime = null, newEndTime = null;
-                // --- Tính toán ngày giờ mới dựa trên vị trí thả ---
+                // --- Tính ngày / giờ mới dựa trên loại slot ---
                 const view = slot.closest('.calendar-view').id;
                 if (slot.classList.contains('all-day-event-container') && view === 'week-view') {
+                // Hàng all-day dạng grid 7 cột
                 const rect = slot.getBoundingClientRect();
                 const dayWidth = rect.width / 7;
                 const x = ev.clientX - rect.left;
@@ -1588,66 +1597,73 @@
                 eventElement.style.gridColumn = `${startCol} / span 1`;
                 newScheduledDate = weekDates[startCol - 1];
                 newStartTime = null;
-                eventElement.dataset.date = newScheduledDate;
-                } else if (slot.classList.contains('time-slot') && !slot.classList.contains('all-day-slot')) {
-                newScheduledDate = slot.dataset.date;
-                newStartTime = slot.dataset.startTime;
-                } else {
+                // ✅ Chuẩn hoá CSS: all-day
+                if (!eventElement.classList.contains('all-day')) eventElement.classList.add('all-day');
+                } else if (slot.classList.contains('all-day-slot')) {
+                // All-day trong day/week view dạng slot riêng
                 newScheduledDate = slot.dataset.date;
                 newStartTime = null;
+                // ✅ Chuẩn hoá CSS: all-day
+                if (!eventElement.classList.contains('all-day')) eventElement.classList.add('all-day');
+                } else if (slot.classList.contains('time-slot') && !slot.classList.contains('all-day-slot')) {
+                // Slot giờ
+                newScheduledDate = slot.dataset.date;
+                newStartTime = slot.dataset.startTime;
+                // ✅ Bỏ class all-day nếu đang có
+                eventElement.classList.remove('all-day');
+                } else {
+                // Fallback: có date nhưng không xác định cụ thể
+                newScheduledDate = slot.dataset.date || newScheduledDate;
+                newStartTime = null;
+                eventElement.classList.add('all-day');
                 }
 
-                // Cập nhật UI và đối tượng schedule
+                // --- Cập nhật UI / model ---
                 const scheduleToUpdate = schedules.find(s => s.id == scheduleId);
                 if (newStartTime) {
-                // 1. Cập nhật time range
+                // Nếu có giờ, tính endTime tạm để hiển thị, còn BE sẽ chốt lại (2 slot)
                 let durationMinutes = 0;
                 if (scheduleToUpdate && scheduleToUpdate.startTime && scheduleToUpdate.endTime) {
-                // duration cũ
                 const [sh, sm] = scheduleToUpdate.startTime.split(':').map(Number);
                 const [eh, em] = scheduleToUpdate.endTime.split(':').map(Number);
                 durationMinutes = (eh * 60 + em) - (sh * 60 + sm);
                 } else {
-                durationMinutes = 30;
+                durationMinutes = 30; // hiển thị tạm; BE sẽ trả về chính xác sau
                 }
-                // Tính endTime mới
+
                 let [nh, nm] = newStartTime.split(':').map(Number);
                 let newEndTotalMin = nh * 60 + nm + durationMinutes;
                 let newEndH = Math.floor(newEndTotalMin / 60) % 24;
                 let newEndM = newEndTotalMin % 60;
                 newEndTime = ("0" + newEndH).slice( - 2) + ":" + ("0" + newEndM).slice( - 2);
-                // 2. Nếu kéo giữa các ngày (multi-day event), cập nhật endDate luôn nếu cần (bằng JS, lấy chênh lệch ngày cũ nếu có)
-                if (scheduleToUpdate && scheduleToUpdate.scheduledDate && scheduleToUpdate.endDate) {
-                // Lấy số ngày (durationDate) cũ
+                const eventTimeElement = eventElement.querySelector('.event-time');
+                if (eventTimeElement) {
+                eventTimeElement.textContent = newStartTime + " - " + newEndTime;
+                }
+
+                if (scheduleToUpdate) {
+                scheduleToUpdate.scheduledDate = newScheduledDate;
+                scheduleToUpdate.startTime = newStartTime;
+                scheduleToUpdate.endTime = newEndTime;
+                // Nếu trước đó có multi-day thì ước lượng endDate theo chênh lệch cũ
+                if (scheduleToUpdate.scheduledDate && scheduleToUpdate.endDate) {
                 let date1 = new Date(scheduleToUpdate.scheduledDate);
                 let date2 = new Date(scheduleToUpdate.endDate);
                 let durationDate = Math.round((date2 - date1) / (24 * 60 * 60 * 1000));
                 if (durationDate > 0) {
                 let slotDate = new Date(newScheduledDate);
                 slotDate.setDate(slotDate.getDate() + durationDate);
-                // Format lại yyyy-mm-dd
                 newEndDate = slotDate.toISOString().split('T')[0];
                 }
+                } else {
+                newEndDate = null;
                 }
-
-                // Cập nhật UI event
-                const eventTimeElement = eventElement.querySelector('.event-time');
-                if (eventTimeElement) {
-                eventTimeElement.textContent = newStartTime + " - " + newEndTime;
-                }
-
-                // Cập nhật lại object schedule
-                if (scheduleToUpdate) {
-                scheduleToUpdate.scheduledDate = newScheduledDate;
-                scheduleToUpdate.startTime = newStartTime;
-                scheduleToUpdate.endTime = newEndTime;
-                if (newEndDate)
-                        scheduleToUpdate.endDate = newEndDate;
-                else
-                        scheduleToUpdate.endDate = "";
+                scheduleToUpdate.endDate = newEndDate || "";
                 scheduleToUpdate.updatedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
                 }
+
                 } else {
+                // All-day
                 const eventTimeElement = eventElement.querySelector('.event-time');
                 if (eventTimeElement) {
                 eventTimeElement.textContent = 'Cả ngày';
@@ -1661,25 +1677,24 @@
                 }
                 }
 
-                // Gửi AJAX server
+                // --- Gọi AJAX: để BE tự tính endTime = startTime + 2 slot ---
                 if (typeof updateEvent === "function" && scheduleId && newScheduledDate) {
-                updateEvent(scheduleId, newScheduledDate, newEndDate, newStartTime, null); // endTime null để backend tự xử lý duration
+                // ✅ Truyền endTime = null → backend tự cộng 2 slot
+                updateEvent(scheduleId, newScheduledDate, newEndDate, newStartTime, null);
                 }
 
-                // Update detail panel nếu đang mở
+                // Nếu panel chi tiết đang mở, làm mới
                 const detailsPanel = document.getElementById('event-details-panel');
-                if (
-                        detailsPanel && detailsPanel.classList.contains('show') &&
-                        detailsPanel.querySelector('.event-id').textContent == scheduleId
-                        ) {
+                if (detailsPanel && detailsPanel.classList.contains('show') &&
+                        detailsPanel.querySelector('.event-id').textContent == scheduleId) {
                 const updatedSchedule = schedules.find(s => s.id == scheduleId);
-                if (updatedSchedule)
-                        showDetails(eventElement, updatedSchedule);
+                if (updatedSchedule) showDetails(eventElement, updatedSchedule);
                 }
 
                 stopAutoScroll();
                 setTimeout(setRightHalfForMiddleEvents, 0);
                 }
+
                 // Các hàm phụ cho kéo thả
                 function startAutoScroll() {
                 scrollContainer = document.querySelector('.calendar-left');

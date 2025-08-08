@@ -169,6 +169,7 @@
 
         <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
         <script src="https://unpkg.com/feather-icons"></script>
+        <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
         <script>
             window.PRESELECTED_ADDRESS = {
                 provinceId: '${param.province != null ? param.province : schedule.provinceId}',
@@ -176,21 +177,25 @@
                 wardId: '${param.ward != null ? param.ward : schedule.wardId}'
             };
             window.ADDR_CONTEXT_PATH = '${pageContext.request.contextPath}';
-
             // Tất cả users có thể chọn
-            window.SCHEDULE_USERS = [
-            <c:forEach var="u" items="${assignments}" varStatus="status">
-            {id: '${u.id}', name: '${u.fullName}'}<c:if test="${!status.last}">,</c:if>
+            // Tạo dữ liệu an toàn
+            window.SCHEDULE_USERS = [];
+            <c:forEach var="u" items="${assignments}">
+            window.SCHEDULE_USERS.push({
+                id: '${u.id}',
+                name: '<c:out value="${u.fullName}"/>'
+            });
             </c:forEach>
-            ];
 
-            // Users đã được phân công (từ assignedUserMap)
-            window.ASSIGNED_USERS = [
-            <c:forEach var="entry" items="${assignedUserMap}" varStatus="status">
-            {id: '${entry.key}', name: '${entry.value}'}<c:if test="${!status.last}">,</c:if>
+            window.ASSIGNED_USERS = [];
+            <c:forEach var="entry" items="${assignedUserMap}">
+            window.ASSIGNED_USERS.push({
+                id: '${entry.key}',
+                name: '<c:out value="${entry.value}"/>'
+            });
             </c:forEach>
-            ];
         </script>
+
 
 
         <script src="${pageContext.request.contextPath}/js/addressHandler.js"></script>

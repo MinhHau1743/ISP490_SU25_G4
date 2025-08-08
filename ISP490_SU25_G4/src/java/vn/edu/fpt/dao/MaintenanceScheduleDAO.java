@@ -15,6 +15,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import vn.edu.fpt.model.Address;
+import java.sql.Types;
 
 public class MaintenanceScheduleDAO extends DBContext {
 
@@ -48,75 +49,50 @@ public class MaintenanceScheduleDAO extends DBContext {
         return schedules;
     }
 
-    public boolean updateScheduleByDragDrop(
-            int id,
-            LocalDate newStartDate,
-            LocalDate newEndDate, // Thường là null khi chỉ kéo, chúng ta sẽ tính lại
-            LocalTime newStartTime,
-            LocalTime newEndTime // Thường là null khi chỉ kéo, chúng ta sẽ tính lại
-    ) {
-        // Câu lệnh SQL để lấy thông tin cũ của sự kiện
-        String getOldScheduleSql = "SELECT scheduled_date, end_date, start_time, end_time FROM MaintenanceSchedules WHERE id = ?";
+    public boolean updateScheduleByDragDrop(int id, LocalDate scheduledDate, LocalDate endDate, LocalTime startTime, LocalTime endTime) {
+    // Chỉ cần MỘT câu lệnh UPDATE
+    String sql = "UPDATE MaintenanceSchedules SET scheduled_date = ?, end_date = ?, start_time = ?, end_time = ?, updated_at = NOW() WHERE id = ?";
+    
+    // Sử dụng try-with-resources để quản lý tài nguyên
+    try (Connection conn = DBContext.getConnection(); // Thay thế bằng cách lấy connection của bạn
+         PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-        // Câu lệnh SQL để cập nhật sự kiện
-        String updateScheduleSql = "UPDATE MaintenanceSchedules SET scheduled_date = ?, end_date = ?, start_time = ?, end_time = ?, updated_at = NOW() WHERE id = ?";
+        // 1. Set scheduled_date (bắt buộc)
+        pstmt.setObject(1, scheduledDate);
 
-        try (Connection conn = DBContext.getConnection(); PreparedStatement psGet = conn.prepareStatement(getOldScheduleSql)) {
-
-            psGet.setInt(1, id);
-            try (ResultSet rs = psGet.executeQuery()) {
-                if (rs.next()) {
-                    // Lấy ngày và giờ cũ từ cơ sở dữ liệu
-                    LocalDate oldStartDate = rs.getObject("scheduled_date", LocalDate.class);
-                    LocalDate oldEndDate = rs.getObject("end_date", LocalDate.class);
-                    LocalTime oldStartTime = rs.getObject("start_time", LocalTime.class);
-                    LocalTime oldEndTime = rs.getObject("end_time", LocalTime.class);
-
-                    // --- TÍNH TOÁN NGÀY/GIỜ KẾT THÚC MỚI ---
-                    // 1. Tính khoảng thời gian (duration) của sự kiện cũ
-                    // Nếu là sự kiện cả ngày (all-day)
-                    if (oldStartTime == null && oldEndTime == null) {
-                        if (oldEndDate != null) {
-                            long dayDuration = ChronoUnit.DAYS.between(oldStartDate, oldEndDate);
-                            newEndDate = newStartDate.plusDays(dayDuration);
-                        } else {
-                            newEndDate = newStartDate; // Sự kiện kéo dài 1 ngày
-                        }
-                        // Giữ nguyên start/end time là null
-                        newStartTime = null;
-                        newEndTime = null;
-                    } // Nếu là sự kiện có giờ cụ thể
-                    else {
-                        if (oldEndTime != null) {
-                            Duration timeDuration = Duration.between(oldStartTime, oldEndTime);
-                            newEndTime = newStartTime.plus(timeDuration);
-                        } else {
-                            newEndTime = newStartTime.plusHours(1); // Mặc định 1 giờ nếu không có end_time
-                        }
-                        // Nếu ngày kết thúc không được cung cấp, giả định là cùng ngày
-                        if (newEndDate == null) {
-                            newEndDate = newStartDate;
-                        }
-                    }
-
-                    // --- THỰC HIỆN CẬP NHẬT ---
-                    try (PreparedStatement psUpdate = conn.prepareStatement(updateScheduleSql)) {
-                        psUpdate.setObject(1, newStartDate);
-                        psUpdate.setObject(2, newEndDate);
-                        psUpdate.setObject(3, newStartTime);
-                        psUpdate.setObject(4, newEndTime);
-                        psUpdate.setInt(5, id);
-
-                        int affectedRows = psUpdate.executeUpdate();
-                        return affectedRows > 0;
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        // 2. Set endDate (có thể null)
+        if (endDate != null) {
+            pstmt.setObject(2, endDate);
+        } else {
+            pstmt.setNull(2, Types.DATE); // Dùng setNull để đảm bảo CSDL nhận giá trị NULL
         }
+
+        // 3. Set startTime (có thể null)
+        if (startTime != null) {
+            pstmt.setObject(3, startTime);
+        } else {
+            pstmt.setNull(3, Types.TIME); // Rất quan trọng khi chuyển sang "Cả ngày"
+        }
+
+        // 4. Set endTime (có thể null)
+        if (endTime != null) {
+            pstmt.setObject(4, endTime);
+        } else {
+            pstmt.setNull(4, Types.TIME); // Rất quan trọng khi chuyển sang "Cả ngày"
+        }
+        
+        // 5. Set id cho điều kiện WHERE
+        pstmt.setInt(5, id);
+
+        // Thực thi và kiểm tra số dòng bị ảnh hưởng
+        int affectedRows = pstmt.executeUpdate();
+        return affectedRows > 0;
+
+    } catch (SQLException e) {
+        e.printStackTrace(); // Luôn ghi log lỗi để dễ dàng debug
         return false;
     }
+ }
 
     public boolean deleteMaintenanceSchedule(int scheduleId) {
         String sql = "DELETE FROM MaintenanceSchedules WHERE id = ?";

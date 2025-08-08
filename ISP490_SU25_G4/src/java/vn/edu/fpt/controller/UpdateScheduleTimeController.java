@@ -6,7 +6,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.json.JSONObject;
-import vn.edu.fpt.dao.MaintenanceScheduleDAO; // Đảm bảo import đúng DAO của bạn
+import org.json.JSONException;
+import vn.edu.fpt.dao.MaintenanceScheduleDAO;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,87 +15,133 @@ import java.io.PrintWriter;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
-import org.json.JSONException;
 
-@WebServlet(name = "updateScheduleController", urlPatterns = {"/updateScheduleTime"})
+@WebServlet(name = "UpdateScheduleTimeController", urlPatterns = {"/updateScheduleTime"})
 public class UpdateScheduleTimeController extends HttpServlet {
+
+    // Khoảng thời gian mặc định cho một sự kiện khi được kéo vào slot có giờ
+    // Ví dụ: 60 phút
+    private static final int DEFAULT_DURATION_MINUTES = 60;
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // --- 1. Thiết lập phản hồi JSON ---
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        PrintWriter out = response.getWriter();
+        // Đảm bảo đọc/ghi UTF-8
+        request.setCharacterEncoding("UTF-8");
+        response.setContentType("application/json; charset=UTF-8");
+
         JSONObject jsonResponse = new JSONObject();
 
         try {
-            // --- 2. Đọc JSON từ request body ---
+            // --- Đọc JSON từ body ---
             StringBuilder sb = new StringBuilder();
-            String line;
             try (BufferedReader reader = request.getReader()) {
+                String line;
                 while ((line = reader.readLine()) != null) {
                     sb.append(line);
                 }
             }
+
+            if (sb.length() == 0) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                jsonResponse.put("status", "error");
+                jsonResponse.put("message", "Request body trống.");
+                writeResponse(response, jsonResponse);
+                return;
+            }
+
             JSONObject jsonRequest = new JSONObject(sb.toString());
 
-            // --- 3. Lấy dữ liệu từ JSON ---
+            // --- Lấy và xác thực dữ liệu đầu vào ---
+            // ID và scheduledDate là bắt buộc
             int id = jsonRequest.getInt("id");
             LocalDate scheduledDate = LocalDate.parse(jsonRequest.getString("scheduledDate"));
-            
-            // Xử lý các giá trị có thể là null một cách an toàn hơn
+
+            // Các trường có thể là null
             LocalDate endDate = parseNullableDate(jsonRequest, "endDate");
             LocalTime startTime = parseNullableTime(jsonRequest, "startTime");
             LocalTime endTime = parseNullableTime(jsonRequest, "endTime");
 
-            // --- 4. Cập nhật vào cơ sở dữ liệu ---
+            // --- ÁP DỤNG LOGIC SERVER ---
+
+            // 1. Nếu sự kiện được kéo vào slot CÓ GIỜ (startTime có giá trị)
+            //    nhưng frontend không gửi endTime, server sẽ tự tính toán.
+            if (startTime != null && endTime == null) {
+                endTime = startTime.plusMinutes(DEFAULT_DURATION_MINUTES);
+            }
+            
+            // 2. Nếu sự kiện được kéo vào slot CẢ NGÀY, frontend sẽ gửi startTime là null.
+            //    Lúc này, logic trên sẽ không chạy, giữ nguyên startTime và endTime là null, điều này là CHÍNH XÁC.
+
+            // 3. Validate logic ngày: Nếu endDate có giá trị nhưng lại trước scheduledDate thì vô hiệu hóa nó.
+            if (endDate != null && endDate.isBefore(scheduledDate)) {
+                endDate = null;
+            }
+
+            // --- Gọi DAO để cập nhật vào CSDL ---
             MaintenanceScheduleDAO dao = new MaintenanceScheduleDAO();
             boolean success = dao.updateScheduleByDragDrop(id, scheduledDate, endDate, startTime, endTime);
 
-            // --- 5. Tạo và gửi phản hồi JSON ---
             if (success) {
+                response.setStatus(HttpServletResponse.SC_OK);
                 jsonResponse.put("status", "success");
                 jsonResponse.put("message", "Lịch trình đã được cập nhật thành công.");
-                response.setStatus(HttpServletResponse.SC_OK); // 200 OK
+                
+                // Trả về payload chứa dữ liệu đã được server chuẩn hóa.
+                // Frontend có thể dùng payload này để cập nhật lại giao diện một cách chính xác.
+                JSONObject payload = new JSONObject();
+                payload.put("id", id);
+                payload.put("scheduledDate", scheduledDate.toString());
+                payload.put("endDate", endDate != null ? endDate.toString() : JSONObject.NULL);
+                payload.put("startTime", startTime != null ? startTime.toString() : JSONObject.NULL);
+                payload.put("endTime", endTime != null ? endTime.toString() : JSONObject.NULL);
+                jsonResponse.put("payload", payload);
+                
             } else {
-                // Nếu không thành công, trả về lỗi server vì đây là một lỗi logic hoặc DB
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 jsonResponse.put("status", "error");
-                jsonResponse.put("message", "Cập nhật thất bại. Không tìm thấy lịch trình hoặc có lỗi xảy ra ở CSDL.");
-                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR); // 500 Internal Server Error
+                jsonResponse.put("message", "Cập nhật thất bại. Lịch trình không tồn tại hoặc có lỗi cơ sở dữ liệu.");
             }
 
-        } catch (JSONException | DateTimeParseException e) {
-            // Bắt lỗi khi dữ liệu JSON không hợp lệ hoặc sai định dạng ngày/giờ
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST); // Lỗi 400
-            jsonResponse.put("status", "error");
-            jsonResponse.put("message", "Dữ liệu gửi lên không hợp lệ: " + e.getMessage());
-            e.printStackTrace(); // In lỗi ra log để gỡ lỗi
-        } catch (Exception e) {
-            // Bắt các lỗi không mong muốn khác (ví dụ: lỗi kết nối CSDL trong DAO)
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR); // Lỗi 500
-            jsonResponse.put("status", "error");
-            jsonResponse.put("message", "Đã có lỗi không mong muốn xảy ra ở máy chủ.");
-            e.printStackTrace(); // Rất quan trọng: In lỗi chi tiết ra log của server
-        }
+            writeResponse(response, jsonResponse);
 
-        out.print(jsonResponse.toString());
-        out.flush();
+        } catch (JSONException | DateTimeParseException e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            writeError(response, "Dữ liệu gửi lên không hợp lệ: " + e.getMessage(), e);
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            writeError(response, "Đã có lỗi không mong muốn xảy ra ở máy chủ.", e);
+        }
     }
 
-    // --- CÁC HÀM HỖ TRỢ ĐỂ CODE GỌN HƠN ---
+    // ---------- Helper Methods ----------
     private LocalDate parseNullableDate(JSONObject json, String key) {
-        if (json.isNull(key) || json.optString(key).isEmpty()) {
-            return null;
-        }
-        return LocalDate.parse(json.getString(key));
+        if (!json.has(key) || json.isNull(key)) return null;
+        String val = json.optString(key, "").trim();
+        return val.isEmpty() ? null : LocalDate.parse(val);
     }
 
     private LocalTime parseNullableTime(JSONObject json, String key) {
-        if (json.isNull(key) || json.optString(key).isEmpty()) {
-            return null;
+        if (!json.has(key) || json.isNull(key)) return null;
+        String val = json.optString(key, "").trim();
+        return val.isEmpty() ? null : LocalTime.parse(val);
+    }
+
+    private void writeResponse(HttpServletResponse response, JSONObject json) throws IOException {
+        try (PrintWriter out = response.getWriter()) {
+            out.print(json.toString());
+            out.flush();
         }
-        return LocalTime.parse(json.getString(key));
+    }
+    
+    private void writeError(HttpServletResponse response, String message, Exception e) throws IOException {
+        // Ghi log lỗi đầy đủ ở server để debug
+        e.printStackTrace(); 
+        
+        JSONObject err = new JSONObject();
+        err.put("status", "error");
+        err.put("message", message);
+        writeResponse(response, err);
     }
 }
