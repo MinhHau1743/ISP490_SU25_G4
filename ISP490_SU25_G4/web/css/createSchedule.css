@@ -10,6 +10,16 @@ html, body {
     margin: 0;
     background-color: #f9fafb;
 }
+.content-wrapper,
+.main-content-body {
+    overflow: visible !important;
+}
+.main-panel {
+    margin-left: 250px ;   /* chừa chỗ cho menu */
+    width: calc(100% - 250px) ;
+    min-height: 100vh ;
+    overflow: auto;       /* <— CHO PHÉP CUỘN Ở PANEL */
+}
 .content-wrapper {
     display: flex;
     flex-direction: column;
@@ -249,16 +259,16 @@ textarea.form-control {
     text-shadow: 0 0 3px rgba(0,0,0,0.5);
 }
 .address-grid {
-  display: grid;
-  /* Creates 3 columns of equal width */
-  grid-template-columns: repeat(3, 1fr); 
-  /* Adds a 1rem (16px) gap between the columns */
-  gap: 1rem; 
+    display: grid;
+    /* Creates 3 columns of equal width */
+    grid-template-columns: repeat(3, 1fr);
+    /* Adds a 1rem (16px) gap between the columns */
+    gap: 1rem;
 }
 .form-grid .form-group-full-width {
-  /* This tells the grid item to start at the first column line (1) 
-     and end at the very last column line (-1) */
-  grid-column: 1 / -1;
+    /* This tells the grid item to start at the first column line (1) 
+       and end at the very last column line (-1) */
+    grid-column: 1 / -1;
 }
 .selected-tags {
     display: flex;

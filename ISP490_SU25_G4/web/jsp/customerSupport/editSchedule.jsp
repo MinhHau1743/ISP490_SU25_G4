@@ -45,7 +45,7 @@
                             <div class="alert alert-danger" role="alert">${error}</div>
                         </c:if>
 
-                        <form action="updateSchedule" method="post" class="form-container">
+                        <form action="${pageContext.request.contextPath}/schedule?action=updateSchedule" method="post" class="form-container">
                             <input type="hidden" name="id" value="${schedule.id}">
 
                             <div class="form-grid">
@@ -158,7 +158,7 @@
                             </div>
 
                             <div class="form-actions">
-                                <a href="listSchedule" class="btn btn-secondary">Hủy bỏ</a>
+                                <a href="schedule" class="btn btn-secondary">Hủy bỏ</a>
                                 <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
                             </div>
                         </form>
@@ -195,7 +195,6 @@
             });
             </c:forEach>
         </script>
-
 
 
         <script src="${pageContext.request.contextPath}/js/addressHandler.js"></script>

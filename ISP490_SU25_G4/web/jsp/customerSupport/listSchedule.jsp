@@ -249,7 +249,7 @@
                 flex-direction: column;
                 padding: 5px;
                 height: auto;
-                 z-index: 2;
+                z-index: 2;
             }
 
             /* All-day event container */
@@ -1062,7 +1062,7 @@
             .date-range:hover {
                 color: #007bff; /* Thay đổi màu khi di chuột qua */
             }
-            
+
         </style>
     </head>
     <body>
@@ -1087,11 +1087,13 @@
                                 <button id="view-list-btn" class="btn-toggle <c:if test="${viewMode == 'list-view'}">active</c:if>" data-view="list-view">Danh sách</button>
                                 </div>
                                 <!-- HIDDEN FORM TO SUBMIT NEXT/PREV DAY -->
-                                <form id="dayNavForm" method="get" action="listSchedule">
+                                <form id="dayNavForm" method="get" action="schedule">
+                                    <input type="hidden" name="action" value="listSchedule">
                                     <input type="hidden" name="controllerDay" id="controllerDay">
                                     <input type="hidden" name="currentDay" id="currentDay">
                                     <input type="hidden" name="viewMode" id="viewMode">
                                 </form>
+
 
                                 <!-- WEEK NAVIGATION -->
                                 <div class="week-nav">
@@ -1102,14 +1104,14 @@
                                 <button class="btn-nav" id="nextDayBtn"><i data-feather="chevron-right"></i></button>
                             </div>
                             <div class="toolbar-spacer"></div>
-                            <form action="createSchedule">
+                            <form action="schedule" method="get">
+                                <input type="hidden" name="action" value="createSchedule">
                                 <button class="btn-primary" id="add-schedule-btn" style="background-color: #e0f2f1; color: #000; border: none;">
                                     <i data-feather="plus"></i>
                                     Lên lịch bảo trì
                                 </button>
                             </form>
                         </div>
-
                         <div class="calendar-content">
                             <div class="calendar-left">
                                 <div id="day-view" class="calendar-view <c:if test="${viewMode == 'day-view'}">active</c:if>">
@@ -1441,7 +1443,7 @@
             feather.replace();
 // Gọi AJAX tới backend khi sự kiện drop hoàn tất
             function updateEvent(scheduleId, newScheduledDate, newEndDate, newStartTime, newEndTime) {
-            const url = contextPath + '/updateScheduleTime';
+            const url = contextPath + '/schedule?action=updateScheduleTime';
             console.log('Updating event:', {
             id: scheduleId,
                     scheduledDate: newScheduledDate,
@@ -1856,7 +1858,7 @@
 
                 // Cập nhật link cho nút Sửa
                 const editBtn = detailsPanel.querySelector('a[title="Sửa"]');
-                editBtn.href = contextPath + '/updateSchedule?id=' + encodeURIComponent(schedule.id);
+                editBtn.href = contextPath + '/schedule?action=updateSchedule&id=' + encodeURIComponent(schedule.id);
                 // Hiển thị panel chi tiết
                 detailsPanel.classList.add('show');
                 } else {

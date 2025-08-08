@@ -45,7 +45,7 @@
                 </a>
             </li>
             <li>
-                <a href="${pageContext.request.contextPath}/listSchedule" class="${currentPage.contains('Schedule') ? 'active' : ''}">
+                <a href="${pageContext.request.contextPath}/schedule" class="${currentPage.contains('Schedule') ? 'active' : ''}">
                     <i data-feather="check-square"></i><span>Lịch bảo trì</span>
                 </a>
             </li>

@@ -34,18 +34,15 @@
                 <jsp:include page="/header.jsp">
                     <jsp:param name="pageTitle" value="Lên lịch bảo trì"/>
                 </jsp:include>
-
                 <main class="content-wrapper">
                     <section class="main-content-body">
-                        <div class="page-header">
-                            <h1>Lên lịch bảo trì mới</h1>
-                        </div>
 
                         <c:if test="${not empty error}">
                             <div class="alert alert-danger" role="alert">${error}</div>
                         </c:if>
 
-                        <form action="createSchedule" method="post" class="form-container">
+                        <form action="schedule" method="post" class="form-container">
+                            <input type="hidden" name="action" value="createSchedule">
                             <div class="form-grid">
 
                                 <div class="form-group">
@@ -179,8 +176,13 @@
         <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js  "></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js  "></script>
         <script src="https://unpkg.com/feather-icons  "></script>
-
         <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                feather.replace();
+            });
+        </script>
+        <script>
+
             window.PRESELECTED_ADDRESS = {
                 provinceId: '${param.province != null ? param.province : schedule.provinceId}',
                 districtId: '${param.district != null ? param.district : schedule.districtId}',
