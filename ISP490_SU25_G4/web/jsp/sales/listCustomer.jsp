@@ -116,7 +116,11 @@
                             </div>
                             <button type="button" class="btn btn-secondary" id="filter-toggle-btn"><i data-feather="filter"></i> Lọc</button>
                             <button type="submit" class="btn btn-primary"><i data-feather="search"></i> Tìm kiếm</button>
-                            <div class="toolbar-actions"><a href="${BASE_URL}/customer/create" class="btn btn-primary"><i data-feather="plus"></i>Thêm Khách hàng</a></div>
+                            <div class="toolbar-actions">
+                                <c:if test="${sessionScope.user.roleName == 'Admin' || sessionScope.user.roleName == 'Kinh doanh'}">
+                                    <a href="${BASE_URL}/customer/create" class="btn btn-primary"><i data-feather="plus"></i>Thêm Khách hàng</a>
+                                </c:if>
+                            </div>
                         </div>
                         <div class="filter-container" id="filter-container">
                             <div class="filter-group"><label for="province">Tỉnh/Thành phố</label><select id="province" name="provinceId"><option value="">Tất cả</option><c:forEach var="p" items="${allProvinces}"><option value="${p.id}" ${p.id == selectedProvinceId ? 'selected' : ''}>${p.name}</option></c:forEach></select></div>
@@ -145,8 +149,10 @@
                                             <td>
                                                 <div class="table-actions">
                                                     <a href="${BASE_URL}/customer/view?id=${customer.id}" title="Xem"><i data-feather="eye"></i></a>
-                                                    <a href="${BASE_URL}/customer/edit?id=${customer.id}" title="Sửa"><i data-feather="edit-2"></i></a>
-                                                    <span class="delete-trigger-btn" data-id="${customer.id}" data-name="<c:out value='${customer.name}'/>" title="Xóa" style="cursor: pointer;"><i data-feather="trash-2"></i></span>
+                                                        <c:if test="${sessionScope.user.roleName == 'Admin' || sessionScope.user.roleName == 'Kinh doanh'}">
+                                                        <a href="${BASE_URL}/customer/edit?id=${customer.id}" title="Sửa"><i data-feather="edit-2"></i></a>
+                                                        <span class="delete-trigger-btn" data-id="${customer.id}" data-name="<c:out value='${customer.name}'/>" title="Xóa"><i data-feather="trash-2"></i></span>
+                                                        </c:if>
                                                 </div>
                                             </td>
                                         </tr>
