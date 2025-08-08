@@ -7,12 +7,14 @@ package vn.edu.fpt.model;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 
 /**
  *
  * @author phamh
  */
 public class MaintenanceSchedule {
+
     private int id;
     private int technicalRequestId;
     private String title;
@@ -21,16 +23,25 @@ public class MaintenanceSchedule {
     private LocalDate endDate;
     private LocalTime startTime;
     private LocalTime endTime;
-    private String location;
+    private Integer addressId;
     private String status;
     private String notes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private List<MaintenanceAssignments> assignments;
+    private Address fullAddress;
+    private String streetAddress;
+    private Integer provinceId;
+    private String provinceName;
+    private Integer districtId;
+    private String districtName;
+    private Integer wardId;
+    private String wardName;
 
     public MaintenanceSchedule() {
     }
 
-    public MaintenanceSchedule(int id, int technicalRequestId, String title, String color, LocalDate scheduledDate, LocalDate endDate, LocalTime startTime, LocalTime endTime, String location, String status, String notes, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public MaintenanceSchedule(int id, int technicalRequestId, String title, String color, LocalDate scheduledDate, LocalDate endDate, LocalTime startTime, LocalTime endTime, Integer addressId, String status, String notes, LocalDateTime createdAt, LocalDateTime updatedAt, List<MaintenanceAssignments> assignments, Address fullAddress) {
         this.id = id;
         this.technicalRequestId = technicalRequestId;
         this.title = title;
@@ -39,14 +50,14 @@ public class MaintenanceSchedule {
         this.endDate = endDate;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.location = location;
+        this.addressId = addressId;
         this.status = status;
         this.notes = notes;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.assignments = assignments;
+        this.fullAddress = fullAddress;
     }
-
-    
 
     public int getId() {
         return id;
@@ -60,7 +71,7 @@ public class MaintenanceSchedule {
         return technicalRequestId;
     }
 
-    public void setTechnicalRequestId(int technicalRequestId) {
+    public void setTechnicalRequestId(Integer technicalRequestId) {
         this.technicalRequestId = technicalRequestId;
     }
 
@@ -112,12 +123,20 @@ public class MaintenanceSchedule {
         this.endTime = endTime;
     }
 
-    public String getLocation() {
-        return location;
+    public Integer getAddressId() {
+        return addressId;
     }
 
-    public void setLocation(String location) {
-        this.location = location;
+    public void setAddressId(Integer addressId) {
+        this.addressId = addressId;
+    }
+
+    public Address getFullAddress() {
+        return fullAddress;
+    }
+
+    public void setFullAddress(Address fullAddress) {
+        this.fullAddress = fullAddress;
     }
 
     public String getStatus() {
@@ -151,5 +170,69 @@ public class MaintenanceSchedule {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
-    
+
+    public List<MaintenanceAssignments> getAssignments() {
+        return assignments;
+    }
+
+    public void setAssignments(List<MaintenanceAssignments> assignments) {
+        this.assignments = assignments;
+    }
+
+    public String getStreetAddress() {
+        return streetAddress;
+    }
+
+    public void setStreetAddress(String streetAddress) {
+        this.streetAddress = streetAddress;
+    }
+
+    public Integer getProvinceId() {
+        return provinceId;
+    }
+
+    public void setProvinceId(Integer provinceId) {
+        this.provinceId = provinceId;
+    }
+
+    public String getProvinceName() {
+        return provinceName;
+    }
+
+    public void setProvinceName(String provinceName) {
+        this.provinceName = provinceName;
+    }
+
+    public Integer getDistrictId() {
+        return districtId;
+    }
+
+    public void setDistrictId(Integer districtId) {
+        this.districtId = districtId;
+    }
+
+    public String getDistrictName() {
+        return districtName;
+    }
+
+    public void setDistrictName(String districtName) {
+        this.districtName = districtName;
+    }
+
+    public Integer getWardId() {
+        return wardId;
+    }
+
+    public void setWardId(Integer wardId) {
+        this.wardId = wardId;
+    }
+
+    public String getWardName() {
+        return wardName;
+    }
+
+    public void setWardName(String wardName) {
+        this.wardName = wardName;
+    }
+
 }

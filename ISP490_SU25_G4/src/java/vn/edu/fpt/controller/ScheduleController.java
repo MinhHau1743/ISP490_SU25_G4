@@ -1,0 +1,844 @@
+package vn.edu.fpt.controller;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
+
+import vn.edu.fpt.dao.AddressDAO;
+import vn.edu.fpt.dao.MaintenanceScheduleDAO;
+import vn.edu.fpt.dao.TechnicalRequestDAO;
+import vn.edu.fpt.dao.UserDAO;
+
+import vn.edu.fpt.model.MaintenanceAssignments;
+import vn.edu.fpt.model.MaintenanceSchedule;
+import vn.edu.fpt.model.Province;
+import vn.edu.fpt.model.TechnicalRequest;
+import vn.edu.fpt.model.User;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.WeekFields;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+@WebServlet(name = "scheduleController", urlPatterns = {"/schedule"})
+public class ScheduleController extends HttpServlet {
+
+    private final DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private final DateTimeFormatter displayFormatter = DateTimeFormatter.ofPattern("EEEE, dd/MM/yyyy", new Locale("vi", "VN"));
+    private final DateTimeFormatter dayDateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy", new Locale("vi", "VN"));
+    private static final int DEFAULT_DURATION_MINUTES = 60;
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
+
+        String action = request.getParameter("action");
+        if ("createSchedule".equals(action)) {
+            // Hiển thị form tạo
+            showCreateForm(request, response);
+            return;
+        } else if ("updateSchedule".equals(action)) {
+            editFormSchedule(request, response);
+            return;
+        } else if ("updateScheduleTime".equals(action)) {
+            updateScheduleTime(request, response);
+            return;
+        }
+
+        // Mặc định (hoặc action=listSchedule): hiển thị lịch
+        viewSchedule(request, response);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
+
+        String action = request.getParameter("action");
+        if ("createSchedule".equals(action)) {
+            handleCreateSubmit(request, response);
+            return;
+        } else if ("updateSchedule".equals(action)) {
+            handleEditSubmit(request, response);
+            return;
+        }
+        // Nếu không khớp action, về GET
+        doGet(request, response);
+    }
+
+    /* =========================
+     * 1) VIEW/LIST SCHEDULE
+     * ========================= */
+    private void viewSchedule(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        MaintenanceScheduleDAO dao = new MaintenanceScheduleDAO();
+        UserDAO userDAO = new UserDAO();
+
+        // 1. Lấy ngày hiện tại hoặc từ frontend
+        String controllerDay = request.getParameter("controllerDay"); // "prev", "next", or null
+        String currentDayStr = request.getParameter("currentDay");    // yyyy-MM-dd
+        String viewMode = request.getParameter("viewMode");      // "day-view", "week-view", "month-view", "list-view"
+
+        LocalDate today = LocalDate.now();
+        if (currentDayStr != null && !currentDayStr.isEmpty()) {
+            try {
+                today = LocalDate.parse(currentDayStr, inputFormatter);
+            } catch (DateTimeParseException e) {
+                System.out.println("⚠️ Failed to parse currentDayStr: " + currentDayStr);
+            }
+        }
+
+        if ("prev".equals(controllerDay)) {
+            if ("month-view".equals(viewMode)) {
+                today = today.minusMonths(1);
+            } else if ("week-view".equals(viewMode)) {
+                today = today.minusDays(7);
+            } else {
+                today = today.minusDays(1);
+            }
+        } else if ("next".equals(controllerDay)) {
+            if ("month-view".equals(viewMode)) {
+                today = today.plusMonths(1);
+            } else if ("week-view".equals(viewMode)) {
+                today = today.plusDays(7);
+            } else {
+                today = today.plusDays(1);
+            }
+        }
+
+        LocalDate now = LocalDate.now();
+        boolean isToday = today.equals(now);
+
+        // Tuần/tháng hiện tại
+        WeekFields weekFields = WeekFields.of(new Locale("vi", "VN"));
+        int currentWeek = now.get(weekFields.weekOfWeekBasedYear());
+        int currentWeekYear = now.get(weekFields.weekBasedYear());
+        int targetWeek = today.get(weekFields.weekOfWeekBasedYear());
+        int targetWeekYear = today.get(weekFields.weekBasedYear());
+        boolean isThisWeek = (currentWeek == targetWeek) && (currentWeekYear == targetWeekYear);
+
+        boolean isThisMonth = today.getMonthValue() == now.getMonthValue() && today.getYear() == now.getYear();
+
+        // Hiển thị range theo view
+        String displayDate;
+        DateTimeFormatter rangeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy", new Locale("vi", "VN"));
+        DateTimeFormatter monthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", new Locale("vi", "VN"));
+
+        if ("week-view".equals(viewMode)) {
+            if (isThisWeek) {
+                displayDate = "Tuần này";
+            } else {
+                LocalDate startOfWeek = today.with(weekFields.dayOfWeek(), 1);
+                LocalDate endOfWeek = today.with(weekFields.dayOfWeek(), 7);
+                displayDate = startOfWeek.format(rangeFormatter) + " - " + endOfWeek.format(rangeFormatter);
+            }
+        } else if ("month-view".equals(viewMode)) {
+            displayDate = isThisMonth ? "Tháng này" : today.format(monthFormatter);
+        } else {
+            displayDate = isToday ? "Hôm nay" : today.format(displayFormatter);
+        }
+
+        String isoDayDate = today.toString(); // yyyy-MM-dd
+        String dayHeader = today.format(DateTimeFormatter.ofPattern("EEEE", new Locale("vi", "VN")));
+        String dayDate = today.format(dayDateFormatter);
+
+        // 2. Day slots (mỗi 30')
+        List<String> dayTimeLabels = new ArrayList<>();
+        List<String> dayStartTimes = new ArrayList<>();
+        dayTimeLabels.add("Cả ngày");
+        dayStartTimes.add("");
+        dayTimeLabels.add("12:00 am");
+        dayStartTimes.add("00:00");
+        dayTimeLabels.add("");
+        dayStartTimes.add("00:30");
+        for (int h = 1; h <= 11; h++) {
+            dayTimeLabels.add(h + ":00 am");
+            dayStartTimes.add(String.format("%02d:00", h));
+            dayTimeLabels.add("");
+            dayStartTimes.add(String.format("%02d:30", h));
+        }
+        dayTimeLabels.add("12:00 pm");
+        dayStartTimes.add("12:00");
+        dayTimeLabels.add("");
+        dayStartTimes.add("12:30");
+        for (int h = 1; h <= 11; h++) {
+            dayTimeLabels.add(h + ":00 pm");
+            dayStartTimes.add(String.format("%02d:00", h + 12));
+            dayTimeLabels.add("");
+            dayStartTimes.add(String.format("%02d:30", h + 12));
+        }
+        dayTimeLabels.add("");
+        dayStartTimes.add("23:30");
+
+        // 3. Week view
+        LocalDate startOfWeek = today.with(weekFields.dayOfWeek(), 1);
+        List<String> days = Arrays.asList("mon", "tue", "wed", "thu", "fri", "sat", "sun");
+        DateTimeFormatter weekHeaderFormatter = DateTimeFormatter.ofPattern("EEE dd/MM", new Locale("vi", "VN"));
+        List<String> dayHeaders = new ArrayList<>();
+        List<LocalDate> weekDates = new ArrayList<>();
+        for (int i = 0; i < 7; i++) {
+            LocalDate d = startOfWeek.plusDays(i);
+            weekDates.add(d);
+            dayHeaders.add(d.format(weekHeaderFormatter));
+        }
+
+        // 4. Month view
+        int year = today.getYear();
+        int month = today.getMonthValue();
+        YearMonth yearMonth = YearMonth.of(year, month);
+        int daysInMonth = yearMonth.lengthOfMonth();
+        LocalDate firstOfMonth = LocalDate.of(year, month, 1);
+        DayOfWeek firstDayOfWeek = firstOfMonth.getDayOfWeek();
+        int firstDayValue = firstDayOfWeek.getValue(); // 1=MON .. 7=SUN
+        int prevDaysCount = firstDayValue - 1;
+
+        LocalDate lastOfPrevMonth = firstOfMonth.minusDays(1);
+        int prevMonthDays = lastOfPrevMonth.getDayOfMonth();
+
+        List<String> dayNumbers = new ArrayList<>();
+        List<Boolean> isCurrentMonths = new ArrayList<>();
+        List<LocalDate> monthDates = new ArrayList<>();
+
+        YearMonth prevMonth = yearMonth.minusMonths(1);
+        LocalDate prevStartDay = lastOfPrevMonth.minusDays(prevDaysCount - 1);
+        int prevDay = prevMonthDays - prevDaysCount + 1;
+        for (int i = 0; i < prevDaysCount; i++) {
+            dayNumbers.add(String.valueOf(prevDay + i));
+            isCurrentMonths.add(false);
+            monthDates.add(prevStartDay.plusDays(i));
+        }
+        for (int d = 1; d <= daysInMonth; d++) {
+            dayNumbers.add(String.valueOf(d));
+            isCurrentMonths.add(true);
+            monthDates.add(LocalDate.of(year, month, d));
+        }
+        int totalDays = dayNumbers.size();
+        int nextDaysCount = (7 - (totalDays % 7)) % 7;
+        YearMonth nextMonth = yearMonth.plusMonths(1);
+        LocalDate nextStart = nextMonth.atDay(1);
+        for (int i = 1; i <= nextDaysCount; i++) {
+            dayNumbers.add(String.valueOf(i));
+            isCurrentMonths.add(false);
+            monthDates.add(nextStart.plusDays(i - 1));
+        }
+
+        // 5. Timeline giờ (week/month)
+        List<String> hours = new ArrayList<>();
+        List<String> hourLabels = new ArrayList<>();
+        for (int h = 0; h < 24; h++) {
+            hours.add(String.format("%02d:00", h));
+            hours.add(String.format("%02d:30", h));
+
+            String amPm;
+            int displayHour;
+            if (h == 0) {
+                displayHour = 12;
+                amPm = "am";
+            } else if (h < 12) {
+                displayHour = h;
+                amPm = "am";
+            } else if (h == 12) {
+                displayHour = 12;
+                amPm = "pm";
+            } else {
+                displayHour = h - 12;
+                amPm = "pm";
+            }
+
+            hourLabels.add(displayHour + ":00 " + amPm);
+            hourLabels.add("");
+        }
+        hours.add("23:30");
+        hourLabels.add("");
+
+        // 6. Dữ liệu lịch + assignments
+        List<MaintenanceSchedule> schedules = dao.getAllMaintenanceSchedules();
+        List<MaintenanceAssignments> assignments = dao.getAllMaintenanceAssignments();
+
+        if ("list-view".equals(viewMode)) {
+            schedules = schedules.stream()
+                    .filter(sch -> sch.getScheduledDate() != null && !sch.getScheduledDate().isBefore(now))
+                    .collect(Collectors.toList());
+        }
+
+        Map<Integer, List<MaintenanceAssignments>> assignmentMap
+                = assignments.stream().collect(Collectors.groupingBy(MaintenanceAssignments::getMaintenanceScheduleId));
+        for (MaintenanceSchedule schedule : schedules) {
+            schedule.setAssignments(assignmentMap.getOrDefault(schedule.getId(), new ArrayList<>()));
+        }
+
+        Map<LocalDate, List<MaintenanceSchedule>> groupedSchedules
+                = schedules.stream().collect(Collectors.groupingBy(MaintenanceSchedule::getScheduledDate));
+
+        // Set attribute ra JSP
+        request.setAttribute("groupedSchedules", groupedSchedules);
+        request.setAttribute("schedules", schedules);
+        request.setAttribute("hourLabels", hourLabels);
+        request.setAttribute("hours", hours);
+        request.setAttribute("days", days);
+
+        // Day view
+        request.setAttribute("dayHeader", dayHeader.toUpperCase());
+        request.setAttribute("dayTimeLabels", dayTimeLabels);
+        request.setAttribute("dayStartTimes", dayStartTimes);
+        request.setAttribute("isoDayDate", isoDayDate);
+        request.setAttribute("displayDate", displayDate);
+        request.setAttribute("today", today);
+        request.setAttribute("dayDate", dayDate);
+
+        // Week view
+        request.setAttribute("dayHeaders", dayHeaders);
+        request.setAttribute("weekDates", weekDates);
+
+        // Month view
+        request.setAttribute("dayNumbers", dayNumbers);
+        request.setAttribute("isCurrentMonths", isCurrentMonths);
+        request.setAttribute("monthDates", monthDates);
+
+        // View mode
+        request.setAttribute("viewMode", viewMode != null ? viewMode : "day-view");
+
+        request.getRequestDispatcher("/jsp/customerSupport/listSchedule.jsp").forward(request, response);
+    }
+
+    /* ====================================
+     * 2) SHOW CREATE FORM (GET)
+     * ==================================== */
+    private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            TechnicalRequestDAO technicalDAO = new TechnicalRequestDAO();
+            AddressDAO addressDAO = new AddressDAO();
+            UserDAO userDAO = new UserDAO();
+
+            // Dropdown data
+            List<User> assignments = userDAO.getAllTechnicalStaffIdAndFullName();
+            List<TechnicalRequest> technicalRequests = technicalDAO.getAllTechnicalRequestsIdAndTitle();
+            List<Province> provinces = addressDAO.getAllProvinces();
+
+            request.setAttribute("assignments", assignments);
+            request.setAttribute("technicalRequests", technicalRequests);
+            request.setAttribute("provinces", provinces);
+
+            request.getRequestDispatcher("jsp/customerSupport/createSchedule.jsp").forward(request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Không tải được form tạo lịch");
+        }
+    }
+
+    /* ====================================
+     * 3) HANDLE CREATE SUBMIT (POST)
+     * ==================================== */
+    private void handleCreateSubmit(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        TechnicalRequestDAO technicalDAO = new TechnicalRequestDAO();
+        AddressDAO addressDAO = new AddressDAO();
+        MaintenanceScheduleDAO scheduleDAO = new MaintenanceScheduleDAO();
+
+        try {
+            // 1. Lấy form data
+            String technicalRequestIdStr = request.getParameter("technical_request_id");
+            String title = request.getParameter("title");
+            String color = request.getParameter("color");
+            String scheduledDateStr = request.getParameter("scheduled_date");
+            String endDateStr = request.getParameter("end_date");
+            String startTimeStr = request.getParameter("start_time");
+            String endTimeStr = request.getParameter("end_time");
+            String status = request.getParameter("status");
+            String notes = request.getParameter("notes");
+
+            // QUAN TRỌNG: nhiều input cùng name
+            String[] assignedUserIds = request.getParameterValues("assignedUserIds");
+
+            // Địa chỉ
+            String streetAddress = request.getParameter("streetAddress");
+            String provinceIdStr = request.getParameter("province");
+            String districtIdStr = request.getParameter("district");
+            String wardIdStr = request.getParameter("ward");
+
+            // 2. Validate
+            if (title == null || title.trim().isEmpty()) {
+                throw new IllegalArgumentException("Vui lòng nhập tiêu đề.");
+            }
+            if (scheduledDateStr == null || scheduledDateStr.trim().isEmpty()) {
+                throw new IllegalArgumentException("Vui lòng chọn ngày bắt đầu.");
+            }
+            if (provinceIdStr == null || provinceIdStr.isBlank()
+                    || districtIdStr == null || districtIdStr.isBlank()
+                    || wardIdStr == null || wardIdStr.isBlank()) {
+                throw new IllegalArgumentException("Vui lòng chọn đầy đủ Tỉnh/Thành, Quận/Huyện, và Phường/Xã.");
+            }
+
+            // 3. Parse
+            LocalDate scheduledDate = LocalDate.parse(scheduledDateStr);
+            LocalDate endDate = (endDateStr != null && !endDateStr.isEmpty()) ? LocalDate.parse(endDateStr) : null;
+            LocalTime startTime = (startTimeStr != null && !startTimeStr.isEmpty()) ? LocalTime.parse(startTimeStr) : null;
+            LocalTime endTime = (endTimeStr != null && !endTimeStr.isEmpty()) ? LocalTime.parse(endTimeStr) : null;
+
+            if (endDate != null && endDate.isBefore(scheduledDate)) {
+                throw new IllegalArgumentException("Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.");
+            }
+            if (startTime != null && endTime != null
+                    && (endDate == null || endDate.isEqual(scheduledDate))
+                    && !endTime.isAfter(startTime)) {
+                throw new IllegalArgumentException("Giờ kết thúc phải sau giờ bắt đầu nếu trong cùng một ngày.");
+            }
+
+            // 4. Lưu/ lấy addressId
+            int provinceId = Integer.parseInt(provinceIdStr);
+            int districtId = Integer.parseInt(districtIdStr);
+            int wardId = Integer.parseInt(wardIdStr);
+            int addressId = addressDAO.findOrCreateAddress(streetAddress, wardId, districtId, provinceId);
+
+            // 5. Tạo schedule
+            MaintenanceSchedule schedule = new MaintenanceSchedule();
+            if (technicalRequestIdStr != null && !technicalRequestIdStr.isEmpty()) {
+                schedule.setTechnicalRequestId(Integer.parseInt(technicalRequestIdStr));
+            }
+            schedule.setTitle(title);
+            schedule.setColor(color);
+            schedule.setScheduledDate(scheduledDate);
+            schedule.setEndDate(endDate);
+            schedule.setStartTime(startTime);
+            schedule.setEndTime(endTime);
+            schedule.setAddressId(addressId);
+            schedule.setStatus(status != null ? status : "upcoming");
+            schedule.setNotes(notes);
+
+            int scheduleId = scheduleDAO.addMaintenanceScheduleAndReturnId(schedule);
+            if (scheduleId <= 0) {
+                throw new Exception("Không thể tạo lịch bảo trì do lỗi cơ sở dữ liệu.");
+            }
+
+            // 6. Lưu assignments (nếu có)
+            if (assignedUserIds != null && assignedUserIds.length > 0) {
+                List<Integer> userIdList = new ArrayList<>();
+                for (String uid : assignedUserIds) {
+                    if (uid != null && !uid.isBlank()) {
+                        userIdList.add(Integer.parseInt(uid.trim()));
+                    }
+                }
+                if (!userIdList.isEmpty()) {
+                    scheduleDAO.addMaintenanceAssignments(scheduleId, userIdList);
+                }
+            }
+
+            // 7. Redirect về list
+            response.sendRedirect(request.getContextPath() + "/schedule?action=schedule");
+
+        } catch (IllegalArgumentException | DateTimeParseException e) {
+            request.setAttribute("error", e.getMessage());
+            forwardToForm(request, response, technicalDAO);
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Đã xảy ra lỗi hệ thống. Vui lòng thử lại.");
+            forwardToForm(request, response, technicalDAO);
+        }
+    }
+
+    /* ====================================
+     * 4) FORWARD LẠI FORM KHI LỖI
+     * ==================================== */
+    private void forwardToForm(HttpServletRequest request, HttpServletResponse response, TechnicalRequestDAO technicalDAO)
+            throws ServletException, IOException {
+
+        // giữ lại dữ liệu người dùng nhập
+        request.setAttribute("title", request.getParameter("title"));
+        request.setAttribute("color", request.getParameter("color"));
+        request.setAttribute("scheduled_date", request.getParameter("scheduled_date"));
+        request.setAttribute("end_date", request.getParameter("end_date"));
+        request.setAttribute("start_time", request.getParameter("start_time"));
+        request.setAttribute("end_time", request.getParameter("end_time"));
+        request.setAttribute("status", request.getParameter("status"));
+        request.setAttribute("notes", request.getParameter("notes"));
+        request.setAttribute("technical_request_id", request.getParameter("technical_request_id"));
+        request.setAttribute("streetAddress", request.getParameter("streetAddress"));
+        request.setAttribute("provinceId", request.getParameter("province"));
+        request.setAttribute("districtId", request.getParameter("district"));
+        request.setAttribute("wardId", request.getParameter("ward"));
+
+        // reload dropdowns
+        try {
+            AddressDAO addressDAO = new AddressDAO();
+            request.setAttribute("technicalRequests", technicalDAO.getAllTechnicalRequestsIdAndTitle());
+            request.setAttribute("provinces", addressDAO.getAllProvinces());
+
+            String provinceParam = request.getParameter("province");
+            String districtParam = request.getParameter("district");
+
+            if (provinceParam != null && !provinceParam.isEmpty()) {
+                request.setAttribute("districts",
+                        addressDAO.getDistrictsByProvinceId(Integer.parseInt(provinceParam)));
+            }
+            if (districtParam != null && !districtParam.isEmpty()) {
+                request.setAttribute("wards",
+                        addressDAO.getWardsByDistrictId(Integer.parseInt(districtParam)));
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        request.getRequestDispatcher("jsp/customerSupport/createSchedule.jsp").forward(request, response);
+    }
+
+    private void editFormSchedule(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        // Use DAOs
+        MaintenanceScheduleDAO scheduleDAO = new MaintenanceScheduleDAO();
+        TechnicalRequestDAO technicalDAO = new TechnicalRequestDAO();
+        AddressDAO addressDAO = new AddressDAO();
+        UserDAO userDAO = new UserDAO();
+
+        try {
+            // 1. Lấy và validate ID từ URL
+            String idStr = request.getParameter("id");
+            if (idStr == null || idStr.trim().isEmpty()) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing schedule ID");
+                return;
+            }
+            int id = Integer.parseInt(idStr);
+
+            // 2. Lấy dữ liệu lịch trình chính
+            MaintenanceSchedule schedule = scheduleDAO.getMaintenanceScheduleById(id);
+            if (schedule == null) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Schedule not found");
+                return;
+            }
+
+            // 3. Lấy dữ liệu cần thiết cho các dropdown
+            List<User> assignments = userDAO.getAllTechnicalStaffIdAndFullName();
+            List<TechnicalRequest> technicalRequests = technicalDAO.getAllTechnicalRequestsIdAndTitle();
+            List<Province> provinces = addressDAO.getAllProvinces();
+            List<Integer> assignedUserIds = scheduleDAO.getAssignedUserIdsByScheduleId(id);
+
+// 2. Chuyển đổi List thành Map để tra cứu nhanh hơn
+            Map<Integer, Boolean> assignedUserMap = new HashMap<>();
+            for (Integer userId : assignedUserIds) {
+                assignedUserMap.put(userId, true);
+            }
+// 3. Gửi Map này sang JSP thay vì List
+            request.setAttribute("assignedUserMap", assignedUserMap);
+            request.setAttribute("assignments", assignments);
+            request.setAttribute("schedule", schedule);
+            request.setAttribute("technicalRequests", technicalRequests);
+            request.setAttribute("provinces", provinces);
+
+            // 5. Tải sẵn danh sách Quận/Huyện và Phường/Xã nếu lịch trình đã có địa chỉ
+            if (schedule.getFullAddress() != null) {
+                request.setAttribute("districts", addressDAO.getDistrictsByProvinceId(schedule.getFullAddress().getProvinceId()));
+                request.setAttribute("wards", addressDAO.getWardsByDistrictId(schedule.getFullAddress().getDistrictId()));
+            }
+
+            // 6. Chuyển hướng đến trang JSP
+            request.getRequestDispatcher("jsp/customerSupport/editSchedule.jsp").forward(request, response);
+
+        } catch (NumberFormatException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid schedule ID format");
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "An error occurred: " + e.getMessage());
+        }
+    }
+
+    private void handleEditSubmit(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        MaintenanceScheduleDAO scheduleDAO = new MaintenanceScheduleDAO();
+        AddressDAO addressDAO = new AddressDAO();
+        TechnicalRequestDAO technicalDAO = new TechnicalRequestDAO();
+
+        try {
+            // === 1. LẤY DỮ LIỆU TỪ FORM ===
+            int id = Integer.parseInt(request.getParameter("id"));
+            String technicalRequestIdStr = request.getParameter("technicalRequestId");
+            String title = request.getParameter("title");
+            String color = request.getParameter("color");
+            String scheduledDateStr = request.getParameter("scheduledDate");
+            String endDateStr = request.getParameter("endDate");
+            String startTimeStr = request.getParameter("startTime");
+            String endTimeStr = request.getParameter("endTime");
+            String status = request.getParameter("status");
+            String notes = request.getParameter("notes");
+
+            // Dữ liệu địa chỉ mới
+            String streetAddress = request.getParameter("streetAddress");
+            String provinceIdStr = request.getParameter("province");
+            String districtIdStr = request.getParameter("district");
+            String wardIdStr = request.getParameter("ward");
+
+            // === 2. VALIDATE DỮ LIỆU ===
+            if (title == null || title.trim().isEmpty()) {
+                throw new IllegalArgumentException("Vui lòng nhập tiêu đề.");
+            }
+            if (scheduledDateStr == null || scheduledDateStr.trim().isEmpty()) {
+                throw new IllegalArgumentException("Vui lòng chọn ngày bắt đầu.");
+            }
+            if (provinceIdStr == null || provinceIdStr.isEmpty()
+                    || districtIdStr == null || districtIdStr.isEmpty()
+                    || wardIdStr == null || wardIdStr.isEmpty()) {
+                throw new IllegalArgumentException("Vui lòng chọn đầy đủ Tỉnh/Thành, Quận/Huyện, và Phường/Xã.");
+            }
+
+            // === 3. PARSE VÀ CẬP NHẬT ĐỐI TƯỢNG ===
+            // Lấy đối tượng schedule hiện tại từ DB để cập nhật
+            MaintenanceSchedule schedule = scheduleDAO.getMaintenanceScheduleById(id);
+            if (schedule == null) {
+                throw new Exception("Lịch bảo trì không còn tồn tại.");
+            }
+
+            // Parse và validate ngày/giờ
+            LocalDate scheduledDate = LocalDate.parse(scheduledDateStr);
+            LocalDate endDate = (endDateStr != null && !endDateStr.isEmpty()) ? LocalDate.parse(endDateStr) : null;
+            LocalTime startTime = (startTimeStr != null && !startTimeStr.isEmpty()) ? LocalTime.parse(startTimeStr) : null;
+            LocalTime endTime = (endTimeStr != null && !endTimeStr.isEmpty()) ? LocalTime.parse(endTimeStr) : null;
+
+            if (endDate != null && endDate.isBefore(scheduledDate)) {
+                throw new IllegalArgumentException("Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.");
+            }
+            if (startTime != null && endTime != null && (endDate == null || endDate.isEqual(scheduledDate)) && !endTime.isAfter(startTime)) {
+                throw new IllegalArgumentException("Giờ kết thúc phải sau giờ bắt đầu nếu trong cùng một ngày.");
+            }
+
+            // Tạo hoặc tìm địa chỉ và lấy ID
+            int provinceId = Integer.parseInt(provinceIdStr);
+            int districtId = Integer.parseInt(districtIdStr);
+            int wardId = Integer.parseInt(wardIdStr);
+            int addressId = addressDAO.findOrCreateAddress(streetAddress, wardId, districtId, provinceId);
+
+            // Cập nhật các thuộc tính của đối tượng schedule
+            // (Các phần lấy parameter và tạo đối tượng schedule ở trên...)
+            if (technicalRequestIdStr != null && !technicalRequestIdStr.isEmpty()) {
+                schedule.setTechnicalRequestId(Integer.parseInt(technicalRequestIdStr));
+            } else {
+                schedule.setTechnicalRequestId(null);
+            }
+            schedule.setTitle(title);
+            schedule.setColor(color);
+            schedule.setScheduledDate(scheduledDate);
+            schedule.setEndDate(endDate);
+            schedule.setStartTime(startTime);
+            schedule.setEndTime(endTime);
+            schedule.setAddressId(addressId);
+            schedule.setStatus(status);
+            schedule.setNotes(notes);
+
+// === 4. LƯU THAY ĐỔI VÀO DATABASE ===
+            boolean scheduleUpdated = scheduleDAO.updateMaintenanceSchedule(schedule);
+
+// --- PHẦN TÍCH HỢP ---
+// Chỉ tiếp tục cập nhật phân công nếu lịch trình đã được cập nhật thành công
+            if (scheduleUpdated) {
+                // 4.1. Lấy danh sách ID nhân viên mới từ form
+                String[] assignedUserIdsStr = request.getParameterValues("assignedUserIds");
+                List<Integer> newUserIds = new ArrayList<>();
+                if (assignedUserIdsStr != null) {
+                    for (String userIdStr : assignedUserIdsStr) {
+                        try {
+                            newUserIds.add(Integer.parseInt(userIdStr));
+                        } catch (NumberFormatException e) {
+                            // Bỏ qua các giá trị không hợp lệ hoặc log lỗi nếu cần
+                            System.err.println("Invalid user ID format: " + userIdStr);
+                        }
+                    }
+                }
+
+                // 4.2. Gọi DAO để cập nhật bảng MaintenanceAssignments
+                boolean assignmentsUpdated = scheduleDAO.updateAssignmentsForSchedule(schedule.getId(), newUserIds);
+
+                // 4.3. Kiểm tra kết quả và chuyển hướng
+                if (assignmentsUpdated) {
+                    // CHỈ KHI CẢ HAI ĐỀU THÀNH CÔNG
+                     response.sendRedirect(request.getContextPath() + "/schedule");
+                } else {
+                    // Trường hợp lịch trình cập nhật OK, nhưng phân công thất bại
+                    // Cần có cơ chế xử lý lỗi tốt hơn, ví dụ: rollback hoặc báo lỗi cụ thể
+                    throw new Exception("Cập nhật lịch bảo trì thành công, nhưng cập nhật phân công nhân viên thất bại.");
+                }
+
+            } else {
+                // Trường hợp cập nhật lịch trình chính thất bại ngay từ đầu
+                throw new Exception("Cập nhật lịch bảo trì thất bại do lỗi cơ sở dữ liệu.");
+            }
+
+        } catch (IllegalArgumentException | DateTimeParseException e) {
+            // Bắt lỗi validation hoặc lỗi parse
+            request.setAttribute("error", e.getMessage());
+            forwardToEditForm(request, response, technicalDAO);
+        } catch (Exception e) {
+            // Bắt các lỗi chung khác
+            e.printStackTrace();
+            request.setAttribute("error", "Đã xảy ra lỗi hệ thống. Vui lòng thử lại.");
+            forwardToEditForm(request, response, technicalDAO);
+        }
+    }
+
+    private void forwardToEditForm(HttpServletRequest request, HttpServletResponse response, TechnicalRequestDAO technicalDAO)
+            throws ServletException, IOException {
+
+        // Cố gắng lấy lại đối tượng schedule để điền form
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            MaintenanceScheduleDAO scheduleDAO = new MaintenanceScheduleDAO();
+            MaintenanceSchedule schedule = scheduleDAO.getMaintenanceScheduleById(id);
+            request.setAttribute("schedule", schedule); // Luôn gửi lại đối tượng gốc
+        } catch (Exception e) {
+            // Bỏ qua nếu không lấy được
+        }
+
+        // Tải lại danh sách cho các dropdown
+        try {
+            AddressDAO addressDAO = new AddressDAO();
+            request.setAttribute("technicalRequests", technicalDAO.getAllTechnicalRequestsIdAndTitle());
+            request.setAttribute("provinces", addressDAO.getAllProvinces());
+
+            // Tải lại quận/huyện và phường/xã nếu người dùng đã chọn
+            if (request.getParameter("province") != null && !request.getParameter("province").isEmpty()) {
+                request.setAttribute("districts", addressDAO.getDistrictsByProvinceId(Integer.parseInt(request.getParameter("province"))));
+            }
+            if (request.getParameter("district") != null && !request.getParameter("district").isEmpty()) {
+                request.setAttribute("wards", addressDAO.getWardsByDistrictId(Integer.parseInt(request.getParameter("district"))));
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        request.getRequestDispatcher("jsp/customerSupport/editSchedule.jsp").forward(request, response);
+    }
+        private void updateScheduleTime(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+                // Đảm bảo đọc/ghi UTF-8
+        request.setCharacterEncoding("UTF-8");
+        response.setContentType("application/json; charset=UTF-8");
+
+        JSONObject jsonResponse = new JSONObject();
+
+        try {
+            // --- Đọc JSON từ body ---
+            StringBuilder sb = new StringBuilder();
+            try (BufferedReader reader = request.getReader()) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line);
+                }
+            }
+
+            if (sb.length() == 0) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                jsonResponse.put("status", "error");
+                jsonResponse.put("message", "Request body trống.");
+                writeResponse(response, jsonResponse);
+                return;
+            }
+
+            JSONObject jsonRequest = new JSONObject(sb.toString());
+
+            // --- Lấy và xác thực dữ liệu đầu vào ---
+            // ID và scheduledDate là bắt buộc
+            int id = jsonRequest.getInt("id");
+            LocalDate scheduledDate = LocalDate.parse(jsonRequest.getString("scheduledDate"));
+
+            // Các trường có thể là null
+            LocalDate endDate = parseNullableDate(jsonRequest, "endDate");
+            LocalTime startTime = parseNullableTime(jsonRequest, "startTime");
+            LocalTime endTime = parseNullableTime(jsonRequest, "endTime");
+
+            // --- ÁP DỤNG LOGIC SERVER ---
+
+            // 1. Nếu sự kiện được kéo vào slot CÓ GIỜ (startTime có giá trị)
+            //    nhưng frontend không gửi endTime, server sẽ tự tính toán.
+            if (startTime != null && endTime == null) {
+                endTime = startTime.plusMinutes(DEFAULT_DURATION_MINUTES);
+            }
+            
+            // 2. Nếu sự kiện được kéo vào slot CẢ NGÀY, frontend sẽ gửi startTime là null.
+            //    Lúc này, logic trên sẽ không chạy, giữ nguyên startTime và endTime là null, điều này là CHÍNH XÁC.
+
+            // 3. Validate logic ngày: Nếu endDate có giá trị nhưng lại trước scheduledDate thì vô hiệu hóa nó.
+            if (endDate != null && endDate.isBefore(scheduledDate)) {
+                endDate = null;
+            }
+
+            // --- Gọi DAO để cập nhật vào CSDL ---
+            MaintenanceScheduleDAO dao = new MaintenanceScheduleDAO();
+            boolean success = dao.updateScheduleByDragDrop(id, scheduledDate, endDate, startTime, endTime);
+
+            if (success) {
+                response.setStatus(HttpServletResponse.SC_OK);
+                jsonResponse.put("status", "success");
+                jsonResponse.put("message", "Lịch trình đã được cập nhật thành công.");
+                
+                // Trả về payload chứa dữ liệu đã được server chuẩn hóa.
+                // Frontend có thể dùng payload này để cập nhật lại giao diện một cách chính xác.
+                JSONObject payload = new JSONObject();
+                payload.put("id", id);
+                payload.put("scheduledDate", scheduledDate.toString());
+                payload.put("endDate", endDate != null ? endDate.toString() : JSONObject.NULL);
+                payload.put("startTime", startTime != null ? startTime.toString() : JSONObject.NULL);
+                payload.put("endTime", endTime != null ? endTime.toString() : JSONObject.NULL);
+                jsonResponse.put("payload", payload);
+                
+            } else {
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                jsonResponse.put("status", "error");
+                jsonResponse.put("message", "Cập nhật thất bại. Lịch trình không tồn tại hoặc có lỗi cơ sở dữ liệu.");
+            }
+
+            writeResponse(response, jsonResponse);
+
+        } catch (JSONException | DateTimeParseException e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            writeError(response, "Dữ liệu gửi lên không hợp lệ: " + e.getMessage(), e);
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            writeError(response, "Đã có lỗi không mong muốn xảy ra ở máy chủ.", e);
+        }
+        }
+        // ---------- Helper Methods ----------
+    private LocalDate parseNullableDate(JSONObject json, String key) {
+        if (!json.has(key) || json.isNull(key)) return null;
+        String val = json.optString(key, "").trim();
+        return val.isEmpty() ? null : LocalDate.parse(val);
+    }
+
+    private LocalTime parseNullableTime(JSONObject json, String key) {
+        if (!json.has(key) || json.isNull(key)) return null;
+        String val = json.optString(key, "").trim();
+        return val.isEmpty() ? null : LocalTime.parse(val);
+    }
+
+    private void writeResponse(HttpServletResponse response, JSONObject json) throws IOException {
+        try (PrintWriter out = response.getWriter()) {
+            out.print(json.toString());
+            out.flush();
+        }
+    }
+    
+    private void writeError(HttpServletResponse response, String message, Exception e) throws IOException {
+        // Ghi log lỗi đầy đủ ở server để debug
+        e.printStackTrace(); 
+        
+        JSONObject err = new JSONObject();
+        err.put("status", "error");
+        err.put("message", message);
+        writeResponse(response, err);
+    }
+}

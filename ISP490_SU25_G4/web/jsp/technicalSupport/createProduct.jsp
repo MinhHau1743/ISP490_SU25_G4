@@ -68,7 +68,7 @@
                                         <div class="details-grid">
 
                                             <!-- Tên sản phẩm -->
-                                            <div class="form-group full-width">
+                                            <div class="form-group">
                                                 <label class="form-label" for="productName">Tên sản phẩm</label>
                                                 <input type="text" id="productName" name="name" class="form-control"
                                                        value="${product.name}" required>
@@ -94,18 +94,6 @@
                                                 <label class="form-label" for="origin">Xuất xứ</label>
                                                 <input type="text" id="origin" name="origin" class="form-control"
                                                        value="${product.brand}" >
-                                            </div>
-
-                                            <!-- Danh mục -->
-                                            <div class="form-group">
-                                                <label class="form-label" for="categoryId">Danh mục</label>
-                                                <select id="categoryId" name="categoryId" class="form-control" required>
-                                                    <c:forEach var="c" items="${categories}">
-                                                        <option value="${c.id}" <c:if test="${product.categoryId == c.id}">selected</c:if>>
-                                                            ${c.name}
-                                                        </option>
-                                                    </c:forEach>
-                                                </select>
                                             </div>
 
 

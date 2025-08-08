@@ -27,13 +27,7 @@ public class ProductByIdController extends HttpServlet {
 
         ProductDAO dao = new ProductDAO();
         Product product = dao.getProductById(id);
-        List<ProductCategory> categories = productCategories.getAllCategories();
-        Map<Integer, String> categoryMap = new HashMap<>();
-        for (ProductCategory c : categories) {
-            categoryMap.put(c.getId(), c.getName());
-        }
         if (product != null) {
-            request.setAttribute("categoryMap", categoryMap);
             request.setAttribute("product", product);
             request.getRequestDispatcher("/jsp/technicalSupport/viewProductDetail.jsp").forward(request, response);
         } else {

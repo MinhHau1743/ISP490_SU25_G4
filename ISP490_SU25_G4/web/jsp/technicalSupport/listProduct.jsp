@@ -100,15 +100,7 @@
                                             </c:forEach>
                                         </select>
                                     </div>
-                                    <div class="filter-group">
-                                        <label for="category-filter">Nhóm hàng</label>
-                                        <select id="category-filter" name="categoryId">
-                                            <option value="">Tất cả</option>
-                                            <c:forEach var="category" items="${categories}">
-                                                <option value="${category.id}" ${param.categoryId == category.id ? 'selected' : ''}>${category.name}</option>
-                                            </c:forEach>
-                                        </select>
-                                    </div>
+
                                 </div>
                                 <div class="filter-actions">
                                     <a href="ProductController" class="btn-reset-filter">Xóa lọc</a>
@@ -134,7 +126,6 @@
                                                 <div class="card-header"><span class="product-name-header">${p.name}</span></div>
                                                 <div class="card-body">
                                                     <div class="card-info-row"><i data-feather="tag"></i><span>Mã: ${p.productCode}</span></div>
-                                                    <div class="card-info-row"><i data-feather="layers"></i><span>Danh mục: ${categoryMap[p.categoryId]}</span></div>
                                                     <div class="card-info-row"><i data-feather="package"></i><span>Xuất xứ: ${p.origin}</span></div>
                                                     <div class="card-info-row"><i data-feather="align-left"></i><span>Mô tả: ${p.description}</span></div>
                                                     <div class="card-info-row"><i data-feather="calendar"></i><span>Ngày tạo: ${p.createdAt}</span></div>
@@ -176,7 +167,6 @@
                                             <tr>
                                                 <th>Tên</th>
                                                 <th>Mã SP</th>
-                                                <th>Danh mục</th>
                                                 <th>Xuất xứ</th>
                                                 <th>Giá</th>
                                                 <th>Ngày tạo</th>
@@ -191,7 +181,6 @@
                                                 <tr>
                                                     <td>${p.name}</td>
                                                     <td>${p.productCode}</td>
-                                                    <td>${categoryMap[p.categoryId]}</td>
                                                     <td>${p.origin}</td>
                                                     <td><fmt:formatNumber value="${p.price}" type="currency" currencyCode="VND"/></td>
                                                     <td>${p.createdAt}</td>
@@ -215,7 +204,6 @@
                         <!-- **KẾT THÚC NỘI DUNG DANH SÁCH SẢN PHẨM** -->
 
                         <jsp:include page="/pagination.jsp"/>
-                        <jsp:include page="/jsp/technicalSupport/createGroupProduct.jsp" />
                     </div>
                 </div>
             </main>

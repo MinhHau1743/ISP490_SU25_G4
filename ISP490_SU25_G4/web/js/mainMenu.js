@@ -1,77 +1,72 @@
 /*
   File: mainMenu.js
-  Description: File JavaScript hoàn chỉnh để điều khiển tất cả các menu.
+  Description: Hướng tiếp cận mới để đảm bảo icon luôn hoạt động.
 */
+document.addEventListener('DOMContentLoaded', function () {
 
-document.addEventListener('DOMContentLoaded', function() {
+    // --- PHẦN 1: KHỞI TẠO VÀ VẼ ICON BAN ĐẦU ---
+    feather.replace();
 
-    // --- LOGIC 1: ĐIỀU KHIỂN ĐÓNG/MỞ SIDEBAR BÊN TRÁI ---
-    const toggleBtn = document.querySelector('.sidebar .toggle-btn');
+    // --- PHẦN 2: LOGIC CHO SIDEBAR VÀ NÚT PIN ---
     const appContainer = document.querySelector('.app-container');
+    const pinBtn = document.querySelector('.pin-btn');
 
-    if (toggleBtn && appContainer) {
-        toggleBtn.addEventListener('click', function() {
+    if (appContainer && pinBtn) {
+        const pinIcon = pinBtn.querySelector('i');
+
+        // Hàm duy nhất để cập nhật trạng thái menu
+        const updateMenu = (isCollapsed) => {
+            const iconName = isCollapsed ? 'lock' : 'unlock';
+            const title = isCollapsed ? 'Mở rộng menu' : 'Thu gọn menu';
+            
+            // Cập nhật thuộc tính trước
+            pinIcon.setAttribute('data-feather', iconName);
+            pinBtn.setAttribute('title', title);
+            
+            // Vẽ lại toàn bộ icon trên trang
+            // Đây là cách đảm bảo icon của nút pin luôn được cập nhật
+            feather.replace(); 
+        };
+
+        // Gán sự kiện click cho nút pin
+        pinBtn.addEventListener('click', () => {
+            const willCollapse = !appContainer.classList.contains('sidebar-collapsed');
             appContainer.classList.toggle('sidebar-collapsed');
-
-            // Khi thu gọn, tự động đóng các menu con đang mở
-            if (appContainer.classList.contains('sidebar-collapsed')) {
-                const openDropdowns = document.querySelectorAll('.sidebar-nav .nav-item-dropdown.open');
-                openDropdowns.forEach(dropdown => {
-                    dropdown.classList.remove('open');
-                });
-            }
+            updateMenu(willCollapse);
         });
+
+        // Thiết lập trạng thái ban đầu
+        updateMenu(appContainer.classList.contains('sidebar-collapsed'));
     }
 
-    // --- LOGIC 2: ĐIỀU KHIỂN CÁC MENU CON TRONG SIDEBAR ---
-    const sidebarDropdownLinks = document.querySelectorAll('.sidebar-nav .nav-item-dropdown > a');
-    sidebarDropdownLinks.forEach(link => {
-        link.addEventListener('click', function(event) {
-            // Chỉ cho phép click khi menu không bị thu gọn
-            if (appContainer && !appContainer.classList.contains('sidebar-collapsed')) {
-                event.preventDefault(); // Ngăn chuyển trang
-                this.parentElement.classList.toggle('open');
-            }
-        });
-    });
-
-    // --- LOGIC 3: ĐIỀU KHIỂN CÁC DROPDOWN TRÊN HEADER (USER & NOTIFICATION) ---
+    // --- PHẦN 3: LOGIC CHO CÁC DROPDOWN TRÊN HEADER ---
     const userProfileButton = document.querySelector('.user-profile-button');
     const userDropdownContent = document.querySelector('.user-profile-dropdown .dropdown-content');
-    
     const notificationButton = document.querySelector('.notification-btn');
     const notificationDropdown = document.querySelector('.notification-dropdown');
-
-    // Hàm đóng tất cả các dropdown trên header
-    function closeAllHeaderDropdowns() {
+    
+    const closeAllHeaderDropdowns = () => {
         if (userDropdownContent) userDropdownContent.classList.remove('show');
         if (notificationDropdown) notificationDropdown.classList.remove('show');
-    }
+    };
 
-    if (userProfileButton && userDropdownContent) {
-        userProfileButton.addEventListener('click', function(event) {
-            event.stopPropagation(); // Ngăn sự kiện click lan ra ngoài
+    if (userProfileButton) {
+        userProfileButton.addEventListener('click', (e) => {
+            e.stopPropagation();
             const isShown = userDropdownContent.classList.contains('show');
-            closeAllHeaderDropdowns(); // Luôn đóng tất cả các dropdown khác trước
-            if (!isShown) {
-                userDropdownContent.classList.add('show'); // Chỉ mở nếu nó đang đóng
-            }
+            closeAllHeaderDropdowns();
+            if (!isShown) userDropdownContent.classList.add('show');
         });
     }
 
-    if (notificationButton && notificationDropdown) {
-        notificationButton.addEventListener('click', function(event) {
-            event.stopPropagation(); // Ngăn sự kiện click lan ra ngoài
+    if (notificationButton) {
+        notificationButton.addEventListener('click', (e) => {
+            e.stopPropagation();
             const isShown = notificationDropdown.classList.contains('show');
-            closeAllHeaderDropdowns(); // Luôn đóng tất cả các dropdown khác trước
-            if (!isShown) {
-                notificationDropdown.classList.add('show'); // Chỉ mở nếu nó đang đóng
-            }
+            closeAllHeaderDropdowns();
+            if (!isShown) notificationDropdown.classList.add('show');
         });
     }
-
-    // Đóng tất cả dropdown trên header nếu người dùng click ra ngoài
-    window.addEventListener('click', function(event) {
-        closeAllHeaderDropdowns();
-    });
+    
+    window.addEventListener('click', closeAllHeaderDropdowns);
 });

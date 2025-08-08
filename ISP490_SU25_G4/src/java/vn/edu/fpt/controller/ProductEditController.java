@@ -39,10 +39,7 @@ public class ProductEditController extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/ProductController?service=products");
                 return;
             }
-
-            List<ProductCategory> categoryList = new ProductCategoriesDAO().getAllCategories();
             request.setAttribute("product", p);
-            request.setAttribute("categories", categoryList);
             request.getRequestDispatcher("/jsp/technicalSupport/editProductDetail.jsp").forward(request, response);
 
         } catch (NumberFormatException e) {
@@ -91,18 +88,6 @@ public class ProductEditController extends HttpServlet {
             }
 
             String description = request.getParameter("description");
-            String categoryIdRaw = request.getParameter("categoryId");
-            int categoryId = 0;
-            if (categoryIdRaw == null || categoryIdRaw.trim().isEmpty()) {
-                errors.add("Danh mục không được để trống!");
-            } else {
-                try {
-                    categoryId = Integer.parseInt(categoryIdRaw);
-                } catch (NumberFormatException ex) {
-                    errors.add("Danh mục không hợp lệ!");
-                }
-            }
-
             String createdAt = request.getParameter("createdAt");
             String updatedAt = request.getParameter("updatedAt");
             boolean isDeleted = "true".equals(request.getParameter("isDeleted"));
@@ -122,7 +107,6 @@ public class ProductEditController extends HttpServlet {
                 p.setOrigin(origin);
                 p.setPrice(price);
                 p.setDescription(description);
-                p.setCategoryId(categoryId);
                 p.setIsDeleted(isDeleted);
                 p.setCreatedAt(createdAt);
                 p.setUpdatedAt(updatedAt);
@@ -130,7 +114,6 @@ public class ProductEditController extends HttpServlet {
 
                 request.setAttribute("product", p);
                 request.setAttribute("editErrors", errors);
-                request.setAttribute("categories", new ProductCategoriesDAO().getAllCategories());
                 request.getRequestDispatcher("/jsp/technicalSupport/editProductDetail.jsp").forward(request, response);
                 return;
             }
@@ -194,7 +177,6 @@ public class ProductEditController extends HttpServlet {
             p.setOrigin(origin);
             p.setPrice(price);
             p.setDescription(description);
-            p.setCategoryId(categoryId);
             p.setIsDeleted(isDeleted);
             p.setCreatedAt(createdAt);
             p.setUpdatedAt(LocalDateTime.now().format(dtf));
@@ -219,7 +201,6 @@ public class ProductEditController extends HttpServlet {
             } else {
                 request.setAttribute("product", p);
                 request.setAttribute("editError", "Cập nhật thất bại!");
-                request.setAttribute("categories", new ProductCategoriesDAO().getAllCategories());
                 request.getRequestDispatcher("/jsp/technicalSupport/editProductDetail.jsp").forward(request, response);
 
             }

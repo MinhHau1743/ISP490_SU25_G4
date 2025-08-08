@@ -92,17 +92,13 @@
                                     <div class="form-section">
                                         <h2 class="form-section-title">Thông tin chung</h2>
 
-                                        <div class="form-group full-width">
-                                            <label class="form-label" for="productName">Tên sản phẩm</label>
-                                            <input type="text" id="productName" name="name" class="form-control" value="${product.name}" required>
-                                        </div>
 
-                                        <div class="form-group full-width">
-                                            <label class="form-label" for="description">Mô tả</label>
-                                            <textarea id="description" name="description" class="form-control" rows="3">${product.description}</textarea>
-                                        </div>
 
                                         <div class="form-grid">
+                                            <div class="form-group">
+                                                <label class="form-label" for="productName">Tên sản phẩm</label>
+                                                <input type="text" id="productName" name="name" class="form-control" value="${product.name}" required>
+                                            </div> 
                                             <div class="form-group">
                                                 <label class="form-label" for="productCode">Mã sản phẩm</label>
                                                 <input type="text" id="productCode" class="form-control" value="${product.productCode}" readonly>
@@ -121,16 +117,6 @@
                                                 <input type="text" id="origin" name="origin" class="form-control" value="${product.origin}">
                                             </div>
                                             <div class="form-group">
-                                                <label class="form-label" for="categoryId">Danh mục</label>
-                                                <select id="categoryId" name="categoryId" class="form-control" required>
-                                                    <c:forEach var="c" items="${categories}">
-                                                        <option value="${c.id}" <c:if test="${product.categoryId == c.id}">selected</c:if>>
-                                                            ${c.name}
-                                                        </option>
-                                                    </c:forEach>
-                                                </select>
-                                            </div>
-                                            <div class="form-group">
                                                 <label class="form-label" for="createdAt">Ngày tạo</label>
                                                 <input type="datetime-local" id="createdAt" name="createdAt" class="form-control"
                                                        value="${product.createdAt}" readonly>
@@ -144,22 +130,13 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <div class="form-group full-width">
+                                        <label class="form-label" for="description">Mô tả</label>
+                                        <textarea id="description" name="description" class="form-control" rows="3">${product.description}</textarea>
+                                    </div>
 
                                     <input type="hidden" name="isDeleted" value="false">
-                                    <div class="form-section">
-                                        <h2 class="form-section-title">Thông số kỹ thuật</h2>
-                                        <table class="specs-table-edit">
-                                            <thead>
-                                                <tr><th>Tên thông số</th><th>Giá trị</th><th></th></tr>
-                                            </thead>
-                                            <tbody id="specs-tbody">
 
-                                            </tbody>
-                                        </table>
-                                        <button type="button" id="add-spec-btn" class="btn-add-spec">
-                                            <i data-feather="plus"></i> Thêm thông số
-                                        </button>
-                                    </div>
                                 </div>
                             </form>                   
                         </div>

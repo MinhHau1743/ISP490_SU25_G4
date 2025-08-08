@@ -115,4 +115,28 @@ public class AddressDAO extends DBContext {
             return ps.executeUpdate() > 0;
         }
     }
+    public int findOrCreateAddress(String streetAddress, int wardId, int districtId, int provinceId) throws SQLException {
+        // Step 1: Try to find an existing address with the exact same details.
+        String findSql = "SELECT id FROM Addresses WHERE " +
+                         "street_address = ? AND ward_id = ? AND district_id = ? AND province_id = ?";
+        
+        try (Connection conn = getConnection(); // Use the inherited getConnection()
+             PreparedStatement psFind = conn.prepareStatement(findSql)) {
+
+            psFind.setString(1, streetAddress);
+            psFind.setInt(2, wardId);
+            psFind.setInt(3, districtId);
+            psFind.setInt(4, provinceId);
+
+            try (ResultSet rs = psFind.executeQuery()) {
+                if (rs.next()) {
+                    // Address found, return its ID.
+                    return rs.getInt("id");
+                } else {
+                    // Step 2: If no address was found, create a new one.
+                    return insertAddress(conn, streetAddress, wardId, districtId, provinceId);
+                }
+            }
+        }
+    }
 }

@@ -21,39 +21,6 @@ public class ProductCategoriesDAO extends DBContext {
 
     Connection conn = getConnection();
 
-    public List<ProductCategory> getAllCategories() {
-        List<ProductCategory> categories = new ArrayList<>();
-
-        String sql = "SELECT id, name FROM ProductCategories";
-
-        try {
-            PreparedStatement st = conn.prepareStatement(sql);
-            ResultSet rs = st.executeQuery();
-            while (rs.next()) {
-                ProductCategory cat = new ProductCategory();
-                cat.setId(rs.getInt("id"));
-                cat.setName(rs.getString("name"));
-                categories.add(cat);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return categories;
-    }
-
-    public boolean insertCategory(ProductCategory category) {
-        String sql = "INSERT INTO ProductCategories (name) VALUES (?)";
-        try {
-            PreparedStatement st = conn.prepareStatement(sql);
-            st.setString(1, category.getName());
-            int rowsInserted = st.executeUpdate();
-            return rowsInserted > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
     public boolean checkDuplicate(String name) {
         String sql = "SELECT COUNT(*) FROM product_category WHERE LOWER(name) = LOWER(?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {

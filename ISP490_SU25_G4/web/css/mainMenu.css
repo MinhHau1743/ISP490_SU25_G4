@@ -1,8 +1,4 @@
-
-/*
-  File: mainMenu.css
-  Description: Stylesheet hoàn chỉnh và ĐÃ ĐƯỢC CHUẨN HÓA cho thanh điều hướng.
-*/
+/* File: mainMenu.css - PHIÊN BẢN SỬA LỖI CUỐI CÙNG */
 
 :root {
     --sidebar-width: 256px;
@@ -10,12 +6,30 @@
     --transition-speed: 0.3s ease-in-out;
 }
 
-/* === LAYOUT CHUNG (SỬA LỖI QUAN TRỌNG NHẤT) === */
+/* === BỐ CỤC CHÍNH === */
 .main-content {
-    padding-left: var(--sidebar-width);
     transition: padding-left var(--transition-speed);
 }
+.app-container:not(.sidebar-collapsed) .main-content {
+    padding-left: var(--sidebar-width);
+}
+.app-container.sidebar-collapsed .main-content {
+    padding-left: var(--sidebar-width-collapsed);
+}
 
+/* === BỔ SUNG: Cho .main-panel tự động co giãn khi menu thu gọn === */
+.app-container:not(.sidebar-collapsed) .main-panel {
+    margin-left: var(--sidebar-width);
+    width: calc(100% - var(--sidebar-width));
+    transition: margin-left var(--transition-speed), width var(--transition-speed);
+}
+.app-container.sidebar-collapsed .main-panel {
+    margin-left: var(--sidebar-width-collapsed);
+    width: calc(100% - var(--sidebar-width-collapsed));
+    transition: margin-left var(--transition-speed), width var(--transition-speed);
+}
+
+/* === SIDEBAR CHUNG === */
 .sidebar {
     position: fixed;
     top: 0;
@@ -30,8 +44,11 @@
     padding: 24px 16px;
     transition: width var(--transition-speed);
 }
+.app-container.sidebar-collapsed .sidebar {
+    width: var(--sidebar-width-collapsed);
+}
 
-/* Các style khác cho header, nav, sub-menu... */
+/* === HEADER === */
 .sidebar-header {
     display: flex;
     justify-content: space-between;
@@ -39,31 +56,61 @@
     margin-bottom: 32px;
     padding: 0 8px;
 }
-
+.logo-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    overflow: hidden;
+}
 .logo-img {
-    height: 50px;
-    object-fit: contain;
-    opacity: 1;
-    transition: opacity 0.2s;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+.sidebar-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    transition: opacity 0.1s;
 }
 
-.toggle-btn {
-    background: none;
+/* === NÚT PIN === */
+.pin-btn {
+    background-color: #f1f5f9;
     border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
     cursor: pointer;
-    color: var(--text-inactive);
-    transition: transform var(--transition-speed);
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+.pin-btn:hover {
+    color: var(--primary-color);
+    background-color: #e2e8f0;
+}
+.pin-btn .feather {
+    width: 18px;
+    height: 18px;
 }
 
+/* === MENU NAVIGATION === */
 .sidebar-nav {
     flex-grow: 1;
     overflow-y: auto;
+    overflow-x: hidden;
 }
 .sidebar-nav ul {
     list-style: none;
     padding: 0;
 }
-
 .sidebar-nav a {
     display: flex;
     align-items: center;
@@ -82,53 +129,62 @@
     background-color: var(--background-color);
     color: var(--text-primary);
 }
-.sidebar-nav > ul > li > a.active {
+.sidebar-nav a.active {
     background-color: var(--primary-color);
     color: var(--white);
-    font-weight: 600;
 }
-.dropdown-icon {
-    margin-left: auto;
-    transition: transform 0.3s ease;
-}
-.sub-menu {
-    list-style: none;
-    padding-left: 28px;
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease-in-out;
-}
-.nav-item-dropdown.open > .sub-menu {
-    max-height: 200px;
-}
-.nav-item-dropdown.open > a .dropdown-icon {
-    transform: rotate(180deg);
-}
-.sub-menu a.active {
-    color: var(--primary-color);
-    background-color: var(--primary-color-light);
+.sidebar-nav span {
+    transition: opacity 0.1s;
 }
 
-/* === TRẠNG THÁI THU GỌN === */
-.app-container.sidebar-collapsed .sidebar {
-    width: var(--sidebar-width-collapsed);
-}
-.app-container.sidebar-collapsed .main-content {
-    padding-left: var(--sidebar-width-collapsed);
-}
-.app-container.sidebar-collapsed .sidebar-nav span,
-.app-container.sidebar-collapsed .logo-img,
-.app-container.sidebar-collapsed .dropdown-icon {
+/* === TRẠNG THÁI THU GỌN VÀ HIỆU ỨNG HOVER === */
+
+/* Khi menu thu gọn, ẩn chữ đi */
+.app-container.sidebar-collapsed .sidebar-title,
+.app-container.sidebar-collapsed .sidebar-nav span {
     opacity: 0;
     visibility: hidden;
-    width: 0;
+}
+
+/* Căn giữa các icon và header */
+.app-container.sidebar-collapsed .sidebar-header {
+    justify-content: center;
 }
 .app-container.sidebar-collapsed .sidebar-nav a {
     justify-content: center;
 }
-.app-container.sidebar-collapsed .toggle-btn {
-    transform: rotate(180deg);
+
+/* Ẩn nút ghim khi không hover */
+.app-container.sidebar-collapsed .pin-btn {
+    opacity: 0;
+    visibility: hidden;
 }
-.app-container.sidebar-collapsed .sub-menu {
-    display: none;
+
+/* Khi di chuột vào menu đang thu gọn */
+.app-container.sidebar-collapsed .sidebar:hover {
+    width: var(--sidebar-width);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* HIỆN LẠI chữ và nút ghim khi hover */
+.app-container.sidebar-collapsed .sidebar:hover .sidebar-title,
+.app-container.sidebar-collapsed .sidebar:hover .sidebar-nav span,
+.app-container.sidebar-collapsed .sidebar:hover .pin-btn {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Căn chỉnh lại header và các mục menu về hai bên khi hover */
+.app-container.sidebar-collapsed .sidebar:hover .sidebar-header {
+    justify-content: space-between;
+}
+.app-container.sidebar-collapsed .sidebar:hover .sidebar-nav a {
+    justify-content: flex-start;
+}
+/* Trong file mainMenu.css hoặc file CSS chung */
+
+.main-menu { /* Hoặc tên class bao bọc menu của bạn */
+    flex-shrink: 0;       /* Ngăn không cho menu bị co lại khi không đủ không gian */
+    width: 250px;         /* Hoặc chiều rộng bạn muốn */
+    background-color: #fff; /* Đảm bảo menu có màu nền */
 }

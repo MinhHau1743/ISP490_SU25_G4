@@ -24,34 +24,33 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <script src="https://unpkg.com/feather-icons"></script>
     </head>
-    <body>
+    <body data-context-path="${pageContext.request.contextPath}">
         <div class="app-container">
-            <jsp:include page="../../mainMenu.jsp"/>
+            <%-- SỬA LỖI: Dùng đường dẫn gốc an toàn cho jsp:include --%>
+            <jsp:include page="/mainMenu.jsp"/>
+
             <main class="main-content">
                 <div class="page-content">
 
-                    <form class="page-content" action="editContract" method="post">
+                    <%-- ======================================================= --%>
+                    <%-- SỬA LỖI: Form action trỏ đến controller mới           --%>
+                    <%-- ======================================================= --%>
+                    <form class="page-content" action="contract" method="post">
+                        <%-- Thêm input ẩn để controller biết đây là hành động "update" --%>
+                        <input type="hidden" name="action" value="update">
                         <input type="hidden" name="id" value="${contract.id}">
 
                         <div class="detail-header">
-                            <a href="${pageContext.request.contextPath}/listContract" class="back-link">
+                            <%-- SỬA LỖI: Nút Hủy nên quay về trang xem chi tiết --%>
+                            <a href="${pageContext.request.contextPath}/contract?action=view&id=${contract.id}" class="back-link">
                                 <i data-feather="arrow-left"></i><span>Hủy</span>
                             </a>
                             <div class="action-buttons">
-                                <%-- ===== Bắt đầu phân quyền nút Lưu thay đổi ===== --%>
-                                <c:choose>
-                                    <c:when test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Chánh văn phòng'}">
-                                        <button type="submit" class="btn btn-primary">
-                                            <i data-feather="save"></i>Lưu thay đổi
-                                        </button>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <button type="button" class="btn btn-primary disabled-action" data-error="Bạn không có quyền sửa hợp đồng.">
-                                            <i data-feather="save"></i>Lưu thay đổi
-                                        </button>
-                                    </c:otherwise>
-                                </c:choose>
-                                <%-- ===== Kết thúc phân quyền nút Lưu thay đổi ===== --%>
+                                <c:if test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Chánh văn phòng'}">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i data-feather="save"></i>Lưu thay đổi
+                                    </button>
+                                </c:if>
                             </div>
                         </div>
 
@@ -119,7 +118,7 @@
                                             <div class="summary-row"><span class="summary-label">VAT (10%)</span><span class="summary-value" id="vatAmount">0</span></div>
                                             <div class="summary-row grand-total-row"><span class="summary-label">Tổng cộng</span><span class="summary-value" id="grandTotal">0</span></div>
                                         </div>
-                                        <input type="hidden" id="contractValue" name="totalValue" value="0">
+                                        <input type="hidden" id="contractValue" name="totalValue" value="${contract.totalValue}">
 
                                         <button type="button" class="btn-add-item" id="addProductBtn"><i data-feather="plus"></i> Thêm sản phẩm</button>
                                     </div>
@@ -174,13 +173,13 @@
                 </div>
             </main>
         </div>
-
+    <%-- Modal (cửa sổ pop-up) để chọn sản phẩm --%>
         <div id="productSearchModal" class="modal-overlay" style="display: none;">
             <div class="modal-content">
                 <div class="modal-header">
                     <h3 class="modal-title">Chọn sản phẩm</h3>
                     <button type="button" class="close-modal-btn" id="closeProductModalBtn"><i data-feather="x"></i></button>
-                </div>
+        </div>
                 <div class="modal-body">
                     <div class="search-bar-container">
                         <input type="text" id="productSearchInput" class="form-control" placeholder="Tìm kiếm sản phẩm theo tên...">
@@ -210,7 +209,7 @@
                 <div class="modal-header">
                     <h3 class="modal-title" style="color: #dc2626;">Thông báo</h3>
                     <button type="button" class="close-modal-btn" id="closeErrorModalBtn"><i data-feather="x"></i></button>
-                </div>
+        </div>
                 <div class="modal-body" style="text-align: center;">
                     <p id="errorMessageText" style="font-size: 16px;"></p>
                 </div>
@@ -237,7 +236,7 @@
         </script>
         <script src="${pageContext.request.contextPath}/js/editContractDetail.js"></script>
         <script>
-               feather.replace();
+            feather.replace();
         </script>
     </body>
 </html>

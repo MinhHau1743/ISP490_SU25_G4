@@ -1,6 +1,6 @@
 /*
  * File: listContract.css
- * Phiên bản hoàn thiện: Tối ưu hóa, sửa lỗi và chú thích đầy đủ.
+ * Phiên bản hoàn thiện: Tối ưu hóa, sửa lỗi và cập nhật giao diện modal.
  * Author: NGUYEN MINH (Refactored by Gemini)
  */
 
@@ -46,7 +46,7 @@
     align-items: center;
     padding: 16px 24px;
     border-bottom: 1px solid #f3f4f6;
-    position: relative; /* Đảm bảo không bị che khuất */
+    position: relative;
     z-index: 10;
 }
 .search-box {
@@ -71,7 +71,7 @@
 .toolbar-actions {
     margin-left: auto;
     display: flex;
-    gap: 12px; /* Khoảng cách giữa các nút */
+    gap: 12px;
 }
 
 /* === BỘ LỌC (FILTER) === */
@@ -79,48 +79,61 @@
     display: none; /* Mặc định ẩn, JS sẽ bật/tắt */
     padding: 20px 24px;
     background-color: var(--background-light);
-    border-bottom: 1px solid #f3f4f6;
-    justify-content: space-between;
-    align-items: flex-end;
-    gap: 24px;
+    border-bottom: 1px solid var(--border-color);
+    animation: slideDown 0.3s ease-out forwards;
 }
 .filter-container.open {
-    display: flex;
+    display: block;
 }
-.filter-controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 24px;
-    align-items: flex-end;
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
-.filter-group {
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px 20px;
+}
+.filter-item {
     display: flex;
     flex-direction: column;
-    gap: 4px;
 }
-.filter-group label {
+.filter-item label {
     font-size: 13px;
     font-weight: 500;
-    color: #374151;
+    color: var(--text-primary);
+    margin-bottom: 8px;
 }
-.filter-group select, .filter-group input {
-    height: 38px;
+.filter-item select,
+.filter-item input[type="date"] {
+    height: 40px;
     padding: 0 12px;
     border-radius: 6px;
     border: 1px solid #d1d5db;
     background-color: white;
     font-size: 14px;
-    min-width: 180px;
+    font-family: var(--font-family-sans);
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
-.date-inputs {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+.filter-item select:focus,
+.filter-item input[type="date"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
 }
 .filter-actions {
     display: flex;
+    justify-content: flex-end;
     gap: 12px;
-    align-items: flex-end;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px dashed var(--border-color);
 }
 
 /* === ĐỊNH NGHĨA KIỂU NÚT CHUNG (BUTTONS) === */
@@ -234,21 +247,41 @@
     height: 16px;
 }
 
-/* === MODAL & TOAST NOTIFICATIONS === */
+/* ======================================================= */
+/* === MODAL & THÔNG BÁO (PHIÊN BẢN CẬP NHẬT) === */
+/* ======================================================= */
 .modal-overlay {
     position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
-    display: none; justify-content: center; align-items: center;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(17, 24, 39, 0.6);
+    backdrop-filter: blur(4px);
+    display: none; /* JS sẽ đổi thành flex */
+    justify-content: center;
+    align-items: center;
     z-index: 1050;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
+.modal-overlay[style*="display: flex"] {
+    opacity: 1;
+}
+
 .modal-content {
     background: white;
-    border-radius: 12px;
+    border-radius: 8px;
     width: 90%;
-    max-width: 420px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    max-width: 450px;
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+    transform: scale(0.95);
+    transition: transform 0.3s ease;
 }
+.modal-overlay[style*="display: flex"] .modal-content {
+    transform: scale(1);
+}
+
 .modal-header {
     display: flex;
     justify-content: space-between;
@@ -260,12 +293,29 @@
     font-size: 18px;
     font-weight: 600;
 }
-.close-modal-btn {
+.modal-close { /* Sửa từ .close-modal-btn để khớp với JSP */
     background: none;
     border: none;
     cursor: pointer;
     padding: 4px;
     line-height: 1;
+    font-size: 24px;
+    color: var(--text-secondary);
+}
+.modal-close:hover {
+    color: var(--text-primary);
+}
+.modal-body {
+    padding: 24px;
+    line-height: 1.6;
+}
+.modal-body p {
+    margin: 0;
+    color: var(--text-secondary);
+}
+.modal-body strong {
+    color: var(--text-primary);
+    font-weight: 600;
 }
 .modal-footer {
     padding: 16px 24px;
@@ -274,24 +324,31 @@
     justify-content: flex-end;
     gap: 12px;
     border-top: 1px solid var(--border-color);
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
 }
 
+/* === THÔNG BÁO (ALERT) === */
 .alert {
     position: fixed;
-    top: 24px; right: 24px; z-index: 2000;
-    display: flex; align-items: center; gap: 12px;
-    min-width: 320px; max-width: 400px;
-    padding: 16px; border-radius: 8px;
+    top: 24px;
+    right: 24px;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 320px;
+    max-width: 400px;
+    padding: 16px;
+    border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    font-size: 14px; font-weight: 500;
+    font-size: 14px;
+    font-weight: 500;
     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
 }
 .alert.fade-out {
     opacity: 0;
     transform: translateY(-20px);
-}
-.alert .feather {
-    width: 20px; height: 20px; flex-shrink: 0;
 }
 .alert-success {
     color: #ffffff;
