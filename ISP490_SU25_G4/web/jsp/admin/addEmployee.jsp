@@ -16,7 +16,7 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-        
+
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
@@ -39,8 +39,9 @@
                     </div>
                 </c:if>
 
-                <form action="${pageContext.request.contextPath}/addEmployee" method="POST" enctype="multipart/form-data">
-                    <section class="content-body">
+                <form action="${pageContext.request.contextPath}/employee?action=add" method="POST"
+
+                      <section class="content-body">
                         <div class="add-employee-page">
 
                             <div class="avatar-panel">
@@ -133,7 +134,7 @@
                     </section>
 
                     <footer class="page-actions-footer">
-                        <a href="${pageContext.request.contextPath}/listEmployee" class="btn btn-secondary" role="button">Hủy</a>
+                        <a href="${pageContext.request.contextPath}/employee?action=list" class="btn btn-secondary" role="button">Hủy</a>
                         <button type="submit" class="btn btn-primary">Lưu nhân viên</button>
                     </footer>
                 </form>
@@ -142,21 +143,21 @@
 
         <script src="https://unpkg.com/feather-icons"></script>
         <script>
-            feather.replace();
+                                    feather.replace();
 
-            // Script preview avatar
-            const avatarUploadInput = document.getElementById('avatar-upload');
-            const avatarPreviewContainer = document.getElementById('avatar-preview-container');
-            avatarUploadInput.addEventListener('change', function (event) {
-                const file = event.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function (e) {
-                        avatarPreviewContainer.innerHTML = `<img src="${e.target.result}" alt="Avatar Preview" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">`;
-                    }
-                    reader.readAsDataURL(file);
-                }
-            });
+                                    // Script preview avatar
+                                    const avatarUploadInput = document.getElementById('avatar-upload');
+                                    const avatarPreviewContainer = document.getElementById('avatar-preview-container');
+                                    avatarUploadInput.addEventListener('change', function (event) {
+                                        const file = event.target.files[0];
+                                        if (file) {
+                                            const reader = new FileReader();
+                                            reader.onload = function (e) {
+                                                avatarPreviewContainer.innerHTML = `<img src="${e.target.result}" alt="Avatar Preview" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">`;
+                                            }
+                                            reader.readAsDataURL(file);
+                                        }
+                                    });
         </script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
