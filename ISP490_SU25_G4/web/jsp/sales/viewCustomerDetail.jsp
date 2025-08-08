@@ -33,29 +33,25 @@
                         <div class="page-content">
                             <div class="detail-header">
                                 <a href="${BASE_URL}/customer/list" class="back-link"><i data-feather="arrow-left"></i><span>Quay lại danh sách</span></a>
-                                <div class="header-actions">
-                                    <%-- User Access Control for Edit Button --%>
-                                    <c:choose>
-                                        <c:when test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Kinh doanh'}">
-                                            <a href="${BASE_URL}/customer/edit?id=${customer.id}" class="btn btn-secondary"><i data-feather="edit-2"></i>Sửa</a>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <a href="#" class="btn btn-secondary disabled-action" data-error="Bạn không có quyền sửa khách hàng."><i data-feather="edit-2"></i>Sửa</a>
-                                        </c:otherwise>
-                                    </c:choose>
+                                        <%-- /jsp/sales/viewCustomerDetail.jsp --%>
 
-                                    <%-- User Access Control for Delete Button --%>
-                                    <c:choose>
-                                        <c:when test="${sessionScope.userRole == 'Admin'}">
-                                            <a href="#" class="btn btn-danger delete-trigger-btn" data-id="<c:out value='${customer.id}'/>" data-name="<c:out value='${customer.name}'/>"><i data-feather="trash-2"></i>Xóa</a>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <a href="#" class="btn btn-danger disabled-action" data-error="Bạn không có quyền xóa khách hàng."><i data-feather="trash-2"></i>Xóa</a>
-                                        </c:otherwise>
-                                    </c:choose>
+                                <div class="header-actions">
+                                    <%-- Nút Sửa: Chỉ Admin và Kinh doanh có quyền --%>
+                                    <c:if test="${sessionScope.user.roleName == 'Admin' || sessionScope.user.roleName == 'Kinh doanh'}">
+                                        <a href="${BASE_URL}/customer/edit?id=${customer.id}" class="btn btn-secondary">
+                                            <i data-feather="edit-2"></i>Sửa
+                                        </a>
+                                    </c:if>
+
+                                    <%-- Nút Xóa: Chỉ Admin có quyền --%>
+                                    <c:if test="${sessionScope.user.roleName == 'Admin'}">
+                                        <a href="#" class="btn btn-danger delete-trigger-btn" data-id="<c:out value='${customer.id}'/>" data-name="<c:out value='${customer.name}'/>">
+                                            <i data-feather="trash-2"></i>Xóa
+                                        </a>
+                                    </c:if>
                                 </div>
                             </div>
-                            
+
                             <div class="detail-layout">
                                 <div class="main-column">
                                     <div class="profile-header-card detail-card">
@@ -98,7 +94,7 @@
                                             <div class="info-item"><span class="label"><i data-feather="mail"></i>Email</span><span class="value"><a href="mailto:<c:out value='${primaryContact.email}'/>"><c:out value="${not empty primaryContact.email ? primaryContact.email : 'N/A'}"/></a></span></div>
                                         </div>
                                     </div>
-                                    
+
                                     <%-- Recent Contracts Section --%>
                                     <div class="detail-card">
                                         <h3 class="card-title">Hợp đồng đã ký kết</h3>
@@ -163,7 +159,7 @@
                                             </div>
                                         </div>
                                     </div>      
-                                    
+
                                     <div class="detail-card">
                                         <h3 class="card-title">Giao dịch gần đây</h3>
                                         <c:choose>

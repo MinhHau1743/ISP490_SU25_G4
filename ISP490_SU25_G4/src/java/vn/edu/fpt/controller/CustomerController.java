@@ -54,6 +54,13 @@ public class CustomerController extends HttpServlet {
             action = "/list"; // Mặc định là action list
         }
 
+        if (action.equals("/create") || action.equals("/edit")) {
+            if (!hasWritePermission(request)) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập trang này.");
+                return;
+            }
+        }
+
         // Các action AJAX không cần xác thực session ở đây vì chúng chỉ trả về dữ liệu JSON
         if (!isAjaxRequest(action)) {
             HttpSession session = request.getSession(false);
@@ -110,6 +117,11 @@ public class CustomerController extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         String action = request.getPathInfo();
 
+        // Tất cả các action trong doPost đều là hành động Ghi (create, edit, delete)
+        if (!hasWritePermission(request)) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền thực hiện hành động này.");
+            return;
+        }
         try {
             switch (action) {
                 case "/create":
@@ -129,7 +141,6 @@ public class CustomerController extends HttpServlet {
         }
     }
 
-    
     private void listCustomers(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             // Lấy tham số lọc và phân trang
@@ -276,7 +287,6 @@ public class CustomerController extends HttpServlet {
             String hotline = request.getParameter("hotline");
             String businessEmail = request.getParameter("businessEmail");
 
-            
             if (hotline == null || hotline.trim().isEmpty()) {
                 request.setAttribute("errorMessage", "Vui lòng nhập Fax/Hotline của doanh nghiệp.");
                 doGet(request, response);
@@ -288,7 +298,6 @@ public class CustomerController extends HttpServlet {
                 return;
             }
 
-            
             String provinceIdStr = request.getParameter("province");
             if (provinceIdStr == null || provinceIdStr.isEmpty()) {
                 request.setAttribute("errorMessage", "Vui lòng chọn Tỉnh/Thành phố.");
@@ -317,7 +326,6 @@ public class CustomerController extends HttpServlet {
                 return;
             }
 
-            
             String fullName = request.getParameter("fullName");
             String position = request.getParameter("position");
             String phone = request.getParameter("phone");
@@ -331,14 +339,12 @@ public class CustomerController extends HttpServlet {
 
             String employeeIdStr = request.getParameter("employeeId");
 
-            
             if (employeeIdStr == null || employeeIdStr.isEmpty()) {
                 request.setAttribute("errorMessage", "Vui lòng chọn nhân viên phụ trách.");
                 doGet(request, response);
                 return;
             }
             int employeeId = Integer.parseInt(employeeIdStr);
-            
 
             String customerGroupIdStr = request.getParameter("customerGroup");
             if (customerGroupIdStr == null || customerGroupIdStr.isEmpty()) {
@@ -422,72 +428,72 @@ public class CustomerController extends HttpServlet {
         int enterpriseId = Integer.parseInt(request.getParameter("enterpriseId"));
         String customerName = request.getParameter("customerName");
         int addressId = Integer.parseInt(request.getParameter("addressId"));
-            if (customerName == null || customerName.trim().isEmpty()) {
-                request.setAttribute("errorMessage", "Tên doanh nghiệp không được để trống.");
-                doGet(request, response);
-                return;
-            }
+        if (customerName == null || customerName.trim().isEmpty()) {
+            request.setAttribute("errorMessage", "Tên doanh nghiệp không được để trống.");
+            doGet(request, response);
+            return;
+        }
 
-            String hotline = request.getParameter("hotline");
-            if (hotline == null || hotline.trim().isEmpty()) {
-                request.setAttribute("errorMessage", "Vui lòng nhập Fax/Hotline của doanh nghiệp.");
-                doGet(request, response);
-                return;
-            }
+        String hotline = request.getParameter("hotline");
+        if (hotline == null || hotline.trim().isEmpty()) {
+            request.setAttribute("errorMessage", "Vui lòng nhập Fax/Hotline của doanh nghiệp.");
+            doGet(request, response);
+            return;
+        }
 
-            String businessEmail = request.getParameter("businessEmail");
-            if (businessEmail == null || businessEmail.trim().isEmpty()) {
-                request.setAttribute("errorMessage", "Vui lòng nhập Email của doanh nghiệp.");
-                doGet(request, response);
-                return;
-            }
+        String businessEmail = request.getParameter("businessEmail");
+        if (businessEmail == null || businessEmail.trim().isEmpty()) {
+            request.setAttribute("errorMessage", "Vui lòng nhập Email của doanh nghiệp.");
+            doGet(request, response);
+            return;
+        }
 
-            String customerGroupIdStr = request.getParameter("customerGroup");
-            if (customerGroupIdStr == null || customerGroupIdStr.isEmpty()) {
-                request.setAttribute("errorMessage", "Vui lòng chọn nhóm khách hàng.");
-                doGet(request, response);
-                return;
-            }
+        String customerGroupIdStr = request.getParameter("customerGroup");
+        if (customerGroupIdStr == null || customerGroupIdStr.isEmpty()) {
+            request.setAttribute("errorMessage", "Vui lòng chọn nhóm khách hàng.");
+            doGet(request, response);
+            return;
+        }
 
-            String employeeIdStr = request.getParameter("employeeId");
-            if (employeeIdStr == null || employeeIdStr.isEmpty()) {
-                request.setAttribute("errorMessage", "Vui lòng chọn nhân viên phụ trách.");
-                doGet(request, response);
-                return;
-            }
+        String employeeIdStr = request.getParameter("employeeId");
+        if (employeeIdStr == null || employeeIdStr.isEmpty()) {
+            request.setAttribute("errorMessage", "Vui lòng chọn nhân viên phụ trách.");
+            doGet(request, response);
+            return;
+        }
 
-            String provinceIdStr = request.getParameter("province");
-            if (provinceIdStr == null || provinceIdStr.isEmpty()) {
-                request.setAttribute("errorMessage", "Vui lòng chọn Tỉnh/Thành phố.");
-                doGet(request, response);
-                return;
-            }
+        String provinceIdStr = request.getParameter("province");
+        if (provinceIdStr == null || provinceIdStr.isEmpty()) {
+            request.setAttribute("errorMessage", "Vui lòng chọn Tỉnh/Thành phố.");
+            doGet(request, response);
+            return;
+        }
 
-            String districtIdStr = request.getParameter("district");
-            if (districtIdStr == null || districtIdStr.isEmpty()) {
-                request.setAttribute("errorMessage", "Vui lòng chọn Quận/Huyện.");
-                doGet(request, response);
-                return;
-            }
+        String districtIdStr = request.getParameter("district");
+        if (districtIdStr == null || districtIdStr.isEmpty()) {
+            request.setAttribute("errorMessage", "Vui lòng chọn Quận/Huyện.");
+            doGet(request, response);
+            return;
+        }
 
-            String wardIdStr = request.getParameter("ward");
-            if (wardIdStr == null || wardIdStr.isEmpty()) {
-                request.setAttribute("errorMessage", "Vui lòng chọn Phường/Xã.");
-                doGet(request, response);
-                return;
-            }
+        String wardIdStr = request.getParameter("ward");
+        if (wardIdStr == null || wardIdStr.isEmpty()) {
+            request.setAttribute("errorMessage", "Vui lòng chọn Phường/Xã.");
+            doGet(request, response);
+            return;
+        }
 
-            String streetAddress = request.getParameter("streetAddress");
-            if (streetAddress == null || streetAddress.trim().isEmpty()) {
-                request.setAttribute("errorMessage", "Vui lòng nhập địa chỉ cụ thể.");
-                doGet(request, response);
-                return;
-            }
-            
-            int employeeId = Integer.parseInt(employeeIdStr);
-            int provinceId = Integer.parseInt(provinceIdStr);
-            int districtId = Integer.parseInt(districtIdStr);
-            int wardId = Integer.parseInt(wardIdStr);
+        String streetAddress = request.getParameter("streetAddress");
+        if (streetAddress == null || streetAddress.trim().isEmpty()) {
+            request.setAttribute("errorMessage", "Vui lòng nhập địa chỉ cụ thể.");
+            doGet(request, response);
+            return;
+        }
+
+        int employeeId = Integer.parseInt(employeeIdStr);
+        int provinceId = Integer.parseInt(provinceIdStr);
+        int districtId = Integer.parseInt(districtIdStr);
+        int wardId = Integer.parseInt(wardIdStr);
 
         Connection conn = null;
         try {
@@ -506,8 +512,8 @@ public class CustomerController extends HttpServlet {
                 filePart.write(uploadFilePath + File.separator + uniqueFileName);
                 avatarDbPath = "uploads/avatars/" + uniqueFileName;
             }
-            
-             // *** THAY ĐỔI: Lấy các trường không bắt buộc và gán "N/A" nếu trống ***
+
+            // *** THAY ĐỔI: Lấy các trường không bắt buộc và gán "N/A" nếu trống ***
             String taxCode = request.getParameter("taxCode");
             if (taxCode == null || taxCode.trim().isEmpty()) {
                 taxCode = "N/A";
@@ -549,9 +555,6 @@ public class CustomerController extends HttpServlet {
             enterpriseToUpdate.setAvatarUrl(avatarDbPath);
             new EnterpriseDAO().updateEnterprise(conn, enterpriseToUpdate);
 
-            
-           
-
             if (fullName != null && !fullName.trim().isEmpty()) {
                 if (new EnterpriseDAO().primaryContactExists(conn, enterpriseId)) {
                     new EnterpriseDAO().updatePrimaryContact(conn, enterpriseId, fullName, position, phone, email);
@@ -564,7 +567,6 @@ public class CustomerController extends HttpServlet {
             new EnterpriseDAO().updateAddress(conn, addressId, streetAddress, wardId, districtId, provinceId);
             new EnterpriseDAO().updatePrimaryContact(conn, enterpriseId, fullName, position, phone, email);
             new EnterpriseDAO().updateMainAssignment(conn, enterpriseId, employeeId);
-            
 
             conn.commit();
             response.sendRedirect(request.getContextPath() + "/customer/view?id=" + enterpriseId);
@@ -677,5 +679,23 @@ public class CustomerController extends HttpServlet {
             return false;
         }
         return action.equals("/getDistricts") || action.equals("/getWards") || action.equals("/searchSuggestions");
+    }
+
+    /**
+     * Kiểm tra xem người dùng hiện tại có quyền Ghi (Thêm, Sửa, Xóa) hay không.
+     *
+     * @param request HttpServletRequest để lấy session
+     * @return true nếu là Admin hoặc Kinh doanh, ngược lại là false
+     */
+    private boolean hasWritePermission(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("user") == null) {
+            return false;
+        }
+        User user = (User) session.getAttribute("user");
+        String roleName = user.getRoleName();
+
+        // CHÚ Ý: Đảm bảo "Admin" và "Kinh doanh" là tên vai trò chính xác trong DB của bạn.
+        return "Admin".equalsIgnoreCase(roleName) || "Kinh doanh".equalsIgnoreCase(roleName);
     }
 }
