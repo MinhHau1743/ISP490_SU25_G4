@@ -1,12 +1,14 @@
 <%--
-    Document   : viewContractDetail.jsp
-    Created on : Jun 20, 2025
-    Author     : NGUYEN MINH (Fixed by Gemini)
+    Document    : viewContractDetail.jsp
+    Created on  : Jun 20, 2025
+    Author      : NGUYEN MINH (Fixed by Gemini)
+    Description : Updated to use statusName from the database.
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn" %> <%-- ADD THIS LIBRARY FOR STRING MANIPULATION --%>
 
 <c:set var="currentPage" value="listContract" />
 
@@ -27,32 +29,25 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/viewContractDetail.css">
     </head>
-    <%-- SỬA LỖI: Thêm data-context-path để JavaScript hoạt động chính xác --%>
     <body data-context-path="${pageContext.request.contextPath}">
         <div class="app-container">
-            <%-- SỬA LỖI: Dùng đường dẫn gốc an toàn cho jsp:include --%>
             <jsp:include page="/mainMenu.jsp"/>
 
             <main class="main-content">
                 <c:if test="${not empty contract}">
                     <div class="page-content">
                         <div class="detail-header">
-                            <%-- SỬA LỖI: URL trỏ về ContractController --%>
                             <a href="${pageContext.request.contextPath}/contract?action=list" class="back-link"><i data-feather="arrow-left"></i><span>Quay lại danh sách</span></a>
 
                             <div class="action-buttons" style="display: flex; gap: 8px;">
                                 <a href="#" class="btn btn-secondary"><i data-feather="printer"></i>In hợp đồng</a>
 
-                                <%-- SỬA LỖI: Áp dụng đúng logic phân quyền cho nút "Gửi đánh giá" --%>
-                                <c:if test="${contract.status == 'expired' && (sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Kinh doanh')}">
+                                <c:if test="${contract.statusName == 'Đã hoàn thành' && (sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Kinh doanh')}">
                                     <a href="${pageContext.request.contextPath}/jsp/customerSupport/createFeedback.jsp" class="btn btn-warning"><i data-feather="star"></i>Gửi đánh giá</a>
                                 </c:if>
 
-                                <%-- SỬA LỖI: Áp dụng đúng logic phân quyền cho nút "Sửa" và "Xóa" --%>
                                 <c:if test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Chánh văn phòng'}">
                                     <a href="${pageContext.request.contextPath}/contract?action=edit&id=${contract.id}" class="btn btn-primary"><i data-feather="edit-2"></i>Sửa</a>
-
-                                    <%-- SỬA LỖI: Đổi class thành "delete-btn" để JS nhận diện --%>
                                     <button type="button" class="btn btn-danger delete-btn" 
                                             data-id="${contract.id}" 
                                             data-name="${contract.contractCode}">
@@ -69,7 +64,6 @@
                                     <div class="card-body">
                                         <div class="info-grid">
                                             <div class="info-item"><span class="label">Mã hợp đồng</span><span class="value" style="font-weight: 700; color: var(--primary-color, #0d9488);">${contract.contractCode}</span></div>
-                                                <%-- SỬA LỖI: Bỏ liên kết đến trang không tồn tại --%>
                                             <div class="info-item"><span class="label">Khách hàng</span><span class="value">${contract.enterpriseName}</span></div>
                                             <div class="info-item full-width"><span class="label">Tên hợp đồng</span><span class="value">${contract.contractName}</span></div>
                                             <div class="info-item full-width"><span class="label">Mô tả / Điều khoản</span><span class="value notes">${not empty contract.notes ? contract.notes : 'Không có ghi chú'}</span></div>
@@ -119,16 +113,18 @@
                                 <div class="detail-card">
                                     <h3 class="card-title">Thời hạn & Giá trị</h3>
                                     <div class="card-body">
-                                        <div class="info-item"><span class="label">Trạng thái</span>
+
+                                        <%-- ======================================================= --%>
+                                        <%-- ## 1. UPDATE: STATUS DISPLAY                          --%>
+                                        <%-- ======================================================= --%>
+                                        <div class="info-item">
+                                            <span class="label">Trạng thái</span>
                                             <span class="value">
-                                                <c:choose>
-                                                    <c:when test="${contract.status == 'active'}"><span class="status-pill status-active">Còn hiệu lực</span></c:when>
-                                                    <c:when test="${contract.status == 'expiring'}"><span class="status-pill status-expiring">Sắp hết hạn</span></c:when>
-                                                    <c:when test="${contract.status == 'expired'}"><span class="status-pill status-expired">Đã hết hạn</span></c:when>
-                                                    <c:otherwise><span class="status-pill">${contract.status}</span></c:otherwise>
-                                                </c:choose>
+                                                <%-- This now uses statusName directly from the database --%>
+                                                <span class="status-pill status-${fn:toLowerCase(fn:replace(contract.statusName, ' ', '-'))}">${contract.statusName}</span>
                                             </span>
                                         </div>
+
                                         <div class="info-item"><span class="label">Ngày ký</span><span class="value"><fmt:formatDate value="${contract.signedDate}" pattern="dd/MM/yyyy"/></span></div>
                                         <div class="info-item"><span class="label">Ngày hết hạn</span><span class="value"><fmt:formatDate value="${contract.endDate}" pattern="dd/MM/yyyy"/></span></div>
                                         <div class="info-item"><span class="label">Giá trị hợp đồng</span><span class="value" style="font-size: 18px; font-weight: 700;"><fmt:formatNumber value="${grandTotal}" type="currency" currencySymbol="₫"/></span></div>
@@ -166,7 +162,6 @@
             </div>
         </div>
 
-        <%-- SỬA LỖI: Dọn dẹp script, chỉ giữ lại những gì cần thiết --%>
         <script src="${pageContext.request.contextPath}/js/viewContractDetail.js"></script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>

@@ -1,7 +1,8 @@
 <%--
-    Document   : editContractDetail.jsp
-    Created on : Jul 09, 2025
-    Author     : NGUYEN MINH (Final Version by Gemini)
+    Document    : editContractDetail.jsp
+    Created on  : Jul 09, 2025
+    Author      : NGUYEN MINH (Final Version by Gemini)
+    Description : Updated to use a dynamic status dropdown.
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
@@ -26,22 +27,15 @@
     </head>
     <body data-context-path="${pageContext.request.contextPath}">
         <div class="app-container">
-            <%-- SỬA LỖI: Dùng đường dẫn gốc an toàn cho jsp:include --%>
             <jsp:include page="/mainMenu.jsp"/>
 
             <main class="main-content">
                 <div class="page-content">
-
-                    <%-- ======================================================= --%>
-                    <%-- SỬA LỖI: Form action trỏ đến controller mới           --%>
-                    <%-- ======================================================= --%>
                     <form class="page-content" action="contract" method="post">
-                        <%-- Thêm input ẩn để controller biết đây là hành động "update" --%>
                         <input type="hidden" name="action" value="update">
                         <input type="hidden" name="id" value="${contract.id}">
 
                         <div class="detail-header">
-                            <%-- SỬA LỖI: Nút Hủy nên quay về trang xem chi tiết --%>
                             <a href="${pageContext.request.contextPath}/contract?action=view&id=${contract.id}" class="back-link">
                                 <i data-feather="arrow-left"></i><span>Hủy</span>
                             </a>
@@ -148,18 +142,27 @@
                                 <div class="detail-card">
                                     <h3 class="card-title">Quản lý</h3>
                                     <div class="card-body">
+
+                                        <%-- ======================================================= --%>
+                                        <%-- ## 1. UPDATE: STATUS DROPDOWN                          --%>
+                                        <%-- ======================================================= --%>
                                         <div class="form-group">
-                                            <label class="form-label" for="status">Trạng thái</label>
-                                            <select id="status" name="status" class="form-control status-select">
-                                                <option value="pending" <c:if test="${contract.status == 'pending'}">selected</c:if>>Chờ duyệt</option>
-                                                <option value="active" <c:if test="${contract.status == 'active'}">selected</c:if>>Còn hiệu lực</option>
-                                                <option value="expired" <c:if test="${contract.status == 'expired'}">selected</c:if>>Đã hết hạn</option>
-                                                <option value="cancelled" <c:if test="${contract.status == 'cancelled'}">selected</c:if>>Đã hủy</option>
-                                                </select>
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="form-label" for="createdById">Nhân viên phụ trách</label>
-                                                <select id="createdById" name="createdById" class="form-control">
+                                            <label class="form-label" for="statusId">Trạng thái</label>
+                                            <%-- Changed name to "statusId" --%>
+                                            <select id="statusId" name="statusId" class="form-control status-select">
+                                                <%-- Loop through the status list from the controller --%>
+                                                <c:forEach var="status" items="${statusList}">
+                                                    <%-- Check if the current status matches the contract's status --%>
+                                                    <option value="${status.id}" <c:if test="${contract.statusId == status.id}">selected</c:if>>
+                                                        ${status.name}
+                                                    </option>
+                                                </c:forEach>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="form-label" for="createdById">Nhân viên phụ trách</label>
+                                            <select id="createdById" name="createdById" class="form-control">
                                                 <c:forEach var="e" items="${employeeList}">
                                                     <option value="${e.id}" <c:if test="${contract.createdById == e.id}">selected</c:if>>${e.firstName} ${e.lastName}</option>
                                                 </c:forEach>
@@ -173,13 +176,14 @@
                 </div>
             </main>
         </div>
-    <%-- Modal (cửa sổ pop-up) để chọn sản phẩm --%>
+
+        <%-- Modal for product selection --%>
         <div id="productSearchModal" class="modal-overlay" style="display: none;">
             <div class="modal-content">
                 <div class="modal-header">
                     <h3 class="modal-title">Chọn sản phẩm</h3>
                     <button type="button" class="close-modal-btn" id="closeProductModalBtn"><i data-feather="x"></i></button>
-        </div>
+                </div>
                 <div class="modal-body">
                     <div class="search-bar-container">
                         <input type="text" id="productSearchInput" class="form-control" placeholder="Tìm kiếm sản phẩm theo tên...">
@@ -204,12 +208,13 @@
             </div>
         </div>
 
+        <%-- Modal for error messages --%>
         <div id="errorModal" class="modal-overlay" style="display: none;">
             <div class="modal-content" style="max-width: 420px;">
                 <div class="modal-header">
                     <h3 class="modal-title" style="color: #dc2626;">Thông báo</h3>
                     <button type="button" class="close-modal-btn" id="closeErrorModalBtn"><i data-feather="x"></i></button>
-        </div>
+                </div>
                 <div class="modal-body" style="text-align: center;">
                     <p id="errorMessageText" style="font-size: 16px;"></p>
                 </div>
@@ -220,23 +225,18 @@
         </div>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                // Kích hoạt các icon
                 feather.replace();
 
-                // Script xử lý click vào nút bị vô hiệu hóa
                 document.body.addEventListener('click', function (event) {
                     const disabledAction = event.target.closest('.disabled-action');
                     if (disabledAction) {
-                        event.preventDefault(); // Ngăn hành động mặc định
+                        event.preventDefault();
                         const errorMessage = disabledAction.getAttribute('data-error') || 'Bạn không có quyền thực hiện chức năng này.';
-                        alert(errorMessage); // Hiển thị thông báo
+                        alert(errorMessage);
                     }
                 });
             });
         </script>
         <script src="${pageContext.request.contextPath}/js/editContractDetail.js"></script>
-        <script>
-            feather.replace();
-        </script>
     </body>
 </html>

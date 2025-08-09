@@ -1,14 +1,14 @@
 <%--
-    Document   : createContract.jsp
-    Created on : Jun 20, 2025
-    Author     : NGUYEN MINH (Final version by Gemini on Jul 08, 2025)
+    Document    : createContract.jsp
+    Created on  : Jun 20, 2025
+    Author      : NGUYEN MINH (Final version by Gemini on Aug 09, 2025)
+    Description : Updated to use a dynamic status dropdown.
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
 
-<%-- Đặt biến để đánh dấu trang hiện tại, hữu ích cho việc active menu --%>
 <c:set var="currentPageJsp" value="listContract" />
 
 <!DOCTYPE html>
@@ -26,23 +26,16 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/createContract.css">
-
     </head>
     <body data-context-path="${pageContext.request.contextPath}">
         <div class="app-container">
-            <%-- SỬA LỖI: Dùng đường dẫn gốc an toàn cho jsp:include --%>
             <jsp:include page="/mainMenu.jsp" />
 
             <main class="main-content">
-                <%-- ======================================================= --%>
-                <%-- SỬA LỖI: Form action trỏ đến controller mới           --%>
-                <%-- ======================================================= --%>
                 <form class="page-content" action="contract" method="post">
-                    <%-- Thêm input ẩn để controller biết đây là hành động "save" --%>
                     <input type="hidden" name="action" value="save">
 
                     <div class="detail-header">
-                        <%-- SỬA LỖI: Nút Hủy trỏ về trang danh sách --%>
                         <a href="${pageContext.request.contextPath}/contract?action=list" class="back-link">
                             <i data-feather="arrow-left"></i><span>Hủy</span>
                         </a>
@@ -94,7 +87,7 @@
                                             </tr>
                                         </thead>
                                         <tbody id="contract-item-list">
-                                            <%-- Các sản phẩm được thêm vào đây bằng JavaScript --%>
+                                            <%-- Products are added here via JavaScript --%>
                                         </tbody>
                                         <tfoot>
                                             <tr>
@@ -134,7 +127,21 @@
                             <div class="detail-card">
                                 <h3 class="card-title">Quản lý</h3>
                                 <div class="card-body">
-                                    <div class="form-group"><label for="status">Trạng thái</label><select id="status" name="status" class="form-control"><option value="pending" selected>Chờ duyệt</option><option value="active">Còn hiệu lực</option></select></div>
+
+                                    <%-- ======================================================= --%>
+                                    <%-- ## 1. UPDATE: STATUS DROPDOWN                          --%>
+                                    <%-- ======================================================= --%>
+                                    <div class="form-group">
+                                        <label for="statusId">Trạng thái</label>
+                                        <%-- Changed name to "statusId" to match the database --%>
+                                        <select id="statusId" name="statusId" class="form-control">
+                                            <%-- Loop through the status list from the database --%>
+                                            <c:forEach var="status" items="${statusList}">
+                                                <option value="${status.id}">${status.name}</option>
+                                            </c:forEach>
+                                        </select>
+                                    </div>
+
                                     <div class="form-group">
                                         <label for="createdById">Nhân viên phụ trách</label>
                                         <select id="createdById" name="createdById" class="form-control">
@@ -152,7 +159,7 @@
             </main>
         </div>
 
-        <%-- Modal (cửa sổ pop-up) để chọn sản phẩm --%>
+        <%-- Modal for product selection --%>
         <div id="productSearchModal" class="modal-overlay" style="display: none;">
             <div class="modal-content">
                 <div class="modal-header">
@@ -183,6 +190,7 @@
             </div>
         </div>
 
+        <%-- Modal for error messages --%>
         <div id="errorModal" class="modal-overlay" style="display: none;">
             <div class="modal-content" style="max-width: 420px;">
                 <div class="modal-header">
@@ -199,25 +207,19 @@
         </div>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                // Kích hoạt các icon
                 feather.replace();
 
-                // Script xử lý click vào nút bị vô hiệu hóa
                 document.body.addEventListener('click', function (event) {
                     const disabledAction = event.target.closest('.disabled-action');
                     if (disabledAction) {
-                        event.preventDefault(); // Ngăn hành động mặc định
+                        event.preventDefault();
                         const errorMessage = disabledAction.getAttribute('data-error') || 'Bạn không có quyền thực hiện chức năng này.';
-                        alert(errorMessage); // Hiển thị thông báo
+                        alert(errorMessage);
                     }
                 });
             });
         </script>
         <script src="${pageContext.request.contextPath}/js/createContract.js"></script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
-         <script>
-            feather.replace();
-        </script>
-
     </body>
 </html>

@@ -1,72 +1,50 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package vn.edu.fpt.model;
 
 import java.math.BigDecimal;
-import java.sql.Date; // SỬA LỖI: Import java.sql.Date thay vì LocalDate
-import java.time.LocalDateTime;
+import java.sql.Date;
+import java.sql.Timestamp; // Nên dùng Timestamp để lấy đủ ngày giờ
 
 /**
- * Lớp này ánh xạ trực tiếp đến bảng 'Contracts' trong cơ sở dữ liệu.
+ * Lớp này ánh xạ đến bảng 'Contracts'.
+ * Đã được chỉnh sửa để loại bỏ các trường không còn tồn tại trong CSDL
+ * và thay thế 'status' bằng 'statusId' và 'statusName'.
  *
- * @author datnt
+ * @author datnt (updated by AI)
  */
 public class Contract {
 
+    // --- CÁC TRƯỜNG KHỚP VỚI CSDL ---
     private long id;
     private String contractCode;
     private String contractName;
-    private long enterpriseId;
-//    private Long contractTypeId;
+    private long enterpriseId; // Giữ nguyên tên biến
     private Long createdById;
-    
-    // SỬA LỖI: Đổi kiểu dữ liệu từ LocalDate sang java.sql.Date
-    private Date startDate; 
-    private Date endDate;   
+
+    private Date startDate;
+    private Date endDate;
     private Date signedDate;
-    
-    private String status;
+
+    // Thay thế 'status' bằng hai trường mới
+    private int statusId;
+    private String statusName; // Thuộc tính này không có trong DB, dùng để hiển thị
+
     private BigDecimal totalValue;
     private String notes;
     private String fileUrl;
-    private Long renewedFromContractId;
     private boolean isDeleted;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private Timestamp createdAt;
+    private Timestamp updatedAt;
 
-    // Các thuộc tính không có trong DB nhưng hữu ích cho việc hiển thị
+    // --- CÁC TRƯỜNG PHỤ, LẤY TỪ JOIN ---
     private String enterpriseName;
     private String createdByName;
 
-    // Constructor mặc định
+    // --- CONSTRUCTORS ---
     public Contract() {
+        // Constructor mặc định
     }
 
-    // Constructor đầy đủ (ví dụ)
-    // SỬA LỖI: Cập nhật kiểu dữ liệu trong constructor
-    public Contract(long id, String contractCode, String contractName, long enterpriseId, Long contractTypeId, Long createdById, Date startDate, Date endDate, Date signedDate, String status, BigDecimal totalValue, String notes, String fileUrl, Long renewedFromContractId, boolean isDeleted, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.id = id;
-        this.contractCode = contractCode;
-        this.contractName = contractName;
-        this.enterpriseId = enterpriseId;
-//        this.contractTypeId = contractTypeId;
-        this.createdById = createdById;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.signedDate = signedDate;
-        this.status = status;
-        this.totalValue = totalValue;
-        this.notes = notes;
-        this.fileUrl = fileUrl;
-        this.renewedFromContractId = renewedFromContractId;
-        this.isDeleted = isDeleted;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
-
-    // Getters and Setters
+    // --- GETTERS AND SETTERS ---
 
     public long getId() {
         return id;
@@ -100,14 +78,6 @@ public class Contract {
         this.enterpriseId = enterpriseId;
     }
 
-//    public Long getContractTypeId() {
-//        return contractTypeId;
-//    }
-//
-//    public void setContractTypeId(Long contractTypeId) {
-//        this.contractTypeId = contractTypeId;
-//    }
-
     public Long getCreatedById() {
         return createdById;
     }
@@ -116,7 +86,6 @@ public class Contract {
         this.createdById = createdById;
     }
 
-    // SỬA LỖI: Cập nhật Getters và Setters cho các trường Date
     public Date getStartDate() {
         return startDate;
     }
@@ -140,13 +109,21 @@ public class Contract {
     public void setSignedDate(Date signedDate) {
         this.signedDate = signedDate;
     }
-    
-    public String getStatus() {
-        return status;
+
+    public int getStatusId() {
+        return statusId;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setStatusId(int statusId) {
+        this.statusId = statusId;
+    }
+
+    public String getStatusName() {
+        return statusName;
+    }
+
+    public void setStatusName(String statusName) {
+        this.statusName = statusName;
     }
 
     public BigDecimal getTotalValue() {
@@ -173,14 +150,6 @@ public class Contract {
         this.fileUrl = fileUrl;
     }
 
-    public Long getRenewedFromContractId() {
-        return renewedFromContractId;
-    }
-
-    public void setRenewedFromContractId(Long renewedFromContractId) {
-        this.renewedFromContractId = renewedFromContractId;
-    }
-
     public boolean isIsDeleted() {
         return isDeleted;
     }
@@ -189,23 +158,22 @@ public class Contract {
         this.isDeleted = isDeleted;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Timestamp getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
     }
 
-    public LocalDateTime getUpdatedAt() {
+    public Timestamp getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
+    public void setUpdatedAt(Timestamp updatedAt) {
         this.updatedAt = updatedAt;
     }
 
-    // Getters and setters cho các trường JOIN
     public String getEnterpriseName() {
         return enterpriseName;
     }
