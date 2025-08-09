@@ -159,6 +159,12 @@ html, body {
 .calendar-view.active {
     display: block;
 }
+#week-view .time-label,
+#week-view .all-day-slot,
+#week-view .time-slot {
+    height: 40px;
+    line-height: 40px;
+}
 
 /* ======================================================== */
 /* 2. CSS CHO LỊCH THEO TUẦN (WEEK VIEW)                    */
@@ -167,6 +173,7 @@ html, body {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 12px;
+    grid-auto-rows: 40px;
     height: calc(100vh - 230px);
 }
 #week-view .calendar-day {
@@ -216,21 +223,21 @@ html, body {
     gap: 2px;            /* Khoảng cách nhỏ giữa các event */
     padding: 2px;
     align-items: flex-start;
+    overflow: visible;
 }
 #week-view .time-grid {
     display: grid;
     grid-template-columns: auto repeat(7, 1fr);
-    /* QUAN TRỌNG: Hàng cao tối thiểu 30px và tự động giãn nở theo nội dung */
-    grid-auto-rows: minmax(30px, auto);
+    grid-auto-rows: 40px;       /* MỖI DÒNG LUÔN CAO 40px */
     border-top: 1px solid #bbb;
     position: relative;
 }
+
 /* 2. Bỏ chiều cao CỐ ĐỊNH của các ô và nhãn giờ để chúng co giãn theo hàng */
 #week-view .time-label,
 #week-view .time-slot,
 #week-view .all-day-slot {
     height: auto; /* Quan trọng: Bỏ chiều cao cố định */
-    min-height: 30px;
     line-height: normal; /* Cho phép text hiển thị tự nhiên */
 }
 #week-view .time-slot,
@@ -240,14 +247,19 @@ html, body {
     gap: 2px;
     padding: 2px;
     align-items: flex-start;
-    min-height: 30px;
+    min-height: 40px;
     height: auto;      /* Bỏ fix height, cho tự giãn */
     box-sizing: border-box;
     flex-wrap: wrap;   /* Nếu nhiều event sẽ xuống dòng */
     flex-grow: 0;      /* Không để slot/phần tử co dãn vượt nội dung */
     flex-shrink: 0;
+    border-right: 1px solid #ddd;     /* vạch kẻ giữa các ngày */
+    border-bottom: 1px solid #ddd;    /* vạch kẻ ngang */
 }
-
+#week-view .time-slot:last-child,
+#week-view .all-day-slot:last-child {
+    border-right: none;
+}
 
 /* 3. Căn chỉnh lại hàng tiêu đề ngày (day-header-row) */
 /* Việc làm cho header dãn theo các hàng bên dưới là rất khó với cấu trúc HTML hiện tại.
@@ -272,27 +284,42 @@ html, body {
     left: auto;
     right: auto;
 
-    /* Thuộc tính flex để tự chia sẻ không gian */
-    flex-grow: 1;
-    flex-basis: 0;
-    flex-shrink: 1;
-    /* === SỬA LỖI TẠI ĐÂY === */
-    min-width: 0; /* QUAN TRỌNG: Cho phép event co lại nhỏ hơn nội dung của nó */
+    /* CHỈNH SỬA: Để event co chia đều chiều ngang */
+    min-width: 0;     /* Cho phép event thu nhỏ */
+    width: auto;      /* Không fix width 100% */
+    max-width: none;  /* Không ép cứng chiều ngang */
 
-    /* Tinh chỉnh hiển thị cho vừa vặn trong ô tuần */
-    width: auto;
-    max-width: none;
-    min-height: 22px;
-    padding: 1px 4px;
-    margin: 0;
-    font-size: 15px;
+    /* Nếu dùng flex, event sẽ tự động chia đều ngang */
+    flex: 1 1 0;      /* Mỗi event chiếm đều không gian trong slot */
+
+    /* Cho phép text xuống dòng nếu dài */
+    white-space: normal;
+
+    /* Chiều cao động dựa trên JS (getEventHeight), hoặc mặc định tối thiểu */
+    height: auto;
+    min-height: 40px;
+
+    padding: 4px 6px;
+    margin: 2px 2px;
+
+    font-size: 14px;
     border-radius: 4px;
+    background: var(--event-bg, #2196f3);
+    color: #fff;
 
-    /* Đảm bảo text bị khuất sẽ hiển thị dấu "..." */
+    box-sizing: border-box;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
 }
+#week-view .time-slot {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    padding: 2px 0;
+    position: relative;
+}
+
 
 /* --- KẾT THÚC --- */
 #week-view .time-slot:has(.event:nth-child(3)) .event,
@@ -313,10 +340,7 @@ html, body {
         flex-direction: column; /* Xếp dọc trên màn hình nhỏ */
     }
 
-    #week-view .event {
-        min-width: 100%; /* Chiếm toàn bộ chiều rộng khi xếp dọc */
-        white-space: normal; /* Cho phép text xuống dòng */
-    }
+
 }
 .maintenance-card {
     background-color: white;

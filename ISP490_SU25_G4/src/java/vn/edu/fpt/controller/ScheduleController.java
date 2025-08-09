@@ -44,6 +44,7 @@ public class ScheduleController extends HttpServlet {
     private final DateTimeFormatter displayFormatter = DateTimeFormatter.ofPattern("EEEE, dd/MM/yyyy", new Locale("vi", "VN"));
     private final DateTimeFormatter dayDateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy", new Locale("vi", "VN"));
     private static final int DEFAULT_DURATION_MINUTES = 60;
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -162,29 +163,40 @@ public class ScheduleController extends HttpServlet {
         // 2. Day slots (mỗi 30')
         List<String> dayTimeLabels = new ArrayList<>();
         List<String> dayStartTimes = new ArrayList<>();
+
         dayTimeLabels.add("Cả ngày");
         dayStartTimes.add("");
+
+// 12:00 am và 12:30 am đầu tiên
         dayTimeLabels.add("12:00 am");
         dayStartTimes.add("00:00");
-        dayTimeLabels.add("");
+        dayTimeLabels.add("12:30 am");
         dayStartTimes.add("00:30");
+
+// Sáng: 01:00 am đến 11:30 am
         for (int h = 1; h <= 11; h++) {
-            dayTimeLabels.add(h + ":00 am");
+            dayTimeLabels.add(String.format("%02d:00 am", h));
             dayStartTimes.add(String.format("%02d:00", h));
-            dayTimeLabels.add("");
+            dayTimeLabels.add(String.format("%02d:30 am", h));
             dayStartTimes.add(String.format("%02d:30", h));
         }
+
+// 12:00 pm và 12:30 pm (buổi trưa)
         dayTimeLabels.add("12:00 pm");
         dayStartTimes.add("12:00");
-        dayTimeLabels.add("");
+        dayTimeLabels.add("12:30 pm");
         dayStartTimes.add("12:30");
+
+// Chiều: 01:00 pm đến 11:30 pm (13h-23h)
         for (int h = 1; h <= 11; h++) {
-            dayTimeLabels.add(h + ":00 pm");
+            dayTimeLabels.add(String.format("%02d:00 pm", h));
             dayStartTimes.add(String.format("%02d:00", h + 12));
-            dayTimeLabels.add("");
+            dayTimeLabels.add(String.format("%02d:30 pm", h));
             dayStartTimes.add(String.format("%02d:30", h + 12));
         }
-        dayTimeLabels.add("");
+
+// Cuối cùng: 23:30 pm (nếu muốn slot cuối cho nửa đêm)
+        dayTimeLabels.add("11:30 pm");
         dayStartTimes.add("23:30");
 
         // 3. Week view
@@ -262,11 +274,11 @@ public class ScheduleController extends HttpServlet {
                 amPm = "pm";
             }
 
-            hourLabels.add(displayHour + ":00 " + amPm);
-            hourLabels.add("");
+            // Slot giờ chẵn
+            hourLabels.add(String.format("%02d:00 %s", displayHour, amPm));
+            // Slot phút 30: label luôn đầy đủ, không để trống
+            hourLabels.add(String.format("%02d:30 %s", displayHour, amPm));
         }
-        hours.add("23:30");
-        hourLabels.add("");
 
         // 6. Dữ liệu lịch + assignments
         List<MaintenanceSchedule> schedules = dao.getAllMaintenanceSchedules();
@@ -667,7 +679,7 @@ public class ScheduleController extends HttpServlet {
                 // 4.3. Kiểm tra kết quả và chuyển hướng
                 if (assignmentsUpdated) {
                     // CHỈ KHI CẢ HAI ĐỀU THÀNH CÔNG
-                     response.sendRedirect(request.getContextPath() + "/schedule");
+                    response.sendRedirect(request.getContextPath() + "/schedule");
                 } else {
                     // Trường hợp lịch trình cập nhật OK, nhưng phân công thất bại
                     // Cần có cơ chế xử lý lỗi tốt hơn, ví dụ: rollback hoặc báo lỗi cụ thể
@@ -723,9 +735,10 @@ public class ScheduleController extends HttpServlet {
 
         request.getRequestDispatcher("jsp/customerSupport/editSchedule.jsp").forward(request, response);
     }
-        private void updateScheduleTime(HttpServletRequest request, HttpServletResponse response)
+
+    private void updateScheduleTime(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-                // Đảm bảo đọc/ghi UTF-8
+        // Đảm bảo đọc/ghi UTF-8
         request.setCharacterEncoding("UTF-8");
         response.setContentType("application/json; charset=UTF-8");
 
@@ -762,16 +775,14 @@ public class ScheduleController extends HttpServlet {
             LocalTime endTime = parseNullableTime(jsonRequest, "endTime");
 
             // --- ÁP DỤNG LOGIC SERVER ---
-
             // 1. Nếu sự kiện được kéo vào slot CÓ GIỜ (startTime có giá trị)
             //    nhưng frontend không gửi endTime, server sẽ tự tính toán.
             if (startTime != null && endTime == null) {
                 endTime = startTime.plusMinutes(DEFAULT_DURATION_MINUTES);
             }
-            
+
             // 2. Nếu sự kiện được kéo vào slot CẢ NGÀY, frontend sẽ gửi startTime là null.
             //    Lúc này, logic trên sẽ không chạy, giữ nguyên startTime và endTime là null, điều này là CHÍNH XÁC.
-
             // 3. Validate logic ngày: Nếu endDate có giá trị nhưng lại trước scheduledDate thì vô hiệu hóa nó.
             if (endDate != null && endDate.isBefore(scheduledDate)) {
                 endDate = null;
@@ -785,7 +796,7 @@ public class ScheduleController extends HttpServlet {
                 response.setStatus(HttpServletResponse.SC_OK);
                 jsonResponse.put("status", "success");
                 jsonResponse.put("message", "Lịch trình đã được cập nhật thành công.");
-                
+
                 // Trả về payload chứa dữ liệu đã được server chuẩn hóa.
                 // Frontend có thể dùng payload này để cập nhật lại giao diện một cách chính xác.
                 JSONObject payload = new JSONObject();
@@ -795,7 +806,7 @@ public class ScheduleController extends HttpServlet {
                 payload.put("startTime", startTime != null ? startTime.toString() : JSONObject.NULL);
                 payload.put("endTime", endTime != null ? endTime.toString() : JSONObject.NULL);
                 jsonResponse.put("payload", payload);
-                
+
             } else {
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 jsonResponse.put("status", "error");
@@ -811,16 +822,21 @@ public class ScheduleController extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             writeError(response, "Đã có lỗi không mong muốn xảy ra ở máy chủ.", e);
         }
-        }
-        // ---------- Helper Methods ----------
+    }
+    // ---------- Helper Methods ----------
+
     private LocalDate parseNullableDate(JSONObject json, String key) {
-        if (!json.has(key) || json.isNull(key)) return null;
+        if (!json.has(key) || json.isNull(key)) {
+            return null;
+        }
         String val = json.optString(key, "").trim();
         return val.isEmpty() ? null : LocalDate.parse(val);
     }
 
     private LocalTime parseNullableTime(JSONObject json, String key) {
-        if (!json.has(key) || json.isNull(key)) return null;
+        if (!json.has(key) || json.isNull(key)) {
+            return null;
+        }
         String val = json.optString(key, "").trim();
         return val.isEmpty() ? null : LocalTime.parse(val);
     }
@@ -831,11 +847,11 @@ public class ScheduleController extends HttpServlet {
             out.flush();
         }
     }
-    
+
     private void writeError(HttpServletResponse response, String message, Exception e) throws IOException {
         // Ghi log lỗi đầy đủ ở server để debug
-        e.printStackTrace(); 
-        
+        e.printStackTrace();
+
         JSONObject err = new JSONObject();
         err.put("status", "error");
         err.put("message", message);
