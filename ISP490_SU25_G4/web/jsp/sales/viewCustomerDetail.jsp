@@ -149,7 +149,7 @@
                                                 <span class="label">Nhân viên phụ trách</span>
                                                 <div class="value assignees-list">
                                                     <c:forEach var="user" items="${customer.assignedUsers}">
-                                                        <span><c:out value="${user.fullName}"/></span>
+                                                        <span><c:out value="${user.fullNameCombined}"/></span>
                                                     </c:forEach>
                                                 </div>
                                             </div>

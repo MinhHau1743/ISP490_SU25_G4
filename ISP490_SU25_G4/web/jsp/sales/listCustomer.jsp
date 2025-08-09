@@ -127,7 +127,7 @@
                                 <div class="filter-group"><label for="district">Quận/Huyện</label><select id="district" name="districtId" disabled><option value="">Tất cả</option></select></div>
                                 <div class="filter-group"><label for="ward">Phường/Xã</label><select id="ward" name="wardId" disabled><option value="">Tất cả</option></select></div>
                                 <div class="filter-group"><label for="customerType">Loại khách hàng</label><select id="customerType" name="customerTypeId"><option value="">Tất cả</option><c:forEach var="type" items="${allCustomerTypes}"><option value="${type.id}" ${type.id == selectedCustomerTypeId ? 'selected' : ''}>${type.name}</option></c:forEach></select></div>
-                            <div class="filter-group"><label for="employee">Nhân viên</label><select id="employee" name="employeeId"><option value="">Tất cả</option><c:forEach var="emp" items="${allEmployees}"><option value="${emp.id}" ${emp.id == selectedEmployeeId ? 'selected' : ''}>${emp.fullName}</option></c:forEach></select></div>
+                            <div class="filter-group"><label for="employee">Nhân viên</label><select id="employee" name="employeeId"><option value="">Tất cả</option><c:forEach var="emp" items="${allEmployees}"><option value="${emp.id}" ${emp.id == selectedEmployeeId ? 'selected' : ''}>${emp.fullNameCombined}</option></c:forEach></select></div>
                                 <div class="filter-actions">
                                     <a href="${BASE_URL}/customer/list" class="btn btn-secondary" id="clear-filter-btn">Xóa lọc</a>
                             </div>

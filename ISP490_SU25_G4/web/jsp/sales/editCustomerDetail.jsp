@@ -157,7 +157,7 @@
                                             <label for="employeeId">Nhân viên phụ trách</label>
                                         <c:set var="assignedUserId" value="${not empty customer.assignedUsers ? customer.assignedUsers[0].id : -1}"/>
                                         <select id="employeeId" name="employeeId" class="form-control" required>
-                                            <c:forEach var="emp" items="${allEmployees}"><option value="${emp.id}" ${assignedUserId == emp.id ? 'selected' : ''}><c:out value="${emp.fullName}"/></option></c:forEach>
+                                            <c:forEach var="emp" items="${allEmployees}"><option value="${emp.id}" ${assignedUserId == emp.id ? 'selected' : ''}><c:out value="${emp.fullNameCombined}"/></option></c:forEach>
                                             </select>
                                         </div>
                                         <div class="form-group">
