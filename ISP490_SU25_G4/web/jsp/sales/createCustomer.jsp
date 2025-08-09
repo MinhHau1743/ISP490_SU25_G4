@@ -200,7 +200,7 @@
                                         <select id="employeeId" name="employeeId" class="form-control" required>
                                             <option value="" disabled selected>-- Chọn nhân viên --</option>
                                             <c:forEach var="emp" items="${employees}">
-                                                <option value="${emp.id}">${emp.fullName}</option>
+                                                <option value="${emp.id}">${emp.fullNameCombined}</option>
                                             </c:forEach>
                                         </select>
                                     </div>
