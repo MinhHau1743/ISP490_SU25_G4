@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function () {
             districtSelect.disabled = true;
             return;
         }
-        fetchAndPopulate(districtSelect, `${contextPath}/getDistricts?provinceId=${provinceId}`, selectedId, loadWardsCallback);
+        fetchAndPopulate(districtSelect, `${contextPath}/schedule?action=getDistricts&provinceId=${provinceId}`, selectedId, loadWardsCallback);
     }
 
     // Tải wards khi đã chọn district
@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function () {
             wardSelect.disabled = true;
             return;
         }
-        fetchAndPopulate(wardSelect, `${contextPath}/getWards?districtId=${districtId}`, selectedId);
+        fetchAndPopulate(wardSelect, `${contextPath}/schedule?action=getWards&districtId=${districtId}`, selectedId);
     }
 
     // Khi chọn province mới

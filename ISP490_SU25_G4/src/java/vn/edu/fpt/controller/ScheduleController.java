@@ -1,5 +1,6 @@
 package vn.edu.fpt.controller;
 
+import com.google.gson.Gson;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -29,6 +30,7 @@ import java.time.format.DateTimeParseException;
 import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -36,6 +38,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.json.JSONException;
 import org.json.JSONObject;
+import vn.edu.fpt.dao.EnterpriseDAO;
+import vn.edu.fpt.model.District;
+import vn.edu.fpt.model.Ward;
 
 @WebServlet(name = "scheduleController", urlPatterns = {"/schedule"})
 public class ScheduleController extends HttpServlet {
@@ -60,6 +65,12 @@ public class ScheduleController extends HttpServlet {
             return;
         } else if ("updateScheduleTime".equals(action)) {
             updateScheduleTime(request, response);
+            return;
+        } else if ("getDistricts".equals(action)) {
+            getDistricts(request, response);
+            return;
+        } else if ("getWards".equals(action)) {
+            getWards(request, response);
             return;
         }
 
@@ -857,4 +868,43 @@ public class ScheduleController extends HttpServlet {
         err.put("message", message);
         writeResponse(response, err);
     }
+
+    private void getDistricts(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        String provinceIdStr = request.getParameter("provinceId");
+        List<District> districts = Collections.emptyList();
+        if (provinceIdStr != null && !provinceIdStr.trim().isEmpty()) {
+            try {
+                districts = new EnterpriseDAO().getDistrictsByProvinceId(Integer.parseInt(provinceIdStr));
+            } catch (Exception e) {
+                e.printStackTrace();
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
+        }
+        try (PrintWriter out = response.getWriter()) {
+            out.print(new Gson().toJson(districts));
+            out.flush();
+        }
+    }
+
+    private void getWards(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        String districtIdStr = request.getParameter("districtId");
+        List<Ward> wards = Collections.emptyList();
+        if (districtIdStr != null && !districtIdStr.trim().isEmpty()) {
+            try {
+                wards = new EnterpriseDAO().getWardsByDistrictId(Integer.parseInt(districtIdStr));
+            } catch (Exception e) {
+                e.printStackTrace();
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
+        }
+        try (PrintWriter out = response.getWriter()) {
+            out.print(new Gson().toJson(wards));
+            out.flush();
+        }
+    }
+
 }

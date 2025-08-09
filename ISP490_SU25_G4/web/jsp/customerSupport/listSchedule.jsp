@@ -565,25 +565,7 @@
                 flex-direction: column;
             }
 
-            /* Month view events */
-            #month-view .event {
-                color: white;
-                padding: 5px;
-                border-radius: 10px;
-                font-size: 14px;
-                cursor: pointer;
-                margin: 2px;
-                width: calc(100% - 10px);
-                box-sizing: border-box;
-            }
 
-            #month-view .event.all-day {
-                height: 20px;
-                margin: 25px 0 2px 0;
-                position: relative;
-                top: 0;
-                border-radius: 10px;
-            }
 
             .resize-handle {
                 position: absolute;
@@ -1074,6 +1056,87 @@
                 background: #dc3545;
                 color: #fff;
             }
+            
+            #month-view .month-grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    border-left: 1px solid #e5e5e5;
+    border-top: 1px solid #e5e5e5;
+}
+#month-view .month-grid-header {
+    padding: 10px 8px;
+    font-weight: 600;
+    font-size: 13px;
+    text-align: center;
+    background-color: #f9f9f9;
+    border-right: 1px solid #e5e5e5;
+    border-bottom: 1px solid #e5e5e5;
+}
+#month-view .month-long-task {
+    position: absolute;
+    height: 28px;
+    border-radius: 10px;
+    font-size: 13px;
+    color: white;
+    padding: 5px 16px;
+    box-sizing: border-box;
+    z-index: 20;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    top: 8px; /* vị trí trên */
+    left: 0;
+}
+#month-view .month-day {
+    border-right: 1px solid #e5e5e5;
+    border-bottom: 1px solid #e5e5e5;
+    min-height: 100px;
+    padding: 8px;
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+    min-height: 90px;
+    height: auto;
+    border: 1px solid #ddd;
+    padding-top: 25px;
+    background: #fff;
+    border-radius: 8px;
+}
+#month-view .month-day.other-month {
+    background-color: #fafafa;
+    color: #aaa;
+}
+#month-view .day-number {
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+#month-view .tasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: relative;
+}
+#month-view .task-item{
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    position: absolute;
+    width: calc(200% + 8px); /* 200% để cover 2 ô + border */
+    z-index: 10;
+    /* cho phép xuống dòng và cắt gọn sau N dòng */
+    white-space: normal;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;   /* tăng lên 3 nếu muốn 3 dòng */
+    line-height: 1.3;
+    max-height: calc(1.3em * 2 + 6px); /* khớp với số dòng ở trên */
+    word-break: break-word;  /* phòng trường hợp từ quá dài */
+}
 
         </style>
     </head>
@@ -1366,7 +1429,6 @@
             feather.replace();
             let draggingEvent = null;
             let lastSlot = null;
-            document.querySelectorAll('.time-slot, .all-day-slot').forEach(bindSlotDnD);
             document.addEventListener('DOMContentLoaded', () => {
             const weekNav = document.querySelector('.week-nav');
             // Lấy view mode từ nguồn chắc chắn đúng!
@@ -1831,7 +1893,7 @@
                 const eventElement = e.target.parentElement;
                 const container = eventElement.parentElement;
                 const rect = container.getBoundingClientRect();
-                const numDays = 7;
+                const numDays = 7; // Số cột
                 const dayWidth = rect.width / numDays;
                 let startCol = parseInt(eventElement.dataset.startCol) || 1;
                 let currentSpan = parseInt(eventElement.dataset.span) || 1;
@@ -1839,11 +1901,9 @@
                 const x = e.clientX - rect.left;
                 let newEndCol = Math.ceil(x / dayWidth) + 1;
                 let newSpan = newEndCol - startCol;
-                if (newSpan < 1)
-                        newSpan = 1;
+                if (newSpan < 1) newSpan = 1;
                 newEndCol = startCol + newSpan;
-                if (newEndCol > numDays + 1)
-                        newEndCol = numDays + 1;
+                if (newEndCol > numDays + 1) newEndCol = numDays + 1;
                 eventElement.style.gridColumn = startCol + ' / ' + newEndCol;
                 eventElement.dataset.span = newEndCol - startCol;
                 }
@@ -1858,14 +1918,13 @@
                 const newSpan = parseInt(eventElement.dataset.span);
                 const newScheduledDate = weekDates[newStartCol - 1];
                 const newEndDate = (newSpan > 1) ? weekDates[newStartCol + newSpan - 2] : null;
-                const newStartTime = null;
-                const newEndTime = null; // All-day nên endTime null
-                updateEvent(scheduleId, newScheduledDate, newEndDate, newStartTime, newEndTime);
+                updateEvent(scheduleId, newScheduledDate, newEndDate, null, null); // all-day (giờ = null)
                 }
 
                 window.addEventListener('mousemove', resize);
                 window.addEventListener('mouseup', stopResize);
                 }
+
 
                 function showDetails(element) {
                 if (isInteracting)
@@ -2161,6 +2220,19 @@
                 });
                 }
                 });
+                /* Helpers */
+                function toDate(d){ return new Date((d || '') + 'T00:00:00'); }
+                function dstr(d){ return d.toISOString().split('T')[0]; }
+                function clamp(d, lo, hi){ return d < lo ? lo : (d > hi ? hi : d); }
+
+                /* Lấy DOM tuần theo lưới month-view (mỗi 7 ô = 1 tuần) */
+                function getMonthWeeksFromDom(){
+                const cells = Array.from(document.querySelectorAll('#month-view .month-day'));
+                const weeks = [];
+                for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+                return weeks;
+                }
+
         </script>
         <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
         <script src="${pageContext.request.contextPath}/js/listSchedule.js"></script>
