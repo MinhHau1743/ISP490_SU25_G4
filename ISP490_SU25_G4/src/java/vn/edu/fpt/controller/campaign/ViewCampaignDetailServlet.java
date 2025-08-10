@@ -53,7 +53,7 @@ public class ViewCampaignDetailServlet extends HttpServlet {
         request.setAttribute("campaign", campaign);
 
         // Chuyển tiếp đến trang JSP hiển thị chi tiết
-        request.getRequestDispatcher("/jsp/admin/viewCampaignDetails.jsp").forward(request, response);
+        request.getRequestDispatcher("/jsp/customerSupport/viewCampaignDetails.jsp").forward(request, response);
     }
 
     @Override

@@ -46,7 +46,7 @@ public class AddCampaignServlet extends HttpServlet {
         List<User> userList = campaignDAO.getAllUsers();
         request.setAttribute("userList", userList);
         
-        request.getRequestDispatcher("/jsp/admin/addNewCampaign.jsp").forward(request, response);
+        request.getRequestDispatcher("/jsp/customerSupport/addNewCampaign.jsp").forward(request, response);
     }
 
     @Override
@@ -163,7 +163,7 @@ public class AddCampaignServlet extends HttpServlet {
                 List<User> userList = campaignDAO.getAllUsers();
                 request.setAttribute("userList", userList);
                 
-                request.getRequestDispatcher("/jsp/admin/addNewCampaign.jsp").forward(request, response);
+                request.getRequestDispatcher("/jsp/customerSupport/addNewCampaign.jsp").forward(request, response);
             }
         } else {
             // Nếu dữ liệu không hợp lệ, quay lại form và hiển thị lỗi
@@ -173,7 +173,7 @@ public class AddCampaignServlet extends HttpServlet {
             List<User> userList = campaignDAO.getAllUsers();
             request.setAttribute("userList", userList);
             
-            request.getRequestDispatcher("/jsp/admin/addNewCampaign.jsp").forward(request, response);
+            request.getRequestDispatcher("/jsp/customerSupport/addNewCampaign.jsp").forward(request, response);
         }
     }
 

@@ -94,7 +94,7 @@ public class CampaignListServlet extends HttpServlet {
 
         // 5. Chuyển tiếp yêu cầu đến trang JSP để hiển thị giao diện
         // Lưu ý: Đã đổi đường dẫn JSP của bạn thành /jsp/admin/listCampaign.jsp như đã thấy trong code Servlet trước
-        request.getRequestDispatcher("/jsp/admin/listCampaign.jsp").forward(request, response);
+        request.getRequestDispatcher("/jsp/customerSupport/listCampaign.jsp").forward(request, response);
     }
 
     /**
