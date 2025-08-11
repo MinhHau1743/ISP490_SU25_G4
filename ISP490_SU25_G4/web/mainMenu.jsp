@@ -40,7 +40,7 @@
                 </a>
             </li>
             <li>
-                <a href="${pageContext.request.contextPath}/ProductController" class="${currentPage.contains('Product') ? 'active' : ''}">
+                <a href="${pageContext.request.contextPath}/product" class="${currentPage.contains('Product') ? 'active' : ''}">
                     <i data-feather="box"></i><span>Hàng hóa</span>
                 </a>
             </li>

@@ -1,6 +1,6 @@
 <%-- 
     Document   : viewProductDetail
-    Created on : Jun 17, 2025, 10:14:47 AM
+    Created on : Jun 17, 2025, 10:14:47 AM
     Author     : NGUYEN MINH
 --%>
 
@@ -23,6 +23,10 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <script src="https://unpkg.com/feather-icons"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.slim.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
@@ -30,12 +34,14 @@
     </head>
     <body>
         <div class="app-container">
-            <jsp:include page="../../mainMenu.jsp"/>
+            <%-- Sửa: Dùng đường dẫn gốc để ổn định hơn --%>
+            <jsp:include page="/mainMenu.jsp"/>
             <main class="main-content">
                 <div class="page-content">
                     <div class="content-card">
                         <div class="detail-header">
-                            <a href="ProductController" class="back-link"> <%-- Sửa link thành /product servlet --%>
+                            <%-- Sửa: href trỏ về trang danh sách sản phẩm --%>
+                            <a href="product?action=list" class="back-link">
                                 <i data-feather="arrow-left"></i>
                                 <span>Quay lại danh sách</span>
                             </a>
@@ -45,17 +51,12 @@
                             <div class="product-view-container">
                                 <div class="product-gallery">
                                     <div class="main-image">
-                                        <%-- Hiển thị ảnh đầu tiên trong danh sách làm ảnh chính --%>
-                                        <img id="mainProductImage" src="${pageContext.request.contextPath}/image/${product.image}" alt="Main image of ${product.name}">
+                                        <img id="mainProductImage" 
+                                             src="${pageContext.request.contextPath}/image/${product.image}" 
+                                             alt="Ảnh của ${product.name}"
+                                             onerror="this.src='${pageContext.request.contextPath}/image/na.jpg'">
                                     </div>
-                                    <div class="thumbnail-list">
-                                        <%-- Lặp qua danh sách ảnh để hiển thị thumbnail --%>
-                                        <c:forEach var="imgUrl" items="" varStatus="loop">
-                                            <div class="thumbnail-item" data-large-src="">
-                                                <img src="" alt="Thumbnail  for ${product.name}">
-                                            </div>
-                                        </c:forEach>
-                                    </div>
+                                    <%-- Bỏ: Phần thumbnail rỗng vì model hiện tại chỉ có 1 ảnh --%>
                                 </div>
 
                                 <div class="product-info">
@@ -70,34 +71,27 @@
                                         <div class="snippet"><span class="snippet-label">Người cập nhật</span><span class="snippet-value">${product.updatedBy}</span></div>
                                     </div>
 
-                        
-
                                     <div class="view-actions">
-                                        <%-- Link sửa sản phẩm với ID động --%>
-                                        <a href="editProduct?id=${product.id}" class="btn btn-primary"><i data-feather="edit"></i> Sửa thông tin</a>
-                                    </div>
+                                        <%-- Chỉ Admin hoặc Kĩ thuật mới thấy nút Sửa --%>
+                                        <c:if test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Kĩ thuật'}">
+                                            <%-- Sửa: href trỏ đến action=edit của controller hợp nhất --%>
+                                            <a href="product?action=edit&id=${product.id}" class="btn btn-primary"><i data-feather="edit"></i> Sửa thông tin</a>
+                                        </c:if>
+                                        </div>
                                 </div>
 
                                 <div class="product-details-tabs">
                                     <nav class="tab-nav">
-                                        <span class="tab-link active" data-tab="description">Mô tả chi tiết</span>
+                                        <span class="tab-link active">Mô tả chi tiết</span>
                                     </nav>
-                                    <div id="description" class="tab-content active">
-                                        <%-- Dùng c:out để hiển thị nội dung HTML từ database --%>
+                                    <div class="tab-content active">
+                                        <%-- Dùng c:out để tránh lỗi XSS và hiển thị đúng định dạng --%>
                                         <c:out value="${product.description}" escapeXml="false" />
-                                    </div>
-                                    <div id="specs" class="tab-content">
-                                        <table class="specs-table">
-                                            <tbody>
-         
-                                            </tbody>
-                                        </table>
                                     </div>
                                 </div>
                             </div>
                         </c:if>
 
-                        <%-- Trường hợp không tìm thấy sản phẩm --%>
                         <c:if test="${empty product}">
                             <div style="text-align: center; padding: 60px 20px;">
                                 <i data-feather="alert-circle" style="width: 48px; height: 48px; color: var(--error-color);"></i>
@@ -111,8 +105,10 @@
             </main>
         </div>
 
-
-        <script src="${pageContext.request.contextPath}/js/viewProductDetail.js"></script>
+        <script>
+            // Kích hoạt feather icons
+            feather.replace();
+        </script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>

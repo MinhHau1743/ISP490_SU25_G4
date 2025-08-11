@@ -10,16 +10,13 @@
         <title>Danh sách Sản phẩm</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <!-- Bootstrap & Feather Icons -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
         <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.slim.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://unpkg.com/feather-icons"></script>
-        <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-        <!-- Styles -->
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
@@ -52,23 +49,23 @@
 
                 <div class="page-content">
                     <div class="content-card">
-                        <!-- Form tìm kiếm & lọc -->
-                        <form action="ProductController" method="get">
+                        <form action="product" method="get">
+                            <input type="hidden" name="action" value="list">
                             <div class="table-toolbar">
                                 <div class="search-box">
-                                    <input type="text" name="keyword" placeholder="Tìm kiếm tên, mã SP..." value="${param.keyword}">
+                                    <input type="text" name="keyword" placeholder="Tìm kiếm tên, mã SP..." value="${keyword}">
                                     <i data-feather="search"></i>
                                 </div>
                                 <button type="button" class="filter-button" id="filterBtn">
                                     <i data-feather="filter"></i><span>Bộ lọc</span>
                                 </button>
                                 <div class="toolbar-actions">
-                                    <a href="createProduct" class="btn btn-primary">
-                                        <i data-feather="plus"></i><span>Thêm Sản phẩm</span>
-                                    </a>
-                                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addGroupModal">
-                                        <i data-feather="plus-square"></i><span> Thêm nhóm hàng</span>
-                                    </button>
+                                    <%-- Chỉ Admin hoặc Kĩ thuật mới thấy nút Thêm --%>
+                                    <c:if test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Kĩ thuật'}">
+                                        <a href="product?action=create" class="btn btn-primary">
+                                            <i data-feather="plus"></i><span>Thêm Sản phẩm</span>
+                                        </a>
+                                    </c:if>
                                     <div class="btn-group ml-3 view-toggle">
                                         <button type="button" class="btn btn-outline-secondary btn-sm active" id="gridViewBtn" title="Xem dạng lưới">
                                             <i data-feather="grid"></i>
@@ -80,40 +77,35 @@
                                 </div>
                             </div>
 
-                            <!-- **BẮT ĐẦU NỘI DUNG BỘ LỌC** -->
                             <div class="filter-container" id="filterContainer" style="display: none;">
                                 <div class="filter-controls">
                                     <div class="filter-group">
                                         <label>Khoảng giá (VNĐ)</label>
                                         <div class="price-inputs">
-                                            <input type="text" name="minPrice" placeholder="Từ" value="${param.minPrice}">
+                                            <input type="text" name="minPrice" placeholder="Từ" value="${minPrice}">
                                             <span>-</span>
-                                            <input type="text" name="maxPrice" placeholder="Đến" value="${param.maxPrice}">
+                                            <input type="text" name="maxPrice" placeholder="Đến" value="${maxPrice}">
                                         </div>
                                     </div>
                                     <div class="filter-group">
                                         <label for="origin-filter">Xuất xứ</label>
                                         <select id="origin-filter" name="origin">
                                             <option value="">Tất cả</option>
-                                            <c:forEach var="origin" items="${originList}">
-                                                <option value="${origin}" ${param.origin == origin ? 'selected' : ''}>${origin}</option>
+                                            <c:forEach var="originItem" items="${originList}">
+                                                <option value="${originItem}" ${origin == originItem ? 'selected' : ''}>${originItem}</option>
                                             </c:forEach>
                                         </select>
                                     </div>
-
                                 </div>
                                 <div class="filter-actions">
-                                    <a href="ProductController" class="btn-reset-filter">Xóa lọc</a>
+                                    <a href="product?action=list" class="btn-reset-filter">Xóa lọc</a>
                                     <button type="submit" class="btn-apply-filter">Áp dụng</button>
                                 </div>
                             </div>
-                            <!-- **KẾT THÚC NỘI DUNG BỘ LỌC** -->
                         </form>
 
-                        <!-- **BẮT ĐẦU NỘI DUNG DANH SÁCH SẢN PHẨM** -->
                         <div class="product-grid">
                             <div class="view-mode-container">
-                                <!-- Dạng lưới -->
                                 <div id="productList" class="view-mode-grid" style="display: flex;">
                                     <c:forEach var="p" items="${productList}">
                                         <div class="product-card">
@@ -139,18 +131,21 @@
                                                             <fmt:formatNumber value="${p.price}" type="currency" currencyCode="VND" minFractionDigits="0" maxFractionDigits="0"/>
                                                         </span>
                                                     </div>
-
                                                     <div class="action-buttons">
-                                                        <a href="getProductById?id=${p.id}" title="Xem chi tiết" class="action-view">
+                                                        <a href="product?action=view&id=${p.id}" title="Xem chi tiết" class="action-view">
                                                             <i data-feather="eye" style="stroke: #17a2b8;"></i>
                                                         </a>
-                                                        <a href="editProduct?id=${p.id}" title="Chỉnh sửa" class="action-edit">
-                                                            <i data-feather="edit-2" style="stroke: #ffc107;"></i>
-                                                        </a>
-                                                        <a href="deleteProduct" data-id="${p.id}" data-name="${p.name}" title="Xóa" class="action-delete delete-trigger-btn">
-                                                            <i data-feather="trash-2" style="stroke: #dc3545;"></i>
-                                                        </a>
-                                                    </div>
+                                                        <c:if test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Kĩ thuật'}">
+                                                            <a href="product?action=edit&id=${p.id}" title="Chỉnh sửa" class="action-edit">
+                                                                <i data-feather="edit-2" style="stroke: #ffc107;"></i>
+                                                            </a>
+                                                        </c:if>
+                                                        <c:if test="${sessionScope.userRole == 'Admin'}">
+                                                            <a href="product?action=delete&id=${p.id}" data-id="${p.id}" data-name="${p.name}" title="Xóa" class="action-delete delete-trigger-btn">
+                                                                <i data-feather="trash-2" style="stroke: #dc3545;"></i>
+                                                            </a>
+                                                        </c:if>
+                                                        </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -160,7 +155,6 @@
                                     </c:if>
                                 </div>
 
-                                <!-- Dạng bảng -->
                                 <div id="productTable" class="view-mode-table" style="display: none;">
                                     <table class="table table-bordered table-hover w-100">
                                         <thead class="thead-light">
@@ -185,14 +179,18 @@
                                                     <td><fmt:formatNumber value="${p.price}" type="currency" currencyCode="VND"/></td>
                                                     <td>${p.createdAt}</td>
                                                     <td>${p.updatedAt}</td>
-                                                    <td>${p.updatedBy}</td>
+                                                    <td>${p.createdBy}</td>
                                                     <td>${p.updatedBy}</td>
                                                     <td class="text-center">
                                                         <div class="btn-group" role="group" aria-label="Hành động sản phẩm">
-                                                            <a href="getProductById?id=${p.id}" title="Xem" class="btn btn-sm btn-info" data-toggle="tooltip"><i data-feather="eye"></i></a>
-                                                            <a href="editProduct?id=${p.id}" title="Sửa" class="btn btn-sm btn-warning text-white" data-toggle="tooltip"><i data-feather="edit-2"></i></a>
-                                                            <a href="deleteProduct" data-id="${p.id}" title="Xóa" class="btn btn-sm btn-danger delete-trigger-btn" data-toggle="tooltip"><i data-feather="trash-2"></i></a>
-                                                        </div>
+                                                            <a href="product?action=view&id=${p.id}" title="Xem" class="btn btn-sm btn-info" data-toggle="tooltip"><i data-feather="eye"></i></a>
+                                                            <c:if test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Kĩ thuật'}">
+                                                                <a href="product?action=edit&id=${p.id}" title="Sửa" class="btn btn-sm btn-warning text-white" data-toggle="tooltip"><i data-feather="edit-2"></i></a>
+                                                            </c:if>
+                                                            <c:if test="${sessionScope.userRole == 'Admin'}">
+                                                                <a href="product?action=delete&id=${p.id}" data-id="${p.id}" title="Xóa" class="btn btn-sm btn-danger delete-trigger-btn" data-toggle="tooltip"><i data-feather="trash-2"></i></a>
+                                                            </c:if>
+                                                            </div>
                                                     </td>
                                                 </tr>
                                             </c:forEach>
@@ -201,7 +199,6 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- **KẾT THÚC NỘI DUNG DANH SÁCH SẢN PHẨM** -->
 
                         <jsp:include page="/pagination.jsp"/>
                     </div>
@@ -209,7 +206,6 @@
             </main>
         </div>
 
-        <!-- Modal xác nhận xóa -->
         <div id="deleteConfirmModal" class="modal-overlay">
             <div class="modal-content">
                 <div class="modal-header"><h3 class="modal-title">Xác nhận xóa</h3><button class="close-modal-btn"><i data-feather="x"></i></button></div>
@@ -218,7 +214,6 @@
             </div>
         </div>
 
-        <!-- Scripts -->
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 feather.replace();

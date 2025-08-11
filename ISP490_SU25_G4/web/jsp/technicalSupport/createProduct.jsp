@@ -1,6 +1,6 @@
 <%-- 
     Document   : createProduct
-    Created on : Jun 14, 2025, 1:36:08 PM
+    Created on : Jun 14, 2025, 1:36:08 PM
     Author     : NGUYEN MINH
 --%>
 
@@ -30,7 +30,8 @@
     </head>
     <body>
         <div class="app-container">
-            <jsp:include page="../../mainMenu.jsp"/>
+            <%-- Sửa: Dùng đường dẫn gốc để ổn định hơn --%>
+            <jsp:include page="/mainMenu.jsp"/>
             <main class="main-content">
                 <header class="main-top-bar">
                     <div class="page-title">Thêm sản phẩm</div>
@@ -39,21 +40,30 @@
                         <span class="notification-badge"></span>
                     </button>
                 </header>
+
+                <%-- Cải tiến: Hiển thị danh sách lỗi rõ ràng hơn --%>
                 <c:if test="${not empty errors}">
-                    <div class="alert alert-warning alert-dismissible">
+                    <div class="alert alert-warning alert-dismissible" style="margin: 0 24px 20px;">
                         <button type="button" class="close" data-dismiss="alert">&times;</button>
-                        <strong>${errors}</strong> 
+                        <strong>Vui lòng sửa các lỗi sau:</strong>
+                        <ul>
+                            <c:forEach var="error" items="${errors}">
+                                <li>${error}</li>
+                                </c:forEach>
+                        </ul>
                     </div>
                 </c:if>
 
-
                 <section class="content-body">
                     <div class="form-container">
-                        <form action="createProduct" method="POST" class="product-form" enctype="multipart/form-data">
-                            <input type="hidden" name="service" value="createProduct">
+                        <%-- Sửa: action trỏ đến controller hợp nhất với action tương ứng --%>
+                        <form action="product?action=processCreate" method="POST" class="product-form" enctype="multipart/form-data">
+
+                            <%-- Bỏ: Input 'service' không còn cần thiết --%>
+
                             <div class="form-main-layout">
                                 <div class="product-image-section">
-                                    <label for="productImageUpload" class="image-placeholder" id="imagePreview">
+                                    <label for="productImageUpload" class="image-placeholder" id="imagePreviewContainer">
                                         <i id="imageIcon" data-feather="image" style="width: 48px; height: 48px;"></i>
                                         <img id="productImagePreview" style="display: none; width: 100%; height: 100%; object-fit: contain;" />
                                     </label>
@@ -61,58 +71,54 @@
                                     <label for="productImageUpload" class="btn-upload">Chọn ảnh</label>
                                 </div>
 
-
                                 <div class="product-details-section">
                                     <fieldset class="form-fieldset">
                                         <legend>Thông tin sản phẩm</legend>
                                         <div class="details-grid">
 
-                                            <!-- Tên sản phẩm -->
                                             <div class="form-group">
                                                 <label class="form-label" for="productName">Tên sản phẩm</label>
+                                                <%-- Sửa: value="${name}" để giữ lại giá trị đã nhập khi có lỗi --%>
                                                 <input type="text" id="productName" name="name" class="form-control"
-                                                       value="${product.name}" required>
+                                                       value="${name}" required>
                                             </div>
-                                            
+
                                             <div class="form-group">
                                                 <label class="form-label" for="productCode">Mã sản phẩm</label>
+                                                <%-- Sửa: value="${productCode}" để giữ lại giá trị đã nhập khi có lỗi --%>
                                                 <input type="text" id="productCode" name="productCode" class="form-control"
-                                                       value="${product.productCode}" required>
+                                                       value="${productCode}" required>
                                             </div>
 
-
-                                            <!-- Giá bán -->
                                             <div class="form-group">
                                                 <label class="form-label" for="price">Giá bán (VNĐ)</label>
+                                                <%-- Sửa: value="${price}" để giữ lại giá trị đã nhập khi có lỗi --%>
                                                 <input type="text" id="price" name="price" class="form-control"
-                                                       value="<fmt:formatNumber value='${product.price}' type='number' groupingUsed='true' />"
+                                                       value="${price}"
                                                        inputmode="numeric" maxlength="15" required>
                                             </div>
 
-                                            <!-- Hãng sản xuất -->
                                             <div class="form-group">
                                                 <label class="form-label" for="origin">Xuất xứ</label>
+                                                <%-- Sửa: value="${origin}" để giữ lại giá trị đã nhập khi có lỗi --%>
                                                 <input type="text" id="origin" name="origin" class="form-control"
-                                                       value="${product.brand}" >
+                                                       value="${origin}" >
                                             </div>
 
-
-                                            <!-- Mô tả -->
                                             <div class="form-group full-width">
                                                 <label class="form-label" for="description">Mô tả</label>
+                                                <%-- Sửa: Dùng thẻ c:out để hiển thị lại mô tả đã nhập khi có lỗi --%>
                                                 <textarea id="description" name="description" class="form-control" rows="4"
-                                                          placeholder="Nhập mô tả chi tiết cho sản phẩm...">${product.description}</textarea>
+                                                          placeholder="Nhập mô tả chi tiết cho sản phẩm..."><c:out value="${description}"/></textarea>
                                             </div>
-
                                         </div>
                                     </fieldset>
                                 </div>
-
                             </div>
 
-
                             <div class="form-actions">
-                                <a href="ProductController" class="btn-form"><i data-feather="x"></i><span>Hủy</span></a>
+                                <%-- Sửa: Nút Hủy trỏ về trang danh sách sản phẩm --%>
+                                <a href="product?action=list" class="btn-form"><i data-feather="x"></i><span>Hủy</span></a>
                                 <button type="submit" class="btn-form primary"><i data-feather="save"></i><span>Lưu sản phẩm</span></button>
                             </div>
                         </form>
