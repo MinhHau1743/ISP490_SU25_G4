@@ -1109,45 +1109,40 @@ public class UserDAO {
         }
         return list;
     }
-/**
- * Lấy danh sách nhân viên thuộc một phòng ban cụ thể.
- * @param departmentName Tên của phòng ban (ví dụ: "Văn phòng").
- * @return Danh sách các nhân viên thuộc phòng ban đó.
- */
-public List<User> getEmployeesByDepartment(String departmentName) {
-    List<User> list = new ArrayList<>();
-    
-    // SỬA LỖI:
-    // 1. JOIN với bảng Departments để lọc theo tên phòng ban.
-    // 2. Chỉ SELECT các cột cần thiết (id, first_name, middle_name, last_name).
-    String sql = "SELECT u.id, u.first_name, u.middle_name, u.last_name "
-               + "FROM Users u "
-               + "JOIN Departments d ON u.department_id = d.id "
-               + "WHERE d.name = ? AND u.is_deleted = 0"; // Thêm điều kiện chỉ lấy nhân viên đang hoạt động
-    
-    try (Connection conn = new DBContext().getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql)) {
 
-        ps.setString(1, departmentName);
-        
-        try (ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                User user = new User();
-                
-                // SỬA LỖI: Dùng getInt("id") cho cột INT
-                user.setId(rs.getInt("id")); 
-                
-                // Lấy đầy đủ họ, tên đệm, và tên
-                user.setFirstName(rs.getString("first_name"));
-                user.setMiddleName(rs.getString("middle_name")); // Đã thêm middleName
-                user.setLastName(rs.getString("last_name"));
-                
-                list.add(user);
+    /**
+     *  * Lấy danh sách nhân viên theo một vai trò (role) cụ thể.  * @param
+     * roleName Tên của vai trò (ví dụ: "Chánh văn phòng").  * @return Danh sách
+     * các nhân viên có vai trò đó.
+ 
+     */
+    public List<User> getEmployeesByDepartment(String roleName) { // Đổi tên tham số cho rõ nghĩa
+
+        List<User> list = new ArrayList<>();
+
+// SỬA LỖI: Đã thay đổi câu lệnh SQL để JOIN với bảng 'roles'
+// và sử dụng cột 'role_id' cho đúng với cấu trúc CSDL.
+        String sql = "SELECT u.id, u.first_name, u.middle_name, u.last_name "
+                + "FROM Users u "
+                + "JOIN roles r ON u.role_id = r.id " // Sửa từ 'Departments' sang 'roles' và 'department_id' sang 'role_id'
+                + "WHERE r.name = ? AND u.is_deleted = 0 AND u.status = 'active'"; // Thêm điều kiện chỉ lấy nhân viên 'active'
+        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, roleName);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    User user = new User();
+                    user.setId(rs.getInt("id"));
+                    user.setFirstName(rs.getString("first_name"));
+                    user.setMiddleName(rs.getString("middle_name"));
+                    user.setLastName(rs.getString("last_name"));
+                    list.add(user);
+                }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-    } catch (Exception e) {
-        e.printStackTrace();
+        return list;
     }
-    return list;
-}
 }

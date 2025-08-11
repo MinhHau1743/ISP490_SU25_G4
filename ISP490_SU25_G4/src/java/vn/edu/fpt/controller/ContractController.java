@@ -24,8 +24,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Controller duy nhất quản lý tất cả các hoạt động CRUD cho Hợp đồng.
- * Phiên bản này đã được cập nhật để tương thích hoàn toàn với cấu trúc CSDL và DAO mới nhất.
+ * Controller duy nhất quản lý tất cả các hoạt động CRUD cho Hợp đồng. Phiên bản
+ * này đã được cập nhật để tương thích hoàn toàn với cấu trúc CSDL và DAO mới
+ * nhất.
  *
  * @author YourName (updated by AI)
  */
@@ -95,7 +96,8 @@ public class ContractController extends HttpServlet {
         if (pageStr != null && !pageStr.trim().isEmpty()) {
             try {
                 page = Integer.parseInt(pageStr);
-            } catch (NumberFormatException e) { /* Bỏ qua, dùng giá trị mặc định */ }
+            } catch (NumberFormatException e) {
+                /* Bỏ qua, dùng giá trị mặc định */ }
         }
 
         ContractDAO contractDAO = new ContractDAO();
@@ -250,7 +252,6 @@ public class ContractController extends HttpServlet {
     }
 
     // --- CÁC PHƯƠNG THỨC HELPER ---
-
     /**
      * Helper để tải dữ liệu chung cho các form (create, edit).
      */
@@ -267,7 +268,8 @@ public class ContractController extends HttpServlet {
     }
 
     /**
-     * Helper để lấy thông tin hợp đồng từ request và gán vào đối tượng Contract.
+     * Helper để lấy thông tin hợp đồng từ request và gán vào đối tượng
+     * Contract.
      */
     private void populateContractFromRequest(HttpServletRequest request, Contract contract) {
         contract.setContractCode(request.getParameter("contractCode"));
