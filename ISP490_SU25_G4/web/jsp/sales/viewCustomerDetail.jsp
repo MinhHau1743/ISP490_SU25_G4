@@ -75,7 +75,8 @@
                                     <div class="detail-card">
                                         <h3 class="card-title">Thông tin doanh nghiệp</h3>
                                         <div class="card-body info-grid">
-                                            <div class="info-item"><span class="label"><i data-feather="phone-call"></i>Fax/Hotline</span><span class="value"><c:out value="${not empty customer.fax ? customer.fax : 'N/A'}"/></span></div>
+                                            <%-- ĐÃ SỬA: Thay thế 'fax' bằng 'hotline' ở cả nhãn và giá trị --%>
+                                            <div class="info-item"><span class="label"><i data-feather="phone-call"></i>Hotline</span><span class="value"><c:out value="${not empty customer.hotline ? customer.hotline : 'N/A'}"/></span></div>
                                             <div class="info-item"><span class="label"><i data-feather="at-sign"></i>Email doanh nghiệp</span><span class="value"><a href="mailto:<c:out value='${customer.businessEmail}'/>"><c:out value="${not empty customer.businessEmail ? customer.businessEmail : 'N/A'}"/></a></span></div>
                                             <div class="info-item"><span class="label"><i data-feather="hash"></i>Mã số thuế</span><span class="value"><c:out value="${not empty customer.taxCode ? customer.taxCode : 'N/A'}"/></span></div>
                                             <div class="info-item"><span class="label"><i data-feather="credit-card"></i>Số tài khoản</span><span class="value"><c:out value="${not empty customer.bankNumber ? customer.bankNumber : 'N/A'}"/></span></div>
@@ -158,7 +159,7 @@
                                                 <span class="value"><fmt:formatDate value="${customer.createdAt}" pattern="dd/MM/yyyy"/></span>
                                             </div>
                                         </div>
-                                    </div>      
+                                    </div>                                    
 
                                     <div class="detail-card">
                                         <h3 class="card-title">Giao dịch gần đây</h3>

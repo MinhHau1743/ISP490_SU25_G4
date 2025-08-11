@@ -1,333 +1,167 @@
 /*
-Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
-Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
+    File: /css/listCampaign.css
+    Description: CSS cho trang Quản lý Chiến dịch, bao gồm thanh công cụ và bộ lọc.
 */
-/* 
-    Created on : Jul 22, 2025, 2:09:36 PM
-    Author     : minhh
-*/
-:root {
-    --primary-color: #4f46e5;
-    --danger-color: #ef4444;
-    --success-color: #22c55e;
-    --warning-color: #f59e0b;
-    --gray-100: #f3f4f6;
-    --gray-200: #e5e7eb;
-    --gray-500: #6b7280;
-    --gray-700: #374151;
-    --gray-800: #1f2937;
-    --white: #ffffff;
-    --border-color: #e5e7eb; /* Thêm biến này nếu chưa có */
-    --text-primary: #1f2937;  /* Thêm biến này nếu chưa có */
-    --text-secondary: #6b7280;/* Thêm biến này nếu chưa có */
-}
 
-.main-content {
-    padding: 1.5rem 2rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-/* === PHẦN HEADER CỦA TRANG NỘI DUNG === */
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.page-header .header-left .breadcrumb {
-    color: var(--gray-500);
-    font-size: 0.875rem;
-}
-.page-header .header-left .breadcrumb a {
-    color: var(--gray-500);
-    text-decoration: none;
-}
-.page-header .header-left .breadcrumb a:hover {
-    color: var(--primary-color);
-}
-.page-header .header-left .page-main-title {
-    font-size: 1.875rem;
-    font-weight: 700;
-    color: var(--gray-800);
-    margin-top: 0.25rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-.title-badge {
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 0.125rem 0.5rem;
-    background-color: #fee2e2;
-    color: var(--danger-color);
-    border-radius: 999px;
-}
-
-.page-header .header-right {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.page-header .header-right .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.6rem 1rem;
-    border-radius: 8px;
-    font-weight: 500;
-    font-size: 0.875rem;
-    text-decoration: none;
-    cursor: pointer;
-    border: 1px solid var(--gray-200);
-    background-color: var(--white);
-    color: var(--gray-700);
-}
-.page-header .header-right .btn:hover {
-    background-color: var(--gray-100);
-}
-
-/* === CÁC THÀNH PHẦN KHÁC === */
-/* Stats Cards */
+/* === KHU VỰC THỐNG KÊ (STATS CARDS) === */
 .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    display: flex;
+    justify-content: center;
     gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
 }
 .stat-card {
-    background-color: var(--white);
+    background-color: #ffffff;
     padding: 1.5rem;
-    border: 1px solid var(--gray-200);
+    border: 1px solid #e5e7eb;
     border-radius: 12px;
     display: flex;
     align-items: center;
     gap: 1rem;
+    min-width: 280px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 .stat-card .icon-container {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 48px; height: 48px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
 }
-.stat-card .icon-container i {
-    width: 24px;
-    height: 24px;
-}
-.icon-yellow {
-    background-color: #fffbeb;
-    color: #f59e0b;
-}
-.icon-blue {
-    background-color: #eff6ff;
-    color: #3b82f6;
-}
-.icon-red {
-    background-color: #fee2e2;
-    color: #ef4444;
-}
-.icon-green {
-    background-color: #f0fdf4;
-    color: #22c55e;
-}
+.stat-card .icon-container i { width: 24px; height: 24px; }
+.icon-yellow { background-color: #fffbeb; color: #f59e0b; }
+.icon-red { background-color: #fee2e2; color: #ef4444; }
+.icon-green { background-color: #f0fdf4; color: #22c55e; }
+.stat-card .info .title { color: #6b7280; font-size: 0.875rem; }
+.stat-card .info .value { font-size: 1.875rem; font-weight: 700; color: #1f2937; }
 
-.stat-card .info .title {
-    color: var(--gray-500);
-    font-size: 0.875rem;
-}
-.stat-card .info .value {
-    font-size: 1.875rem;
-    font-weight: 700;
-    color: var(--gray-800);
-}
-.stat-card .percentage {
-    margin-left: auto;
-    font-size: 0.875rem;
-    font-weight: 500;
-    padding: 0.25rem 0.5rem;
-    border-radius: 999px;
-    background-color: #dcfce7;
-    color: #166534;
-}
-
-/* Tabs */
-.campaign-tabs {
-    border-bottom: 1px solid var(--gray-200);
-}
-.campaign-tabs ul {
-    display: flex;
-    gap: 1.5rem;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-.campaign-tabs li a {
-    display: block;
-    padding: 0.75rem 0.25rem;
-    text-decoration: none;
-    color: var(--gray-500);
-    font-weight: 500;
-    border-bottom: 2px solid transparent;
-}
-.campaign-tabs li a.active, .campaign-tabs li a:hover {
-    color: var(--danger-color);
-    border-bottom-color: var(--danger-color);
-}
-
-/* Toolbar */
+/* === THANH CÔNG CỤ VÀ BỘ LỌC (TOOLBAR & FILTERS) === */
 .campaign-toolbar {
-    background-color: var(--white);
-    padding: 1rem;
-    border: 1px solid var(--gray-200);
+    background-color: #ffffff;
+    padding: 24px;
+    border: 1px solid #e5e7eb;
     border-radius: 12px;
+    margin-bottom: 24px;
 }
-.toolbar-top, .toolbar-bottom {
+.toolbar-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
-}
-.toolbar-top {
-    margin-bottom: 1rem;
+    gap: 16px;
 }
 .search-bar {
     position: relative;
+    flex-grow: 1;
 }
 .search-bar i {
     position: absolute;
-    left: 0.75rem;
+    left: 14px;
     top: 50%;
     transform: translateY(-50%);
-    color: var(--gray-500);
-    width: 1rem;
-    height: 1rem;
+    color: #9ca3af;
+    width: 20px;
+    height: 20px;
 }
 .search-bar input {
-    padding: 0.6rem 1rem 0.6rem 2.5rem;
-    border: 1px solid var(--gray-200);
+    padding: 12px 16px 12px 44px;
+    border: 1px solid #d1d5db;
     border-radius: 8px;
-    min-width: 300px;
+    width: 100%;
+    font-size: 1rem;
+    height: 44px;
 }
 .btn-add-campaign {
-    background-color: var(--danger-color);
-    color: var(--white);
+    background-color: #0d9488;
+    color: #ffffff;
     border: none;
-    padding: 0.75rem 1.25rem;
+    padding: 12px 20px;
+    height: 44px;
     border-radius: 8px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
     text-decoration: none;
+    transition: background-color 0.2s ease;
+    white-space: nowrap;
+}
+.btn-add-campaign:hover {
+    background-color: #0f766e;
 }
 .toolbar-bottom {
-    gap: 1rem;
-}
-.toolbar-bottom .filter-group {
     display: flex;
-    align-items: center;
-    gap: 1rem;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #f3f4f6;
 }
-.filter-btn {
-    padding: 0.6rem 1rem;
-    border: 1px solid var(--gray-200);
-    border-radius: 8px;
-    background-color: var(--white);
-    cursor: pointer;
+.filter-group {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    flex-direction: column;
+    gap: 6px;
 }
-.btn-manage-columns {
-    background-color: #eef2ff;
-    color: var(--primary-color);
-    border: none;
-    margin-left: auto;
-}
-
-/* Data Table */
-.data-table-container {
-    background-color: var(--white);
-    border: 1px solid var(--gray-200);
-    border-radius: 12px;
-    overflow: hidden;
-}
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-.data-table th, .data-table td {
-    padding: 1rem 1.5rem;
-    text-align: left;
-    border-bottom: 1px solid var(--gray-200);
-    vertical-align: middle;
-}
-.data-table thead th {
-    background-color: var(--gray-100);
-    color: var(--gray-500);
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-}
-.data-table tbody tr:last-child td {
-    border-bottom: none;
-}
-.data-table th .sort-icon {
-    margin-left: 0.5rem;
-}
-.data-table td input[type="checkbox"] {
-    margin-right: 0.5rem;
-}
-
-/* Table Cell Specifics */
-.progress-cell .progress-item {
-    display: inline-block;
-    margin-right: 1.5rem;
-}
-.progress-cell .progress-value {
-    font-weight: 600;
-    color: var(--gray-700);
-}
-.progress-cell .progress-label {
+.filter-group label {
     font-size: 0.875rem;
-    color: var(--gray-500);
-    margin-left: 0.25rem;
+    font-weight: 500;
+    color: #374151;
 }
-
-.members-cell {
-    display: flex;
-    align-items: center;
+.filter-group select,
+.filter-group input[type="date"] {
+    height: 40px;
+    padding: 0 12px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    background-color: #fff;
+    font-size: 14px;
+    min-width: 180px;
 }
-.avatar-stack {
+.filter-actions {
+    margin-left: auto;
     display: flex;
+    gap: 12px;
 }
-.avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 2px solid var(--white);
-    margin-left: -10px;
-    background-color: var(--gray-200);
-    display: flex;
+.btn-filter, .btn-clear-filter {
+    height: 40px;
+    padding: 0 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-weight: 500;
-    font-size: 0.875rem;
-    color: var(--gray-500);
-    overflow: hidden;
+    border: 1px solid #d1d5db;
+    transition: background-color 0.2s;
 }
-.avatar:first-child {
-    margin-left: 0;
+.btn-filter {
+    background-color: #374151;
+    color: white;
+    border-color: #374151;
 }
-.avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+.btn-filter:hover {
+    background-color: #1f2937;
 }
-.avatar-more {
-    background-color: var(--danger-color);
-    color: var(--white);
+.btn-clear-filter {
+    background-color: #ffffff;
+    color: #4b5563;
 }
+.btn-clear-filter:hover {
+    background-color: #f9fafb;
+}
+
+/* === BẢNG DỮ LIỆU (DATA TABLE) === */
+.data-table-container {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow-x: auto;
+}
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th, .data-table td { padding: 1rem 1.5rem; text-align: left; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+.data-table thead th { background-color: #f9fafb; color: #6b7280; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+.data-table tbody tr:last-child td { border-bottom: none; }
+.status-select { min-width: 150px; /* ... */ }
+.actions-cell { white-space: nowrap; text-align: right; }
+.actions-cell .icon-btn { background: none; border: none; cursor: pointer; padding: 6px; margin: 0 2px; display: inline-flex; align-items: center; justify-content: center; color: #6b7280; border-radius: 50%; transition: background-color 0.2s, color 0.2s; }
+.actions-cell .icon-btn:hover { background-color: #f0fdfa; color: #0d9488; }

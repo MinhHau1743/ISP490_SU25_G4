@@ -1,104 +1,160 @@
-package vn.edu.fpt.model; // Gói của bạn
+package vn.edu.fpt.model;
 
 import java.sql.Timestamp;
-import java.util.Date;
 
+/**
+ * Lớp Model này đại diện cho một chiến dịch (Campaign).
+ * Cấu trúc đã được cập nhật để phù hợp với CSDL đã cải tiến.
+ */
 public class Campaign {
+
+    // Các trường tương ứng với cột trong DB
     private int campaignId;
     private String name;
     private String description;
-    private Date startDate;
-    private Date endDate;
-    private String status;
+    private int enterpriseId;
+    private int statusId;
+    private int typeId;
     private int createdBy;
-    private User user; // Đối tượng User của người tạo
+    private Integer updatedBy;
     private Timestamp createdAt;
     private Timestamp updatedAt;
-    private Integer updatedBy; // Thêm trường updatedBy (sử dụng Integer để cho phép giá trị null nếu cần)
-    
-    // THAY ĐỔI 1: Thêm trường để lưu tên tệp đính kèm
-    private String attachmentFileName;
 
-    // Constructors
-    public Campaign() {}
+    // Các thuộc tính bổ sung để chứa đối tượng liên quan (giúp hiển thị trên JSP)
+    private User creator; // Đối tượng người tạo chiến dịch
+    private Status status; // Đối tượng trạng thái
+    private String enterpriseName; // Tên khách hàng
+    private String typeName; // Tên loại chiến dịch
 
-    // Constructor đầy đủ (cập nhật để bao gồm updatedBy và attachmentFileName)
-    public Campaign(int campaignId, String name, String description, Date startDate, Date endDate, String status, 
-                    int createdBy, Integer updatedBy, Timestamp createdAt, Timestamp updatedAt, String attachmentFileName) {
-        this.campaignId = campaignId;
-        this.name = name;
-        this.description = description;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.status = status;
-        this.createdBy = createdBy;
-        this.updatedBy = updatedBy;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        this.attachmentFileName = attachmentFileName; // Gán attachmentFileName
+    /**
+     * Constructor mặc định
+     */
+    public Campaign() {
     }
 
     // Getters and Setters
-    public int getCampaignId() { return campaignId; }
-    public void setCampaignId(int campaignId) { this.campaignId = campaignId; }
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-
-    public Date getStartDate() { return startDate; }
-    public void setStartDate(Date startDate) { 
-        this.startDate = startDate;
+    public int getCampaignId() {
+        return campaignId;
     }
 
-    public Date getEndDate() { return endDate; }
-    public void setEndDate(Date endDate) { 
-        this.endDate = endDate;
+    public void setCampaignId(int campaignId) {
+        this.campaignId = campaignId;
     }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public String getName() {
+        return name;
+    }
 
-    public int getCreatedBy() { return createdBy; }
-    public void setCreatedBy(int createdBy) { this.createdBy = createdBy; }
-    
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public Timestamp getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+    public String getDescription() {
+        return description;
+    }
 
-    public Timestamp getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-    public Integer getUpdatedBy() { return updatedBy; } 
-    public void setUpdatedBy(Integer updatedBy) { 
+    public int getEnterpriseId() {
+        return enterpriseId;
+    }
+
+    public void setEnterpriseId(int enterpriseId) {
+        this.enterpriseId = enterpriseId;
+    }
+
+    public int getStatusId() {
+        return statusId;
+    }
+
+    public void setStatusId(int statusId) {
+        this.statusId = statusId;
+    }
+
+    public int getTypeId() {
+        return typeId;
+    }
+
+    public void setTypeId(int typeId) {
+        this.typeId = typeId;
+    }
+
+    public int getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(int createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public Integer getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(Integer updatedBy) {
         this.updatedBy = updatedBy;
     }
 
-    // THAY ĐỔI 2: Thêm Getter và Setter cho attachmentFileName
-    public String getAttachmentFileName() {
-        return attachmentFileName;
+    public Timestamp getCreatedAt() {
+        return createdAt;
     }
 
-    public void setAttachmentFileName(String attachmentFileName) {
-        this.attachmentFileName = attachmentFileName;
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
     }
 
+    public Timestamp getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Timestamp updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    // --- Getters & Setters cho các thuộc tính đối tượng bổ sung ---
+    public User getCreator() {
+        return creator;
+    }
+
+    public void setCreator(User creator) {
+        this.creator = creator;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public String getEnterpriseName() {
+        return enterpriseName;
+    }
+
+    public void setEnterpriseName(String enterpriseName) {
+        this.enterpriseName = enterpriseName;
+    }
+
+    public String getTypeName() {
+        return typeName;
+    }
+
+    public void setTypeName(String typeName) {
+        this.typeName = typeName;
+    }
 
     @Override
     public String toString() {
         return "Campaign{" +
                 "campaignId=" + campaignId +
                 ", name='" + name + '\'' +
-                ", status='" + status + '\'' +
-                ", startDate=" + startDate +
-                ", endDate=" + endDate +
+                ", enterpriseId=" + enterpriseId +
+                ", statusId=" + statusId +
+                ", typeId=" + typeId +
                 ", createdBy=" + createdBy +
-                ", updatedBy=" + updatedBy +
-                ", attachmentFileName='" + attachmentFileName + '\'' + // Thêm vào toString
                 '}';
     }
 }

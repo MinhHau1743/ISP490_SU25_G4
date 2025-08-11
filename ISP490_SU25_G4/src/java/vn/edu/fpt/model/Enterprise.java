@@ -19,7 +19,7 @@ public class Enterprise {
     private String name;
     private String taxCode;
     private String businessEmail;
-    private String fax;
+    private String hotline;
     private String bankNumber;
 
     private int industryId;
@@ -33,10 +33,10 @@ public class Enterprise {
     private Timestamp updatedAt;
 
     // Fields from joined tables for easy display
-    private String fullAddress; // From Addresses table
-    private String primaryContactPhone; // From EnterpriseContacts table
-    private String customerTypeName; // From CustomerTypes table
-    private List<User> assignedUsers; // List of assigned employees from Users table
+    private String fullAddress;
+    private String primaryContactPhone;
+    private String customerTypeName;
+    private List<User> assignedUsers;
 
     // === THÊM TRƯỜNG MỚI VÀO ĐÂY ===
     private String primaryContactEmail;
@@ -45,7 +45,7 @@ public class Enterprise {
     private int wardId;
     private String streetAddress;
 
-// === THIS FIELD WAS MISSING ===
+    // === THIS FIELD WAS MISSING ===
     private List<EnterpriseContact> contacts;
 
     public Enterprise() {
@@ -54,13 +54,13 @@ public class Enterprise {
         this.contacts = new ArrayList<>();
     }
 
-    public Enterprise(int id, String enterpriseCode, String name, String businessEmail, String taxCode, String fax, String bankNumber, int industryId, int customerTypeId, int areaId, int addressId, String avatarUrl, boolean isDeleted, Timestamp createdAt, Timestamp updatedAt) {
+    public Enterprise(int id, String enterpriseCode, String name, String businessEmail, String taxCode, String hotline, String bankNumber, int industryId, int customerTypeId, int areaId, int addressId, String avatarUrl, boolean isDeleted, Timestamp createdAt, Timestamp updatedAt) {
         this.id = id;
         this.enterpriseCode = enterpriseCode;
         this.name = name;
         this.businessEmail = businessEmail;
         this.taxCode = taxCode;
-        this.fax = fax;
+        this.hotline = hotline;
         this.bankNumber = bankNumber;
         this.industryId = industryId;
         this.customerTypeId = customerTypeId;
@@ -71,8 +71,6 @@ public class Enterprise {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
-    
-    
 
     public String getBusinessEmail() {
         return businessEmail;
@@ -81,7 +79,6 @@ public class Enterprise {
     public void setBusinessEmail(String businessEmail) {
         this.businessEmail = businessEmail;
     }
-    
 
     public int getProvinceId() {
         return provinceId;
@@ -163,12 +160,12 @@ public class Enterprise {
         this.taxCode = taxCode;
     }
 
-    public String getFax() {
-        return fax;
+    public String getHotline() {
+        return hotline;
     }
 
-    public void setFax(String fax) {
-        this.fax = fax;
+    public void setHotline(String hotline) {
+        this.hotline = hotline;
     }
 
     public String getBankNumber() {
@@ -277,7 +274,8 @@ public class Enterprise {
 
     @Override
     public String toString() {
-        return "Enterprise{" + "id=" + id + ", enterpriseCode=" + enterpriseCode + ", name=" + name + ", taxCode=" + taxCode + ", fax=" + fax + ", bankNumber=" + bankNumber + ", industryId=" + industryId + ", customerTypeId=" + customerTypeId + ", areaId=" + areaId + ", addressId=" + addressId + ", avatarUrl=" + avatarUrl + ", isDeleted=" + isDeleted + ", createdAt=" + createdAt + ", updatedAt=" + updatedAt + '}';
+        // ĐÃ SỬA: Thay thế 'area.id' bằng 'areaId'
+        return "Enterprise{" + "id=" + id + ", enterpriseCode=" + enterpriseCode + ", name=" + name + ", taxCode=" + taxCode + ", hotline=" + hotline + ", bankNumber=" + bankNumber + ", industryId=" + industryId + ", customerTypeId=" + customerTypeId + ", areaId=" + areaId + ", addressId=" + addressId + ", avatarUrl=" + avatarUrl + ", isDeleted=" + isDeleted + ", createdAt=" + createdAt + ", updatedAt=" + updatedAt + '}';
     }
 
 }

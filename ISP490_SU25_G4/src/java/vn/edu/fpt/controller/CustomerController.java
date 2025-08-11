@@ -288,7 +288,8 @@ public class CustomerController extends HttpServlet {
             String businessEmail = request.getParameter("businessEmail");
 
             if (hotline == null || hotline.trim().isEmpty()) {
-                request.setAttribute("errorMessage", "Vui lòng nhập Fax/Hotline của doanh nghiệp.");
+                // ĐÃ SỬA: Cập nhật thông báo lỗi
+                request.setAttribute("errorMessage", "Vui lòng nhập Hotline của doanh nghiệp.");
                 doGet(request, response);
                 return;
             }
@@ -436,7 +437,8 @@ public class CustomerController extends HttpServlet {
 
         String hotline = request.getParameter("hotline");
         if (hotline == null || hotline.trim().isEmpty()) {
-            request.setAttribute("errorMessage", "Vui lòng nhập Fax/Hotline của doanh nghiệp.");
+            // ĐÃ SỬA: Cập nhật thông báo lỗi
+            request.setAttribute("errorMessage", "Vui lòng nhập Hotline của doanh nghiệp.");
             doGet(request, response);
             return;
         }
@@ -548,13 +550,15 @@ public class CustomerController extends HttpServlet {
             enterpriseToUpdate.setId(enterpriseId);
             enterpriseToUpdate.setName(request.getParameter("customerName"));
             enterpriseToUpdate.setBusinessEmail(request.getParameter("businessEmail"));
-            enterpriseToUpdate.setFax(request.getParameter("hotline"));
+            // ĐÃ SỬA: Gọi đúng phương thức setHotline() thay vì setFax()
+            enterpriseToUpdate.setHotline(request.getParameter("hotline"));
             enterpriseToUpdate.setTaxCode(request.getParameter("taxCode"));
             enterpriseToUpdate.setBankNumber(request.getParameter("bankNumber"));
             enterpriseToUpdate.setCustomerTypeId(Integer.parseInt(request.getParameter("customerGroup")));
             enterpriseToUpdate.setAvatarUrl(avatarDbPath);
-            new EnterpriseDAO().updateEnterprise(conn, enterpriseToUpdate);
 
+            // Dòng này được gọi ở dưới rồi, gọi 2 lần sẽ thừa
+            // new EnterpriseDAO().updateEnterprise(conn, enterpriseToUpdate);
             if (fullName != null && !fullName.trim().isEmpty()) {
                 if (new EnterpriseDAO().primaryContactExists(conn, enterpriseId)) {
                     new EnterpriseDAO().updatePrimaryContact(conn, enterpriseId, fullName, position, phone, email);
@@ -565,7 +569,8 @@ public class CustomerController extends HttpServlet {
 
             new EnterpriseDAO().updateEnterprise(conn, enterpriseToUpdate);
             new EnterpriseDAO().updateAddress(conn, addressId, streetAddress, wardId, districtId, provinceId);
-            new EnterpriseDAO().updatePrimaryContact(conn, enterpriseId, fullName, position, phone, email);
+            // Dòng này đã được xử lý trong logic if/else ở trên
+            // new EnterpriseDAO().updatePrimaryContact(conn, enterpriseId, fullName, position, phone, email); 
             new EnterpriseDAO().updateMainAssignment(conn, enterpriseId, employeeId);
 
             conn.commit();

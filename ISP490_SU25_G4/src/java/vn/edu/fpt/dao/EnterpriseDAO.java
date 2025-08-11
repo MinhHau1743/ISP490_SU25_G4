@@ -32,14 +32,14 @@ public class EnterpriseDAO extends DBContext {
         // Tạo mã khách hàng duy nhất, ví dụ: KH-timestamp
         String enterpriseCode = "KH-" + System.currentTimeMillis();
 
-        // Theo DB schema, fax và bank_number là NOT NULL, ta sẽ để giá trị tạm thời
-        String sql = "INSERT INTO Enterprises (enterprise_code, name, business_email, fax, bank_number, tax_code, customer_type_id, address_id, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        // ĐÃ SỬA: Bỏ cột `fax` và thay bằng `hotline` trong câu lệnh SQL
+        String sql = "INSERT INTO Enterprises (enterprise_code, name, business_email, hotline, bank_number, tax_code, customer_type_id, address_id, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, enterpriseCode);
             ps.setString(2, name);
             ps.setString(3, businessEmail);
-            ps.setString(4, hotline); // Giá trị tạm
+            ps.setString(4, hotline); // ĐÃ SỬA: Gán giá trị cho cột hotline
             ps.setString(5, bankNumber);
             ps.setString(6, taxCode);
             ps.setInt(7, customerTypeId);
@@ -85,8 +85,9 @@ public class EnterpriseDAO extends DBContext {
         Map<Integer, Enterprise> enterpriseMap = new HashMap<>();
         List<Object> params = new ArrayList<>();
 
+        // ĐÃ SỬA: Thay e.fax bằng e.hotline trong danh sách cột SELECT
         StringBuilder sql = new StringBuilder(
-                "SELECT DISTINCT e.id AS enterprise_id, e.name AS enterprise_name, e.enterprise_code, e.avatar_url AS enterprise_avatar, e.fax, "
+                "SELECT DISTINCT e.id AS enterprise_id, e.name AS enterprise_name, e.enterprise_code, e.avatar_url AS enterprise_avatar, e.hotline, "
                 + "CONCAT_WS(', ', a.street_address, w.name, d.name, p.name) AS full_address, "
                 + "ct.name AS customer_type_name, "
                 + "u.id AS user_id, u.first_name, u.last_name, u.middle_name, u.avatar_url AS user_avatar "
@@ -150,7 +151,7 @@ public class EnterpriseDAO extends DBContext {
                             newEnterprise.setId(rs.getInt("enterprise_id"));
                             newEnterprise.setName(rs.getString("enterprise_name"));
                             newEnterprise.setEnterpriseCode(rs.getString("enterprise_code"));
-                            newEnterprise.setFax(rs.getString("fax"));
+                            newEnterprise.setHotline(rs.getString("hotline")); // ĐÃ SỬA: Dùng setHotline()
                             newEnterprise.setCustomerTypeName(rs.getString("customer_type_name"));
                             newEnterprise.setFullAddress(rs.getString("full_address"));
                             newEnterprise.setAvatarUrl(rs.getString("enterprise_avatar"));
@@ -222,7 +223,7 @@ public class EnterpriseDAO extends DBContext {
                     enterprise.setAddressId(rs.getInt("address_id"));
 
                     enterprise.setBusinessEmail(rs.getString("business_email"));
-                    enterprise.setFax(rs.getString("fax"));
+                    enterprise.setHotline(rs.getString("hotline")); // ĐÃ SỬA: Đọc từ cột hotline
 
                     // === DÒNG QUAN TRỌNG BỊ THIẾU ===
                     enterprise.setCreatedAt(rs.getTimestamp("created_at"));
@@ -268,12 +269,13 @@ public class EnterpriseDAO extends DBContext {
     }
 
     public boolean updateEnterprise(Connection conn, Enterprise enterprise) throws SQLException {
-        String sql = "UPDATE Enterprises SET name = ?, business_email = ?, tax_code = ?, fax = ?, bank_number = ?, customer_type_id = ?, avatar_url = ? WHERE id = ?";
+        // ĐÃ SỬA: Cập nhật cột hotline thay vì fax
+        String sql = "UPDATE Enterprises SET name = ?, business_email = ?, tax_code = ?, hotline = ?, bank_number = ?, customer_type_id = ?, avatar_url = ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, enterprise.getName());
             ps.setString(2, enterprise.getBusinessEmail());
             ps.setString(3, enterprise.getTaxCode());
-            ps.setString(4, enterprise.getFax());
+            ps.setString(4, enterprise.getHotline()); // ĐÃ SỬA: Lấy giá trị từ getHotline()
             ps.setString(5, enterprise.getBankNumber());
             ps.setInt(6, enterprise.getCustomerTypeId());
             ps.setString(7, enterprise.getAvatarUrl()); // Thêm avatar_url
@@ -406,8 +408,9 @@ public class EnterpriseDAO extends DBContext {
         Map<Integer, Enterprise> enterpriseMap = new HashMap<>();
         List<Object> params = new ArrayList<>();
 
+        // ĐÃ SỬA: Thay e.fax bằng e.hotline
         StringBuilder sql = new StringBuilder(
-                "SELECT e.id AS enterprise_id, e.name AS enterprise_name, e.enterprise_code, e.avatar_url, e.business_email, e.fax, "
+                "SELECT e.id AS enterprise_id, e.name AS enterprise_name, e.enterprise_code, e.avatar_url, e.business_email, e.hotline, "
                 + "CONCAT_WS(', ', a.street_address, w.name, d.name, p.name) AS full_address, "
                 + "GROUP_CONCAT(DISTINCT CONCAT_WS(' ', u.last_name, u.middle_name, u.first_name) SEPARATOR ', ') AS assigned_users "
                 + "FROM Enterprises e "
@@ -438,7 +441,7 @@ public class EnterpriseDAO extends DBContext {
                     enterprise.setId(rs.getInt("enterprise_id"));
                     enterprise.setName(rs.getString("enterprise_name"));
                     enterprise.setEnterpriseCode(rs.getString("enterprise_code"));
-                    enterprise.setFax(rs.getString("fax"));
+                    enterprise.setHotline(rs.getString("hotline")); // ĐÃ SỬA: Dùng hotline thay vì fax
                     enterprise.setBusinessEmail(rs.getString("business_email"));
                     enterprise.setFullAddress(rs.getString("full_address"));
                     enterprise.setAvatarUrl(rs.getString("avatar_url"));
@@ -709,7 +712,7 @@ public class EnterpriseDAO extends DBContext {
             }
         }
         return contactList;
-        
+
     }
-    
+
 }

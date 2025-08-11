@@ -57,53 +57,54 @@
 
                     <c:if test="${not empty errorMessage}"><div class="error-message"><strong>Lỗi:</strong> ${errorMessage}</div></c:if>
 
-                        <div class="detail-layout">
+                            <div class="detail-layout">
 
 
-                            <div class="main-column">
-                                <div class="profile-header-card detail-card">
-                                    <div class="card-body">
-                                        <div class="avatar-section">
-                                        <%-- Sửa lỗi hiển thị ảnh: Sử dụng BASE_URL và kiểm tra customer.avatarUrl --%>
-                                        <c:choose>
-                                            <c:when test="${not empty customer.avatarUrl}">
-                                                <img src="${BASE_URL}/${customer.avatarUrl}" alt="Ảnh đại diện" id="avatarPreview">
-                                            </c:when>
-                                            <c:otherwise>
-                                                <%-- Placeholder với chữ cái đầu của tên --%>
-                                                <img src="https://placehold.co/120x120/E0F7FA/00796B?text=${customer.name.substring(0,1)}" alt="Ảnh đại diện" id="avatarPreview">
-                                            </c:otherwise>
-                                        </c:choose>
+                                <div class="main-column">
+                                    <div class="profile-header-card detail-card">
+                                        <div class="card-body">
+                                            <div class="avatar-section">
+                                            <%-- Sửa lỗi hiển thị ảnh: Sử dụng BASE_URL và kiểm tra customer.avatarUrl --%>
+                                            <c:choose>
+                                                <c:when test="${not empty customer.avatarUrl}">
+                                                    <img src="${BASE_URL}/${customer.avatarUrl}" alt="Ảnh đại diện" id="avatarPreview">
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <%-- Placeholder với chữ cái đầu của tên --%>
+                                                    <img src="https://placehold.co/120x120/E0F7FA/00796B?text=${customer.name.substring(0,1)}" alt="Ảnh đại diện" id="avatarPreview">
+                                                </c:otherwise>
+                                            </c:choose>
 
-                                        <input type="file" id="avatarUpload" name="avatar" hidden accept="image/*">
-                                        <button type="button" class="btn btn-secondary" id="btnChooseAvatar">Đổi ảnh</button>
-                                    </div>
-                                    <div class="customer-main-info" style="width: 100%;">
-                                        <div class="form-group" style="margin-bottom: 16px;">
-                                            <label for="customerName">Tên doanh nghiệp (*)</label>
-                                            <%-- Đổi name từ "name" thành "customerName" để đồng bộ --%>
-                                            <input type="text" id="customerName" name="customerName" class="form-control" value="<c:out value='${customer.name}'/>" required>
+                                            <input type="file" id="avatarUpload" name="avatar" hidden accept="image/*">
+                                            <button type="button" class="btn btn-secondary" id="btnChooseAvatar">Đổi ảnh</button>
+                                        </div>
+                                        <div class="customer-main-info" style="width: 100%;">
+                                            <div class="form-group" style="margin-bottom: 16px;">
+                                                <label for="customerName">Tên doanh nghiệp (*)</label>
+                                                <%-- Đổi name từ "name" thành "customerName" để đồng bộ --%>
+                                                <input type="text" id="customerName" name="customerName" class="form-control" value="<c:out value='${customer.name}'/>" required>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <%-- Thông tin doanh nghiệp --%>
-                            <div class="detail-card">
-                                <h3 class="card-title">Thông tin doanh nghiệp</h3>
-                                <div class="card-body">
-                                    <div class="info-grid">
-                                        <div class="form-group"><label for="hotline">Fax/Hotline (*)</label><input type="tel" id="hotline" name="hotline" class="form-control" value="<c:out value='${customer.fax}'/>" required></div>
-                                        <div class="form-group"><label for="businessEmail">Email doanh nghiệp (*)</label><input type="email" id="businessEmail" name="businessEmail" class="form-control" value="<c:out value='${customer.businessEmail}'/>" required></div>
-                                        <div class="form-group"><label for="taxCode">Mã số thuế</label><input type="text" id="taxCode" name="taxCode" class="form-control" value="<c:out value='${customer.taxCode}'/>"></div>
-                                        <div class="form-group"><label for="bankNumber">Số tài khoản ngân hàng</label><input type="text" id="bankNumber" name="bankNumber" class="form-control" value="<c:out value='${customer.bankNumber}'/>"></div>
-                                    </div>
-                                    <hr style="margin: 1.5rem 0;">
-                                    <div class="info-grid" style="margin-top: 1rem; grid-template-columns: repeat(3, 1fr);">
-                                        <div class="form-group">
-                                            <label for="province">Tỉnh/Thành phố (*)</label>
-                                            <select id="province" name="province" class="form-control" required>
-                                                <c:forEach var="p" items="${allProvinces}"><option value="${p.id}" ${customer.provinceId == p.id ? 'selected' : ''}><c:out value="${p.name}"/></option></c:forEach>
+                                <%-- Thông tin doanh nghiệp --%>
+                                <div class="detail-card">
+                                    <h3 class="card-title">Thông tin doanh nghiệp</h3>
+                                    <div class="card-body">
+                                        <div class="info-grid">
+                                            <%-- ĐÃ SỬA: Cập nhật nhãn và giá trị từ 'fax' sang 'hotline' --%>
+                                            <div class="form-group"><label for="hotline">Hotline (*)</label><input type="tel" id="hotline" name="hotline" class="form-control" value="<c:out value='${customer.hotline}'/>" required></div>
+                                            <div class="form-group"><label for="businessEmail">Email doanh nghiệp (*)</label><input type="email" id="businessEmail" name="businessEmail" class="form-control" value="<c:out value='${customer.businessEmail}'/>" required></div>
+                                            <div class="form-group"><label for="taxCode">Mã số thuế</label><input type="text" id="taxCode" name="taxCode" class="form-control" value="<c:out value='${customer.taxCode}'/>"></div>
+                                            <div class="form-group"><label for="bankNumber">Số tài khoản ngân hàng</label><input type="text" id="bankNumber" name="bankNumber" class="form-control" value="<c:out value='${customer.bankNumber}'/>"></div>
+                                        </div>
+                                        <hr style="margin: 1.5rem 0;">
+                                        <div class="info-grid" style="margin-top: 1rem; grid-template-columns: repeat(3, 1fr);">
+                                            <div class="form-group">
+                                                <label for="province">Tỉnh/Thành phố (*)</label>
+                                                <select id="province" name="province" class="form-control" required>
+                                                    <c:forEach var="p" items="${allProvinces}"><option value="${p.id}" ${customer.provinceId == p.id ? 'selected' : ''}><c:out value="${p.name}"/></option></c:forEach>
                                                 </select>
                                             </div>
                                             <div class="form-group">
@@ -118,39 +119,39 @@
                                                 <c:forEach var="w" items="${wardsForCustomer}"><option value="${w.id}" ${customer.wardId == w.id ? 'selected' : ''}><c:out value="${w.name}"/></option></c:forEach>
                                                 </select>
                                             </div>
+                                            </div>
+                                            <div class="form-group" style="margin-top: 1rem;">
+                                                <label for="streetAddress">Địa chỉ cụ thể (*)</label>
+                                                <input type="text" id="streetAddress" name="streetAddress" class="form-control" value="<c:out value='${customer.streetAddress}'/>" required>
                                         </div>
-                                        <div class="form-group" style="margin-top: 1rem;">
-                                            <label for="streetAddress">Địa chỉ cụ thể (*)</label>
-                                            <input type="text" id="streetAddress" name="streetAddress" class="form-control" value="<c:out value='${customer.streetAddress}'/>" required>
+                                    </div>
+                                </div>
+
+                                <%-- Thông tin người đại diện --%>
+                                <div class="detail-card">
+                                    <h3 class="card-title">Thông tin người đại diện</h3>
+                                    <div class="card-body">
+                                        <c:set var="primaryContact" value="${customer.contacts[0]}"/>
+                                        <div class="info-grid">
+                                            <div class="form-group"><label for="fullName">Họ và tên</label><input type="text" id="fullName" name="fullName" class="form-control" value="<c:out value='${primaryContact.fullName}'/>" ></div>
+                                            <div class="form-group"><label for="position">Chức vụ</label><input type="text" id="position" name="position" class="form-control" value="<c:out value='${primaryContact.position}'/>" ></div>
+                                            <div class="form-group"><label for="phone">Số điện thoại</label><input type="tel" id="phone" name="phone" class="form-control" value="<c:out value='${primaryContact.phoneNumber}'/>" ></div>
+                                            <div class="form-group"><label for="email">Email</label><input type="email" id="email" name="email" class="form-control" value="<c:out value='${primaryContact.email}'/>"></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <%-- Thông tin người đại diện --%>
-                            <div class="detail-card">
-                                <h3 class="card-title">Thông tin người đại diện</h3>
-                                <div class="card-body">
-                                    <c:set var="primaryContact" value="${customer.contacts[0]}"/>
-                                    <div class="info-grid">
-                                        <div class="form-group"><label for="fullName">Họ và tên</label><input type="text" id="fullName" name="fullName" class="form-control" value="<c:out value='${primaryContact.fullName}'/>" ></div>
-                                        <div class="form-group"><label for="position">Chức vụ</label><input type="text" id="position" name="position" class="form-control" value="<c:out value='${primaryContact.position}'/>" ></div>
-                                        <div class="form-group"><label for="phone">Số điện thoại</label><input type="tel" id="phone" name="phone" class="form-control" value="<c:out value='${primaryContact.phoneNumber}'/>" ></div>
-                                        <div class="form-group"><label for="email">Email</label><input type="email" id="email" name="email" class="form-control" value="<c:out value='${primaryContact.email}'/>"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="sidebar-column">
-                            <div class="detail-card">
-                                <h3 class="card-title">Thông tin bổ sung</h3>
-                                <div class="card-body">
-                                    <div class="form-group"><label for="customerCode">Mã khách hàng</label><input type="text" id="customerCode" name="customerCode" class="form-control" value="<c:out value='${customer.enterpriseCode}'/>" readonly></div>
-                                    <div class="form-group">
-                                        <label for="customerGroup">Nhóm khách hàng</label>
-                                        <%-- Đổi name từ customerTypeId thành customerGroup để đồng bộ --%>
-                                        <select id="customerGroup" name="customerGroup" class="form-control">
-                                            <c:forEach var="type" items="${allCustomerTypes}"><option value="${type.id}" ${customer.customerTypeId == type.id ? 'selected' : ''}><c:out value="${type.name}"/></option></c:forEach>
+                            <div class="sidebar-column">
+                                <div class="detail-card">
+                                    <h3 class="card-title">Thông tin bổ sung</h3>
+                                    <div class="card-body">
+                                        <div class="form-group"><label for="customerCode">Mã khách hàng</label><input type="text" id="customerCode" name="customerCode" class="form-control" value="<c:out value='${customer.enterpriseCode}'/>" readonly></div>
+                                        <div class="form-group">
+                                            <label for="customerGroup">Nhóm khách hàng</label>
+                                            <%-- Đổi name từ customerTypeId thành customerGroup để đồng bộ --%>
+                                            <select id="customerGroup" name="customerGroup" class="form-control">
+                                                <c:forEach var="type" items="${allCustomerTypes}"><option value="${type.id}" ${customer.customerTypeId == type.id ? 'selected' : ''}><c:out value="${type.name}"/></option></c:forEach>
                                             </select>
                                         </div>
                                         <div class="form-group">
@@ -164,11 +165,11 @@
                                             <label for="joinDate">Ngày tham gia</label>
                                         <%-- Hiển thị ngày tham gia, không cho sửa --%>
                                         <span class="value"><fmt:formatDate value="${customer.createdAt}" pattern="dd/MM/yyyy"/></span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
                 </form>
             </main>
         </div>
