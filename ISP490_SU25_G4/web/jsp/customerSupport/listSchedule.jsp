@@ -1120,7 +1120,7 @@
                 position: relative;
             }
             #month-view .task-item{
-                position: relative; 
+                position: relative;
                 cursor: pointer;
                 padding: 4px 8px;
                 border-radius: 4px;
@@ -1129,7 +1129,7 @@
                 /* cho phép xuống dòng và cắt gọn sau N dòng */
                 white-space: normal;
                 overflow: hidden;
-                display: block; 
+                display: block;
                 -webkit-box-orient: vertical;
                 -webkit-line-clamp: 2;   /* tăng lên 3 nếu muốn 3 dòng */
                 line-height: 1.3;
@@ -1959,30 +1959,16 @@
                 detailsPanel.querySelector('.event-notes').textContent = schedule.notes || 'Không có ghi chú';
                 detailsPanel.querySelector('.event-created-at').textContent = schedule.createdAt || 'N/A';
                 detailsPanel.querySelector('.event-updated-at').textContent = schedule.updatedAt || 'N/A';
+                detailsPanel.querySelector('.event-status').textContent = schedule.status || 'N/A';
                 // --- BẮT ĐẦU PHẦN CẬP NHẬT ĐỂ HIỂN THỊ THẺ NHÂN VIÊN ---
 
                 const assignmentsContainer = detailsPanel.querySelector('.event-assignments');
                 assignmentsContainer.innerHTML = ''; // Bắt đầu bằng việc xóa sạch nội dung cũ
                 const statusSpan = detailsPanel.querySelector('.event-status');
                 const statusVal = schedule.status || '';
-                let badgeClass = 'badge-secondary', statusText = statusVal;
-                if (statusVal === 'upcoming') {
-                badgeClass = 'badge-upcoming'; statusText = 'Sắp tới';
-                }
-                else if (statusVal === 'inprogress') {
-                badgeClass = 'badge-inprogress'; statusText = 'Đang thực hiện';
-                }
-                else if (statusVal === 'completed') {
-                badgeClass = 'badge-completed'; statusText = 'Hoàn thành';
-                }
-                else if (statusVal === 'cancelled') {
-                badgeClass = 'badge-cancelled'; statusText = 'Đã huỷ';
-                }
-                else if (!statusVal || statusVal === 'unknown') {
-                badgeClass = 'badge-secondary'; statusText = 'Không xác định';
-                }
-                statusSpan.className = `event-status badge px-2 py-1 ${badgeClass}`;
-                statusSpan.textContent = statusText;
+                statusSpan.textContent = statusVal; // hiển thị nguyên trạng
+// Không đổi class, giữ nguyên class hiện có hoặc tự đặt cố định nếu muốn:
+                statusSpan.className = 'event-status';
                 // Hàm trợ giúp để lấy 2 chữ cái đầu của tên
                 function getInitials(name) {
                 if (!name || typeof name !== 'string' || name.trim() === '') {
@@ -2267,6 +2253,7 @@
                 item.style.width = 'calc(' + (days * 100) + '% + 8px)';
                 });
                 });
+                
         </script>
         <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
         <script src="${pageContext.request.contextPath}/js/listSchedule.js"></script>

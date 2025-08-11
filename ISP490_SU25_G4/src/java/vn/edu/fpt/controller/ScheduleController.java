@@ -355,10 +355,9 @@ public class ScheduleController extends HttpServlet {
             List<User> assignments = userDAO.getAllTechnicalStaffIdAndFullName();
             List<TechnicalRequest> technicalRequests = technicalDAO.getAllTechnicalRequestsIdAndTitle();
             List<Province> provinces = addressDAO.getAllProvinces();
-
-            request.setAttribute("assignments", assignments);
-            request.setAttribute("technicalRequests", technicalRequests);
             request.setAttribute("provinces", provinces);
+            request.setAttribute("assignments", assignments);
+            request.setAttribute("technicalRequests", technicalRequests);  
 
             request.getRequestDispatcher("jsp/customerSupport/createSchedule.jsp").forward(request, response);
         } catch (Exception e) {
@@ -387,10 +386,8 @@ public class ScheduleController extends HttpServlet {
             String endTimeStr = request.getParameter("end_time");
             String status = request.getParameter("status");
             String notes = request.getParameter("notes");
-
             // QUAN TRỌNG: nhiều input cùng name
             String[] assignedUserIds = request.getParameterValues("assignedUserIds");
-
             // Địa chỉ
             String streetAddress = request.getParameter("streetAddress");
             String provinceIdStr = request.getParameter("province");

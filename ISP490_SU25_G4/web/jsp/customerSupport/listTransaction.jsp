@@ -13,7 +13,6 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-        
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
@@ -24,7 +23,7 @@
         <div class="app-container">
             <jsp:include page="/mainMenu.jsp"/>
             <main class="main-content">
-                
+
                 <%-- **THAY ĐỔI:** Thêm header mới vào đây --%>
                 <jsp:include page="/header.jsp">
                     <jsp:param name="pageTitle" value="Lịch sử Giao dịch"/>
@@ -41,11 +40,15 @@
                                 </div>
                                 <button type="submit" class="btn btn-primary"><i data-feather="search"></i> Tìm kiếm</button>
                             </div>
+                            <a href="${pageContext.request.contextPath}/ticket?action=create" class="btn btn-success">
+                                <i data-feather="plus"></i> Thêm mới
+                            </a>
                             <div class="toolbar-actions">
                                 <a href="${pageContext.request.contextPath}/ticket?action=list" class="btn btn-secondary">
                                     <i data-feather="refresh-cw"></i> Reset
                                 </a>
                             </div>
+
                         </form>
 
                         <div class="transaction-grid">
@@ -124,7 +127,7 @@
                                     </c:forEach>
                                     <c:if test="${currentPage < totalPages}"><a href="${pageContext.request.contextPath}/ticket?action=list&page=${currentPage + 1}&query=${param.query}">&raquo;</a></c:if>
                                     <c:if test="${currentPage == totalPages}"><a href="#" class="disabled">&raquo;</a></c:if>
-                                </div>
+                                    </div>
                             </c:if>
                         </div>
                     </div>
@@ -145,7 +148,7 @@
 
         <script src="https://unpkg.com/feather-icons"></script>
         <script>
-            document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('DOMContentLoaded', function () {
                 feather.replace();
             });
         </script>

@@ -709,5 +709,7 @@ public class EnterpriseDAO extends DBContext {
             }
         }
         return contactList;
+        
     }
+    
 }

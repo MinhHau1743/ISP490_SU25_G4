@@ -11,14 +11,21 @@ import vn.edu.fpt.model.Contract;
 import vn.edu.fpt.model.TechnicalRequest;
 import vn.edu.fpt.model.TechnicalRequestDevice;
 import vn.edu.fpt.model.Product;
-
+import vn.edu.fpt.dao.AddressDAO;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import vn.edu.fpt.dao.EnterpriseDAO;
 import vn.edu.fpt.dao.FeedbackDAO;
-import vn.edu.fpt.model.ContractProduct;
+import vn.edu.fpt.model.District;
+import vn.edu.fpt.model.Province;
 import vn.edu.fpt.model.Service;
+import vn.edu.fpt.model.Ward;
 
 @WebServlet(name = "TicketController", urlPatterns = {"/ticket"})
 public class TicketController extends HttpServlet {
@@ -54,12 +61,17 @@ public class TicketController extends HttpServlet {
                 case "edit":
                     showEditForm(request, response);
                     break;
-
                 case "getProducts":
                     getProducts(request, response);
                     break;
-                case "delete": // <-- THÊM CASE NÀY
+                case "delete":
                     deleteTicket(request, response);
+                    break;
+                case "getDistricts":
+                    getDistricts(request, response);
+                    break;
+                case "getWards":
+                    getWards(request, response);
                     break;
 
                 case "list":
@@ -70,6 +82,8 @@ public class TicketController extends HttpServlet {
         } catch (SQLException e) {
             e.printStackTrace(); // In lỗi ra log server để debug
             throw new ServletException("Database access error.", e);
+        } catch (Exception ex) {
+            Logger.getLogger(TicketController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -85,57 +99,71 @@ public class TicketController extends HttpServlet {
         }
     }
 
-    private void listTickets(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
-    // 1. Lấy tất cả tham số lọc và phân trang
-    String query = request.getParameter("query");
-    String status = request.getParameter("status");
-    String serviceIdStr = request.getParameter("serviceId");
-    int serviceId = 0;
-    if (serviceIdStr != null && !serviceIdStr.isEmpty()) {
-        try { serviceId = Integer.parseInt(serviceIdStr); } catch (NumberFormatException e) { /* Bỏ qua */ }
+    private void listTickets(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException, Exception {
+        // 1. Lấy tất cả tham số lọc và phân trang
+        String query = request.getParameter("query");
+        String status = request.getParameter("status");
+        String serviceIdStr = request.getParameter("serviceId");
+        int serviceId = 0;
+        if (serviceIdStr != null && !serviceIdStr.isEmpty()) {
+            try {
+                serviceId = Integer.parseInt(serviceIdStr);
+            } catch (NumberFormatException e) {
+                /* Bỏ qua */ }
+        }
+
+        int page = 1;
+        final int LIMIT = 9; // Hiển thị 9 thẻ mỗi trang (3x3 grid)
+        String pageStr = request.getParameter("page");
+        if (pageStr != null && !pageStr.isEmpty()) {
+            try {
+                page = Integer.parseInt(pageStr);
+            } catch (NumberFormatException e) {
+                page = 1;
+            }
+        }
+
+        // 2. Lấy tổng số item với bộ lọc để tính toán số trang
+        int totalItems = dao.getTotalFilteredRequestCount(query, status, serviceId);
+        int totalPages = (int) Math.ceil((double) totalItems / LIMIT);
+        if (totalPages == 0) {
+            totalPages = 1;
+        }
+        if (page > totalPages) {
+            page = totalPages;
+        }
+
+        // 3. Tính offset
+        int offset = (page - 1) * LIMIT;
+
+        // 4. Lấy danh sách giao dịch đã lọc
+        List<TechnicalRequest> transactionList = dao.getFilteredTechnicalRequests(query, status, serviceId, LIMIT, offset);
+
+        // 5. Lấy danh sách cho các dropdown bộ lọc
+        List<Service> serviceList = dao.getAllServices();
+        List<String> statusList = dao.getDistinctStatuses();
+        request.setAttribute("transactions", transactionList);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalItems", totalItems); // Gửi thêm tổng số item
+        request.setAttribute("serviceList", serviceList); // Gửi danh sách dịch vụ
+        request.setAttribute("statusList", statusList);   // Gửi danh sách trạng thái
+        request.setAttribute("activeMenu", "ticket");
+
+        request.getRequestDispatcher("/jsp/customerSupport/listTransaction.jsp").forward(request, response);
     }
-    
-    int page = 1;
-    final int LIMIT = 9; // Hiển thị 9 thẻ mỗi trang (3x3 grid)
-    String pageStr = request.getParameter("page");
-    if (pageStr != null && !pageStr.isEmpty()) {
-        try { page = Integer.parseInt(pageStr); } catch (NumberFormatException e) { page = 1; }
-    }
 
-    // 2. Lấy tổng số item với bộ lọc để tính toán số trang
-    int totalItems = dao.getTotalFilteredRequestCount(query, status, serviceId);
-    int totalPages = (int) Math.ceil((double) totalItems / LIMIT);
-    if (totalPages == 0) totalPages = 1;
-    if (page > totalPages) page = totalPages;
-
-    // 3. Tính offset
-    int offset = (page - 1) * LIMIT;
-
-    // 4. Lấy danh sách giao dịch đã lọc
-    List<TechnicalRequest> transactionList = dao.getFilteredTechnicalRequests(query, status, serviceId, LIMIT, offset);
-
-    // 5. Lấy danh sách cho các dropdown bộ lọc
-    List<Service> serviceList = dao.getAllServices();
-    List<String> statusList = dao.getDistinctStatuses();
-
-    // 6. Gửi tất cả dữ liệu sang JSP
-    request.setAttribute("transactions", transactionList);
-    request.setAttribute("totalPages", totalPages);
-    request.setAttribute("currentPage", page);
-    request.setAttribute("totalItems", totalItems); // Gửi thêm tổng số item
-    request.setAttribute("serviceList", serviceList); // Gửi danh sách dịch vụ
-    request.setAttribute("statusList", statusList);   // Gửi danh sách trạng thái
-    request.setAttribute("activeMenu", "ticket");
-
-    request.getRequestDispatcher("/jsp/customerSupport/listTransaction.jsp").forward(request, response);
-}
-
-    private void showCreateForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+    private void showCreateForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException, Exception {
+        AddressDAO addressDAO = new AddressDAO();
+        List<Province> provinces = addressDAO.getAllProvinces();
+                
+        
+        // 6. Gửi tất cả dữ liệu sang JSP
         request.setAttribute("customerList", dao.getAllEnterprises());
         request.setAttribute("employeeList", dao.getAllTechnicians());
         request.setAttribute("serviceList", dao.getAllServices());
         request.setAttribute("contractList", dao.getAllActiveContracts()); // <--- THÊM DÒNG NÀY
-
+        request.setAttribute("provinces", provinces);
         request.setAttribute("activeMenu", "createTicket");
         request.getRequestDispatcher("/jsp/customerSupport/createTicket.jsp").forward(request, response);
     }
@@ -208,7 +236,8 @@ public class TicketController extends HttpServlet {
             updatedRequest.setId(ticketId);
             updatedRequest.setEnterpriseId(Integer.parseInt(request.getParameter("enterpriseId")));
             updatedRequest.setServiceId(Integer.parseInt(request.getParameter("serviceId")));
-            updatedRequest.setAssignedToId(Integer.parseInt(request.getParameter("employeeId")));
+            int employeeId = Integer.parseInt(request.getParameter("employeeId"));
+            updatedRequest.setAssignedUserIds(Collections.singletonList(employeeId));
 
             String description = request.getParameter("description");
             updatedRequest.setDescription(description);
@@ -282,7 +311,8 @@ public class TicketController extends HttpServlet {
 
             String employeeIdStr = request.getParameter("employeeId");
             if (employeeIdStr != null && !employeeIdStr.isEmpty()) {
-                newRequest.setAssignedToId(Integer.parseInt(employeeIdStr));
+                int employeeId = Integer.parseInt(employeeIdStr);
+                newRequest.setAssignedUserIds(Collections.singletonList(employeeId));
             }
 
             String contractIdStr = request.getParameter("contractId");
@@ -384,6 +414,44 @@ public class TicketController extends HttpServlet {
             e.printStackTrace();
             // Nếu có lỗi, cũng chuyển hướng về trang danh sách với thông báo lỗi
             response.sendRedirect(request.getContextPath() + "/ticket?action=list&error=deleteFailed");
+        }
+    }
+
+    private void getDistricts(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        String provinceIdStr = request.getParameter("provinceId");
+        List<District> districts = Collections.emptyList();
+        if (provinceIdStr != null && !provinceIdStr.trim().isEmpty()) {
+            try {
+                districts = new EnterpriseDAO().getDistrictsByProvinceId(Integer.parseInt(provinceIdStr));
+            } catch (Exception e) {
+                e.printStackTrace();
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
+        }
+        try (PrintWriter out = response.getWriter()) {
+            out.print(new Gson().toJson(districts));
+            out.flush();
+        }
+    }
+
+    private void getWards(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        String districtIdStr = request.getParameter("districtId");
+        List<Ward> wards = Collections.emptyList();
+        if (districtIdStr != null && !districtIdStr.trim().isEmpty()) {
+            try {
+                wards = new EnterpriseDAO().getWardsByDistrictId(Integer.parseInt(districtIdStr));
+            } catch (Exception e) {
+                e.printStackTrace();
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
+        }
+        try (PrintWriter out = response.getWriter()) {
+            out.print(new Gson().toJson(wards));
+            out.flush();
         }
     }
 }
