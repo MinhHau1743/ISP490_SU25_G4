@@ -1056,88 +1056,86 @@
                 background: #dc3545;
                 color: #fff;
             }
-            
-            #month-view .month-grid {
-    position: relative;
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    border-left: 1px solid #e5e5e5;
-    border-top: 1px solid #e5e5e5;
-}
-#month-view .month-grid-header {
-    padding: 10px 8px;
-    font-weight: 600;
-    font-size: 13px;
-    text-align: center;
-    background-color: #f9f9f9;
-    border-right: 1px solid #e5e5e5;
-    border-bottom: 1px solid #e5e5e5;
-}
-#month-view .month-long-task {
-    position: absolute;
-    height: 28px;
-    border-radius: 10px;
-    font-size: 13px;
-    color: white;
-    padding: 5px 16px;
-    box-sizing: border-box;
-    z-index: 20;
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-    top: 8px; /* vị trí trên */
-    left: 0;
-}
-#month-view .month-day {
-    border-right: 1px solid #e5e5e5;
-    border-bottom: 1px solid #e5e5e5;
-    min-height: 100px;
-    padding: 8px;
-    font-size: 13px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    position: relative;
-    min-height: 90px;
-    height: auto;
-    border: 1px solid #ddd;
-    padding-top: 25px;
-    background: #fff;
-    border-radius: 8px;
-}
-#month-view .month-day.other-month {
-    background-color: #fafafa;
-    color: #aaa;
-}
-#month-view .day-number {
-    font-weight: 500;
-    margin-bottom: 4px;
-}
-#month-view .tasks-list {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    position: relative;
-}
-#month-view .task-item{
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    position: absolute;
-    width: calc(200% + 8px); /* 200% để cover 2 ô + border */
-    z-index: 10;
-    /* cho phép xuống dòng và cắt gọn sau N dòng */
-    white-space: normal;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;   /* tăng lên 3 nếu muốn 3 dòng */
-    line-height: 1.3;
-    max-height: calc(1.3em * 2 + 6px); /* khớp với số dòng ở trên */
-    word-break: break-word;  /* phòng trường hợp từ quá dài */
-}
 
+            #month-view .month-grid {
+                position: relative;
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                border-left: 1px solid #e5e5e5;
+                border-top: 1px solid #e5e5e5;
+            }
+            #month-view .month-grid-header {
+                padding: 10px 8px;
+                font-weight: 600;
+                font-size: 13px;
+                text-align: center;
+                background-color: #f9f9f9;
+                border-right: 1px solid #e5e5e5;
+                border-bottom: 1px solid #e5e5e5;
+            }
+            #month-view .month-long-task {
+                position: absolute;
+                height: 28px;
+                border-radius: 10px;
+                font-size: 13px;
+                color: white;
+                padding: 5px 16px;
+                box-sizing: border-box;
+                z-index: 20;
+                white-space: nowrap;
+                display: flex;
+                align-items: center;
+                top: 8px; /* vị trí trên */
+                left: 0;
+            }
+            #month-view .month-day {
+                border-right: 1px solid #e5e5e5;
+                border-bottom: 1px solid #e5e5e5;
+                min-height: 100px;
+                padding: 8px;
+                font-size: 13px;
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+                position: relative;
+                min-height: 90px;
+                height: auto;
+                border: 1px solid #ddd;
+                padding-top: 25px;
+                background: #fff;
+                border-radius: 8px;
+            }
+            #month-view .month-day.other-month {
+                background-color: #fafafa;
+                color: #aaa;
+            }
+            #month-view .day-number {
+                font-weight: 500;
+                margin-bottom: 4px;
+            }
+            #month-view .tasks-list {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+                position: relative;
+            }
+            #month-view .task-item{
+                position: relative; 
+                cursor: pointer;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 12px;
+                z-index: 10;
+                /* cho phép xuống dòng và cắt gọn sau N dòng */
+                white-space: normal;
+                overflow: hidden;
+                display: block; 
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 2;   /* tăng lên 3 nếu muốn 3 dòng */
+                line-height: 1.3;
+                max-height: calc(1.3em * 2 + 6px); /* khớp với số dòng ở trên */
+                word-break: break-word;  /* phòng trường hợp từ quá dài */
+            }
         </style>
     </head>
     <body>
@@ -1297,7 +1295,17 @@
                                                 <div class="tasks-list">
                                                     <c:forEach var="schedule" items="${schedules}">
                                                         <c:if test="${schedule.scheduledDate.equals(monthDates[status.index])}">
-                                                            <div class="task-item status-${fn:toLowerCase(schedule.status)}" data-task-id="${schedule.id}" data-schedule-id="${schedule.id}" data-item-name="${schedule.title}" title="${schedule.title}" onclick="showDetails(this)" draggable="true" ondragstart="drag(event)" style="background-color: ${schedule.color}; color: white;">
+                                                            <div class="task-item status-${fn:toLowerCase(schedule.status)}"
+                                                                 data-task-id="${schedule.id}"
+                                                                 data-schedule-id="${schedule.id}"
+                                                                 data-item-name="${schedule.title}"
+                                                                 data-scheduled-date="${schedule.scheduledDate}"
+                                                                 data-end-date="${schedule.endDate}"
+                                                                 title="${schedule.title}"
+                                                                 onclick="showDetails(this)"
+                                                                 draggable="true"
+                                                                 ondragstart="drag(event)"
+                                                                 style="background-color: ${schedule.color}; color: white;">
                                                                 ${fn:substring(schedule.title, 0, 10)}...
                                                             </div>
                                                         </c:if>
@@ -1771,6 +1779,8 @@
                 }
                 slot.appendChild(eventElement);
                 const scheduleId = eventElement.id.split('-')[1];
+                const scheduleToUpdate = schedules.find(s => s.id == scheduleId);
+                if (!scheduleToUpdate) return;
                 let newScheduledDate = null, newEndDate = null, newStartTime = null, newEndTime = null;
                 // --- Tính ngày / giờ mới dựa trên loại slot ---
                 const view = slot.closest('.calendar-view').id;
@@ -1803,12 +1813,31 @@
                 eventElement.classList.add('all-day');
                 }
 
+                // --- Tính toán newEndDate dựa trên khoảng thời gian của event ---
+                if (scheduleToUpdate.scheduledDate && scheduleToUpdate.endDate) {
+                // Tính khoảng cách ngày giữa scheduledDate và endDate cũ
+                const oldStartDate = new Date(scheduleToUpdate.scheduledDate);
+                const oldEndDate = new Date(scheduleToUpdate.endDate);
+                const dayDifference = Math.round((oldEndDate - oldStartDate) / (24 * 60 * 60 * 1000));
+                if (dayDifference > 0) {
+                // Áp dụng cùng khoảng cách cho ngày mới
+                const newStartDate = new Date(newScheduledDate);
+                newStartDate.setDate(newStartDate.getDate() + dayDifference);
+                newEndDate = newStartDate.toISOString().split('T')[0];
+                } else {
+                // Event chỉ trong 1 ngày
+                newEndDate = newScheduledDate;
+                }
+                } else {
+                // Không có endDate cũ, sử dụng scheduledDate mới
+                newEndDate = newScheduledDate;
+                }
+
                 // --- Cập nhật UI / model ---
-                const scheduleToUpdate = schedules.find(s => s.id == scheduleId);
                 if (newStartTime) {
                 // Nếu có giờ, tính lại duration thực tế:
                 let durationMinutes = 0;
-                if (scheduleToUpdate && scheduleToUpdate.startTime && scheduleToUpdate.endTime) {
+                if (scheduleToUpdate.startTime && scheduleToUpdate.endTime) {
                 const [sh, sm] = scheduleToUpdate.startTime.split(':').map(Number);
                 const [eh, em] = scheduleToUpdate.endTime.split(':').map(Number);
                 durationMinutes = (eh * 60 + em) - (sh * 60 + sm);
@@ -1829,28 +1858,12 @@
                 }
 
                 // Cập nhật model
-                if (scheduleToUpdate) {
                 scheduleToUpdate.scheduledDate = newScheduledDate;
                 scheduleToUpdate.startTime = newStartTime;
                 scheduleToUpdate.endTime = newEndTime;
-                // Nếu có multi-day thì tính lại endDate
-                if (scheduleToUpdate.scheduledDate && scheduleToUpdate.endDate) {
-                let date1 = new Date(scheduleToUpdate.scheduledDate);
-                let date2 = new Date(scheduleToUpdate.endDate);
-                let durationDate = Math.round((date2 - date1) / (24 * 60 * 60 * 1000));
-                if (durationDate > 0) {
-                let slotDate = new Date(newScheduledDate);
-                slotDate.setDate(slotDate.getDate() + durationDate);
-                newEndDate = slotDate.toISOString().split('T')[0];
-                }
-                } else {
-                newEndDate = null;
-                }
-                scheduleToUpdate.endDate = newEndDate || "";
+                scheduleToUpdate.endDate = newEndDate;
                 scheduleToUpdate.updatedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
-                }
-
-                // Gọi AJAX: Truyền đúng newEndTime
+                // Gọi AJAX: Truyền đúng newEndTime và newEndDate
                 if (typeof updateEvent === "function" && scheduleId && newScheduledDate) {
                 updateEvent(scheduleId, newScheduledDate, newEndDate, newStartTime, newEndTime);
                 }
@@ -1860,14 +1873,14 @@
                 if (eventTimeElement) {
                 eventTimeElement.textContent = 'Cả ngày';
                 }
-                if (scheduleToUpdate) {
+
+                // Cập nhật model
                 scheduleToUpdate.scheduledDate = newScheduledDate;
                 scheduleToUpdate.startTime = null;
                 scheduleToUpdate.endTime = null;
-                scheduleToUpdate.endDate = "";
+                scheduleToUpdate.endDate = newEndDate;
                 scheduleToUpdate.updatedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
-                }
-                // Gọi AJAX với null nếu là all-day
+                // Gọi AJAX với null cho time nhưng có newEndDate
                 if (typeof updateEvent === "function" && scheduleId && newScheduledDate) {
                 updateEvent(scheduleId, newScheduledDate, newEndDate, null, null);
                 }
@@ -1880,8 +1893,6 @@
                 const updatedSchedule = schedules.find(s => s.id == scheduleId);
                 if (updatedSchedule) showDetails(eventElement, updatedSchedule);
                 }
-
-                setTimeout(setRightHalfForMiddleEvents, 0);
                 }
 
 // Chạy khi DOM load xong:
@@ -2233,6 +2244,29 @@
                 return weeks;
                 }
 
+                document.addEventListener('DOMContentLoaded', function () {
+                function getDayDiff(start, end) {
+                if (!start) return 1;
+                if (!end) end = start;
+                const s = new Date(start);
+                const e = new Date(end);
+                if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) return 1;
+                // chuẩn hóa về 00:00 để tránh lệch múi giờ
+                s.setHours(0, 0, 0, 0);
+                e.setHours(0, 0, 0, 0);
+                return Math.floor((e - s) / (1000 * 60 * 60 * 24)) + 1; // inclusive
+                }
+
+                document.querySelectorAll('#month-view .task-item').forEach(function(item, index){
+                const start = item.getAttribute('data-scheduled-date');
+                const end = item.getAttribute('data-end-date');
+                const days = Math.max(1, getDayDiff(start, end));
+                console.log('task#' + index, {
+                start, end, days, id: item.id, title: item.getAttribute('data-item-name')
+                });
+                item.style.width = 'calc(' + (days * 100) + '% + 8px)';
+                });
+                });
         </script>
         <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
         <script src="${pageContext.request.contextPath}/js/listSchedule.js"></script>

@@ -75,29 +75,24 @@ public class ProductController extends HttpServlet {
         String minPriceStr = request.getParameter("minPrice");
         String maxPriceStr = request.getParameter("maxPrice");
         String origin = request.getParameter("origin");
-        String categoryIdStr = request.getParameter("categoryId");
 
         Double minPrice = null, maxPrice = null;
-        Integer categoryId = null;
         if (minPriceStr != null && !minPriceStr.isEmpty()) {
             minPrice = Double.parseDouble(minPriceStr);
         }
         if (maxPriceStr != null && !maxPriceStr.isEmpty()) {
             maxPrice = Double.parseDouble(maxPriceStr);
         }
-        if (categoryIdStr != null && !categoryIdStr.isEmpty()) {
-            categoryId = Integer.parseInt(categoryIdStr);
-        }
         if (origin != null && origin.trim().isEmpty()) {
             origin = null;
         }
 
         // --- Đếm tổng sản phẩm và tổng trang theo filter ---
-        int totalProducts = products.countProductsWithFilter(keyword, minPrice, maxPrice, origin, categoryId);
+        int totalProducts = products.countProductsWithFilter(keyword, minPrice, maxPrice, origin);
         int totalPages = (int) Math.ceil((double) totalProducts / pageSize);
 
         // --- Lấy danh sách sản phẩm theo filter và phân trang ---
-        List<Product> listProducts = products.getProductsWithFilter(keyword, minPrice, maxPrice, origin, categoryId, page, pageSize);
+        List<Product> listProducts = products.getProductsWithFilter(keyword, minPrice, maxPrice, origin, page, pageSize);
         List<String> origins = products.getAllOrigins();  // Giả định bạn có method này
         request.setAttribute("originList", origins);
         request.setAttribute("productList", listProducts);
@@ -110,7 +105,6 @@ public class ProductController extends HttpServlet {
         request.setAttribute("minPrice", minPriceStr);
         request.setAttribute("maxPrice", maxPriceStr);
         request.setAttribute("origin", origin);
-        request.setAttribute("categoryId", categoryIdStr);
 
         String notification = (String) request.getAttribute("Notification");
         if (notification != null && !notification.isEmpty()) {
