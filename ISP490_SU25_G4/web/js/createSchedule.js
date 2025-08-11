@@ -47,13 +47,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Đảm bảo endDate >= scheduledDate
-    startDateInput.addEventListener('change', () => {
-        if (endDateInput.value && endDateInput.value < startDateInput.value) {
-            endDateInput.value = startDateInput.value;
-        }
-        endDateInput.min = startDateInput.value;
-        toggleTimeFields();
-    });
+ startDateInput.addEventListener('change', () => {
+    // 1. Lấy ngày bắt đầu và tạo đối tượng Date
+    const startDate = new Date(startDateInput.value);
+
+    // 2. Tính toán ngày tiếp theo (ngày sớm nhất có thể chọn cho endDate)
+    const nextDay = new Date(startDate);
+    nextDay.setDate(startDate.getDate() + 1);
+
+    // 3. Định dạng lại thành chuỗi 'YYYY-MM-DD'
+    const minEndDateString = nextDay.toISOString().split('T')[0];
+
+    // 4. Đặt ngày tối thiểu cho ô endDate
+    endDateInput.min = minEndDateString;
+
+    // 5. (Quan trọng) Nếu ngày kết thúc hiện tại nhỏ hơn ngày tối thiểu mới,
+    //    hãy cập nhật nó thành ngày tối thiểu đó.
+    if (endDateInput.value && endDateInput.value < minEndDateString) {
+        endDateInput.value = minEndDateString;
+    }
+
+    // Gọi hàm khác (giữ nguyên)
+    toggleTimeFields();
+});
 
     // Xử lý khi endDate thay đổi
     endDateInput.addEventListener('change', () => {

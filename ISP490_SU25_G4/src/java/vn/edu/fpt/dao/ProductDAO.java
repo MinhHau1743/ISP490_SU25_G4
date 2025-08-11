@@ -214,7 +214,7 @@ public class ProductDAO extends DBContext {
         return products;
     }
 
-    public int countProductsWithFilter(String keyword, Double minPrice, Double maxPrice, String origin, Integer categoryId) {
+    public int countProductsWithFilter(String keyword, Double minPrice, Double maxPrice, String origin) {
         int count = 0;
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM Products WHERE is_deleted = 0");
         List<Object> params = new ArrayList<>();
@@ -235,10 +235,6 @@ public class ProductDAO extends DBContext {
             sql.append(" AND origin = ?");
             params.add(origin);
         }
-        if (categoryId != null) {
-            sql.append(" AND category_id = ?");
-            params.add(categoryId);
-        }
 
         try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
@@ -254,7 +250,7 @@ public class ProductDAO extends DBContext {
         return count;
     }
 
-    public List<Product> getProductsWithFilter(String keyword, Double minPrice, Double maxPrice, String origin, Integer categoryId, int page, int pageSize) {
+    public List<Product> getProductsWithFilter(String keyword, Double minPrice, Double maxPrice, String origin, int page, int pageSize) {
         List<Product> products = new ArrayList<>();
         StringBuilder sql = new StringBuilder("SELECT * FROM Products WHERE is_deleted = 0");
         List<Object> params = new ArrayList<>();
@@ -274,10 +270,6 @@ public class ProductDAO extends DBContext {
         if (origin != null && !origin.trim().isEmpty()) {
             sql.append(" AND origin = ?");
             params.add(origin);
-        }
-        if (categoryId != null) {
-            sql.append(" AND category_id = ?");
-            params.add(categoryId);
         }
 
         sql.append(" ORDER BY id DESC"); // hoặc sửa lại theo ý bạn
@@ -359,14 +351,14 @@ public class ProductDAO extends DBContext {
     public static void main(String[] args) {
         ProductDAO productDAO = new ProductDAO();
         // ==== Test case 1: Lấy tất cả sản phẩm trang 1, 5 sản phẩm/trang ====
-        List<Product> products1 = productDAO.getProductsWithFilter(null, null, null, null, null, 1, 5);
+        List<Product> products1 = productDAO.getProductsWithFilter(null, null, null, null,  1, 5);
         System.out.println("== Các sản phẩm trang 1 ==");
         for (Product p : products1) {
             System.out.println(p);
         }
 
         // ==== Test case 2: Lọc sản phẩm theo từ khóa, có phân trang ====
-        List<Product> products2 = productDAO.getProductsWithFilter("test", null, null, null, null, 1, 10);
+        List<Product> products2 = productDAO.getProductsWithFilter("test", null, null, null, 1, 10);
         System.out.println("== Các sản phẩm chứa tên 'test' ==");
         for (Product p : products2) {
             System.out.println(p);
@@ -378,7 +370,6 @@ public class ProductDAO extends DBContext {
                 10000.0, // minPrice
                 1500000.0, // maxPrice
                 "Việt Nam", // origin
-                null, // categoryId
                 1, // page
                 10 // pageSize
         );
@@ -389,7 +380,7 @@ public class ProductDAO extends DBContext {
 
         // ==== Test case 4: Lọc theo categoryId ====
         List<Product> products4 = productDAO.getProductsWithFilter(
-                null, null, null, null, 1, 1, 10
+                null, null, null, null, 1, 10
         );
         System.out.println("== Các sản phẩm categoryId = 1 ==");
         for (Product p : products4) {
