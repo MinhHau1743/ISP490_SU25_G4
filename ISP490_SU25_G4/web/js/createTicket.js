@@ -99,5 +99,100 @@ document.addEventListener('DOMContentLoaded', function () {
         deviceIndex = 1;
     }
 });
+// file: createTicket.js
+document.addEventListener('DOMContentLoaded', function () {
+  const provinceSelect = document.getElementById('province');
+  const districtSelect = document.getElementById('district');
+  const wardSelect = document.getElementById('ward');
 
+  // Lấy từ APP_CONFIG do JSP cung cấp, fallback sang pathname nếu thiếu
+  const contextPath =
+    (window.APP_CONFIG && window.APP_CONFIG.contextPath) ||
+    (function () {
+      const seg = window.location.pathname.split('/')[1] || '';
+      return seg ? '/' + seg : '';
+    })();
 
+  provinceSelect.addEventListener('change', function () {
+    const provinceId = this.value?.trim();
+    console.log('Selected Province ID:', provinceId);
+
+    // reset
+    districtSelect.innerHTML = '<option value="" disabled selected>-- Chọn Quận/Huyện --</option>';
+    districtSelect.disabled = true;
+    wardSelect.innerHTML = '<option value="" disabled selected>-- Chọn Phường/Xã --</option>';
+    wardSelect.disabled = true;
+
+    if (!provinceId) {
+      console.log('Province ID is empty or invalid');
+      return;
+    }
+
+    districtSelect.innerHTML = '<option value="">-- Đang tải... --</option>';
+    districtSelect.disabled = false;
+
+    const url = `${contextPath}/ticket?action=getDistricts&provinceId=${encodeURIComponent(provinceId)}`;
+    console.log('Request URL:', url);
+
+    fetch(url)
+      .then(r => {
+        console.log('Response status:', r.status, 'URL:', r.url);
+        if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+        return r.json();
+      })
+      .then(data => {
+        console.log('Districts data received:', data);
+        districtSelect.innerHTML = '<option value="" disabled selected>-- Chọn Quận/Huyện --</option>';
+
+        if (Array.isArray(data) && data.length) {
+          for (const district of data) {
+            districtSelect.add(new Option(district.name, district.id));
+          }
+        } else {
+          districtSelect.innerHTML = '<option value="" disabled>-- Không có dữ liệu --</option>';
+        }
+      })
+      .catch(err => {
+        console.error('Lỗi khi tải danh sách Quận/Huyện:', err);
+        districtSelect.innerHTML = '<option value="">-- Lỗi tải dữ liệu --</option>';
+      });
+  });
+
+  districtSelect.addEventListener('change', function () {
+    const districtId = this.value?.trim();
+    console.log('Selected District ID:', districtId);
+
+    wardSelect.innerHTML = '<option value="" disabled selected>-- Chọn Phường/Xã --</option>';
+    wardSelect.disabled = true;
+
+    if (!districtId) return;
+
+    wardSelect.innerHTML = '<option value="">-- Đang tải... --</option>';
+    wardSelect.disabled = false;
+
+    const url = `${contextPath}/ticket?action=getWards&districtId=${encodeURIComponent(districtId)}`;
+    console.log('Ward request URL:', url);
+
+    fetch(url)
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+        return r.json();
+      })
+      .then(data => {
+        console.log('Wards data received:', data);
+        wardSelect.innerHTML = '<option value="" disabled selected>-- Chọn Phường/Xã --</option>';
+
+        if (Array.isArray(data) && data.length) {
+          for (const ward of data) {
+            wardSelect.add(new Option(ward.name, ward.id));
+          }
+        } else {
+          wardSelect.innerHTML = '<option value="" disabled>-- Không có dữ liệu --</option>';
+        }
+      })
+      .catch(err => {
+        console.error('Lỗi khi tải danh sách Phường/Xã:', err);
+        wardSelect.innerHTML = '<option value="">-- Lỗi tải dữ liệu --</option>';
+      });
+  });
+});

@@ -15,6 +15,9 @@ import vn.edu.fpt.dao.AddressDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -22,7 +25,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import vn.edu.fpt.dao.EnterpriseDAO;
 import vn.edu.fpt.dao.FeedbackDAO;
+import vn.edu.fpt.dao.MaintenanceScheduleDAO;
 import vn.edu.fpt.model.District;
+import vn.edu.fpt.model.MaintenanceSchedule;
 import vn.edu.fpt.model.Province;
 import vn.edu.fpt.model.Service;
 import vn.edu.fpt.model.Ward;
@@ -156,8 +161,7 @@ public class TicketController extends HttpServlet {
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException, Exception {
         AddressDAO addressDAO = new AddressDAO();
         List<Province> provinces = addressDAO.getAllProvinces();
-                
-        
+
         // 6. Gửi tất cả dữ liệu sang JSP
         request.setAttribute("customerList", dao.getAllEnterprises());
         request.setAttribute("employeeList", dao.getAllTechnicians());
@@ -294,7 +298,10 @@ public class TicketController extends HttpServlet {
 
     private void createTicket(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
+            MaintenanceScheduleDAO scheduleDAO = new MaintenanceScheduleDAO();
+            MaintenanceSchedule schedule = new MaintenanceSchedule();
             TechnicalRequest newRequest = new TechnicalRequest();
+            AddressDAO addressDAO = new AddressDAO();
             newRequest.setReporterId(1); // Giả sử ID người báo cáo là 1
 
             // --- Sửa lỗi NumberFormatException ---
@@ -319,7 +326,82 @@ public class TicketController extends HttpServlet {
             if (contractIdStr != null && !contractIdStr.isEmpty()) {
                 newRequest.setContractId(Integer.parseInt(contractIdStr));
             }
+            String provinceIdStr = request.getParameter("province");
+            String districtIdStr = request.getParameter("district");
+            String wardIdStr = request.getParameter("ward");
+            String streetAddress = request.getParameter("streetAddress");
 
+            if (provinceIdStr == null || provinceIdStr.isBlank()
+                    || districtIdStr == null || districtIdStr.isBlank()
+                    || wardIdStr == null || wardIdStr.isBlank()) {
+                throw new IllegalArgumentException("Vui lòng chọn đầy đủ Tỉnh/Thành, Quận/Huyện, và Phường/Xã.");
+            }
+                // --- Xử lý địa chỉ (tách ra khỏi block end_time) ---
+            try {
+                // --- Xử lý ngày giờ ---
+                String scheduledDateStr = request.getParameter("scheduled_date");
+                if (scheduledDateStr != null && !scheduledDateStr.isEmpty()) {
+                    LocalDate scheduledDate = LocalDate.parse(scheduledDateStr);
+                    schedule.setScheduledDate(scheduledDate);
+                }
+
+                String endDateStr = request.getParameter("end_date");
+                if (endDateStr != null && !endDateStr.isEmpty()) {
+                    LocalDate endDate = LocalDate.parse(endDateStr);
+                    schedule.setEndDate(endDate);
+                }
+
+                String startTimeStr = request.getParameter("start_time");
+                if (startTimeStr != null && !startTimeStr.isEmpty()) {
+                    LocalTime startTime = LocalTime.parse(startTimeStr);
+                    schedule.setStartTime(startTime);
+                }
+
+                String endTimeStr = request.getParameter("end_time");
+                if (endTimeStr != null && !endTimeStr.isEmpty()) {
+                    LocalTime endTime = LocalTime.parse(endTimeStr);
+                    schedule.setEndTime(endTime);
+                }
+
+
+                if (provinceIdStr != null && !provinceIdStr.isEmpty()
+                        && districtIdStr != null && !districtIdStr.isEmpty()
+                        && wardIdStr != null && !wardIdStr.isEmpty()) {
+
+                    int provinceId = Integer.parseInt(provinceIdStr);
+                    int districtId = Integer.parseInt(districtIdStr);
+                    int wardId = Integer.parseInt(wardIdStr);
+
+                    // Tạo hoặc tìm địa chỉ trong database
+                    int addressId = addressDAO.findOrCreateAddress(streetAddress, wardId, districtId, provinceId);
+
+                    // Khởi tạo schedule nếu cần thiết
+                    if (schedule == null) {
+                        schedule = new MaintenanceSchedule(); // Hoặc class tương ứng
+                    }
+
+                    // Gán addressId vào object schedule
+                    schedule.setAddressId(addressId);
+
+                    // Hoặc nếu bạn muốn gán vào newRequest:
+                    // newRequest.setAddressId(addressId);
+                    System.out.println("Address ID đã được gán: " + addressId);
+                } else {
+                    System.out.println("Thông tin địa chỉ không đầy đủ");
+                }
+
+            } catch (DateTimeParseException e) {
+                System.err.println("Lỗi parse ngày/giờ: " + e.getMessage());
+                // Xử lý lỗi ngày giờ
+            } catch (NumberFormatException e) {
+                System.err.println("Lỗi parse số: " + e.getMessage());
+                // Xử lý lỗi parse số
+            } catch (Exception e) {
+                System.err.println("Lỗi khi xử lý dữ liệu: " + e.getMessage());
+                e.printStackTrace();
+            }
+
+            int scheduleId = scheduleDAO.addMaintenanceScheduleAndReturnId(schedule);
             // --- Giữ nguyên logic lấy mô tả ---
             String description = request.getParameter("description");
             newRequest.setDescription(description);

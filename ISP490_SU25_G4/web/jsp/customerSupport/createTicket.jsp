@@ -214,114 +214,16 @@
             </main>
         </div>
         <%-- Đặt khối script này ở cuối file /jsp/customerSupport/createTicket.jsp, trước thẻ </body> --%>
-        <script>
-document.addEventListener('DOMContentLoaded', function () {
-const provinceSelect = document.getElementById('province');
-const districtSelect = document.getElementById('district');
-const wardSelect = document.getElementById('ward');
-
-// Lấy context path từ URL hiện tại
-const pathArray = window.location.pathname.split('/');
-const contextPath = pathArray.length > 1 ? '/' + pathArray[1] : '';
-
-provinceSelect.addEventListener('change', function () {
-const provinceId = this.value;
-console.log('Selected Province ID:', provinceId); // Debug - kiểm tra có giá trị không
-
-// Reset dropdowns
-districtSelect.innerHTML = '<option value="" disabled selected>-- Chọn Quận/Huyện --</option>';
-districtSelect.disabled = true;
-wardSelect.innerHTML = '<option value="" disabled selected>-- Chọn Phường/Xã --</option>';
-wardSelect.disabled = true;
-
-// Kiểm tra provinceId có giá trị và không rỗng
-if (provinceId && provinceId.trim() !== '') {
-districtSelect.innerHTML = '<option value="">-- Đang tải... --</option>';
-districtSelect.disabled = false;
-
-// SỬA: Bỏ /ISP490_SU25_G4 thừa
-const url = `/ISP490_SU25_G4/ticket?action=getDistricts&provinceId=${provinceId}`;
-console.log('Request URL:', url); // Debug - kiểm tra URL
-
-fetch(url)
-.then(response => {
-console.log('Response status:', response.status);
-console.log('Response URL:', response.url);
-
-if (!response.ok) {
-throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-}
-return response.json();
-})
-.then(data => {
-console.log('Districts data received:', data); // Debug
-
-districtSelect.innerHTML = '<option value="" disabled selected>-- Chọn Quận/Huyện --</option>';
-
-if (Array.isArray(data) && data.length > 0) {
-data.forEach(function (district) {
-const option = new Option(district.name, district.id);
-districtSelect.add(option);
-});
-} else {
-districtSelect.innerHTML = '<option value="" disabled>-- Không có dữ liệu --</option>';
-}
-})
-.catch(error => {
-console.error('Lỗi khi tải danh sách Quận/Huyện:', error);
-districtSelect.innerHTML = '<option value="">-- Lỗi tải dữ liệu --</option>';
-});
-} else {
-console.log('Province ID is empty or invalid'); // Debug
-}
-});
-
-districtSelect.addEventListener('change', function () {
-const districtId = this.value;
-console.log('Selected District ID:', districtId); // Debug
-
-wardSelect.innerHTML = '<option value="" disabled selected>-- Chọn Phường/Xã --</option>';
-wardSelect.disabled = true;
-
-if (districtId && districtId.trim() !== '') {
-wardSelect.innerHTML = '<option value="">-- Đang tải... --</option>';
-wardSelect.disabled = false;
-
-// SỬA: Bỏ /ISP490_SU25_G4 thừa
-const url = `/ISP490_SU25_G4/ticket?action=getWards&districtId=${districtId}`;
-console.log('Ward request URL:', url); // Debug
-
-fetch(url)
-.then(response => {
-if (!response.ok) {
-throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-}
-return response.json();
-})
-.then(data => {
-console.log('Wards data received:', data); // Debug
-
-wardSelect.innerHTML = '<option value="" disabled selected>-- Chọn Phường/Xã --</option>';
-
-if (Array.isArray(data) && data.length > 0) {
-data.forEach(function (ward) {
-const option = new Option(ward.name, ward.id);
-wardSelect.add(option);
-});
-} else {
-wardSelect.innerHTML = '<option value="" disabled>-- Không có dữ liệu --</option>';
-}
-})
-.catch(error => {
-console.error('Lỗi khi tải danh sách Phường/Xã:', error);
-wardSelect.innerHTML = '<option value="">-- Lỗi tải dữ liệu --</option>';
-});
-}
-});
-});
+<!-- Ở cuối file JSP, trước các script khác -->
+<script>
+  window.APP_CONFIG = {
+    contextPath: '${pageContext.request.contextPath}'
+  };
 </script>
+<!-- nạp file js nghiệp vụ sau khi đã có APP_CONFIG -->
+<script src="${pageContext.request.contextPath}/js/createTicket.js" defer></script>
+<!-- file khác như mainMenu.js để sau cũng được -->
+<script src="${pageContext.request.contextPath}/js/mainMenu.js" defer></script>
 
-
-        <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>
