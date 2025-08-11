@@ -292,31 +292,81 @@
                                     </div>
                                 </div>
                                 <div class="card internal-notes">
-                                    <h3><i data-feather="message-square"></i> Thảo luận nội bộ</h3>
-                                    <div class="notes-content">
-                                        <div class="notes-list" style="margin-bottom: 24px;">
-                                            <c:if test="${empty internalNotes}">
-                                                <p style="color: #9ca3af; font-style: italic;">Chưa có ghi chú nào.</p>
-                                            </c:if>
-                                            <c:forEach var="note" items="${internalNotes}">
-                                                <div class="note-item" style="margin-bottom: 16px; border-bottom: 1px solid #f3f4f6; padding-bottom: 12px;">
-                                                    <p style="margin: 0 0 8px 0;">${note.noteText}</p>
-                                                    <div class="note-meta" style="font-size: 12px; color: #9ca3af;">
-                                                        <strong>${note.userName}</strong> - 
-                                                        <fmt:formatDate value="${note.createdAt}" pattern="dd/MM/yyyy HH:mm"/>
-                                                    </div>
-                                                </div>
-                                            </c:forEach>
-                                        </div>
-                                        <div class="add-note-form">
-<form action="${pageContext.request.contextPath}/feedback?action=addNote" method="POST">
-                                                <input type="hidden" name="feedbackId" value="${feedback.id}">
-                                                <textarea name="noteText" rows="3" placeholder="Thêm ghi chú nội bộ..." required style="width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; margin-bottom: 12px; resize: vertical;"></textarea>
-                                                <button type="submit" class="btn btn-primary" style="width: 100%;">Thêm ghi chú</button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
+    <h3><i data-feather="message-square"></i> Thảo luận nội bộ</h3>
+    <div class="notes-content">
+        <%-- Danh sách các ghi chú đã có --%>
+        <div class="notes-list" style="margin-bottom: 24px;">
+            <c:if test="${empty internalNotes}">
+                <p style="color: #9ca3af; font-style: italic;">Chưa có ghi chú nào.</p>
+            </c:if>
+            <c:forEach var="note" items="${internalNotes}">
+                <%-- Mỗi item ghi chú --%>
+                <div class="note-item" id="note-item-${note.id}" style="margin-bottom: 16px; border-bottom: 1px solid #f3f4f6; padding-bottom: 12px;">
+                    
+                    <%-- Phần hiển thị nội dung (VIEW) --%>
+                    <div id="note-view-${note.id}">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <p style="margin: 0 0 8px 0; flex-grow: 1; word-break: break-word;">${note.noteText}</p>
+                            
+                            <%-- Nhóm nút Sửa/Xóa --%>
+                            <div class="note-actions" style="display: flex; gap: 8px; margin-left: 16px;">
+                                <%-- 
+                                 LƯU Ý BẢO MẬT: 
+                                 Trong thực tế, bạn chỉ nên hiển thị các nút này nếu người dùng đăng nhập 
+                                 có ID trùng với `note.userId`.
+                                 Ví dụ: <c:if test="${sessionScope.user.id == note.userId}"> ... </c:if>
+                                --%>
+                                <a href="javascript:void(0);" onclick="toggleEdit(${note.id})" title="Sửa" style="color: #4b5563; cursor: pointer;">
+                                    <i data-feather="edit-2" style="width: 16px; height: 16px;"></i>
+                                </a>
+                                
+                                <%-- Form xóa ẩn --%>
+                                <form action="${pageContext.request.contextPath}/feedback" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa ghi chú này không?');" style="margin: 0; padding: 0; display: inline;">
+                                    <input type="hidden" name="action" value="deleteNote">
+                                    <input type="hidden" name="noteId" value="${note.id}">
+                                    <input type="hidden" name="feedbackId" value="${feedback.id}">
+                                    <button type="submit" title="Xóa" style="background: none; border: none; padding: 0; cursor: pointer; color: #ef4444;">
+                                        <i data-feather="trash-2" style="width: 16px; height: 16px;"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="note-meta" style="font-size: 12px; color: #9ca3af;">
+                            <strong>${note.userName}</strong> - 
+                            <fmt:formatDate value="${note.createdAt}" pattern="dd/MM/yyyy HH:mm"/>
+                        </div>
+                    </div>
+
+                    <%-- Phần form sửa (EDIT) - Mặc định bị ẩn --%>
+                    <div id="note-edit-${note.id}" style="display: none;">
+                        <form action="${pageContext.request.contextPath}/feedback" method="POST">
+                            <input type="hidden" name="action" value="editNote">
+                            <input type="hidden" name="noteId" value="${note.id}">
+                            <input type="hidden" name="feedbackId" value="${feedback.id}">
+                            <textarea name="noteText" rows="3" required style="width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; margin-bottom: 12px; resize: vertical;">${note.noteText}</textarea>
+                            <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                                <button type="button" onclick="toggleEdit(${note.id})" class="btn btn-secondary">Hủy</button>
+                                <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </c:forEach>
+        </div>
+
+        <%-- Form thêm ghi chú mới (giữ nguyên) --%>
+        <div class="add-note-form">
+            <form action="${pageContext.request.contextPath}/feedback?action=addNote" method="POST">
+                <input type="hidden" name="feedbackId" value="${feedback.id}">
+                <textarea name="noteText" rows="3" placeholder="Thêm ghi chú nội bộ..." required style="width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; margin-bottom: 12px; resize: vertical;"></textarea>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Thêm ghi chú</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<%-- Thêm đoạn script này vào cuối thẻ <body> của bạn, ngay trên thẻ đóng </body> --%>
+
                             </div>
                             <div class="details-sidebar">
                                 <%-- MODIFICATION: Thêm class để phân màu --%>
@@ -368,5 +418,26 @@
                 feather.replace({'stroke-width': 1.7}); // Tăng độ dày icon cho dễ nhìn hơn
             });
         </script>
+        <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        feather.replace({'stroke-width': 1.7});
+    });
+
+    // Hàm để bật/tắt giữa chế độ xem và chế độ sửa
+    function toggleEdit(noteId) {
+        const viewDiv = document.getElementById('note-view-' + noteId);
+        const editDiv = document.getElementById('note-edit-' + noteId);
+
+        if (viewDiv.style.display === 'none') {
+            // Nếu đang ở chế độ sửa -> chuyển về chế độ xem
+            viewDiv.style.display = 'block';
+            editDiv.style.display = 'none';
+        } else {
+            // Nếu đang ở chế độ xem -> chuyển sang chế độ sửa
+            viewDiv.style.display = 'none';
+            editDiv.style.display = 'block';
+        }
+    }
+</script>
     </body>
 </html>

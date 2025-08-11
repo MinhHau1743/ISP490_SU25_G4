@@ -42,10 +42,10 @@ public class FeedbackController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         // CORE CHANGE 2: The "Router" for GET requests
         String action = request.getParameter("action");
-        
+
         // Default to the list view if no action is specified
         if (action == null || action.trim().isEmpty()) {
             action = "list";
@@ -59,7 +59,7 @@ public class FeedbackController extends HttpServlet {
                 case "create":
                     doCreateForm(request, response);
                     break;
-                    
+
                 case "list":
                 default:
                     doList(request, response);
@@ -77,55 +77,59 @@ public class FeedbackController extends HttpServlet {
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
-        throws ServletException, IOException {
-    
-    // Lấy action từ request
-    String action = request.getParameter("action");
+            throws ServletException, IOException {
 
-    // Mặc định là chuỗi rỗng để tránh NullPointerException
-    if (action == null) {
-        action = ""; 
-    }
+        // Lấy action từ request
+        String action = request.getParameter("action");
 
-    try {
-        // Sử dụng switch để định tuyến cho các action của POST
-        switch (action) {
-            case "create":
-                doCreateSubmit(request, response);
-                break;
-            
-            // ✔️ THÊM CASE NÀY VÀO
-            case "addNote":
-                doAddNote(request, response);
-                break;
-
-            default:
-                // Xử lý các action không hợp lệ cho POST
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid action for POST request.");
-                break;
+        // Mặc định là chuỗi rỗng để tránh NullPointerException
+        if (action == null) {
+            action = "";
         }
-    } catch (Exception e) {
-        // Xử lý lỗi chung cho các hành động POST
-        e.printStackTrace();
-        response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "An error occurred while processing your request.");
+
+        try {
+            // Sử dụng switch để định tuyến cho các action của POST
+            switch (action) {
+                case "create":
+                    doCreateSubmit(request, response);
+                    break;
+
+                case "addNote":
+                    doAddNote(request, response);
+                    break;
+                case "editNote":
+                    doEditNote(request, response);
+                    break;
+
+                case "deleteNote":
+                    doDeleteNote(request, response);
+                    break;
+                default:
+                    // Xử lý các action không hợp lệ cho POST
+                    response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid action for POST request.");
+                    break;
+            }
+        } catch (Exception e) {
+            // Xử lý lỗi chung cho các hành động POST
+            e.printStackTrace();
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "An error occurred while processing your request.");
+        }
     }
-    }
-    
+
     // ----------------------------------------------------------------
     // PRIVATE METHODS FOR EACH ACTION
     // ----------------------------------------------------------------
-
     /**
-     * ACTION: Displays a list of all feedbacks with filtering.
-     * (Logic from the old ListFeedbackController)
+     * ACTION: Displays a list of all feedbacks with filtering. (Logic from the
+     * old ListFeedbackController)
      */
-    private void doList(HttpServletRequest request, HttpServletResponse response) 
+    private void doList(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         FeedbackDAO feedbackDAO = new FeedbackDAO();
 
         String query = request.getParameter("query");
         String ratingFilter = request.getParameter("ratingFilter");
-        
+
         if (ratingFilter == null || ratingFilter.trim().isEmpty()) {
             ratingFilter = "all";
         }
@@ -148,13 +152,13 @@ public class FeedbackController extends HttpServlet {
     }
 
     /**
-     * ACTION: Displays details for a single feedback item.
-     * (Logic from the old ViewFeedbackController)
+     * ACTION: Displays details for a single feedback item. (Logic from the old
+     * ViewFeedbackController)
      */
-    private void doView(HttpServletRequest request, HttpServletResponse response) 
+    private void doView(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String idParam = request.getParameter("id");
-        
+
         // CORE CHANGE 4: Update redirect URLs to use the new unified pattern
         if (idParam == null || idParam.trim().isEmpty()) {
             response.sendRedirect("feedback?action=list&error=missingId");
@@ -180,8 +184,8 @@ public class FeedbackController extends HttpServlet {
     }
 
     /**
-     * ACTION: Shows the form to create a new feedback.
-     * (Logic from the old CreateFeedbackController's doGet)
+     * ACTION: Shows the form to create a new feedback. (Logic from the old
+     * CreateFeedbackController's doGet)
      */
     private void doCreateForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -194,7 +198,7 @@ public class FeedbackController extends HttpServlet {
         try {
             int technicalRequestId = Integer.parseInt(idParam);
             TechnicalRequestDAO technicalDAO = new TechnicalRequestDAO();
-            
+
             // Dòng này có thể ném ra SQLException
             TechnicalRequest technicalRequest = technicalDAO.getTechnicalRequestById(technicalRequestId);
 
@@ -202,13 +206,13 @@ public class FeedbackController extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Technical request not found.");
                 return;
             }
-            
+
             request.setAttribute("technicalRequest", technicalRequest);
             request.getRequestDispatcher("/jsp/customerSupport/createFeedback.jsp").forward(request, response);
 
         } catch (NumberFormatException e) {
             // Bắt lỗi nếu idParam không phải là số
-             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid technicalRequestId format.");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid technicalRequestId format.");
         } catch (java.sql.SQLException e) {
             // ✔️ THÊM KHỐI CATCH NÀY ĐỂ XỬ LÝ LỖI DATABASE
             // Bắt lỗi nếu có sự cố khi truy vấn cơ sở dữ liệu
@@ -218,10 +222,10 @@ public class FeedbackController extends HttpServlet {
     }
 
     /**
-     * ACTION: Processes the submission of the new feedback form.
-     * (Logic from the old CreateFeedbackController's doPost)
+     * ACTION: Processes the submission of the new feedback form. (Logic from
+     * the old CreateFeedbackController's doPost)
      */
-    private void doCreateSubmit(HttpServletRequest request, HttpServletResponse response) 
+    private void doCreateSubmit(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
             String ratingParam = request.getParameter("rating");
@@ -232,7 +236,7 @@ public class FeedbackController extends HttpServlet {
             if (ratingParam == null || ratingParam.equals("0")) {
                 request.setAttribute("errorMessage", "Please select a rating.");
                 // We must call the form display method again to show the error
-                doCreateForm(request, response); 
+                doCreateForm(request, response);
                 return;
             }
 
@@ -264,20 +268,21 @@ public class FeedbackController extends HttpServlet {
             doCreateForm(request, response);
         }
     }
+
     private void doAddNote(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
             int feedbackId = Integer.parseInt(request.getParameter("feedbackId"));
             String noteText = request.getParameter("noteText");
-            
+
             // Lấy thông tin người dùng từ session
             HttpSession session = request.getSession();
             // User loggedInUser = (User) session.getAttribute("user");
-            
+
             // !! LƯU Ý: Dòng dưới đây là giả định. 
             // Bạn cần thay thế bằng cách lấy ID người dùng thật từ session.
             // Ví dụ: int userId = loggedInUser.getId();
-            int userId = 1; 
+            int userId = 1;
 
             if (noteText == null || noteText.trim().isEmpty()) {
                 // Nếu text rỗng, không làm gì, chỉ redirect lại
@@ -299,6 +304,67 @@ public class FeedbackController extends HttpServlet {
         } catch (Exception e) {
             e.printStackTrace();
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Could not add note.");
+        }
+    }
+
+    private void doEditNote(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int noteId = Integer.parseInt(request.getParameter("noteId"));
+            int feedbackId = Integer.parseInt(request.getParameter("feedbackId"));
+            String noteText = request.getParameter("noteText");
+
+            // Lấy ID người dùng từ session
+            HttpSession session = request.getSession();
+            // User loggedInUser = (User) session.getAttribute("user");
+            // if (loggedInUser == null) {
+            //     response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            //     return;
+            // }
+            // TODO: Thêm logic kiểm tra xem người dùng có quyền sửa ghi chú này không.
+
+            if (noteText == null || noteText.trim().isEmpty()) {
+                response.sendRedirect("feedback?action=view&id=" + feedbackId + "&noteError=empty");
+                return;
+            }
+
+            FeedbackDAO feedbackDAO = new FeedbackDAO();
+            feedbackDAO.updateInternalNote(noteId, noteText);
+
+            response.sendRedirect("feedback?action=view&id=" + feedbackId + "&noteUpdate=success");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Could not update note.");
+        }
+    }
+
+    /**
+     * ACTION: Xử lý việc xóa một ghi chú nội bộ.
+     */
+    private void doDeleteNote(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int noteId = Integer.parseInt(request.getParameter("noteId"));
+            int feedbackId = Integer.parseInt(request.getParameter("feedbackId"));
+
+            // Lấy ID người dùng từ session
+            HttpSession session = request.getSession();
+            // User loggedInUser = (User) session.getAttribute("user");
+            // if (loggedInUser == null) {
+            //     response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            //     return;
+            // }
+            // TODO: Thêm logic kiểm tra xem người dùng có quyền xóa ghi chú này không.
+
+            FeedbackDAO feedbackDAO = new FeedbackDAO();
+            feedbackDAO.softDeleteInternalNote(noteId);
+
+            response.sendRedirect("feedback?action=view&id=" + feedbackId + "&noteDelete=success");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Could not delete note.");
         }
     }
 }

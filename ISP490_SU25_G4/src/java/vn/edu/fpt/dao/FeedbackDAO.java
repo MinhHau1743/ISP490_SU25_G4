@@ -291,7 +291,38 @@ public class FeedbackDAO {
             return false;
         }
     }
+    
+public boolean updateInternalNote(int noteId, String newNoteText) {
+    String sql = "UPDATE internal_notes SET note_text = ? WHERE id = ?";
+    try (Connection conn = new DBContext().getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
 
-    // Bạn có thể thêm các phương thức khác ở đây như:
-    // getFeedbackDetailById(int id), updateFeedbackStatus(int id, String status), softDeleteFeedback(int id)...
+        ps.setString(1, newNoteText);
+        ps.setInt(2, noteId);
+        return ps.executeUpdate() > 0;
+    } catch (Exception e) {
+        e.printStackTrace();
+        return false;
+    }
+}
+
+/**
+ * Xóa mềm một ghi chú nội bộ (đánh dấu is_deleted = 1).
+ * @param noteId ID của ghi chú cần xóa.
+ * @return true nếu xóa thành công, false nếu thất bại.
+ */
+public boolean softDeleteInternalNote(int noteId) {
+    // Giả định bạn có cột is_deleted trong bảng internal_notes
+    String sql = "UPDATE internal_notes SET is_deleted = 1 WHERE id = ?";
+    try (Connection conn = new DBContext().getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+
+        ps.setInt(1, noteId);
+        return ps.executeUpdate() > 0;
+    } catch (Exception e) {
+        e.printStackTrace();
+        return false;
+    }
+}
+
 }
