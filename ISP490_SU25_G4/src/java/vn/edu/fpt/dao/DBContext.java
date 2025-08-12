@@ -14,7 +14,8 @@ public class DBContext {
 //    private static final String DB_PASSWORD = "Admin12#$";
 
 
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/datn2";
+
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/datn";
     private static final String DB_USER_NAME = "root";
     private static final String DB_PASSWORD = "1234";
 
