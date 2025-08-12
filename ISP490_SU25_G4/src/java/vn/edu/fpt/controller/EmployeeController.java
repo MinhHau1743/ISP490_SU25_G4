@@ -20,7 +20,7 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.mail.MessagingException;
+// KHÔNG CẦN import jakarta.mail.MessagingException nữa nếu xử lý lỗi chung
 import vn.edu.fpt.common.EmailService;
 import vn.edu.fpt.common.EmailSender;
 import vn.edu.fpt.common.GmailSender;
@@ -432,6 +432,7 @@ public class EmployeeController extends HttpServlet {
      * Sends a welcome email to a newly created user.
      */
     private void sendWelcomeEmail(User newUser) {
+        // KHẮC PHỤC: Bắt lỗi Exception chung để giải quyết lỗi biên dịch
         try {
             EmailSender emailSender = new GmailSender();
             EmailService emailService = new EmailService(emailSender);
@@ -445,7 +446,7 @@ public class EmployeeController extends HttpServlet {
                     + "<p>Please change your password after logging in.</p>";
 
             emailService.sendEmail(newUser.getEmail(), subject, message);
-        } catch (MessagingException ex) {
+        } catch (Exception ex) { // Đổi từ MessagingException sang Exception
             Logger.getLogger(EmployeeController.class.getName()).log(Level.SEVERE, "Failed to send welcome email", ex);
         }
     }

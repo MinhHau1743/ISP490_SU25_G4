@@ -1007,8 +1007,8 @@ public class UserDAO {
         String sql = "SELECT * FROM Users WHERE email = ? OR identity_card_number = ?";
         User user = null;
 
-        try (Connection conn = new DBContext().getConnection(); // Giả sử DBContext là lớp kết nối của bạn
-                 PreparedStatement ps = conn.prepareStatement(sql)) {
+        // Sử dụng try-with-resources để đảm bảo kết nối được đóng đúng cách
+        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, email);
             ps.setString(2, idCard);
@@ -1018,17 +1018,21 @@ public class UserDAO {
                     user = new User();
                     // Ánh xạ dữ liệu từ ResultSet sang đối tượng User
                     user.setId(rs.getInt("id"));
-                    user.setLastName(rs.getString("lastName"));
-                    user.setMiddleName(rs.getString("middleName"));
-                    user.setFirstName(rs.getString("firstName"));
+
+                    // KHẮC PHỤC: Sửa lại tên cột cho khớp với database (snake_case)
+                    user.setLastName(rs.getString("last_name"));
+                    user.setMiddleName(rs.getString("middle_name"));
+                    user.setFirstName(rs.getString("first_name"));
                     user.setEmail(rs.getString("email"));
-                    user.setPhoneNumber(rs.getString("phoneNumber"));
+                    user.setPhoneNumber(rs.getString("phone_number"));
                     user.setIdentityCardNumber(rs.getString("identity_card_number"));
-                    user.setIsDeleted(rs.getInt("isDeleted")); // Lấy cả trạng thái isDeleted
+                    user.setIsDeleted(rs.getInt("is_deleted")); // Giả sử model của bạn có setter này
+
                     // Thêm các trường khác nếu cần
                 }
             }
         } catch (Exception e) {
+            System.err.println("Lỗi khi tìm người dùng bằng email hoặc CCCD: " + e.getMessage());
             e.printStackTrace(); // In lỗi ra console để debug
         }
         return user;
@@ -1113,8 +1117,7 @@ public class UserDAO {
     /**
      *  * Lấy danh sách nhân viên theo một vai trò (role) cụ thể.  * @param
      * roleName Tên của vai trò (ví dụ: "Chánh văn phòng").  * @return Danh sách
-     * các nhân viên có vai trò đó.
- 
+     * các nhân viên có vai trò đó.  
      */
     public List<User> getEmployeesByDepartment(String roleName) { // Đổi tên tham số cho rõ nghĩa
 
