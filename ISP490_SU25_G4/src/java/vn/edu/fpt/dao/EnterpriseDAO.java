@@ -27,6 +27,41 @@ import vn.edu.fpt.model.Ward;
  */
 public class EnterpriseDAO extends DBContext {
 
+    /**
+     * Kiểm tra xem tên doanh nghiệp đã tồn tại hay chưa (không phân biệt chữ
+     * hoa/thường).
+     *
+     * @param name Tên doanh nghiệp cần kiểm tra.
+     * @param customerIdToExclude ID của khách hàng hiện tại cần loại trừ khỏi
+     * việc kiểm tra (dùng khi chỉnh sửa). Để là `null` khi tạo khách hàng mới.
+     * @return `true` nếu tên đã tồn tại, `false` nếu ngược lại.
+     * @throws Exception
+     */
+    public boolean isNameExists(String name, Integer customerIdToExclude) throws Exception {
+        List<Object> params = new ArrayList<>();
+        // SQL để kiểm tra tên tồn tại, dùng LOWER() để không phân biệt chữ hoa/thường
+        String sql = "SELECT 1 FROM Enterprises WHERE TRIM(LOWER(name)) = TRIM(LOWER(?)) AND is_deleted = 0";
+        params.add(name);
+
+        // Nếu đang chỉnh sửa, loại trừ khách hàng hiện tại ra khỏi lượt kiểm tra
+        if (customerIdToExclude != null) {
+            sql += " AND id != ?";
+            params.add(customerIdToExclude);
+        }
+        sql += " LIMIT 1";
+
+        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next(); // true nếu tìm thấy bản ghi, ngược lại là false
+            }
+        }
+    }
+
     // Phương thức này nhận Connection để có thể tham gia vào transaction
     public int insertEnterprise(Connection conn, String name, String businessEmail, String hotline, int customerTypeId, int addressId, String taxCode, String bankNumber, String avatarUrl) throws SQLException {
         // Tạo mã khách hàng duy nhất, ví dụ: KH-timestamp
