@@ -30,6 +30,12 @@
                 </jsp:include>
 
                 <div class="page-content">
+                    <c:if test="${param.feedback == 'success'}">
+                        <div class="alert alert-success">
+                            <i data-feather="star"></i>
+                            <span>Phản hồi của khách hàng đã được ghi nhận thành công.</span>
+                        </div>
+                    </c:if>
                     <div class="content-card">
                         <form class="table-toolbar" action="${pageContext.request.contextPath}/ticket" method="get">
                             <input type="hidden" name="action" value="list">

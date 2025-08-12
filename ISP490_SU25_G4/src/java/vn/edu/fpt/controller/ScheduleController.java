@@ -355,9 +355,10 @@ public class ScheduleController extends HttpServlet {
             List<User> assignments = userDAO.getAllTechnicalStaffIdAndFullName();
             List<TechnicalRequest> technicalRequests = technicalDAO.getAllTechnicalRequestsIdAndTitle();
             List<Province> provinces = addressDAO.getAllProvinces();
-            request.setAttribute("provinces", provinces);
+
             request.setAttribute("assignments", assignments);
-            request.setAttribute("technicalRequests", technicalRequests);  
+            request.setAttribute("technicalRequests", technicalRequests);
+            request.setAttribute("provinces", provinces);
 
             request.getRequestDispatcher("jsp/customerSupport/createSchedule.jsp").forward(request, response);
         } catch (Exception e) {
@@ -378,6 +379,7 @@ public class ScheduleController extends HttpServlet {
         try {
             // 1. Lấy form data
             String technicalRequestIdStr = request.getParameter("technical_request_id");
+            String campaignIdStr = request.getParameter("campaign_id");
             String title = request.getParameter("title");
             String color = request.getParameter("color");
             String scheduledDateStr = request.getParameter("scheduled_date");
@@ -386,14 +388,16 @@ public class ScheduleController extends HttpServlet {
             String endTimeStr = request.getParameter("end_time");
             String status = request.getParameter("status");
             String notes = request.getParameter("notes");
+
             // QUAN TRỌNG: nhiều input cùng name
             String[] assignedUserIds = request.getParameterValues("assignedUserIds");
+
             // Địa chỉ
             String streetAddress = request.getParameter("streetAddress");
             String provinceIdStr = request.getParameter("province");
             String districtIdStr = request.getParameter("district");
             String wardIdStr = request.getParameter("ward");
-
+            int statusId = Integer.parseInt(status);
             // 2. Validate
             if (title == null || title.trim().isEmpty()) {
                 throw new IllegalArgumentException("Vui lòng nhập tiêu đề.");
@@ -429,6 +433,7 @@ public class ScheduleController extends HttpServlet {
             int addressId = addressDAO.findOrCreateAddress(streetAddress, wardId, districtId, provinceId);
 
             // 5. Tạo schedule
+            TechnicalRequest techRequest = new TechnicalRequest();
             MaintenanceSchedule schedule = new MaintenanceSchedule();
             if (technicalRequestIdStr != null && !technicalRequestIdStr.isEmpty()) {
                 schedule.setTechnicalRequestId(Integer.parseInt(technicalRequestIdStr));
@@ -440,9 +445,9 @@ public class ScheduleController extends HttpServlet {
             schedule.setStartTime(startTime);
             schedule.setEndTime(endTime);
             schedule.setAddressId(addressId);
-            schedule.setStatus(status != null ? status : "upcoming");
-            schedule.setNotes(notes);
-
+            schedule.setStatusId(statusId);
+            techRequest.setTitle(title);
+            techRequest.setDescription(notes);
             int scheduleId = scheduleDAO.addMaintenanceScheduleAndReturnId(schedule);
             if (scheduleId <= 0) {
                 throw new Exception("Không thể tạo lịch bảo trì do lỗi cơ sở dữ liệu.");

@@ -13,7 +13,7 @@ public class TechnicalRequest {
     private int serviceId;
     private String title;
     private String description;
-    private String priority; 
+    private String priority;
     private String status;
     private int reporterId;
     private String assignedToNames;
@@ -204,7 +204,6 @@ public class TechnicalRequest {
     public void setDevices(List<TechnicalRequestDevice> devices) {
         this.devices = devices;
     }
-
 
 
     public List<Integer> getAssignedUserIds() {

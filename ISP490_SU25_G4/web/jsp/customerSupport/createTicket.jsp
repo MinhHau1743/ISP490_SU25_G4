@@ -12,35 +12,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/createTicket.css">
         <script src="https://unpkg.com/feather-icons"></script>
-        <style>
-            .address-section {
-                margin-top: 1rem;
-                padding: 1rem;
-                border: 1px solid #e0e0e0;
-                border-radius: 8px;
-                background-color: #f9f9f9;
-            }
-            .address-section h3 {
-                margin-top: 0;
-                margin-bottom: 1rem;
-                color: #333;
-                font-size: 1.1rem;
-            }
-            .address-grid {
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                gap: 1rem;
-                margin-bottom: 1rem;
-            }
-            .form-group.full-width {
-                grid-column: 1 / -1;
-            }
-            @media (max-width: 768px) {
-                .address-grid {
-                    grid-template-columns: 1fr;
-                }
-            }
-        </style>
+
     </head>
     <body>
         <div class="app-container">
@@ -58,6 +30,10 @@
                             <div class="detail-card">
                                 <h2 class="card-title">Thông tin Phiếu Giao Việc</h2>
                                 <div class="form-grid">
+                                    <div class="form-group full-width">
+                                        <label>Tiêu đề</label>
+                                        <input type="text" name="title" class="form-control" value="">
+                                    </div>
                                     <div class="form-group">
                                         <label>Mã Phiếu</label>
                                         <input type="text" class="form-control" value="(Tự động tạo)" readonly>
@@ -159,53 +135,84 @@
                         <div class="sidebar-column">
                             <div class="detail-card sidebar-form">
                                 <h2 class="card-title">Chi tiết Giao việc</h2>
+
                                 <div class="sidebar-form-row">
                                     <label for="priority">Mức độ ưu tiên</label>
-                                    <select id="priority" name="priority" class="form-control">
-                                        <option value="medium">Thông thường</option>
-                                        <option value="high">Cao</option>
-                                        <option value="urgent">Khẩn cấp</option>
-                                    </select>
+                                    <div class="input-with-icon">
+                                        <select id="priority" name="priority" class="form-control">
+                                            <option value="medium">Thông thường</option>
+                                            <option value="high">Cao</option>
+                                            <option value="urgent">Khẩn cấp</option>
+                                        </select>
+                                    </div>
                                 </div>
+
                                 <div class="sidebar-form-row">
-                                    <label for="employeeId">Gán cho nhân viên</label>
-                                    <select id="employeeId" name="employeeId" class="form-control" required>
-                                        <option value="" disabled selected>-- Chọn kỹ thuật viên --</option>
-                                        <c:forEach var="employee" items="${employeeList}">
-                                            <option value="${employee.id}">${employee.lastName} ${employee.middleName} ${employee.firstName}</option>
-                                        </c:forEach>
-                                    </select>
+                                    <label for="status">Trạng thái</label>
+                                    <div class="input-with-icon">
+                                        <select id="status" name="status" class="form-control" required>
+                                            <option value="new">Mới tạo</option>
+                                            <option value="in_progress">Đang thực hiện</option>
+                                            <option value="resolved">Đã giải quyết</option>
+                                            <option value="closed">Đã đóng</option>
+                                        </select>
+                                    </div>
                                 </div>
+
+                                <div class="sidebar-form-row">
+                                    <label for="employeeId">Gán cho</label>
+                                    <div class="input-with-icon">
+                                        <select id="employeeId" name="employeeId" class="form-control" required>
+                                            <option value="" disabled selected>-- Chọn kỹ thuật viên --</option>
+                                            <c:forEach var="employee" items="${employeeList}">
+                                                <option value="${employee.id}">${employee.lastName} ${employee.middleName} ${employee.firstName}</option>
+                                            </c:forEach>
+                                        </select>
+                                    </div>
+                                </div>
+
                                 <div class="sidebar-form-row">
                                     <label>Ngày tạo</label>
-                                    <input type="date" id="createdDate" name="createdDate" class="form-control" readonly>
+                                    <div class="input-with-icon">
+                                        <input type="date" id="createdDate" name="createdDate" class="form-control" readonly>
+                                    </div>
                                 </div>
-                                <div class="sidebar-form-row">
-                                    <label for="scheduled_date">Ngày bắt đầu (*)</label>
-                                    <input type="date" id="scheduled_date" name="scheduled_date" value="${scheduled_date}" class="form-control" required>
+
+                                <div class="sidebar-form-row row-2col">
+                                    <label>Khoảng ngày</label>
+                                    <div class="control">
+                                        <input type="date" id="scheduled_date" name="scheduled_date" value="${scheduled_date}" class="form-control" required>
+                                        <div class="field-hint">Bắt đầu</div>
+                                    </div>
+                                    <div class="control">
+                                        <input type="date" id="end_date" name="end_date" value="${end_date}" class="form-control">
+                                        <div class="field-hint">Kết thúc</div>
+                                    </div>
                                 </div>
-                                <div class="sidebar-form-row">
-                                    <label for="end_date">Ngày kết thúc</label>
-                                    <input type="date" id="end_date" name="end_date" value="${end_date}" class="form-control">
+
+                                <div class="sidebar-form-row row-2col">
+                                    <label>Khung giờ</label>
+                                    <div class="control">
+                                        <input type="time" id="start_time" name="start_time" value="${start_time}" class="form-control">
+                                        <div class="field-hint">Từ</div>
+                                    </div>
+                                    <div class="control">
+                                        <input type="time" id="end_time" name="end_time" value="${end_time}" class="form-control">
+                                        <div class="field-hint">Đến</div>
+                                    </div>
                                 </div>
+
                                 <div class="sidebar-form-row">
-                                    <label for="start_time">Giờ bắt đầu</label>
-                                    <input type="time" id="start_time" name="start_time" value="${start_time}" class="form-control">
-                                </div>
-                                <div class="sidebar-form-row">
-                                    <label for="end_time">Giờ kết thúc</label>
-                                    <input type="time" id="end_time" name="end_time" value="${end_time}" class="form-control">
-                                </div>
-                                <div class="sidebar-form-row">
-                                    <label>Chi phí</label>
+                                    <label>Chi phí dự kiến</label>
                                     <div class="radio-group">
                                         <label><input type="radio" name="isBillable" value="true"> Có</label>
                                         <label><input type="radio" name="isBillable" value="false" checked> Không</label>
                                     </div>
                                 </div>
-                                <div id="amount-group" class="sidebar-form-row" style="display: none;">
+
+                                <div id="amount-group" class="sidebar-form-row" style="display:none;">
                                     <label for="amount">Số tiền (VND)</label>
-                                    <input type="number" id="amount" name="amount" class="form-control" value="0">
+                                    <input type="number" id="amount" name="amount" class="form-control" min="0" value="0">
                                 </div>
                             </div>
                         </div>
@@ -214,16 +221,14 @@
             </main>
         </div>
         <%-- Đặt khối script này ở cuối file /jsp/customerSupport/createTicket.jsp, trước thẻ </body> --%>
-<!-- Ở cuối file JSP, trước các script khác -->
-<script>
-  window.APP_CONFIG = {
-    contextPath: '${pageContext.request.contextPath}'
-  };
-</script>
-<!-- nạp file js nghiệp vụ sau khi đã có APP_CONFIG -->
-<script src="${pageContext.request.contextPath}/js/createTicket.js" defer></script>
-<!-- file khác như mainMenu.js để sau cũng được -->
-<script src="${pageContext.request.contextPath}/js/mainMenu.js" defer></script>
+        <!-- Ở cuối file JSP, trước các script khác -->
+        <script>
+         window.contextPath = '<%= request.getContextPath()%>';
+        </script>
+        <!-- nạp file js nghiệp vụ sau khi đã có APP_CONFIG -->
+        <script src="${pageContext.request.contextPath}/js/createTicket.js" defer></script>
+        <!-- file khác như mainMenu.js để sau cũng được -->
+        <script src="${pageContext.request.contextPath}/js/mainMenu.js" defer></script>
 
     </body>
 </html>
