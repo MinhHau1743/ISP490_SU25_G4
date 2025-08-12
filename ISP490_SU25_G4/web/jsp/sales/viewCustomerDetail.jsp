@@ -51,6 +51,18 @@
                                     </c:if>
                                 </div>
                             </div>
+                            <c:if test="${not empty successMessage}">
+                                <div class="message success" style="margin: 0 24px 16px; padding: 16px; border-radius: 8px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; font-weight: 500;">
+                                    <i data-feather="check-circle" style="vertical-align: -4px; margin-right: 8px;"></i>
+                                    <strong>Thành công!</strong> ${successMessage}
+                                </div>
+                                <%-- Script để feather.replace() hoạt động cho icon mới thêm --%>
+                                <script>
+                                    document.addEventListener('DOMContentLoaded', function () {
+                                        feather.replace();
+                                    });
+                                </script>
+                            </c:if>
 
                             <div class="detail-layout">
                                 <div class="main-column">
