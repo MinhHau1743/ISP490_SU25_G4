@@ -39,7 +39,7 @@ public class LoginController extends HttpServlet {
             // Lưu thông tin người dùng vào session
             session.setAttribute("user", user);
             session.setAttribute("email", email);                      // ✔ Email đăng nhập
-            session.setAttribute("userID", user.getId());             // ✔ ID người dùng
+            session.setAttribute("userId", user.getId()); // Sửa 'D' thành 'd'           // ✔ ID người dùng
             session.setAttribute("userRole", user.getRoleName());     // ✔ Vai trò người dùng
             session.setAttribute("userName", user.getFullNameCombined());     // ✔ Tên đầy đủ
 

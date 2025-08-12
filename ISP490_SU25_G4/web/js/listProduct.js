@@ -1,13 +1,12 @@
+// Dán toàn bộ đoạn code này để thay thế cho code trong thẻ <script> ở file listProduct.jsp
+
 document.addEventListener('DOMContentLoaded', function () {
-    // 1. Format giá khi load trang
+    // 1. Format giá khi load trang (GIỮ NGUYÊN)
     document.querySelectorAll('.number-format').forEach(function (input) {
-        // Format khi load
         if (input.value && !isNaN(input.value.replace(/[^0-9]/g, ''))) {
             let raw = input.value.replace(/[^0-9]/g, '');
             input.value = Number(raw).toLocaleString('vi-VN');
         }
-
-        // Format khi nhập
         input.addEventListener('input', function () {
             let raw = input.value.replace(/[^0-9]/g, '');
             if (raw === '') {
@@ -17,19 +16,16 @@ document.addEventListener('DOMContentLoaded', function () {
             input.value = Number(raw).toLocaleString('vi-VN');
             input.setSelectionRange(input.value.length, input.value.length);
         });
-
-        // Bỏ dấu phẩy khi submit
         input.form && input.form.addEventListener('submit', function () {
             input.value = input.value.replace(/[^0-9]/g, '');
         });
     });
 
-    // 2. Toggle dạng xem (lưới/bảng)
+    // 2. Toggle dạng xem (lưới/bảng) (GIỮ NGUYÊN)
     const gridViewBtn = document.getElementById("gridViewBtn");
     const tableViewBtn = document.getElementById("tableViewBtn");
     const productList = document.getElementById("productList");
     const productTable = document.getElementById("productTable");
-
     if (gridViewBtn && tableViewBtn && productList && productTable) {
         function setActiveButton(mode) {
             if (mode === "grid") {
@@ -46,20 +42,18 @@ document.addEventListener('DOMContentLoaded', function () {
             localStorage.setItem("productViewMode", mode);
             feather.replace();
         }
-
         gridViewBtn.addEventListener("click", () => setActiveButton("grid"));
         tableViewBtn.addEventListener("click", () => setActiveButton("table"));
-//  Đặt mặc định là "grid"
         const savedView = localStorage.getItem("productViewMode") || "grid";
         setActiveButton(savedView);
     }
 
-    // 3. feather icons
+    // 3. feather icons (GIỮ NGUYÊN)
     if (typeof feather !== "undefined") {
         feather.replace();
     }
 
-    // 4. Bộ lọc (filter)
+    // 4. Bộ lọc (filter) (GIỮ NGUYÊN)
     const filterBtn = document.getElementById('filterBtn');
     const filterContainer = document.getElementById('filterContainer');
     const urlParams = new URLSearchParams(window.location.search);
@@ -72,7 +66,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (filterContainer)
             filterContainer.style.display = 'none';
     }
-
     if (filterBtn && filterContainer) {
         filterBtn.addEventListener('click', function () {
             const isHidden = filterContainer.style.display === 'none';
@@ -81,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // 5. Modal xác nhận xoá
+    // 5. Modal xác nhận xoá (PHẦN ĐƯỢC SỬA)
     const deleteModal = document.getElementById('deleteConfirmModal');
     if (deleteModal) {
         const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
@@ -92,7 +85,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const openDeleteModal = (id, name, image) => {
             deleteMessage.innerHTML = `Bạn có chắc chắn muốn xóa sản phẩm '<strong>${name}</strong>'?`;
-            confirmDeleteBtn.href = `deleteProduct?id=${id}`;
+
+            // === SỬA DUY NHẤT DÒNG NÀY ĐỂ KHẮC PHỤC LỖI 404 ===
+            confirmDeleteBtn.href = `product?action=delete&id=${id}`;
+
             deleteModal.classList.add('show');
             feather.replace();
         };
@@ -114,12 +110,11 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // 6. Modal xem ảnh lớn
+    // 6. Modal xem ảnh lớn (GIỮ NGUYÊN)
     const modal = document.getElementById("myModal");
     const modalImg = document.getElementById("img01");
     const captionText = document.getElementById("caption");
     const thumbnails = document.querySelectorAll(".modal-img");
-
     if (modal && modalImg && captionText && thumbnails.length > 0) {
         thumbnails.forEach(function (img) {
             img.addEventListener("click", function () {
@@ -128,14 +123,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 captionText.innerHTML = this.alt;
             });
         });
-
         const span = document.getElementsByClassName("close")[0];
         if (span) {
             span.onclick = function () {
                 modal.style.display = "none";
             };
         }
-
         modal.addEventListener("click", function (e) {
             if (e.target === modal) {
                 modal.style.display = "none";
@@ -144,6 +137,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
+// Các đoạn script khác bên dưới giữ nguyên
 document.addEventListener("DOMContentLoaded", function () {
     const alertBox = document.getElementById("customAlert");
     const progressBar = document.getElementById("alertProgressBar");
@@ -156,7 +150,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }, 5100);
     }
 });
-// Hide loading overlay when page fully loaded
 window.addEventListener("load", function () {
     const overlay = document.getElementById("loadingOverlay");
     if (overlay) {
@@ -165,15 +158,15 @@ window.addEventListener("load", function () {
         setTimeout(() => overlay.style.display = "none", 500);
     }
 });
-// Sau 100ms để đảm bảo DOM render xong mới bắt đầu chạy progress
 setTimeout(function () {
-    document.getElementById("alertProgressBar").style.width = "0%";
+    const progressBar = document.getElementById("alertProgressBar");
+    if (progressBar) {
+        progressBar.style.width = "0%";
+    }
 }, 100);
-
-// Sau 5s thì tự động ẩn alert
 setTimeout(function () {
     const alertBox = document.getElementById("customAlert");
     if (alertBox) {
-        $(alertBox).alert('close'); // Bootstrap dismiss
+        $(alertBox).alert('close');
     }
 }, 5100);

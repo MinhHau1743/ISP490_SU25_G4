@@ -26,7 +26,7 @@ public class ContractDAO extends DBContext {
     public List<ContractProduct> getContractProductsByContractId(long contractId) {
         List<ContractProduct> items = new ArrayList<>();
         // ## FIX 1: Chuẩn hóa tên bảng thành snake_case ##
-        String sql = "SELECT * FROM contract_products WHERE contract_id = ?";
+        String sql = "SELECT * FROM ContractProducts WHERE contract_id = ?";
 
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -51,17 +51,14 @@ public class ContractDAO extends DBContext {
         return items;
     }
 
-    /**
-     * Tạo một hợp đồng mới cùng với các sản phẩm đi kèm trong một transaction.
-     */
     public boolean createContractWithItems(Contract contract, List<ContractProduct> items) {
         Connection conn = null;
-        // ## FIX 2: Sửa tên cột contract_name -> contract_title ##
         String contractSQL = "INSERT INTO contracts "
-                + "(contract_code, contract_title, enterprise_id, created_by_id, start_date, end_date, signed_date, status_id, total_value, notes, file_url) "
+                + "(contract_code, contract_name, enterprise_id, created_by_id, start_date, end_date, signed_date, status_id, total_value, notes, file_url) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        // ## FIX 1: Chuẩn hóa tên bảng thành snake_case ##
-        String itemsSQL = "INSERT INTO contract_products (contract_id, product_id, name, product_code, unit_price, quantity) VALUES (?, ?, ?, ?, ?, ?)";
+
+        // KHẮC PHỤC: Sửa 'contract_products' thành 'ContractProducts'
+        String itemsSQL = "INSERT INTO ContractProducts (contract_id, product_id, name, product_code, unit_price, quantity) VALUES (?, ?, ?, ?, ?, ?)";
 
         try {
             conn = getConnection();
@@ -107,19 +104,16 @@ public class ContractDAO extends DBContext {
         }
     }
 
-    /**
-     * Cập nhật một hợp đồng và danh sách sản phẩm/dịch vụ đi kèm.
-     */
     public boolean updateContractWithItems(Contract contract, List<ContractProduct> items) {
         Connection conn = null;
-        // ## FIX 2: Sửa tên cột contract_name -> contract_title ##
         String updateContractSQL = "UPDATE contracts SET "
-                + "contract_code = ?, contract_title = ?, enterprise_id = ?, created_by_id = ?, "
+                + "contract_code = ?, contract_name = ?, enterprise_id = ?, created_by_id = ?, "
                 + "start_date = ?, end_date = ?, signed_date = ?, status_id = ?, total_value = ?, notes = ?, file_url = ? "
                 + "WHERE id = ?";
-        // ## FIX 1: Chuẩn hóa tên bảng thành snake_case ##
-        String deleteItemsSQL = "DELETE FROM contract_products WHERE contract_id = ?";
-        String insertItemsSQL = "INSERT INTO contract_products (contract_id, product_id, name, product_code, unit_price, quantity) VALUES (?, ?, ?, ?, ?, ?)";
+
+        // KHẮC PHỤC: Sửa 'contract_products' thành 'ContractProducts'
+        String deleteItemsSQL = "DELETE FROM ContractProducts WHERE contract_id = ?";
+        String insertItemsSQL = "INSERT INTO ContractProducts (contract_id, product_id, name, product_code, unit_price, quantity) VALUES (?, ?, ?, ?, ?, ?)";
 
         try {
             conn = getConnection();
@@ -245,23 +239,29 @@ public class ContractDAO extends DBContext {
 
     public List<Contract> getRecentContractsByEnterpriseId(int enterpriseId, int limit) {
         List<Contract> contracts = new ArrayList<>();
-        // ## FIX 2: Sửa tên cột contract_name -> contract_title ##
-        String sql = "SELECT c.id, c.contract_code, c.contract_title, c.end_date, c.total_value, cs.name as statusName "
+
+        // KHẮC PHỤC: Tên cột trong database là 'contract_name', không phải 'contract_title'
+        String sql = "SELECT c.id, c.contract_code, c.contract_name, c.end_date, c.total_value, cs.name as statusName "
                 + "FROM contracts c "
                 + "LEFT JOIN contract_statuses cs ON c.status_id = cs.id "
                 + "WHERE c.enterprise_id = ? AND c.is_deleted = 0 "
                 + "ORDER BY c.end_date DESC, c.id DESC "
                 + "LIMIT ?";
+
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setInt(1, enterpriseId);
             ps.setInt(2, limit);
+
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Contract contract = new Contract();
                     contract.setId(rs.getLong("id"));
                     contract.setContractCode(rs.getString("contract_code"));
-                    // ## FIX 2: Sửa tên cột contract_name -> contract_title ##
-                    contract.setContractName(rs.getString("contract_title"));
+
+                    // KHẮC PHỤC: Lấy dữ liệu từ cột 'contract_name' cho đúng
+                    contract.setContractName(rs.getString("contract_name"));
+
                     contract.setEndDate(rs.getDate("end_date"));
                     contract.setTotalValue(rs.getBigDecimal("total_value"));
                     contract.setStatusName(rs.getString("statusName"));
@@ -326,7 +326,7 @@ public class ContractDAO extends DBContext {
         contract.setId(rs.getLong("id"));
         contract.setContractCode(rs.getString("contract_code"));
         // ## FIX 2: Sửa tên cột contract_name -> contract_title ##
-        contract.setContractName(rs.getString("contract_title"));
+        contract.setContractName(rs.getString("contract_name"));;
         contract.setEnterpriseId(rs.getLong("enterprise_id"));
         contract.setCreatedById(rs.getObject("created_by_id", Long.class));
         contract.setStartDate(rs.getDate("start_date"));
