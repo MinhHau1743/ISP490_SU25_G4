@@ -315,7 +315,7 @@
                 overflow: hidden;
                 color: white;
                 cursor: pointer;
-                border: 2px solid white; 
+                border: 2px solid white;
             }
 
             /* All-day events */
@@ -1727,6 +1727,22 @@
                 }
                 }
 
+                document.addEventListener('DOMContentLoaded', function () {
+                document.querySelectorAll('#week-view .event, #day-view .event').forEach(function (eventDiv) {
+                const st = eventDiv.dataset.startTime || null;
+                const et = eventDiv.dataset.endTime || null;
+                applyEventHeight(eventDiv, st, et);
+                });
+                });
+                function applyEventHeight(el, startTime, endTime) {
+                if (startTime) {
+                const h = getEventHeight(startTime, endTime, 30, 40, 40); // slot=30', cao=40px
+                el.style.setProperty('height', h + 'px', 'important');
+                } else {
+                // all-day: bỏ height inline để CSS .event.all-day chi phối
+                el.style.removeProperty('height');
+                }
+                }
 
 // ====================================================================
                 /**
@@ -1758,136 +1774,169 @@
                 function drop(ev) {
                 ev.preventDefault();
                 stopAutoScroll();
+                // helper nội bộ: set height theo giờ hoặc bỏ height khi all-day
+                function applyEventHeight(el, startTime, endTime) {
+                if (startTime) {
+                // slot=30', slotHeight=40px, extra=40px (đúng như code trước đó của bạn)
+                const h = getEventHeight(startTime, endTime, 30, 40, 40);
+                el.style.setProperty('height', h + 'px', 'important');
+                } else {
+                el.style.removeProperty('height'); // all-day để CSS tự co giãn
+                }
+                }
+
                 const data = ev.dataTransfer.getData("text");
                 let eventElement = document.getElementById(data);
                 if (!eventElement) return;
-                // Clean up .is-other-event class cho toàn bộ event
-                document.querySelectorAll('.event').forEach(event => {
-                event.classList.remove('is-other-event');
-                });
-                // Xoá bản sao dư nếu có
+                // Dọn class "is-other-event"
+                document.querySelectorAll('.event').forEach(e => e.classList.remove('is-other-event'));
+                // Xoá các bản sao dư cùng id (chừa element đang kéo)
                 document.querySelectorAll('#' + CSS.escape(data)).forEach((el) => {
-                if (el !== eventElement && el.parentNode) {
-                el.parentNode.removeChild(el);
-                }
+                if (el !== eventElement && el.parentNode) el.parentNode.removeChild(el);
                 });
                 // Xác định slot mục tiêu
                 let slot = ev.target.closest('.time-slot, .all-day-slot, .all-day-event-container, .month-day');
                 if (!slot) return;
                 // Chuyển DOM sang slot mới
-                if (eventElement.parentNode) {
-                eventElement.parentNode.removeChild(eventElement);
-                }
+                if (eventElement.parentNode) eventElement.parentNode.removeChild(eventElement);
                 slot.appendChild(eventElement);
+                // Nếu trước đó có slot-active, bỏ đi
+                if (typeof lastSlot !== 'undefined' && lastSlot) {
+                lastSlot.classList.remove('slot-active');
+                lastSlot = null;
+                }
+
                 const scheduleId = eventElement.id.split('-')[1];
                 const scheduleToUpdate = schedules.find(s => s.id == scheduleId);
                 if (!scheduleToUpdate) return;
                 let newScheduledDate = null, newEndDate = null, newStartTime = null, newEndTime = null;
                 // --- Tính ngày / giờ mới dựa trên loại slot ---
-                const view = slot.closest('.calendar-view').id;
+                const view = slot.closest('.calendar-view') ? slot.closest('.calendar-view').id : null;
                 if (slot.classList.contains('all-day-event-container') && view === 'week-view') {
-                // Hàng all-day dạng grid 7 cột
+                // All-day hàng 7 cột trong week-view
                 const rect = slot.getBoundingClientRect();
                 const dayWidth = rect.width / 7;
                 const x = ev.clientX - rect.left;
                 let startCol = Math.floor(x / dayWidth) + 1;
                 startCol = Math.max(1, Math.min(startCol, 7));
-                eventElement.style.gridColumn = `${startCol} / span 1`;
+                eventElement.style.gridColumn = `${startCol} / span 1`; // cố định vào cột tương ứng
+
                 newScheduledDate = weekDates[startCol - 1];
                 newStartTime = null;
-                // Chuẩn hóa CSS: all-day
-                if (!eventElement.classList.contains('all-day')) eventElement.classList.add('all-day');
-                } else if (slot.classList.contains('all-day-slot')) {
-                // All-day trong day/week view dạng slot riêng
+                // chuyển sang all-day
+                eventElement.classList.add('all-day');
+                eventElement.dataset.startTime = '';
+                eventElement.dataset.endTime = '';
+                // nếu có grid-column khi từ all-day sang time-slot rồi quay lại: giữ hợp lệ
+                applyEventHeight(eventElement, null, null);
+                const t = eventElement.querySelector('.event-time');
+                if (t) t.textContent = 'Cả ngày';
+                } else if (slot.classList.contains('all-day-slot') || slot.classList.contains('month-day')) {
+                // All-day trong day/week view (all-day-slot) hoặc month view (month-day)
                 newScheduledDate = slot.dataset.date;
                 newStartTime = null;
-                if (!eventElement.classList.contains('all-day')) eventElement.classList.add('all-day');
-                } else if (slot.classList.contains('time-slot') && !slot.classList.contains('all-day-slot')) {
-                // Slot giờ
+                eventElement.classList.add('all-day');
+                eventElement.dataset.startTime = '';
+                eventElement.dataset.endTime = '';
+                // rời khỏi time-slot => bỏ grid-column nếu có
+                eventElement.style.removeProperty('grid-column');
+                applyEventHeight(eventElement, null, null);
+                const t = eventElement.querySelector('.event-time');
+                if (t) t.textContent = 'Cả ngày';
+                } else if (slot.classList.contains('time-slot')) {
+                // Slot theo giờ
                 newScheduledDate = slot.dataset.date;
-                newStartTime = slot.dataset.startTime;
+                newStartTime = slot.dataset.startTime || null;
                 eventElement.classList.remove('all-day');
+                // rời all-day => bỏ grid-column nếu còn
+                eventElement.style.removeProperty('grid-column');
+                // tạm set startTime; endTime sẽ tính bên dưới
+                eventElement.dataset.startTime = newStartTime || '';
                 } else {
-                // Fallback: có date nhưng không xác định cụ thể
+                // Fallback: có date nhưng không xác định, xem như all-day
                 newScheduledDate = slot.dataset.date || newScheduledDate;
                 newStartTime = null;
                 eventElement.classList.add('all-day');
+                eventElement.dataset.startTime = '';
+                eventElement.dataset.endTime = '';
+                eventElement.style.removeProperty('grid-column');
+                applyEventHeight(eventElement, null, null);
+                const t = eventElement.querySelector('.event-time');
+                if (t) t.textContent = 'Cả ngày';
                 }
 
-                // --- Tính toán newEndDate dựa trên khoảng thời gian của event ---
+                // --- Tính toán newEndDate dựa trên khoảng thời gian ngày cũ ---
                 if (scheduleToUpdate.scheduledDate && scheduleToUpdate.endDate) {
-                // Tính khoảng cách ngày giữa scheduledDate và endDate cũ
                 const oldStartDate = new Date(scheduleToUpdate.scheduledDate);
                 const oldEndDate = new Date(scheduleToUpdate.endDate);
                 const dayDifference = Math.round((oldEndDate - oldStartDate) / (24 * 60 * 60 * 1000));
                 if (dayDifference > 0) {
-                // Áp dụng cùng khoảng cách cho ngày mới
                 const newStartDate = new Date(newScheduledDate);
                 newStartDate.setDate(newStartDate.getDate() + dayDifference);
                 newEndDate = newStartDate.toISOString().split('T')[0];
                 } else {
-                // Event chỉ trong 1 ngày
-                newEndDate = newScheduledDate;
+                newEndDate = newScheduledDate; // event 1 ngày
                 }
                 } else {
-                // Không có endDate cũ, sử dụng scheduledDate mới
-                newEndDate = newScheduledDate;
+                newEndDate = newScheduledDate; // không có endDate cũ => coi là 1 ngày
                 }
 
                 // --- Cập nhật UI / model ---
                 if (newStartTime) {
-                // Nếu có giờ, tính lại duration thực tế:
+                // Có giờ: tính lại duration
                 let durationMinutes = 0;
                 if (scheduleToUpdate.startTime && scheduleToUpdate.endTime) {
                 const [sh, sm] = scheduleToUpdate.startTime.split(':').map(Number);
                 const [eh, em] = scheduleToUpdate.endTime.split(':').map(Number);
                 durationMinutes = (eh * 60 + em) - (sh * 60 + sm);
-                if (durationMinutes <= 0) durationMinutes += 24 * 60;
+                if (durationMinutes <= 0) durationMinutes += 24 * 60; // hỗ trợ qua đêm
                 } else {
-                durationMinutes = 30; // fallback nếu không có endTime
+                durationMinutes = 30; // fallback 30'
                 }
 
                 let [nh, nm] = newStartTime.split(':').map(Number);
                 let newEndTotalMin = nh * 60 + nm + durationMinutes;
                 let newEndH = Math.floor(newEndTotalMin / 60) % 24;
                 let newEndM = newEndTotalMin % 60;
-                newEndTime = ("0" + newEndH).slice( - 2) + ":" + ("0" + newEndM).slice( - 2);
-                // Cập nhật UI
+                newEndTime = String(newEndH).padStart(2, '0') + ":" + String(newEndM).padStart(2, '0');
+                // Cập nhật text hiển thị
                 const eventTimeElement = eventElement.querySelector('.event-time');
-                if (eventTimeElement) {
-                eventTimeElement.textContent = newStartTime + " - " + newEndTime;
-                }
-
-                // Cập nhật model
+                if (eventTimeElement) eventTimeElement.textContent = newStartTime + " - " + newEndTime;
+                // Cập nhật dataset + height
+                eventElement.dataset.startTime = newStartTime || '';
+                eventElement.dataset.endTime = newEndTime || '';
+                applyEventHeight(eventElement, newStartTime, newEndTime);
+                // Cập nhật model cục bộ
                 scheduleToUpdate.scheduledDate = newScheduledDate;
                 scheduleToUpdate.startTime = newStartTime;
                 scheduleToUpdate.endTime = newEndTime;
                 scheduleToUpdate.endDate = newEndDate;
                 scheduleToUpdate.updatedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
-                // Gọi AJAX: Truyền đúng newEndTime và newEndDate
+                // Gọi AJAX
                 if (typeof updateEvent === "function" && scheduleId && newScheduledDate) {
                 updateEvent(scheduleId, newScheduledDate, newEndDate, newStartTime, newEndTime);
                 }
                 } else {
                 // All-day
                 const eventTimeElement = eventElement.querySelector('.event-time');
-                if (eventTimeElement) {
-                eventTimeElement.textContent = 'Cả ngày';
-                }
-
-                // Cập nhật model
+                if (eventTimeElement) eventTimeElement.textContent = 'Cả ngày';
+                // Dataset + height
+                eventElement.dataset.startTime = '';
+                eventElement.dataset.endTime = '';
+                applyEventHeight(eventElement, null, null);
+                // Model cục bộ
                 scheduleToUpdate.scheduledDate = newScheduledDate;
                 scheduleToUpdate.startTime = null;
                 scheduleToUpdate.endTime = null;
                 scheduleToUpdate.endDate = newEndDate;
                 scheduleToUpdate.updatedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
-                // Gọi AJAX với null cho time nhưng có newEndDate
+                // AJAX (giờ = null)
                 if (typeof updateEvent === "function" && scheduleId && newScheduledDate) {
                 updateEvent(scheduleId, newScheduledDate, newEndDate, null, null);
                 }
                 }
 
-                // Nếu panel chi tiết đang mở, làm mới lại
+                // Làm mới panel chi tiết nếu đang mở đúng event
                 const detailsPanel = document.getElementById('event-details-panel');
                 if (detailsPanel && detailsPanel.classList.contains('show') &&
                         detailsPanel.querySelector('.event-id').textContent == scheduleId) {
@@ -1895,6 +1944,7 @@
                 if (updatedSchedule) showDetails(eventElement, updatedSchedule);
                 }
                 }
+
 
 // Chạy khi DOM load xong:
                 document.addEventListener('DOMContentLoaded', function () {
@@ -1978,7 +2028,7 @@
                         'Completed': 'bg-success',
                         'Đang thực hiện': 'bg-info',
                         'Hoàn thành': 'bg-success',
-                        };
+                };
                 statusSpan.classList.add(colorMap[statusVal] || 'bg-secondary');
                 }
                 // Hàm trợ giúp để lấy 2 chữ cái đầu của tên
