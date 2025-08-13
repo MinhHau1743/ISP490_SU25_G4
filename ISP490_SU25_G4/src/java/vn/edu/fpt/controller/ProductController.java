@@ -9,25 +9,19 @@ import vn.edu.fpt.model.Product;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal; // KHẮC PHỤC: Import BigDecimal
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.sql.Timestamp;  // KHẮC PHỤC: Import Timestamp
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author phamh Front Controller duy nhất để quản lý tất cả các hoạt động CRUD
- * cho Sản phẩm. Sử dụng một tham số "action" để điều hướng đến phương thức xử
- * lý phù hợp.
- */
 @WebServlet(name = "ProductController", urlPatterns = {"/product"})
 @MultipartConfig
 public class ProductController extends HttpServlet {
 
     private static final String UPLOAD_DIR = "D:/New folder/ISP490_SU25_G4/web/image"; // Nên cấu hình ngoài
-    private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -48,7 +42,7 @@ public class ProductController extends HttpServlet {
                 showEditForm(request, response);
                 break;
             case "delete":
-                deleteProducts(request, response);
+                deleteProduct(request, response);
                 break;
             case "list":
             default:
@@ -79,9 +73,6 @@ public class ProductController extends HttpServlet {
         }
     }
 
-    // ===================================================================================
-    // HÀM VALIDATE TÁI SỬ DỤNG
-    // ===================================================================================
     /**
      * Hàm kiểm tra dữ liệu đầu vào cho sản phẩm.
      *
@@ -102,7 +93,7 @@ public class ProductController extends HttpServlet {
 
         if (productCode == null || productCode.trim().isEmpty()) {
             errors.add("Mã sản phẩm không được để trống!");
-        } else if (isCreating && dao.isProductCodeExists(productCode)) {
+        } else if (isCreating && dao.isProductCodeExists(productCode)) { // KHẮC PHỤC: Gọi đúng tên phương thức
             // Chỉ kiểm tra mã tồn tại khi tạo mới
             errors.add("Mã sản phẩm đã tồn tại!");
         }
@@ -115,22 +106,19 @@ public class ProductController extends HttpServlet {
             errors.add("Giá không được để trống!");
         } else {
             try {
-                double price = Double.parseDouble(priceRaw.replace(",", "").replace(".", ""));
-                if (price < 0) {
+                // Validate với BigDecimal
+                BigDecimal price = new BigDecimal(priceRaw.replace(".", "").replace(",", ""));
+                if (price.compareTo(BigDecimal.ZERO) < 0) {
                     errors.add("Giá phải là một số không âm!");
                 }
             } catch (NumberFormatException ex) {
-                errors.add("Giá không hợp lệ!");
+                errors.add("Giá không hợp lệ! Vui lòng chỉ nhập số.");
             }
         }
         return errors;
     }
 
-    // ===================================================================================
-    // CÁC PHƯƠNG THỨC HÀNH ĐỘNG (ACTION METHODS)
-    // ===================================================================================
     private void listProducts(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // ... (Logic của listProducts không đổi)
         ProductDAO products = new ProductDAO();
         int page = 1;
         int pageSize = 10;
@@ -144,13 +132,20 @@ public class ProductController extends HttpServlet {
         String minPriceStr = request.getParameter("minPrice");
         String maxPriceStr = request.getParameter("maxPrice");
         String origin = request.getParameter("origin");
-        Double minPrice = null, maxPrice = null;
-        if (minPriceStr != null && !minPriceStr.isEmpty()) {
-            minPrice = Double.parseDouble(minPriceStr);
+
+        // KHẮC PHỤC: Sử dụng BigDecimal cho giá
+        BigDecimal minPrice = null, maxPrice = null;
+        try {
+            if (minPriceStr != null && !minPriceStr.isEmpty()) {
+                minPrice = new BigDecimal(minPriceStr);
+            }
+            if (maxPriceStr != null && !maxPriceStr.isEmpty()) {
+                maxPrice = new BigDecimal(maxPriceStr);
+            }
+        } catch (NumberFormatException e) {
+            // Có thể thêm thông báo lỗi nếu giá nhập vào không phải là số
         }
-        if (maxPriceStr != null && !maxPriceStr.isEmpty()) {
-            maxPrice = Double.parseDouble(maxPriceStr);
-        }
+
         if (origin != null && origin.trim().isEmpty()) {
             origin = null;
         }
@@ -171,7 +166,6 @@ public class ProductController extends HttpServlet {
     }
 
     private void viewProductDetail(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // ... (Logic của viewProductDetail không đổi)
         String idStr = request.getParameter("id");
         if (idStr == null || idStr.isEmpty()) {
             response.sendRedirect(request.getContextPath() + "/404.jsp");
@@ -196,23 +190,42 @@ public class ProductController extends HttpServlet {
         request.getRequestDispatcher("/jsp/technicalSupport/createProduct.jsp").forward(request, response);
     }
 
+    // Trong file controller/ProductController.java
     private void processCreateProduct(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        System.out.println("\n--- BẮT ĐẦU DEBUG: THÊM SẢN PHẨM ---");
         try {
             ProductDAO dao = new ProductDAO();
             HttpSession session = request.getSession();
 
+            // DEBUG 1: In ra dữ liệu nhận được từ Form
+            System.out.println("[CONTROLLER] 1. Dữ liệu nhận từ form:");
             String name = request.getParameter("name");
             String productCode = request.getParameter("productCode");
             String origin = request.getParameter("origin");
             String priceRaw = request.getParameter("price");
             String description = request.getParameter("description");
-            Part filePart = request.getPart("image");
-            String userName = (String) session.getAttribute("userName");
+            System.out.println("   - name: " + name);
+            System.out.println("   - productCode: " + productCode);
+            System.out.println("   - origin: " + origin);
+            System.out.println("   - priceRaw: " + priceRaw);
 
-            // Sử dụng hàm validate chung
+            // DEBUG 2: In ra thông tin lấy từ Session
+            System.out.println("[CONTROLLER] 2. Kiểm tra thông tin Session:");
+            Integer userId = (Integer) session.getAttribute("userID"); // Sửa 'd' thành 'D'
+            System.out.println("   - userId lấy được: " + userId);
+            if (userId == null) {
+                System.out.println("   -> LỖI: userId là null. Chuyển hướng về trang login.");
+                response.sendRedirect(request.getContextPath() + "/login.jsp");
+                return;
+            }
+
+            // DEBUG 3: In ra kết quả Validate
+            System.out.println("[CONTROLLER] 3. Bắt đầu validate dữ liệu:");
             List<String> errors = validateProductInput(name, productCode, origin, priceRaw, dao, true);
-
+            System.out.println("   - Số lỗi validate: " + errors.size());
             if (!errors.isEmpty()) {
+                System.out.println("   - Chi tiết lỗi: " + errors);
+                // ... code xử lý khi có lỗi validate (giữ nguyên)
                 request.setAttribute("errors", errors);
                 request.setAttribute("name", name);
                 request.setAttribute("productCode", productCode);
@@ -222,57 +235,61 @@ public class ProductController extends HttpServlet {
                 request.getRequestDispatcher("/jsp/technicalSupport/createProduct.jsp").forward(request, response);
                 return;
             }
+            System.out.println("   -> Validate thành công.");
 
+            // DEBUG 4: In ra đối tượng Product trước khi truyền cho DAO
+            System.out.println("[CONTROLLER] 4. Tạo đối tượng Product để lưu:");
             Product p = new Product();
             p.setName(name);
             p.setProductCode(productCode);
             p.setOrigin(origin);
-            p.setPrice(Double.parseDouble(priceRaw.replace(",", "").replace(".", "")));
+            p.setPrice(new BigDecimal(priceRaw.replace(".", "").replace(",", "")));
             p.setDescription(description);
-            p.setIsDeleted(false);
-            p.setCreatedAt(LocalDateTime.now().format(dtf));
-            p.setCreatedBy(userName);
+            p.setDeleted(false);
+            p.setCreatedBy(userId);
+            p.setUpdatedBy(userId);
+            System.out.println("   - Dữ liệu chuẩn bị gửi đi: " + p.toString());
+
+            // DEBUG 5: Gọi DAO
+            System.out.println("[CONTROLLER] 5. Gọi dao.insertProduct(p) để lưu vào DB.");
             int newId = dao.insertProduct(p);
+            System.out.println("[CONTROLLER]   -> Kết quả từ DAO (ID mới): " + newId);
 
-            File uploadPath = new File(UPLOAD_DIR);
-            if (!uploadPath.exists()) {
-                uploadPath.mkdirs();
-            }
-
-            String imageFileName;
-            if (filePart != null && filePart.getSize() > 0) {
-                String submittedFileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
-                String extension = submittedFileName.substring(submittedFileName.lastIndexOf('.')).toLowerCase();
-                imageFileName = newId + "_product" + extension;
-                filePart.write(UPLOAD_DIR + File.separator + imageFileName);
-            } else {
-                imageFileName = newId + "_product.jpg";
-                File defaultImage = new File(UPLOAD_DIR, "na.jpg");
-                File newImage = new File(UPLOAD_DIR, imageFileName);
-                if (defaultImage.exists()) {
-                    Files.copy(defaultImage.toPath(), newImage.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            if (newId > 0) {
+                System.out.println("[CONTROLLER] -> THÊM THÀNH CÔNG. Bắt đầu xử lý ảnh.");
+                // ... Code xử lý ảnh giữ nguyên ...
+                Part filePart = request.getPart("image");
+                File uploadPath = new File(UPLOAD_DIR);
+                if (!uploadPath.exists()) {
+                    uploadPath.mkdirs();
+                }
+                String imageFileName;
+                if (filePart != null && filePart.getSize() > 0) {
+                    String submittedFileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+                    String extension = submittedFileName.substring(submittedFileName.lastIndexOf('.')).toLowerCase();
+                    imageFileName = newId + "_product" + extension;
+                    filePart.write(UPLOAD_DIR + File.separator + imageFileName);
                 } else {
                     imageFileName = "na.jpg";
                 }
+                dao.updateProductImage(newId, imageFileName);
+                System.out.println("[CONTROLLER] -> Xử lý ảnh xong. Chuyển hướng về trang danh sách.");
+                response.sendRedirect(request.getContextPath() + "/product?action=list");
+            } else {
+                System.out.println("[CONTROLLER] -> LỖI: DAO không thể thêm sản phẩm.");
+                request.setAttribute("error", "Không thể tạo sản phẩm do lỗi từ phía server.");
+                request.getRequestDispatcher("/jsp/technicalSupport/createProduct.jsp").forward(request, response);
             }
-            dao.updateProductImage(newId, imageFileName);
-
-            response.sendRedirect(request.getContextPath() + "/product?action=list");
 
         } catch (Exception e) {
-            e.printStackTrace();
-            request.setAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
-            request.getRequestDispatcher("/error.jsp").forward(request, response);
+            System.out.println("[CONTROLLER] --- CÓ LỖI NGOẠI LỆ XẢY RA ---");
+            e.printStackTrace(); // In ra toàn bộ lỗi chi tiết
         }
     }
 
     private void showEditForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // ... (Logic của showEditForm không đổi)
         String idRaw = request.getParameter("id");
-        if (idRaw == null || idRaw.trim().isEmpty()) {
-            response.sendRedirect(request.getContextPath() + "/product?action=list");
-            return;
-        }
+        // ... (Logic không đổi)
         try {
             int id = Integer.parseInt(idRaw);
             ProductDAO dao = new ProductDAO();
@@ -290,9 +307,13 @@ public class ProductController extends HttpServlet {
 
     private void processEditProduct(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession();
-        String userName = (String) session.getAttribute("userName");
+        // KHẮC PHỤC: Lấy userId
+        Integer userId = (Integer) session.getAttribute("userID"); // Sửa 'd' thành 'D'
+        if (userId == null) {
+            response.sendRedirect(request.getContextPath() + "/login.jsp");
+            return;
+        }
         int id = 0;
-
         try {
             id = Integer.parseInt(request.getParameter("id"));
             ProductDAO dao = new ProductDAO();
@@ -304,12 +325,11 @@ public class ProductController extends HttpServlet {
 
             String name = request.getParameter("name");
             String origin = request.getParameter("origin");
-            String priceRaw = request.getParameter("price");
+            String priceRaw = request.getParameter("price").replace(",", "");
             String description = request.getParameter("description");
             boolean isDeleted = "true".equals(request.getParameter("isDeleted"));
             Part filePart = request.getPart("image");
 
-            // Sử dụng hàm validate chung, không cần kiểm tra mã sản phẩm tồn tại
             List<String> errors = validateProductInput(name, oldProduct.getProductCode(), origin, priceRaw, dao, false);
 
             if (!errors.isEmpty()) {
@@ -318,9 +338,9 @@ public class ProductController extends HttpServlet {
                 oldProduct.setName(name);
                 oldProduct.setOrigin(origin);
                 try {
-                    oldProduct.setPrice(Double.parseDouble(priceRaw.replace(",", "").replace(".", "")));
+                    oldProduct.setPrice(new BigDecimal(priceRaw.replace(".", "").replace(",", ""))); // KHẮC PHỤC
                 } catch (Exception e) {
-                }
+                    /* Bỏ qua nếu giá không hợp lệ */ }
                 oldProduct.setDescription(description);
                 request.setAttribute("product", oldProduct);
                 request.getRequestDispatcher("/jsp/technicalSupport/editProductDetail.jsp").forward(request, response);
@@ -336,26 +356,22 @@ public class ProductController extends HttpServlet {
                 filePart.write(UPLOAD_DIR + File.separator + imageFileName);
             }
 
-            Product p = new Product();
-            p.setId(id);
-            p.setName(name);
-            p.setProductCode(oldProduct.getProductCode());
-            p.setImage(imageFileName);
-            p.setOrigin(origin);
-            p.setPrice(Double.parseDouble(priceRaw.replace(",", "").replace(".", "")));
-            p.setDescription(description);
-            p.setIsDeleted(isDeleted);
-            p.setCreatedAt(oldProduct.getCreatedAt());
-            p.setCreatedBy(oldProduct.getCreatedBy());
-            p.setUpdatedAt(LocalDateTime.now().format(dtf));
-            p.setUpdatedBy(userName);
+            // Tạo đối tượng product mới để update
+            oldProduct.setName(name);
+            oldProduct.setImage(imageFileName);
+            oldProduct.setOrigin(origin);
+            oldProduct.setPrice(new BigDecimal(priceRaw)); // KHẮC PHỤC
+            oldProduct.setDescription(description);
+            oldProduct.setDeleted(isDeleted); // KHẮC PHỤC
+            oldProduct.setUpdatedBy(userId); // KHẮC PHỤC
+            // createdAt, createdBy không đổi. updatedAt sẽ được DAO xử lý.
 
-            boolean success = dao.editProduct(p);
+            boolean success = dao.editProduct(oldProduct);
 
             if (success) {
                 response.sendRedirect(request.getContextPath() + "/product?action=list&cache=" + System.currentTimeMillis());
             } else {
-                request.setAttribute("product", p);
+                request.setAttribute("product", oldProduct);
                 request.setAttribute("editError", "Cập nhật thất bại!");
                 request.getRequestDispatcher("/jsp/technicalSupport/editProductDetail.jsp").forward(request, response);
             }
@@ -367,26 +383,57 @@ public class ProductController extends HttpServlet {
         }
     }
 
-    private void deleteProducts(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // ... (Logic của deleteProducts không đổi)
-        String[] selectedProducts = request.getParameterValues("id");
-        if (selectedProducts != null && selectedProducts.length > 0) {
-            ProductDAO products = new ProductDAO();
-            for (String idStr : selectedProducts) {
-                try {
-                    int productId = Integer.parseInt(idStr);
-                    deleteImageByPattern(productId);
-                    products.deleteProduct(productId);
-                } catch (NumberFormatException e) {
-                    e.printStackTrace();
-                }
-            }
+    // Trong file controller/ProductController.java
+// Thay thế hoàn toàn phương thức cũ bằng phiên bản này
+    private void deleteProduct(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        System.out.println("\n--- BẮT ĐẦU DEBUG: Controller.deleteProduct ---");
+
+        HttpSession session = request.getSession();
+        Integer userId = (Integer) session.getAttribute("userId");
+        String userRole = (String) session.getAttribute("userRole");
+
+        // DEBUG 1: In ra thông tin Session và quyền hạn
+        System.out.println("[CONTROLLER-DELETE] 1. Kiểm tra Session và Quyền:");
+        System.out.println("   - userId lấy được từ session: " + userId);
+        System.out.println("   - userRole lấy được từ session: '" + userRole + "'"); // In ra role để xem chính xác
+
+        // Kiểm tra quyền Admin
+        if (userId == null || !"Admin".equals(userRole)) {
+            System.out.println("   -> LỖI: Không có quyền Admin hoặc chưa đăng nhập. Chuyển hướng và kết thúc.");
+            response.sendRedirect(request.getContextPath() + "/product?action=list");
+            return; // Dừng lại ở đây
         }
-        response.sendRedirect(request.getContextPath() + "/product?action=list");
+        System.out.println("   -> OK: Đã xác thực quyền Admin.");
+
+        try {
+            // DEBUG 2: In ra tham số ID từ URL
+            String productIdStr = request.getParameter("id");
+            System.out.println("[CONTROLLER-DELETE] 2. Lấy Product ID từ URL:");
+            System.out.println("   - Tham số 'id' nhận được (dạng chuỗi): " + productIdStr);
+
+            int id = Integer.parseInt(productIdStr);
+            System.out.println("   - ID sau khi chuyển đổi (dạng số): " + id);
+
+            ProductDAO dao = new ProductDAO();
+
+            System.out.println("[CONTROLLER-DELETE] 3. Chuẩn bị gọi DAO.softDeleteProduct...");
+            dao.softDeleteProduct(id, userId);
+            System.out.println("[CONTROLLER-DELETE] 4. Đã gọi DAO thành công.");
+
+        } catch (NumberFormatException e) {
+            System.out.println("[CONTROLLER-DELETE] !!! LỖI: Không thể chuyển đổi ID sản phẩm sang dạng số. ID có thể bị null hoặc không hợp lệ.");
+            e.printStackTrace();
+        } catch (Exception e) {
+            System.out.println("[CONTROLLER-DELETE] !!! LỖI NGOẠI LỆ KHÁC XẢY RA:");
+            e.printStackTrace();
+        }
+
+        // Luôn chuyển hướng về trang danh sách
+        System.out.println("[CONTROLLER-DELETE] 5. Chuyển hướng về trang danh sách.");
+        response.sendRedirect("product?action=list");
     }
 
     private void deleteImageByPattern(int productId) {
-        // ... (Logic của deleteImageByPattern không đổi)
         File folder = new File(UPLOAD_DIR);
         if (folder.exists() && folder.isDirectory()) {
             File[] files = folder.listFiles((dir, name) -> name.startsWith(productId + "_product"));

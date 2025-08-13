@@ -16,7 +16,8 @@ import java.util.List;
 public class MaintenanceSchedule {
 
     private int id;
-    private Integer technicalRequestId;
+    private int technicalRequestId;
+    private int campaignId;
     private String title;
     private String color;
     private LocalDate scheduledDate;
@@ -24,13 +25,12 @@ public class MaintenanceSchedule {
     private LocalTime startTime;
     private LocalTime endTime;
     private Integer addressId;
-    private int statusId;
-    private Integer campaignId;
-    private String statusName;
+    private String status;
     private String notes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<MaintenanceAssignments> assignments;
+    private Integer statusId;
     private Address fullAddress;
     private String streetAddress;
     private Integer provinceId;
@@ -39,11 +39,12 @@ public class MaintenanceSchedule {
     private String districtName;
     private Integer wardId;
     private String wardName;
-
+    private String statusName;
+    private Integer assignedUserId;
     public MaintenanceSchedule() {
     }
 
-    public MaintenanceSchedule(int id, int technicalRequestId, String title, String color, LocalDate scheduledDate, LocalDate endDate, LocalTime startTime, LocalTime endTime, Integer addressId, int statusId, String notes, LocalDateTime createdAt, LocalDateTime updatedAt, List<MaintenanceAssignments> assignments, Address fullAddress, String streetAddress, Integer provinceId, String provinceName, Integer districtId, String districtName, Integer wardId, String wardName) {
+    public MaintenanceSchedule(int id, int technicalRequestId, String title, String color, LocalDate scheduledDate, LocalDate endDate, LocalTime startTime, LocalTime endTime, Integer addressId, String status, String notes, LocalDateTime createdAt, LocalDateTime updatedAt, List<MaintenanceAssignments> assignments, Address fullAddress) {
         this.id = id;
         this.technicalRequestId = technicalRequestId;
         this.title = title;
@@ -53,22 +54,45 @@ public class MaintenanceSchedule {
         this.startTime = startTime;
         this.endTime = endTime;
         this.addressId = addressId;
-        this.statusId = statusId;
+        this.status = status;
         this.notes = notes;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.assignments = assignments;
         this.fullAddress = fullAddress;
-        this.streetAddress = streetAddress;
-        this.provinceId = provinceId;
-        this.provinceName = provinceName;
-        this.districtId = districtId;
-        this.districtName = districtName;
-        this.wardId = wardId;
-        this.wardName = wardName;
     }
 
+    public Integer getAssignedUserId() {
+        return assignedUserId;
+    }
 
+    public void setAssignedUserId(Integer assignedUserId) {
+        this.assignedUserId = assignedUserId;
+    }
+ 
+    public int getCampaignId() {
+        return campaignId;
+    }
+
+    public void setCampaignId(int campaignId) {
+        this.campaignId = campaignId;
+    }
+    
+    public String getStatusName() {
+        return statusName;
+    }
+
+    public void setStatusName(String statusName) {
+        this.statusName = statusName;
+    }
+
+    public Integer getStatusId() {
+        return statusId;
+    }
+
+    public void setStatusId(Integer statusId) {
+        this.statusId = statusId;
+    }
 
     public int getId() {
         return id;
@@ -78,16 +102,7 @@ public class MaintenanceSchedule {
         this.id = id;
     }
 
-    public Integer getCampaignId() {
-        return campaignId;
-    }
-
-    public void setCampaignId(Integer campaignId) {
-        this.campaignId = campaignId;
-    }
-
-   
-    public Integer getTechnicalRequestId() {
+    public int getTechnicalRequestId() {
         return technicalRequestId;
     }
 
@@ -159,14 +174,13 @@ public class MaintenanceSchedule {
         this.fullAddress = fullAddress;
     }
 
-    public int getStatusId() {
-        return statusId;
+    public String getStatus() {
+        return status;
     }
 
-    public void setStatusId(int statusId) {
-        this.statusId = statusId;
+    public void setStatus(String status) {
+        this.status = status;
     }
-
 
     public String getNotes() {
         return notes;
@@ -255,15 +269,5 @@ public class MaintenanceSchedule {
     public void setWardName(String wardName) {
         this.wardName = wardName;
     }
-
-    public String getStatusName() {
-        return statusName;
-    }
-
-    public void setStatusName(String statusName) {
-        this.statusName = statusName;
-    }
-
-
 
 }

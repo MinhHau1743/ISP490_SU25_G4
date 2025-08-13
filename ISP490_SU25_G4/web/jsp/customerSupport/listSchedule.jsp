@@ -1463,7 +1463,7 @@
                     startTime: "${schedule.startTime != null ? schedule.startTime : ''}",
                     endTime: "${schedule.endTime != null ? schedule.endTime : ''}",
                     location: "${schedule.fullAddress != null ? fn:escapeXml(schedule.fullAddress.fullAddress) : 'Không xác định'}",
-                    status: "${schedule.status}",
+                    statusName: "${schedule.statusName}",
                     notes: "${schedule.notes}",
                     createdAt: "${schedule.createdAt}",
                     updatedAt: "${schedule.updatedAt}",
@@ -1959,16 +1959,27 @@
                 detailsPanel.querySelector('.event-notes').textContent = schedule.notes || 'Không có ghi chú';
                 detailsPanel.querySelector('.event-created-at').textContent = schedule.createdAt || 'N/A';
                 detailsPanel.querySelector('.event-updated-at').textContent = schedule.updatedAt || 'N/A';
-                detailsPanel.querySelector('.event-status').textContent = schedule.status || 'N/A';
                 // --- BẮT ĐẦU PHẦN CẬP NHẬT ĐỂ HIỂN THỊ THẺ NHÂN VIÊN ---
 
                 const assignmentsContainer = detailsPanel.querySelector('.event-assignments');
                 assignmentsContainer.innerHTML = ''; // Bắt đầu bằng việc xóa sạch nội dung cũ
                 const statusSpan = detailsPanel.querySelector('.event-status');
-                const statusVal = schedule.status || '';
-                statusSpan.textContent = statusVal; // hiển thị nguyên trạng
-// Không đổi class, giữ nguyên class hiện có hoặc tự đặt cố định nếu muốn:
-                statusSpan.className = 'event-status';
+                if (statusSpan) {
+                const raw = schedule.statusName;
+                const statusVal = (typeof raw === 'string' && raw.trim() !== '') ? raw.trim()
+                        : (schedule.statusId ? ({1:'Upcoming', 2:'In Progress', 3:'Completed'}[schedule.statusId] || 'N/A') : 'N/A');
+                statusSpan.textContent = statusVal;
+                statusSpan.className = 'event-status badge px-2 py-1';
+                statusSpan.classList.remove('bg-secondary', 'bg-info', 'bg-success', 'bg-warning', 'bg-danger');
+                const colorMap = {
+                'Upcoming': 'bg-secondary',
+                        'In Progress': 'bg-info',
+                        'Completed': 'bg-success',
+                        'Đang thực hiện': 'bg-info',
+                        'Hoàn thành': 'bg-success',
+                        };
+                statusSpan.classList.add(colorMap[statusVal] || 'bg-secondary');
+                }
                 // Hàm trợ giúp để lấy 2 chữ cái đầu của tên
                 function getInitials(name) {
                 if (!name || typeof name !== 'string' || name.trim() === '') {
@@ -2253,7 +2264,6 @@
                 item.style.width = 'calc(' + (days * 100) + '% + 8px)';
                 });
                 });
-                
         </script>
         <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
         <script src="${pageContext.request.contextPath}/js/listSchedule.js"></script>

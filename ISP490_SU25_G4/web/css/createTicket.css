@@ -354,3 +354,115 @@ select.priority-high {
     background-color: #fef5e5;
     color: #f2994a;
 }
+/* ================================================= */
+/* 4. Sidebar Form (Chi tiết giao việc) - ĐÃ TỐI ƯU */
+/* ================================================= */
+
+/* Vùng bao bọc toàn bộ form trong sidebar */
+.sidebar-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* <-- Khoảng cách giữa các hàng */
+
+}
+
+/* Mỗi hàng trong form (gồm label + input/control) */
+.sidebar-form-row {
+    display: grid;
+    /* Cột 1 (label) rộng 100px, Cột 2 (input) chiếm phần còn lại */
+    grid-template-columns: 100px 1fr;
+    align-items: center;
+    gap: 16px; /* Khoảng cách giữa label và input */
+}
+
+/* Định dạng chung cho các label trong sidebar */
+.sidebar-form-row > label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-align: right; /* Căn lề phải cho label để thẳng hàng */
+}
+
+/* Bọc các input có icon */
+.input-with-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-with-icon .form-control {
+    padding-left: 36px; /* Tạo không gian cho icon */
+}
+
+.input-with-icon > i {
+    position: absolute;
+    left: 12px;
+    color: var(--text-tertiary);
+    width: 16px;
+    height: 16px;
+}
+
+/* Căn chỉnh các hàng có 2 control (Khoảng ngày, Khung giờ) */
+.sidebar-form-row.row-2col {
+    /* Cột 1 (label), Cột 2 (input), Cột 3 (input) */
+    grid-template-columns: 100px 1fr 1fr;
+}
+
+.sidebar-form-row .control {
+    display: flex;
+    flex-direction: column;
+    gap: 4px; /* Khoảng cách giữa input và hint text */
+}
+
+.field-hint {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    padding-left: 4px;
+}
+
+/* Nhóm cho các nút radio (Có/Không) */
+.radio-group {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.radio-group label {
+    font-weight: 500;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+input[type="radio"] {
+    accent-color: var(--primary-color);
+}
+.address-section {
+    margin-top: 1rem;
+    padding: 1rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+.address-section h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #333;
+    font-size: 1.1rem;
+}
+.address-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+@media (max-width: 768px) {
+    .address-grid {
+        grid-template-columns: 1fr;
+    }
+}

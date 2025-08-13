@@ -39,9 +39,10 @@
                     </div>
                 </c:if>
 
-                <form action="${pageContext.request.contextPath}/employee?action=add" method="POST"
+                <%-- KHẮC PHỤC LỖI: Thêm enctype="multipart/form-data" vào thẻ form --%>
+                <form action="${pageContext.request.contextPath}/employee?action=add" method="POST" enctype="multipart/form-data">
 
-                      <section class="content-body">
+                    <section class="content-body">
                         <div class="add-employee-page">
 
                             <div class="avatar-panel">

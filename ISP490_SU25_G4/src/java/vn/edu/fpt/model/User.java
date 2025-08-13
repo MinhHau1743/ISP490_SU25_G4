@@ -2,6 +2,9 @@ package vn.edu.fpt.model;
 
 import java.sql.Timestamp;
 import java.time.LocalDate;
+// ## MỚI: Thêm các import cần thiết cho việc chuyển đổi ngày ##
+import java.util.Date;
+import java.time.ZoneId;
 
 public class User {
 
@@ -45,6 +48,18 @@ public class User {
 
     // Constructors
     public User() {
+    }
+
+    // ## MỚI: Thêm phương thức chuyển đổi ngày sinh để tương thích với JSP ##
+    /**
+     * Phương thức phụ trợ để chuyển đổi LocalDate sang java.util.Date cho các
+     * thư viện cũ như JSTL <fmt:formatDate>.
+     */
+    public Date getDateOfBirthAsDate() {
+        if (this.dateOfBirth == null) {
+            return null;
+        }
+        return Date.from(this.dateOfBirth.atStartOfDay(ZoneId.systemDefault()).toInstant());
     }
 
     public String getFullNameCombined() {
@@ -279,7 +294,6 @@ public class User {
         this.provinceName = provinceName;
     }
 
-    // Các trường ID cho địa chỉ
     public Integer getProvinceId() {
         return provinceId;
     }
@@ -316,5 +330,4 @@ public class User {
     public String toString() {
         return "User{" + "id=" + id + ", email=" + email + ", lastName=" + lastName + ", middleName=" + middleName + ", firstName=" + firstName + ", avatarUrl=" + avatarUrl + ", employeeCode=" + employeeCode + ", phoneNumber=" + phoneNumber + ", dateOfBirth=" + dateOfBirth + ", gender=" + gender + ", identityCardNumber=" + identityCardNumber + ", notes=" + notes + ", status=" + status + ", createdAt=" + createdAt + ", updatedAt=" + updatedAt + ", roleName=" + roleName + ", positionName=" + positionName + ", departmentName=" + departmentName + ", streetAddress=" + streetAddress + ", wardName=" + wardName + ", districtName=" + districtName + ", provinceName=" + provinceName + ", roleId=" + roleId + ", departmentId=" + departmentId + ", positionId=" + positionId + ", addressId=" + addressId + ", isDeleted=" + isDeleted + ", provinceId=" + provinceId + ", districtId=" + districtId + ", wardId=" + wardId + ", requireChangePassword=" + requireChangePassword + ", fullName=" + fullName + '}';
     }
-
 }

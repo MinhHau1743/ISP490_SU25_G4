@@ -26,7 +26,7 @@
     <body>
         <div class="app-container">
             <jsp:include page="/mainMenu.jsp"/>
-            
+
             <main class="main-content">
                 <jsp:include page="/header.jsp">
                     <jsp:param name="pageTitle" value="Danh sách Sản phẩm"/>
@@ -120,10 +120,10 @@
                                                     <div class="card-info-row"><i data-feather="tag"></i><span>Mã: ${p.productCode}</span></div>
                                                     <div class="card-info-row"><i data-feather="package"></i><span>Xuất xứ: ${p.origin}</span></div>
                                                     <div class="card-info-row"><i data-feather="align-left"></i><span>Mô tả: ${p.description}</span></div>
-                                                    <div class="card-info-row"><i data-feather="calendar"></i><span>Ngày tạo: ${p.createdAt}</span></div>
-                                                    <div class="card-info-row"><i data-feather="refresh-cw"></i><span>Cập nhật: ${p.updatedAt}</span></div>
-                                                    <div class="card-info-row"><i data-feather="user-plus"></i><span>Người tạo: ${p.createdBy}</span></div>
-                                                    <div class="card-info-row"><i data-feather="edit"></i><span>Người cập nhật: ${p.updatedBy}</span></div>
+                                                    <div class="card-info-row"><i data-feather="calendar"></i><span>Ngày tạo: <fmt:formatDate value="${p.createdAt}" pattern="dd/MM/yyyy HH:mm"/></span></div>
+                                                    <div class="card-info-row"><i data-feather="refresh-cw"></i><span>Cập nhật: <fmt:formatDate value="${p.updatedAt}" pattern="dd/MM/yyyy HH:mm"/></span></div>
+                                                    <div class="card-info-row"><i data-feather="user-plus"></i><span>Người tạo: ${p.createdByName}</span></div>
+                                                    <div class="card-info-row"><i data-feather="edit"></i><span>Người cập nhật: ${p.updatedByName}</span></div>
                                                 </div>
                                                 <div class="card-footer">
                                                     <div class="product-price-footer price-ellipsis">
@@ -141,11 +141,11 @@
                                                             </a>
                                                         </c:if>
                                                         <c:if test="${sessionScope.userRole == 'Admin'}">
-                                                            <a href="product?action=delete&id=${p.id}" data-id="${p.id}" data-name="${p.name}" title="Xóa" class="action-delete delete-trigger-btn">
+                                                            <a href="#" data-id="${p.id}" data-name="${p.name}" title="Xóa" class="action-delete delete-trigger-btn">
                                                                 <i data-feather="trash-2" style="stroke: #dc3545;"></i>
                                                             </a>
                                                         </c:if>
-                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -177,20 +177,20 @@
                                                     <td>${p.productCode}</td>
                                                     <td>${p.origin}</td>
                                                     <td><fmt:formatNumber value="${p.price}" type="currency" currencyCode="VND"/></td>
-                                                    <td>${p.createdAt}</td>
-                                                    <td>${p.updatedAt}</td>
-                                                    <td>${p.createdBy}</td>
-                                                    <td>${p.updatedBy}</td>
+                                                    <td><fmt:formatDate value="${p.createdAt}" pattern="dd/MM/yyyy HH:mm"/></td>
+                                                    <td><fmt:formatDate value="${p.updatedAt}" pattern="dd/MM/yyyy HH:mm"/></td>
+                                                    <td>${p.createdByName}</td>
+                                                    <td>${p.updatedByName}</td>
                                                     <td class="text-center">
                                                         <div class="btn-group" role="group" aria-label="Hành động sản phẩm">
                                                             <a href="product?action=view&id=${p.id}" title="Xem" class="btn btn-sm btn-info" data-toggle="tooltip"><i data-feather="eye"></i></a>
-                                                            <c:if test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Kĩ thuật'}">
+                                                                <c:if test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Kĩ thuật'}">
                                                                 <a href="product?action=edit&id=${p.id}" title="Sửa" class="btn btn-sm btn-warning text-white" data-toggle="tooltip"><i data-feather="edit-2"></i></a>
-                                                            </c:if>
-                                                            <c:if test="${sessionScope.userRole == 'Admin'}">
-                                                                <a href="product?action=delete&id=${p.id}" data-id="${p.id}" title="Xóa" class="btn btn-sm btn-danger delete-trigger-btn" data-toggle="tooltip"><i data-feather="trash-2"></i></a>
-                                                            </c:if>
-                                                            </div>
+                                                                </c:if>
+                                                                <c:if test="${sessionScope.userRole == 'Admin'}">
+                                                                <a href="#" data-id="${p.id}" title="Xóa" class="btn btn-sm btn-danger delete-trigger-btn" data-toggle="tooltip"><i data-feather="trash-2"></i></a>
+                                                                </c:if>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             </c:forEach>
@@ -215,8 +215,37 @@
         </div>
 
         <script>
-            document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('DOMContentLoaded', function () {
                 feather.replace();
+
+                // Logic cho modal xóa (nếu bạn muốn dùng action=delete thay vì JS)
+                // Bạn có thể cần sửa lại script này để phù hợp hơn
+                const deleteButtons = document.querySelectorAll('.delete-trigger-btn');
+                const modal = document.getElementById('deleteConfirmModal');
+                const confirmBtn = document.getElementById('confirmDeleteBtn');
+                const cancelBtn = document.getElementById('cancelDeleteBtn');
+                const closeBtn = modal.querySelector('.close-modal-btn');
+                const deleteMessage = document.getElementById('deleteMessage');
+
+                deleteButtons.forEach(button => {
+                    button.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const productId = this.getAttribute('data-id');
+                        const productName = this.getAttribute('data-name'); // Lấy tên sản phẩm
+                        deleteMessage.textContent = `Bạn có chắc chắn muốn xóa sản phẩm "${productName}"?`;
+                        confirmBtn.href = `product?action=delete&id=${productId}`;
+                        modal.style.display = 'flex';
+                    });
+                });
+
+                const closeModal = () => modal.style.display = 'none';
+                cancelBtn.addEventListener('click', closeModal);
+                closeBtn.addEventListener('click', closeModal);
+                modal.addEventListener('click', function (e) {
+                    if (e.target === modal) {
+                        closeModal();
+                    }
+                });
             });
         </script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>

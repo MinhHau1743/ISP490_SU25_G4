@@ -1,222 +1,120 @@
-/*
-Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
-Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
-*/
-/* 
-    Created on : Jun 6, 2025, 11:42:03 PM
-    Author     : NGUYEN MINH
-*/
 /* File: css/profile.css */
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 
-:root {
-    --primary-color: #298E94;
-    --background-color: #F7F8FA;
-    --white: #FFFFFF;
-    --text-primary: #1A202C;
-    --text-secondary: #718096;
-    --border-color: #E2E8F0;
-    --card-shadow: 0px 8px 24px rgba(0, 0, 0, 0.05);
-}
-
-body {
-    font-family: 'Roboto', sans-serif;
-    margin: 0;
-    background-color: var(--background-color);
-    color: var(--text-primary);
-}
-
-.page-container {
-    display: flex;
-}
-
-.content-wrapper {
-    flex-grow: 1;
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-}
-
-/* Header */
-.content-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--white);
-    padding: 16px 24px;
-    border-radius: 12px;
-    box-shadow: var(--card-shadow);
-}
-
-.content-header h1 {
-    font-size: 20px;
-    margin: 0;
-}
-
-.content-header .breadcrumb {
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin: 4px 0 0;
-}
-
-.notification-btn {
-    position: relative;
-    border: 1px solid var(--border-color);
-    background: none;
-    border-radius: 8px;
-    width: 48px;
-    height: 48px;
-    cursor: pointer;
-}
-
-.notification-badge {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    background-color: red;
-    color: white;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    font-size: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-/* Form Container */
+/* --- CẤU TRÚC CHUNG --- */
 .profile-form-container {
-    flex-grow: 1;
-}
-
-#profileForm {
+    padding: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 24px; /* Khoảng cách giữa các card */
 }
 
 .profile-card {
-    background: var(--white);
+    background-color: #fff;
     border-radius: 12px;
-    box-shadow: var(--card-shadow);
-    padding: 24px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
 }
 
 .profile-card h2 {
     font-size: 18px;
-    margin-top: 0;
-    margin-bottom: 24px;
+    font-weight: 600;
+    padding: 20px 24px;
+    margin: 0;
+    border-bottom: 1px solid #e9ecef;
 }
 
-.card-body-split {
-    display: flex;
-    gap: 24px;
+.card-body {
+    padding: 24px;
 }
 
-.avatar-section {
-    flex-shrink: 0;
+/* --- PHẦN AVATAR --- */
+.avatar-card {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 16px;
+    gap: 24px;
+    padding: 24px;
 }
 
-#avatarPreview {
-    width: 170px;
-    height: 170px;
-    border-radius: 12px;
+.avatar-card img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
     object-fit: cover;
 }
 
-.info-section {
-    flex-grow: 1;
+.avatar-card .profile-name {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0;
 }
 
-/* Form Elements */
-.form-row {
-    display: flex;
-    gap: 24px;
-    margin-bottom: 24px;
+.avatar-card .profile-role {
+    font-size: 16px;
+    color: #6c757d;
+    margin-top: 4px;
 }
 
-.form-group {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+/* --- BỐ CỤC LƯỚI CHO CÁC Ô THÔNG TIN --- */
+.info-grid {
+    display: grid;
+    /* Mặc định 3 cột trên màn hình lớn */
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
 }
 
-.form-group.full-width {
-    width: 100%;
+/* KIỂU DÁNG CHO MỖI Ô THÔNG TIN */
+.info-item {
+    background-color: #f8f9fa;
+    padding: 16px;
+    border-radius: 8px;
 }
 
-.form-group label {
+.info-item .info-label {
+    display: block;
+    font-size: 13px;
+    color: #6c757d;
+    margin-bottom: 4px;
+}
+
+.info-item .info-data {
+    font-size: 16px;
     font-weight: 500;
-    color: var(--text-secondary);
-    font-size: 14px;
+    color: #212529;
+    word-wrap: break-word;
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    font-size: 16px;
-    background-color: #F7F8FA;
+/* Ô chiếm toàn bộ chiều rộng */
+.info-item.full-width {
+    grid-column: 1 / -1; /* Trải dài từ cột đầu đến cột cuối */
 }
 
-.form-group input:disabled,
-.form-group select:disabled,
-.form-group textarea:disabled {
-    background-color: #F7F8FA;
-    color: var(--text-primary);
-    border-color: transparent;
-    padding-left: 0;
-}
-
-.form-group .form-data {
-    font-size: 16px;
-    padding: 10px 0;
-}
-
-.radio-group {
-    display: flex;
-    gap: 24px;
-}
-.radio-group label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: normal;
-}
-
-/* Buttons */
-.btn {
-    padding: 10px 24px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    border: 1px solid transparent;
-}
-
-.btn-primary {
-    background-color: var(--primary-color);
-    color: var(--white);
-}
-
-.btn-secondary {
-    background-color: #E5E5E5;
-    color: #4D4D4D;
-    border: 1px solid #D9D9D9;
-}
-
+/* NÚT BẤM */
 .form-actions {
+    padding: 24px;
+    text-align: right;
     display: flex;
     justify-content: flex-end;
     gap: 16px;
-    padding: 16px 0;
 }
+
+/* TÙY CHỈNH CHO MÀN HÌNH NHỎ (RESPONSIVE) */
+@media (max-width: 992px) {
+    .info-grid {
+        /* 2 cột trên máy tính bảng */
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .info-grid {
+        /* 1 cột trên điện thoại */
+        grid-template-columns: 1fr;
+    }
+     .avatar-card {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+

@@ -3,7 +3,7 @@ Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to c
 Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
 */
 /* 
-    Created on : Jun 12, 2025, 4:31:28 PM
+    Created on : Jun 20, 2025, 11:03:44 AM
     Author     : NGUYEN MINH
 */
 :root {
@@ -18,6 +18,9 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     --bg-gray-light: #f7fafc;
 }
 
+/* ============================================= */
+/* 1. Bố cục trang chung (Layout)                */
+/* ============================================= */
 .page-content {
     padding: 24px;
 }
@@ -28,6 +31,7 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     align-items: center;
     margin-bottom: 24px;
 }
+
 .detail-header .back-link {
     display: flex;
     align-items: center;
@@ -36,6 +40,7 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     text-decoration: none;
     font-weight: 500;
 }
+
 .detail-header .back-link:hover {
     color: var(--primary-color);
 }
@@ -45,17 +50,20 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     grid-template-columns: 2fr 1fr;
     gap: 24px;
 }
+
 .main-column, .sidebar-column {
     display: flex;
     flex-direction: column;
     gap: 24px;
 }
+
 .detail-card {
     background: var(--bg-white);
     border-radius: 12px;
     padding: 24px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.05);
 }
+
 .detail-card .card-title {
     font-size: 18px;
     font-weight: 600;
@@ -66,7 +74,7 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
 }
 
 /* ============================================= */
-/* 3. Định dạng Form (Form Styling)              */
+/* 2. Form chính (Main Form)                     */
 /* ============================================= */
 .form-grid {
     display: grid;
@@ -90,7 +98,6 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     color: var(--text-secondary);
 }
 
-/* Định dạng chung cho các ô input, select, textarea */
 .form-control {
     font-size: 15px;
     font-family: 'Inter', sans-serif;
@@ -114,110 +121,348 @@ textarea.form-control {
     min-height: 120px;
     resize: vertical;
 }
+
+/* ============================================= */
+/* 3. Bảng thiết bị (Device Table)               */
+/* ============================================= */
 .device-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 16px;
+    table-layout: fixed;
 }
+
 .device-table th, .device-table td {
     text-align: left;
     padding: 12px;
     border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
 }
+
 .device-table thead {
     background-color: var(--bg-gray-light);
 }
-.device-table td textarea {
+
+.device-table .action-col {
+    width: 60px;
+    text-align: center;
+}
+
+.form-control-table {
     width: 100%;
+    height: 42px;
+    padding: 10px 12px;
+    border: 1px solid #dcdfe6;
+    border-radius: 6px;
+    background-color: var(--bg-white);
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    resize: none;
+    box-sizing: border-box;
+}
+
+.form-control-table:focus {
+    outline: none;
+    border-color: var(--border-color-focus);
+    box-shadow: 0 0 0 2px rgba(41, 142, 148, 0.1);
+}
+
+textarea.form-control-table {
+    height: auto;
     min-height: 50px;
     resize: vertical;
 }
 
-/* == BẮT ĐẦU CSS MỚI CHO SIDEBAR FORM == */
+.device-table-actions {
+    margin-top: 16px;
+    text-align: right;
+}
+
+/* ================================================= */
+/* 4. Sidebar Form (Chi tiết giao việc) - ĐÃ TỐI ƯU */
+/* ================================================= */
+
+/* Vùng bao bọc toàn bộ form trong sidebar */
 .sidebar-form .detail-card {
-    padding: 16px;
     display: flex;
     flex-direction: column;
-    gap: 8px; /* Khoảng cách giữa các hàng */
+    gap: 16px; /* <-- Khoảng cách giữa các hàng, bạn có thể chỉnh ở đây */
 }
-.sidebar-form .card-title {
-    padding: 0 8px 12px 8px;
-}
+
+/* Mỗi hàng trong form (gồm label + input) */
 .sidebar-form-row {
     display: grid;
-    grid-template-columns: 140px 1fr; /* Cố định chiều rộng của label */
-    align-items: center;
-    gap: 16px;
+    /* Cột 1 (label) rộng 130px, Cột 2 (input) chiếm phần còn lại */
+    grid-template-columns: 130px 1fr;
+    align-items: center; /* Căn giữa các phần tử theo chiều dọc */
+    gap: 12px;           /* Khoảng cách giữa label và input */
 }
+
+/* Định dạng chung cho các label trong sidebar */
 .sidebar-form-row label {
     font-size: 14px;
     font-weight: 500;
     color: var(--text-secondary);
+    text-align: left;
     margin: 0;
 }
-.sidebar-form-row .form-control {
-    width: 100%;
-    font-weight: 500;
-}
-.sidebar-form-row .radio-group {
+
+/* Nhóm cho các nút radio (Có/Không) */
+.radio-group {
     display: flex;
-    gap: 16px;
+    align-items: center;
+    gap: 24px; /* Khoảng cách giữa 2 lựa chọn "Có" và "Không" */
 }
-.sidebar-form-row .radio-group label {
+
+.radio-group label {
+    font-weight: 500; /* Chữ đậm hơn một chút so với mặc định */
+    display: flex;
+    align-items: center;
+    gap: 6px; /* Khoảng cách giữa nút radio và chữ */
+    cursor: pointer;
+}
+
+/* ============================================= */
+/* 5. Modal thông báo (Notification Modal)       */
+/* ============================================= */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px 40px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    transform: scale(0.9);
+    transition: transform 0.3s;
+}
+
+.modal-overlay.show .modal-content {
+    transform: scale(1);
+}
+
+.modal-content .success-icon {
+    width: 60px;
+    height: 60px;
+    color: #28a745;
+    margin-bottom: 15px;
+}
+
+.modal-content .success-message {
+    font-size: 18px;
     font-weight: 500;
+    color: #333;
+    margin: 0;
 }
 
-/* CSS cho màu sắc của Select Box */
-select.new {
-    background-color: #e6f7ff;
-    color: #1890ff;
-    font-weight: 600;
-}
-select.assigned {
-    background-color: #d3adf7;
-    color: #531dab;
-    font-weight: 600;
-}
-select.in_progress {
-    background-color: #fffbe6;
-    color: #faad14;
-    font-weight: 600;
-}
-select.resolved {
-    background-color: #f6ffed;
-    color: #52c41a;
-    font-weight: 600;
-}
-select.closed {
-    background-color: #f5f5f5;
-    color: #8c8c8c;
-    font-weight: 600;
-}
-select.rejected {
-    background-color: #fff1f0;
-    color: #cf1322;
-    font-weight: 600;
+.progress-bar-container {
+    width: 100%;
+    height: 8px;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    margin-top: 20px;
+    overflow: hidden;
 }
 
-/* --- Priority Colors --- */
-/* Tên class giờ đã khớp với value của option (vd: value="critical" -> class="critical") */
-select.critical {
-    background-color: #fff1f0;
-    color: #f5222d;
-    font-weight: 600;
+.progress-bar-fill {
+    width: 0%;
+    height: 100%;
+    background-color: #28a745;
+    border-radius: 4px;
 }
-select.high {
-    background-color: #fff7e6;
-    color: #fa8c16;
-    font-weight: 600;
+
+.modal-overlay.show .progress-bar-fill {
+    animation: fill-progress 2s linear forwards;
 }
-select.medium {
-    background-color: #e6f7ff;
-    color: #1890ff;
-    font-weight: 600;
+
+@keyframes fill-progress {
+    from {
+        width: 0%;
+    }
+    to {
+        width: 100%;
+    }
 }
-select.low {
-    background-color: #f0f2f5;
-    color: #595959;
-    font-weight: 600;
+
+/* ============================================= */
+/* 6. Hộp gợi ý (Suggestion Box)                 */
+/* ============================================= */
+.suggestion-box {
+    position: absolute;
+    border: 1px solid #ddd;
+    background-color: white;
+    z-index: 1000;
+    display: none;
+    max-height: 150px;
+    overflow-y: auto;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-radius: 4px;
+}
+
+.suggestion-item {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.suggestion-item:hover {
+    background-color: #f0f0f0;
+}
+
+
+select.status-completed {
+    background-color: #EAF7E8;
+    color: #3E8635;
+}
+select.status-processing {
+    background-color: #FEF5E5;
+    color: #F2994A;
+}
+select.status-pending {
+    background-color: #FDEEEE;
+    color: #EB5757;
+}
+select.status-cancelled {
+    background-color: #f0f0f0;
+    color: #757575;
+}
+
+select.priority-urgent {
+    background-color: #fdeeee;
+    color: #eb5757;
+}
+select.priority-high {
+    background-color: #fef5e5;
+    color: #f2994a;
+}
+/* ================================================= */
+/* 4. Sidebar Form (Chi tiết giao việc) - ĐÃ TỐI ƯU */
+/* ================================================= */
+
+/* Vùng bao bọc toàn bộ form trong sidebar */
+.sidebar-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* <-- Khoảng cách giữa các hàng */
+
+}
+
+/* Mỗi hàng trong form (gồm label + input/control) */
+.sidebar-form-row {
+    display: grid;
+    /* Cột 1 (label) rộng 100px, Cột 2 (input) chiếm phần còn lại */
+    grid-template-columns: 100px 1fr;
+    align-items: center;
+    gap: 16px; /* Khoảng cách giữa label và input */
+}
+
+/* Định dạng chung cho các label trong sidebar */
+.sidebar-form-row > label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-align: right; /* Căn lề phải cho label để thẳng hàng */
+}
+
+/* Bọc các input có icon */
+.input-with-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-with-icon .form-control {
+    padding-left: 36px; /* Tạo không gian cho icon */
+}
+
+.input-with-icon > i {
+    position: absolute;
+    left: 12px;
+    color: var(--text-tertiary);
+    width: 16px;
+    height: 16px;
+}
+
+/* Căn chỉnh các hàng có 2 control (Khoảng ngày, Khung giờ) */
+.sidebar-form-row.row-2col {
+    /* Cột 1 (label), Cột 2 (input), Cột 3 (input) */
+    grid-template-columns: 100px 1fr 1fr;
+}
+
+.sidebar-form-row .control {
+    display: flex;
+    flex-direction: column;
+    gap: 4px; /* Khoảng cách giữa input và hint text */
+}
+
+.field-hint {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    padding-left: 4px;
+}
+
+/* Nhóm cho các nút radio (Có/Không) */
+.radio-group {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.radio-group label {
+    font-weight: 500;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+input[type="radio"] {
+    accent-color: var(--primary-color);
+}
+.address-section {
+    margin-top: 1rem;
+    padding: 1rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+.address-section h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #333;
+    font-size: 1.1rem;
+}
+.address-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+@media (max-width: 768px) {
+    .address-grid {
+        grid-template-columns: 1fr;
+    }
 }

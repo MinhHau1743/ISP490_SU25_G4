@@ -355,9 +355,10 @@ public class ScheduleController extends HttpServlet {
             List<User> assignments = userDAO.getAllTechnicalStaffIdAndFullName();
             List<TechnicalRequest> technicalRequests = technicalDAO.getAllTechnicalRequestsIdAndTitle();
             List<Province> provinces = addressDAO.getAllProvinces();
-            request.setAttribute("provinces", provinces);
+
             request.setAttribute("assignments", assignments);
-            request.setAttribute("technicalRequests", technicalRequests);  
+            request.setAttribute("technicalRequests", technicalRequests);
+            request.setAttribute("provinces", provinces);
 
             request.getRequestDispatcher("jsp/customerSupport/createSchedule.jsp").forward(request, response);
         } catch (Exception e) {
@@ -375,6 +376,9 @@ public class ScheduleController extends HttpServlet {
         AddressDAO addressDAO = new AddressDAO();
         MaintenanceScheduleDAO scheduleDAO = new MaintenanceScheduleDAO();
 
+        Map<String, String> fieldErrors = new HashMap<>();
+        boolean hasErrors = false;
+
         try {
             // 1. Lấy form data
             String technicalRequestIdStr = request.getParameter("technical_request_id");
@@ -386,87 +390,282 @@ public class ScheduleController extends HttpServlet {
             String endTimeStr = request.getParameter("end_time");
             String status = request.getParameter("status");
             String notes = request.getParameter("notes");
-            // QUAN TRỌNG: nhiều input cùng name
             String[] assignedUserIds = request.getParameterValues("assignedUserIds");
+
             // Địa chỉ
             String streetAddress = request.getParameter("streetAddress");
             String provinceIdStr = request.getParameter("province");
             String districtIdStr = request.getParameter("district");
             String wardIdStr = request.getParameter("ward");
 
-            // 2. Validate
+            // 2. VALIDATE TỪNG FIELD
+            // Validate title
             if (title == null || title.trim().isEmpty()) {
-                throw new IllegalArgumentException("Vui lòng nhập tiêu đề.");
+                fieldErrors.put("title", "Vui lòng nhập tiêu đề lịch bảo trì.");
+                hasErrors = true;
+            } else if (title.trim().length() < 3) {
+                fieldErrors.put("title", "Tiêu đề phải có ít nhất 3 ký tự.");
+                hasErrors = true;
+            } else if (title.trim().length() > 255) {
+                fieldErrors.put("title", "Tiêu đề không được vượt quá 255 ký tự.");
+                hasErrors = true;
             }
+
+            // Validate scheduled date
+            LocalDate scheduledDate = null;
             if (scheduledDateStr == null || scheduledDateStr.trim().isEmpty()) {
-                throw new IllegalArgumentException("Vui lòng chọn ngày bắt đầu.");
-            }
-            if (provinceIdStr == null || provinceIdStr.isBlank()
-                    || districtIdStr == null || districtIdStr.isBlank()
-                    || wardIdStr == null || wardIdStr.isBlank()) {
-                throw new IllegalArgumentException("Vui lòng chọn đầy đủ Tỉnh/Thành, Quận/Huyện, và Phường/Xã.");
-            }
-
-            // 3. Parse
-            LocalDate scheduledDate = LocalDate.parse(scheduledDateStr);
-            LocalDate endDate = (endDateStr != null && !endDateStr.isEmpty()) ? LocalDate.parse(endDateStr) : null;
-            LocalTime startTime = (startTimeStr != null && !startTimeStr.isEmpty()) ? LocalTime.parse(startTimeStr) : null;
-            LocalTime endTime = (endTimeStr != null && !endTimeStr.isEmpty()) ? LocalTime.parse(endTimeStr) : null;
-
-            if (endDate != null && endDate.isBefore(scheduledDate)) {
-                throw new IllegalArgumentException("Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.");
-            }
-            if (startTime != null && endTime != null
-                    && (endDate == null || endDate.isEqual(scheduledDate))
-                    && !endTime.isAfter(startTime)) {
-                throw new IllegalArgumentException("Giờ kết thúc phải sau giờ bắt đầu nếu trong cùng một ngày.");
+                fieldErrors.put("scheduled_date", "Vui lòng chọn ngày bắt đầu.");
+                hasErrors = true;
+            } else {
+                try {
+                    scheduledDate = LocalDate.parse(scheduledDateStr);
+                    if (scheduledDate.isBefore(LocalDate.now())) {
+                        fieldErrors.put("scheduled_date", "Ngày bắt đầu không được là ngày trong quá khứ.");
+                        hasErrors = true;
+                    }
+                    if (scheduledDate.isAfter(LocalDate.now().plusYears(1))) {
+                        fieldErrors.put("scheduled_date", "Ngày bắt đầu không được quá 1 năm kể từ hôm nay.");
+                        hasErrors = true;
+                    }
+                } catch (DateTimeParseException e) {
+                    fieldErrors.put("scheduled_date", "Định dạng ngày không hợp lệ.");
+                    hasErrors = true;
+                }
             }
 
-            // 4. Lưu/ lấy addressId
-            int provinceId = Integer.parseInt(provinceIdStr);
-            int districtId = Integer.parseInt(districtIdStr);
-            int wardId = Integer.parseInt(wardIdStr);
+            // Validate end date
+            LocalDate endDate = null;
+            if (endDateStr != null && !endDateStr.trim().isEmpty()) {
+                try {
+                    endDate = LocalDate.parse(endDateStr);
+                    if (scheduledDate != null && endDate.isBefore(scheduledDate)) {
+                        fieldErrors.put("end_date", "Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.");
+                        hasErrors = true;
+                    }
+                } catch (DateTimeParseException e) {
+                    fieldErrors.put("end_date", "Định dạng ngày không hợp lệ.");
+                    hasErrors = true;
+                }
+            }
+
+            // Validate start time
+            LocalTime startTime = null;
+            if (startTimeStr != null && !startTimeStr.trim().isEmpty()) {
+                try {
+                    startTime = LocalTime.parse(startTimeStr);
+                } catch (DateTimeParseException e) {
+                    fieldErrors.put("start_time", "Định dạng giờ không hợp lệ.");
+                    hasErrors = true;
+                }
+            }
+
+            // Validate end time
+            LocalTime endTime = null;
+            if (endTimeStr != null && !endTimeStr.trim().isEmpty()) {
+                try {
+                    endTime = LocalTime.parse(endTimeStr);
+                } catch (DateTimeParseException e) {
+                    fieldErrors.put("end_time", "Định dạng giờ không hợp lệ.");
+                    hasErrors = true;
+                }
+            }
+
+            // Validate time logic
+            if (startTime != null && endTime != null && !endTime.isAfter(startTime)) {
+                fieldErrors.put("end_time", "Giờ kết thúc phải sau giờ bắt đầu.");
+                hasErrors = true;
+            }
+
+            // Validate today's time
+            if (scheduledDate != null && scheduledDate.isEqual(LocalDate.now()) && startTime != null) {
+                if (startTime.isBefore(LocalTime.now().plusMinutes(30))) {
+                    fieldErrors.put("start_time", "Giờ bắt đầu phải ít nhất 30 phút sau thời điểm hiện tại.");
+                    hasErrors = true;
+                }
+            }
+
+            // Validate province
+            int provinceId = 0;
+            if (provinceIdStr == null || provinceIdStr.trim().isEmpty()) {
+                fieldErrors.put("province", "Vui lòng chọn Tỉnh/Thành phố.");
+                hasErrors = true;
+            } else {
+                try {
+                    provinceId = Integer.parseInt(provinceIdStr);
+                    if (provinceId <= 0) {
+                        fieldErrors.put("province", "Tỉnh/Thành phố không hợp lệ.");
+                        hasErrors = true;
+                    }
+                } catch (NumberFormatException e) {
+                    fieldErrors.put("province", "Tỉnh/Thành phố không hợp lệ.");
+                    hasErrors = true;
+                }
+            }
+
+            // Validate district
+            int districtId = 0;
+            if (districtIdStr == null || districtIdStr.trim().isEmpty()) {
+                fieldErrors.put("district", "Vui lòng chọn Quận/Huyện.");
+                hasErrors = true;
+            } else {
+                try {
+                    districtId = Integer.parseInt(districtIdStr);
+                    if (districtId <= 0) {
+                        fieldErrors.put("district", "Quận/Huyện không hợp lệ.");
+                        hasErrors = true;
+                    }
+                } catch (NumberFormatException e) {
+                    fieldErrors.put("district", "Quận/Huyện không hợp lệ.");
+                    hasErrors = true;
+                }
+            }
+
+            // Validate ward
+            int wardId = 0;
+            if (wardIdStr == null || wardIdStr.trim().isEmpty()) {
+                fieldErrors.put("ward", "Vui lòng chọn Phường/Xã.");
+                hasErrors = true;
+            } else {
+                try {
+                    wardId = Integer.parseInt(wardIdStr);
+                    if (wardId <= 0) {
+                        fieldErrors.put("ward", "Phường/Xã không hợp lệ.");
+                        hasErrors = true;
+                    }
+                } catch (NumberFormatException e) {
+                    fieldErrors.put("ward", "Phường/Xã không hợp lệ.");
+                    hasErrors = true;
+                }
+            }
+
+            // Validate street address
+            if (streetAddress == null || streetAddress.trim().isEmpty()) {
+                fieldErrors.put("streetAddress", "Vui lòng nhập địa chỉ cụ thể.");
+                hasErrors = true;
+            } else if (streetAddress.trim().length() < 5) {
+                fieldErrors.put("streetAddress", "Địa chỉ cụ thể phải có ít nhất 5 ký tự.");
+                hasErrors = true;
+            } else if (streetAddress.trim().length() > 255) {
+                fieldErrors.put("streetAddress", "Địa chỉ cụ thể không được vượt quá 255 ký tự.");
+                hasErrors = true;
+            }
+
+            // Validate status
+            int statusId = 0;
+            if (status == null || status.trim().isEmpty()) {
+                fieldErrors.put("status", "Vui lòng chọn trạng thái.");
+                hasErrors = true;
+            } else {
+                try {
+                    statusId = Integer.parseInt(status);
+                    if (statusId <= 0) {
+                        fieldErrors.put("status", "Trạng thái không hợp lệ.");
+                        hasErrors = true;
+                    }
+                } catch (NumberFormatException e) {
+                    fieldErrors.put("status", "Trạng thái không hợp lệ.");
+                    hasErrors = true;
+                }
+            }
+
+            // Validate assigned users
+            List<Integer> validUserIds = new ArrayList<>();
+            if (assignedUserIds != null && assignedUserIds.length > 0) {
+                for (String userIdStr : assignedUserIds) {
+                    if (userIdStr != null && !userIdStr.trim().isEmpty()) {
+                        try {
+                            int userId = Integer.parseInt(userIdStr.trim());
+                            if (userId <= 0) {
+                                fieldErrors.put("assignedUsers", "ID người được phân công không hợp lệ.");
+                                hasErrors = true;
+                                break;
+                            }
+                            if (validUserIds.contains(userId)) {
+                                fieldErrors.put("assignedUsers", "Không được phân công trùng lặp cho cùng một người.");
+                                hasErrors = true;
+                                break;
+                            }
+                            validUserIds.add(userId);
+                        } catch (NumberFormatException e) {
+                            fieldErrors.put("assignedUsers", "ID người được phân công không hợp lệ.");
+                            hasErrors = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (validUserIds.size() > 10) {
+                    fieldErrors.put("assignedUsers", "Không được phân công cho quá 10 người cùng lúc.");
+                    hasErrors = true;
+                }
+            }
+
+            // Validate notes
+            if (notes != null && notes.trim().length() > 1000) {
+                fieldErrors.put("notes", "Ghi chú không được vượt quá 1000 ký tự.");
+                hasErrors = true;
+            }
+
+            // Validate color
+            if (color != null && !color.trim().isEmpty() && !color.matches("^#[0-9A-Fa-f]{6}$")) {
+                fieldErrors.put("color", "Mã màu không hợp lệ.");
+                hasErrors = true;
+            }
+
+            // Validate technical request ID
+            if (technicalRequestIdStr != null && !technicalRequestIdStr.trim().isEmpty()) {
+                try {
+                    int techReqId = Integer.parseInt(technicalRequestIdStr);
+                    if (techReqId <= 0) {
+                        fieldErrors.put("technical_request_id", "Yêu cầu kỹ thuật không hợp lệ.");
+                        hasErrors = true;
+                    } else {
+                        TechnicalRequest existingRequest = technicalDAO.getTechnicalRequestById(techReqId);
+                        if (existingRequest == null) {
+                            fieldErrors.put("technical_request_id", "Yêu cầu kỹ thuật không tồn tại.");
+                            hasErrors = true;
+                        }
+                    }
+                } catch (NumberFormatException e) {
+                    fieldErrors.put("technical_request_id", "Yêu cầu kỹ thuật không hợp lệ.");
+                    hasErrors = true;
+                }
+            }
+
+            // Nếu có lỗi, forward lại form với errors
+            if (hasErrors) {
+                request.setAttribute("fieldErrors", fieldErrors);
+                forwardToForm(request, response, technicalDAO);
+                return;
+            }
+
+            // PROCEED WITH CREATION nếu không có lỗi
             int addressId = addressDAO.findOrCreateAddress(streetAddress, wardId, districtId, provinceId);
 
-            // 5. Tạo schedule
             MaintenanceSchedule schedule = new MaintenanceSchedule();
             if (technicalRequestIdStr != null && !technicalRequestIdStr.isEmpty()) {
                 schedule.setTechnicalRequestId(Integer.parseInt(technicalRequestIdStr));
             }
-            schedule.setTitle(title);
-            schedule.setColor(color);
+            schedule.setTitle(title.trim());
+            schedule.setColor(color != null ? color.trim() : null);
             schedule.setScheduledDate(scheduledDate);
             schedule.setEndDate(endDate);
             schedule.setStartTime(startTime);
             schedule.setEndTime(endTime);
             schedule.setAddressId(addressId);
-            schedule.setStatus(status != null ? status : "upcoming");
-            schedule.setNotes(notes);
+            schedule.setStatusId(statusId);
 
             int scheduleId = scheduleDAO.addMaintenanceScheduleAndReturnId(schedule);
             if (scheduleId <= 0) {
                 throw new Exception("Không thể tạo lịch bảo trì do lỗi cơ sở dữ liệu.");
             }
 
-            // 6. Lưu assignments (nếu có)
-            if (assignedUserIds != null && assignedUserIds.length > 0) {
-                List<Integer> userIdList = new ArrayList<>();
-                for (String uid : assignedUserIds) {
-                    if (uid != null && !uid.isBlank()) {
-                        userIdList.add(Integer.parseInt(uid.trim()));
-                    }
-                }
-                if (!userIdList.isEmpty()) {
-                    scheduleDAO.addMaintenanceAssignments(scheduleId, userIdList);
-                }
+            if (!validUserIds.isEmpty()) {
+                scheduleDAO.addMaintenanceAssignments(scheduleId, validUserIds);
             }
 
-            // 7. Redirect về list
             response.sendRedirect(request.getContextPath() + "/schedule?action=schedule");
 
-        } catch (IllegalArgumentException | DateTimeParseException e) {
-            request.setAttribute("error", e.getMessage());
-            forwardToForm(request, response, technicalDAO);
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("error", "Đã xảy ra lỗi hệ thống. Vui lòng thử lại.");

@@ -12,28 +12,27 @@ import java.util.stream.Collectors;
 
 /**
  * Lớp DAO quản lý các truy vấn dùng cho việc báo cáo và thống kê dashboard.
- * Phiên bản này đã được sửa tất cả các lỗi và bổ sung đầy đủ các phương thức cần thiết.
  *
  * @author YourName (updated by AI)
  */
 public class ReportDAO extends DBContext {
 
-    /**
-     * Hàm tiện ích để đóng các tài nguyên một cách an toàn.
-     */
     private void closeResources(Connection conn, PreparedStatement ps, ResultSet rs) {
         try {
-            if (rs != null) rs.close();
-            if (ps != null) ps.close();
-            if (conn != null) conn.close();
+            if (rs != null) {
+                rs.close();
+            }
+            if (ps != null) {
+                ps.close();
+            }
+            if (conn != null) {
+                conn.close();
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    /**
-     * Hàm tiện ích để thực hiện các truy vấn đếm.
-     */
     private int getCount(String query, String... params) {
         int count = 0;
         Connection conn = null;
@@ -57,14 +56,11 @@ public class ReportDAO extends DBContext {
         return count;
     }
 
-    /**
-     * 1. Lấy tổng doanh thu trong khoảng thời gian.
-     */
     public double getTotalRevenue(String startDate, String endDate) {
         String query = "SELECT SUM(cp.quantity * cp.unit_price) "
-                     + "FROM ContractProducts cp "
-                     + "JOIN contracts c ON cp.contract_id = c.id "
-                     + "WHERE c.created_at BETWEEN ? AND ?";
+                + "FROM ContractProducts cp "
+                + "JOIN contracts c ON cp.contract_id = c.id "
+                + "WHERE c.created_at BETWEEN ? AND ?";
         double total = 0;
         Connection conn = null;
         PreparedStatement ps = null;
@@ -86,29 +82,21 @@ public class ReportDAO extends DBContext {
         return total;
     }
 
-    /**
-     * 2a. Lấy số lượng khách hàng mới.
-     */
     public int getNewCustomerCount(String startDate, String endDate) {
         String query = "SELECT COUNT(id) FROM Enterprises WHERE created_at BETWEEN ? AND ? AND is_deleted = 0";
         return getCount(query, startDate, endDate);
     }
 
-    /**
-     * 2b. Lấy tổng số khách hàng.
-     */
     public int getTotalCustomerCount() {
         String query = "SELECT COUNT(id) FROM Enterprises WHERE is_deleted = 0";
         return getCount(query);
     }
 
-    /**
-     * 2c. Lấy số khách hàng quay lại (khách hàng cũ nhưng có hợp đồng mới trong kỳ).
-     */
+    // ## FIX: Thay thế `c.enterprise_id` bằng `c.customer_id` (hoặc tên cột đúng trong DB của bạn) ##
     public int getReturningCustomerCount(String startDate, String endDate) {
-        String query = "SELECT COUNT(DISTINCT c.enterprise_id) FROM contracts c "
-                     + "JOIN Enterprises e ON c.enterprise_id = e.id "
-                     + "WHERE c.created_at BETWEEN ? AND ? AND e.created_at < ?";
+        String query = "SELECT COUNT(DISTINCT c.customer_id) FROM contracts c "
+                + "JOIN Enterprises e ON c.customer_id = e.id "
+                + "WHERE c.created_at BETWEEN ? AND ? AND e.created_at < ?";
         int count = 0;
         Connection conn = null;
         PreparedStatement ps = null;
@@ -118,7 +106,7 @@ public class ReportDAO extends DBContext {
             ps = conn.prepareStatement(query);
             ps.setString(1, startDate);
             ps.setString(2, endDate);
-            ps.setString(3, startDate); // Khách hàng được tạo trước ngày bắt đầu của kỳ báo cáo
+            ps.setString(3, startDate);
             rs = ps.executeQuery();
             if (rs.next()) {
                 count = rs.getInt(1);
@@ -130,17 +118,14 @@ public class ReportDAO extends DBContext {
         }
         return count;
     }
-    
-    /**
-     * 3. Lấy số lượng hợp đồng theo từng trạng thái.
-     */
+
     public Map<String, Integer> getContractStatusCounts(String startDate, String endDate) {
         Map<String, Integer> counts = new HashMap<>();
         String query = "SELECT cs.name, COUNT(c.id) as count "
-                     + "FROM contracts c "
-                     + "JOIN contract_statuses cs ON c.status_id = cs.id "
-                     + "WHERE c.created_at BETWEEN ? AND ? AND c.is_deleted = 0 "
-                     + "GROUP BY cs.name";
+                + "FROM contracts c "
+                + "JOIN contract_statuses cs ON c.status_id = cs.id "
+                + "WHERE c.created_at BETWEEN ? AND ? AND c.is_deleted = 0 "
+                + "GROUP BY cs.name";
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -161,9 +146,6 @@ public class ReportDAO extends DBContext {
         return counts;
     }
 
-    /**
-     * 4. Lấy số lượng yêu cầu kỹ thuật theo trạng thái.
-     */
     public Map<String, Integer> getTechnicalRequestStatusCounts(String startDate, String endDate) {
         Map<String, Integer> counts = new HashMap<>();
         counts.put("Đã giải quyết", 0);
@@ -171,9 +153,9 @@ public class ReportDAO extends DBContext {
         counts.put("Chờ xử lý", 0);
 
         String query = "SELECT status, COUNT(id) as count "
-                     + "FROM TechnicalRequests "
-                     + "WHERE created_at BETWEEN ? AND ? AND is_deleted = 0 "
-                     + "GROUP BY status";
+                + "FROM TechnicalRequests "
+                + "WHERE created_at BETWEEN ? AND ? AND is_deleted = 0 "
+                + "GROUP BY status";
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -207,20 +189,17 @@ public class ReportDAO extends DBContext {
         }
         return counts;
     }
-    
-    /**
-     * 5a. Lấy danh sách sản phẩm bán chạy theo SỐ LƯỢNG.
-     */
+
     public List<Map<String, Object>> getTopProducts(String startDate, String endDate, int limit) {
         List<Map<String, Object>> topProducts = new ArrayList<>();
         String query = "SELECT p.name, SUM(cp.quantity) as total_sold "
-                     + "FROM ContractProducts cp "
-                     + "JOIN Products p ON cp.product_id = p.id "
-                     + "JOIN contracts c ON cp.contract_id = c.id "
-                     + "WHERE p.is_deleted = 0 AND c.created_at BETWEEN ? AND ? "
-                     + "GROUP BY p.id, p.name "
-                     + "ORDER BY total_sold DESC "
-                     + "LIMIT ?";
+                + "FROM ContractProducts cp "
+                + "JOIN Products p ON cp.product_id = p.id "
+                + "JOIN contracts c ON cp.contract_id = c.id "
+                + "WHERE p.is_deleted = 0 AND c.created_at BETWEEN ? AND ? "
+                + "GROUP BY p.id, p.name "
+                + "ORDER BY total_sold DESC "
+                + "LIMIT ?";
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -245,19 +224,16 @@ public class ReportDAO extends DBContext {
         return topProducts;
     }
 
-    /**
-     * 5b. Lấy danh sách sản phẩm bán chạy nhất theo DOANH THU.
-     */
     public List<Map<String, Object>> getTopProductsByRevenue(String startDate, String endDate, int limit) {
         List<Map<String, Object>> topProducts = new ArrayList<>();
         String query = "SELECT p.name, SUM(cp.quantity * cp.unit_price) as total_revenue "
-                     + "FROM ContractProducts cp "
-                     + "JOIN Products p ON cp.product_id = p.id "
-                     + "JOIN contracts c ON cp.contract_id = c.id "
-                     + "WHERE p.is_deleted = 0 AND c.created_at BETWEEN ? AND ? "
-                     + "GROUP BY p.id, p.name "
-                     + "ORDER BY total_revenue DESC "
-                     + "LIMIT ?";
+                + "FROM ContractProducts cp "
+                + "JOIN Products p ON cp.product_id = p.id "
+                + "JOIN contracts c ON cp.contract_id = c.id "
+                + "WHERE p.is_deleted = 0 AND c.created_at BETWEEN ? AND ? "
+                + "GROUP BY p.id, p.name "
+                + "ORDER BY total_revenue DESC "
+                + "LIMIT ?";
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -282,17 +258,14 @@ public class ReportDAO extends DBContext {
         return topProducts;
     }
 
-    /**
-     * 6. Lấy xu hướng doanh thu theo ngày để vẽ biểu đồ.
-     */
     public List<Map<String, Object>> getRevenueTrend(String startDate, String endDate) {
         List<Map<String, Object>> trendData = new ArrayList<>();
         String query = "SELECT DATE(c.created_at) as a_date, SUM(cp.quantity * cp.unit_price) as daily_revenue "
-                     + "FROM ContractProducts cp "
-                     + "JOIN contracts c ON cp.contract_id = c.id "
-                     + "WHERE c.created_at BETWEEN ? AND ? "
-                     + "GROUP BY a_date "
-                     + "ORDER BY a_date ASC";
+                + "FROM ContractProducts cp "
+                + "JOIN contracts c ON cp.contract_id = c.id "
+                + "WHERE c.created_at BETWEEN ? AND ? "
+                + "GROUP BY a_date "
+                + "ORDER BY a_date ASC";
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -315,15 +288,12 @@ public class ReportDAO extends DBContext {
         }
         return trendData;
     }
-    
-    /**
-     * 7. Lấy danh sách khách hàng mới trong khoảng thời gian.
-     */
+
     public List<Map<String, Object>> getNewCustomersList(String startDate, String endDate) {
         List<Map<String, Object>> customers = new ArrayList<>();
         String query = "SELECT enterprise_code, name, created_at, avatar_url FROM Enterprises "
-                     + "WHERE created_at BETWEEN ? AND ? AND is_deleted = 0 "
-                     + "ORDER BY created_at DESC";
+                + "WHERE created_at BETWEEN ? AND ? AND is_deleted = 0 "
+                + "ORDER BY created_at DESC";
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -349,17 +319,15 @@ public class ReportDAO extends DBContext {
         return customers;
     }
 
-    /**
-     * 8. Lấy danh sách hợp đồng chi tiết trong khoảng thời gian.
-     */
+    // ## FIX: Thay thế `c.enterprise_id` bằng `c.customer_id` (hoặc tên cột đúng trong DB của bạn) ##
     public List<Map<String, Object>> getContractsList(String startDate, String endDate) {
         List<Map<String, Object>> contracts = new ArrayList<>();
         String query = "SELECT c.contract_code, e.name as enterprise_name, c.start_date, c.end_date, cs.name as status "
-                     + "FROM contracts c "
-                     + "JOIN Enterprises e ON c.enterprise_id = e.id "
-                     + "LEFT JOIN contract_statuses cs ON c.status_id = cs.id "
-                     + "WHERE c.created_at BETWEEN ? AND ? "
-                     + "ORDER BY c.created_at DESC";
+                + "FROM contracts c "
+                + "JOIN Enterprises e ON c.customer_id = e.id "
+                + "LEFT JOIN contract_statuses cs ON c.status_id = cs.id "
+                + "WHERE c.created_at BETWEEN ? AND ? "
+                + "ORDER BY c.created_at DESC";
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -385,20 +353,17 @@ public class ReportDAO extends DBContext {
         }
         return contracts;
     }
-    
-    /**
-     * 9. Lấy danh sách các yêu cầu kỹ thuật cùng với các thiết bị đi kèm.
-     */
+
     public List<Map<String, Object>> getTechnicalRequestsWithDevices(String startDate, String endDate) {
         Map<Integer, Map<String, Object>> requestMap = new HashMap<>();
         String requestsQuery = "SELECT tr.id, tr.request_code, tr.title, e.name as enterprise_name, "
-                             + "CONCAT_WS(' ', u.last_name, u.middle_name, u.first_name) as assigned_to_name, "
-                             + "tr.created_at, tr.status "
-                             + "FROM TechnicalRequests tr "
-                             + "JOIN Enterprises e ON tr.enterprise_id = e.id "
-                             + "LEFT JOIN users u ON tr.assigned_to_id = u.id "
-                             + "WHERE tr.is_deleted = 0 AND tr.created_at BETWEEN ? AND ? "
-                             + "ORDER BY tr.created_at DESC";
+                + "CONCAT_WS(' ', u.last_name, u.middle_name, u.first_name) as assigned_to_name, "
+                + "tr.created_at, tr.status "
+                + "FROM TechnicalRequests tr "
+                + "JOIN Enterprises e ON tr.enterprise_id = e.id "
+                + "LEFT JOIN users u ON tr.assigned_to_id = u.id "
+                + "WHERE tr.is_deleted = 0 AND tr.created_at BETWEEN ? AND ? "
+                + "ORDER BY tr.created_at DESC";
 
         Connection conn = null;
         PreparedStatement psRequests = null;
@@ -408,7 +373,7 @@ public class ReportDAO extends DBContext {
 
         try {
             conn = getConnection();
-            
+
             psRequests = conn.prepareStatement(requestsQuery);
             psRequests.setString(1, startDate);
             psRequests.setString(2, endDate);
@@ -434,7 +399,7 @@ public class ReportDAO extends DBContext {
             if (!requestIds.isEmpty()) {
                 String placeholders = requestIds.stream().map(id -> "?").collect(Collectors.joining(","));
                 String devicesQuery = "SELECT technical_request_id, device_name, serial_number, problem_description "
-                                    + "FROM TechnicalRequestDevices WHERE technical_request_id IN (" + placeholders + ")";
+                        + "FROM TechnicalRequestDevices WHERE technical_request_id IN (" + placeholders + ")";
 
                 psDevices = conn.prepareStatement(devicesQuery);
                 for (int i = 0; i < requestIds.size(); i++) {
@@ -449,7 +414,7 @@ public class ReportDAO extends DBContext {
                         device.put("device_name", rsDevices.getString("device_name"));
                         device.put("serial_number", rsDevices.getString("serial_number"));
                         device.put("problem_description", rsDevices.getString("problem_description"));
-                        
+
                         @SuppressWarnings("unchecked")
                         List<Map<String, Object>> devicesList = (List<Map<String, Object>>) requestMap.get(technicalRequestId).get("devices");
                         devicesList.add(device);
@@ -466,16 +431,13 @@ public class ReportDAO extends DBContext {
         return new ArrayList<>(requestMap.values());
     }
 
-    /**
-     * 10. Lấy xu hướng khách hàng mới theo ngày để vẽ biểu đồ.
-     */
     public List<Map<String, Object>> getNewCustomersTrend(String startDate, String endDate) {
         List<Map<String, Object>> trendData = new ArrayList<>();
         String query = "SELECT DATE(created_at) as a_date, COUNT(id) as daily_new_customers "
-                     + "FROM Enterprises "
-                     + "WHERE is_deleted = 0 AND created_at BETWEEN ? AND ? "
-                     + "GROUP BY a_date "
-                     + "ORDER BY a_date ASC";
+                + "FROM Enterprises "
+                + "WHERE is_deleted = 0 AND created_at BETWEEN ? AND ? "
+                + "GROUP BY a_date "
+                + "ORDER BY a_date ASC";
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
