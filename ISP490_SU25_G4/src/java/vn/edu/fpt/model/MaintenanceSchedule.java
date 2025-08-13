@@ -17,7 +17,7 @@ public class MaintenanceSchedule {
 
     private int id;
     private int technicalRequestId;
-    private int campaignId;
+    private Integer campaignId;
     private String title;
     private String color;
     private LocalDate scheduledDate;
@@ -41,6 +41,7 @@ public class MaintenanceSchedule {
     private String wardName;
     private String statusName;
     private Integer assignedUserId;
+
     public MaintenanceSchedule() {
     }
 
@@ -69,15 +70,15 @@ public class MaintenanceSchedule {
     public void setAssignedUserId(Integer assignedUserId) {
         this.assignedUserId = assignedUserId;
     }
- 
-    public int getCampaignId() {
+
+    public Integer getCampaignId() {
         return campaignId;
     }
 
-    public void setCampaignId(int campaignId) {
+    public void setCampaignId(Integer campaignId) {
         this.campaignId = campaignId;
     }
-    
+
     public String getStatusName() {
         return statusName;
     }
@@ -102,9 +103,9 @@ public class MaintenanceSchedule {
         this.id = id;
     }
 
-    public int getTechnicalRequestId() {
-        return technicalRequestId;
-    }
+    public Integer getTechnicalRequestId() {
+    return technicalRequestId;
+}
 
     public void setTechnicalRequestId(Integer technicalRequestId) {
         this.technicalRequestId = technicalRequestId;

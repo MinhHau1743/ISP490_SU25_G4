@@ -16,12 +16,12 @@ public class TechnicalRequest {
     private String priority;
     private String status;
     private int reporterId;
-    private String assignedToNames;
+    private Integer assignedToId;
     private boolean isBillable;
     private double estimatedCost;
     private Timestamp createdAt;
     private Timestamp resolvedAt;
-  
+
     // Các trường ảo để hiển thị
     private String enterpriseName;
     private String contractCode;
@@ -31,10 +31,19 @@ public class TechnicalRequest {
     private List<Integer> assignedUserIds;
     // SỬA LẠI Ở ĐÂY: Đảm bảo sử dụng đúng danh sách TechnicalRequestDevice
     private List<TechnicalRequestDevice> devices;
+    private String enterpriseEmail;
 
     public TechnicalRequest() {
     }
 
+    public String getEnterpriseEmail() {
+        return enterpriseEmail;
+    }
+
+    public void setEnterpriseEmail(String enterpriseEmail) {
+        this.enterpriseEmail = enterpriseEmail;
+    }
+    
     // Getters and Setters cho tất cả các trường...
     public int getId() {
         return id;
@@ -116,12 +125,12 @@ public class TechnicalRequest {
         this.reporterId = reporterId;
     }
 
-    public String getAssignedToNames() {
-        return assignedToNames;
+    public Integer getAssignedToId() {
+        return assignedToId;
     }
 
-    public void setAssignedToNames(String assignedToNames) {
-        this.assignedToNames = assignedToNames;
+    public void setAssignedToId(Integer assignedToId) {
+        this.assignedToId = assignedToId;
     }
 
     public boolean isIsBillable() {
@@ -205,7 +214,6 @@ public class TechnicalRequest {
         this.devices = devices;
     }
 
-
     public List<Integer> getAssignedUserIds() {
         return assignedUserIds;
     }
@@ -213,5 +221,5 @@ public class TechnicalRequest {
     public void setAssignedUserIds(List<Integer> assignedUserIds) {
         this.assignedUserIds = assignedUserIds;
     }
-    
+
 }

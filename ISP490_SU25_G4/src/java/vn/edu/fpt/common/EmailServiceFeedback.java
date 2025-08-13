@@ -1,12 +1,20 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package vn.edu.fpt.common;
 
 import java.util.Properties;
 import javax.mail.*;
 import javax.mail.internet.*;
 
+/**
+ *
+ * @author ducanh
+ */
 public class EmailServiceFeedback {
-
     // Các thông tin cấu hình được giữ nguyên ở đây
+
     private static final String FROM_EMAIL = "anhndhe172050@fpt.edu.vn"; // Email của bạn
     private static final String PASSWORD = "gmkw ouil irgq hktz";      // Mật khẩu ứng dụng của Gmail
 

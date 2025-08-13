@@ -40,6 +40,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import vn.edu.fpt.dao.EnterpriseDAO;
 import vn.edu.fpt.model.District;
+import vn.edu.fpt.model.Status;
 import vn.edu.fpt.model.Ward;
 
 @WebServlet(name = "scheduleController", urlPatterns = {"/schedule"})
@@ -748,13 +749,14 @@ public class ScheduleController extends HttpServlet {
             List<TechnicalRequest> technicalRequests = technicalDAO.getAllTechnicalRequestsIdAndTitle();
             List<Province> provinces = addressDAO.getAllProvinces();
             List<Integer> assignedUserIds = scheduleDAO.getAssignedUserIdsByScheduleId(id);
-
+            List<Status> statusList = scheduleDAO.getAllStatuses();
 // 2. Chuyển đổi List thành Map để tra cứu nhanh hơn
             Map<Integer, Boolean> assignedUserMap = new HashMap<>();
             for (Integer userId : assignedUserIds) {
                 assignedUserMap.put(userId, true);
             }
 // 3. Gửi Map này sang JSP thay vì List
+            request.setAttribute("statusList", statusList);
             request.setAttribute("assignedUserMap", assignedUserMap);
             request.setAttribute("assignments", assignments);
             request.setAttribute("schedule", schedule);
@@ -784,18 +786,19 @@ public class ScheduleController extends HttpServlet {
         MaintenanceScheduleDAO scheduleDAO = new MaintenanceScheduleDAO();
         AddressDAO addressDAO = new AddressDAO();
         TechnicalRequestDAO technicalDAO = new TechnicalRequestDAO();
-
+        TechnicalRequest tr = new TechnicalRequest();
         try {
             // === 1. LẤY DỮ LIỆU TỪ FORM ===
             int id = Integer.parseInt(request.getParameter("id"));
             String technicalRequestIdStr = request.getParameter("technicalRequestId");
+            String campaignIdIdStr = request.getParameter("campaignId");
             String title = request.getParameter("title");
             String color = request.getParameter("color");
             String scheduledDateStr = request.getParameter("scheduledDate");
             String endDateStr = request.getParameter("endDate");
             String startTimeStr = request.getParameter("startTime");
             String endTimeStr = request.getParameter("endTime");
-            String status = request.getParameter("status");
+            String statusIdStr = request.getParameter("statusId");
             String notes = request.getParameter("notes");
 
             // Dữ liệu địa chỉ mới
@@ -846,23 +849,42 @@ public class ScheduleController extends HttpServlet {
             // Cập nhật các thuộc tính của đối tượng schedule
             // (Các phần lấy parameter và tạo đối tượng schedule ở trên...)
             if (technicalRequestIdStr != null && !technicalRequestIdStr.isEmpty()) {
-                schedule.setTechnicalRequestId(Integer.parseInt(technicalRequestIdStr));
+                schedule.setTechnicalRequestId(Integer.valueOf(technicalRequestIdStr));
             } else {
                 schedule.setTechnicalRequestId(null);
             }
-            schedule.setTitle(title);
+            if (campaignIdIdStr != null && !campaignIdIdStr.isEmpty()) {
+                schedule.setCampaignId(Integer.valueOf(campaignIdIdStr));
+            } else {
+                schedule.setCampaignId(null);
+            }
+            Integer statusId = null;
+            if (statusIdStr != null && !statusIdStr.isBlank()) {
+                statusId = Integer.valueOf(statusIdStr);
+            }
             schedule.setColor(color);
             schedule.setScheduledDate(scheduledDate);
             schedule.setEndDate(endDate);
             schedule.setStartTime(startTime);
             schedule.setEndTime(endTime);
             schedule.setAddressId(addressId);
-            schedule.setStatus(status);
-            schedule.setNotes(notes);
+            schedule.setStatusId(statusId);
 
 // === 4. LƯU THAY ĐỔI VÀO DATABASE ===
             boolean scheduleUpdated = scheduleDAO.updateMaintenanceSchedule(schedule);
+            // Lấy ID yêu cầu kỹ thuật GẮN VỚI schedule này (không phải từ form)
+            if (schedule.getTechnicalRequestId() != null) {
+                tr.setId(schedule.getTechnicalRequestId());  // ID của yêu cầu đã gắn
+                tr.setTitle(title);
+                tr.setDescription(notes);
 
+                boolean ok = technicalDAO.updateTechnicalRequestTitleAndDesc(tr);
+                if (!ok) {
+                    request.setAttribute("error", "Cập nhật yêu cầu kỹ thuật thất bại!");
+                    forwardToEditForm(request, response, technicalDAO);
+                    return;
+                }
+            }
 // --- PHẦN TÍCH HỢP ---
 // Chỉ tiếp tục cập nhật phân công nếu lịch trình đã được cập nhật thành công
             if (scheduleUpdated) {
@@ -872,7 +894,7 @@ public class ScheduleController extends HttpServlet {
                 if (assignedUserIdsStr != null) {
                     for (String userIdStr : assignedUserIdsStr) {
                         try {
-                            newUserIds.add(Integer.parseInt(userIdStr));
+                            newUserIds.add(Integer.valueOf(userIdStr));
                         } catch (NumberFormatException e) {
                             // Bỏ qua các giá trị không hợp lệ hoặc log lỗi nếu cần
                             System.err.println("Invalid user ID format: " + userIdStr);

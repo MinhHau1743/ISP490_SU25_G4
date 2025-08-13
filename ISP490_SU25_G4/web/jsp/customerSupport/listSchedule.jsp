@@ -315,6 +315,7 @@
                 overflow: hidden;
                 color: white;
                 cursor: pointer;
+                border: 2px solid white; 
             }
 
             /* All-day events */

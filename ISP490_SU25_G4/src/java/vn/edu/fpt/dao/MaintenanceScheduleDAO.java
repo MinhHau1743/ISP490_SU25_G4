@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import vn.edu.fpt.model.Address;
 import java.sql.Types;
+import vn.edu.fpt.model.Status;
+import vn.edu.fpt.model.TechnicalRequest;
 
 public class MaintenanceScheduleDAO extends DBContext {
 
@@ -119,6 +121,27 @@ public class MaintenanceScheduleDAO extends DBContext {
         }
     }
 
+    public List<Status> getAllStatuses() {
+        List<Status> list = new ArrayList<>();
+
+        // cột trong DB là status_name → đặt alias name cho dễ đọc
+        final String sql = "SELECT id, status_name AS name FROM Statuses ORDER BY id";
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                Status s = new Status(
+                        rs.getInt("id"),
+                        rs.getString("name")
+                );
+                list.add(s);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();       // hoặc log bằng logger
+        }
+        return list;
+    }
+
     public MaintenanceSchedule getMaintenanceScheduleById(int id) {
         MaintenanceSchedule schedule = null;
         String sql = """
@@ -142,7 +165,8 @@ public class MaintenanceScheduleDAO extends DBContext {
             p.name AS province_name,
             d.name AS district_name,
             w.name AS ward_name,
-            tr.title AS technical_request_title        -- NEW
+            tr.title AS technical_request_title,
+            tr.description AS technical_request_description
         FROM MaintenanceSchedules ms
         LEFT JOIN Addresses a        ON ms.address_id          = a.id
         LEFT JOIN Provinces p        ON a.province_id          = p.id
@@ -224,6 +248,7 @@ public class MaintenanceScheduleDAO extends DBContext {
 
                     // ------ TechnicalRequest title ------
                     schedule.setTitle(rs.getString("technical_request_title"));   // NEW
+                    schedule.setNotes(rs.getString("technical_request_description"));
                 }
             }
         } catch (SQLException ex) {
@@ -313,45 +338,58 @@ public class MaintenanceScheduleDAO extends DBContext {
     }
 
     public boolean updateMaintenanceSchedule(MaintenanceSchedule schedule) {
-        if (schedule == null || schedule.getId() <= 0) {
-            System.out.println("Error: A valid schedule object with an ID is required for an update.");
-            return false;
-        }
+        final String SQL = """
+        UPDATE MaintenanceSchedules
+        SET technical_request_id = ?,
+            campaign_id          = ?,
+            color                = ?,
+            scheduled_date       = ?,
+            end_date             = ?,
+            start_time           = ?,
+            end_time             = ?,
+            address_id           = ?,
+            status_id            = ?,
+            updated_at           = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """;
 
-        // **SỬA ĐỔI**: Thay thế "location = ?" bằng "address_id = ?".
-        String sql = "UPDATE MaintenanceSchedules SET "
-                + "technical_request_id = ?, title = ?, color = ?, "
-                + "scheduled_date = ?, end_date = ?, start_time = ?, end_time = ?, "
-                + "address_id = ?, status = ?, notes = ?, updated_at = CURRENT_TIMESTAMP "
-                + "WHERE id = ?";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(SQL)) {
 
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            // 1. Các FK có thể null ⇒ dùng setObject
+            ps.setObject(1, schedule.getTechnicalRequestId());          // technical_request_id
+            // cột campaign_id nằm ở tham số thứ 2
+            if (schedule.getCampaignId() == null) {
+                ps.setNull(2, java.sql.Types.INTEGER);
+            } else {
+                ps.setInt(2, schedule.getCampaignId());
+            }
+            // campaign_id
 
-            // Sử dụng setObject để xử lý null và các kiểu java.time một cách an toàn
-            ps.setObject(1, schedule.getTechnicalRequestId());
-            ps.setString(2, schedule.getTitle());
-            ps.setString(3, schedule.getColor());
-            ps.setObject(4, schedule.getScheduledDate());
-            ps.setObject(5, schedule.getEndDate());
-            ps.setObject(6, schedule.getStartTime());
-            ps.setObject(7, schedule.getEndTime());
+            // 2. Các cột kiểu chuỗi
+            ps.setString(3, schedule.getColor());                       // color
 
-            // **SỬA ĐỔI**: Sử dụng addressId thay vì location.
-            ps.setObject(8, schedule.getAddressId());
+            // 3. Ngày – giờ
+            ps.setObject(4, schedule.getScheduledDate());               // scheduled_date (NOT NULL)
+            ps.setObject(5, schedule.getEndDate());                     // end_date
+            ps.setObject(6, schedule.getStartTime());                   // start_time
+            ps.setObject(7, schedule.getEndTime());                     // end_time
 
-            ps.setString(9, schedule.getStatus());
-            ps.setString(10, schedule.getNotes());
-            ps.setInt(11, schedule.getId());
+            // 4. Address & Status
+            ps.setInt(8, schedule.getAddressId());                   // address_id (NOT NULL)
+            ps.setObject(9, schedule.getStatusId());                    // status_id  (FK ⇒ INT)
 
-            int rowsUpdated = ps.executeUpdate();
-            return rowsUpdated > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
+            // 5. WHERE id = ?
+            ps.setInt(10, schedule.getId());
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
             return false;
         }
     }
 
-        public int addMaintenanceScheduleAndReturnId(MaintenanceSchedule schedule) {
+    public int addMaintenanceScheduleAndReturnId(MaintenanceSchedule schedule) {
         String sql = "INSERT INTO MaintenanceSchedules "
                 + "(technical_request_id, campaign_id, color, scheduled_date, end_date, start_time, end_time, address_id, status_id, created_at, updated_at) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, NULL)";
@@ -548,30 +586,37 @@ public class MaintenanceScheduleDAO extends DBContext {
 
     public static void main(String[] args) {
         MaintenanceScheduleDAO dao = new MaintenanceScheduleDAO();
-        List<MaintenanceSchedule> assignedUserIds = dao.getAllMaintenanceSchedules();
-        System.out.println(assignedUserIds);
-        System.out.println("Danh sách lịch bảo trì:");
-        MaintenanceSchedule ms = new MaintenanceSchedule();
-        ms.setTechnicalRequestId(1); // ID technical_request đã tồn tại
-        ms.setCampaignId(1);         // ID campaign đã tồn tại (hoặc null nếu không có)
-        ms.setColor("red");          // Nhập màu bất kỳ
-        ms.setScheduledDate(LocalDate.now()); // Ngày bắt đầu
-        String str = "2025-08-14";
-        LocalDate parsed = LocalDate.parse(str); // hoặc dùng DateTimeFormatter nếu format khác
-        ms.setScheduledDate(parsed);
-
-        ms.setStartTime(null);  // Giờ bắt đầu (có thể null)
-        ms.setEndTime(null);    // Giờ kết thúc (có thể null)
-        ms.setAddressId(1);        // ID address tồn tại
-        ms.setStatusId(2);         // ID trạng thái (tồn tại trong Statuses)
-
-        // Gọi hàm test insert
-        int msId = dao.addMaintenanceScheduleAndReturnId(ms);
-
-        if (msId > 0) {
-            System.out.println("✅ Insert MaintenanceSchedule thành công. ID = " + msId);
+        MaintenanceSchedule schedule = dao.getMaintenanceScheduleById(37);
+        
+        if (schedule != null) {
+            System.out.println("✅ Tìm thấy MaintenanceSchedule:");
+            System.out.println("ID: " + schedule.getId());
+            System.out.println("Technical Request ID: " + schedule.getTechnicalRequestId());
+            System.out.println("Campaign ID: " + schedule.getCampaignId());
+            System.out.println("Color: " + schedule.getColor());
+            System.out.println("Scheduled Date: " + schedule.getScheduledDate());
+            System.out.println("End Date: " + schedule.getEndDate());
+            System.out.println("Start Time: " + schedule.getStartTime());
+            System.out.println("End Time: " + schedule.getEndTime());
+            System.out.println("Address ID: " + schedule.getAddressId());
+            System.out.println("Status ID: " + schedule.getStatusId());
+            System.out.println("Created At: " + schedule.getCreatedAt());
+            System.out.println("Updated At: " + schedule.getUpdatedAt());
+            System.out.println("Notes: " + schedule.getNotes());
+            
+            // Address fields
+            System.out.println("\n--- Address Information ---");
+            System.out.println("Street Address: " + schedule.getStreetAddress());
+            System.out.println("Province: " + schedule.getProvinceName() + " (ID: " + schedule.getProvinceId() + ")");
+            System.out.println("District: " + schedule.getDistrictName() + " (ID: " + schedule.getDistrictId() + ")");
+            System.out.println("Ward: " + schedule.getWardName() + " (ID: " + schedule.getWardId() + ")");
+            
+            // TechnicalRequest fields
+            System.out.println("\n--- Technical Request Information ---");
+            System.out.println("Title: " + schedule.getTitle());
+            System.out.println("Notes (Description): " + schedule.getNotes());
         } else {
-            System.out.println("❌ Insert MaintenanceSchedule thất bại.");
+            System.out.println("❌ Không tìm thấy MaintenanceSchedule với ID = 1");
         }
     }
 }

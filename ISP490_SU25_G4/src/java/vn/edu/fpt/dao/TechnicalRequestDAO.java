@@ -20,59 +20,46 @@ import java.util.List;
 import vn.edu.fpt.model.ContractProduct;
 import vn.edu.fpt.model.MaintenanceSchedule;
 import java.time.LocalDate;
-
 import java.time.LocalTime;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class TechnicalRequestDAO {
 
-    public List<TechnicalRequest> getFilteredTechnicalRequests(
-            String query, String status, int serviceId, int limit, int offset) throws SQLException {
-
+    public List<TechnicalRequest> getFilteredTechnicalRequests(String query, String status, int serviceId, int limit, int offset) throws SQLException {
         List<TechnicalRequest> requests = new ArrayList<>();
         List<Object> params = new ArrayList<>();
-
         StringBuilder sql = new StringBuilder(
-                "SELECT tr.*, "
-                + "       e.name AS enterpriseName, "
-                + "       c.contract_code AS contractCode, "
-                + "       s.name AS serviceName, "
-                + "       GROUP_CONCAT(DISTINCT CONCAT(u.last_name, ' ', u.middle_name, ' ', u.first_name) SEPARATOR ', ') AS assignedToNames "
+                "SELECT tr.*, e.name as enterpriseName, c.contract_code as contractCode, s.name as serviceName, "
+                + "CONCAT(assignee.last_name, ' ', assignee.middle_name, ' ', assignee.first_name) as assignedToName "
                 + "FROM TechnicalRequests tr "
                 + "JOIN Enterprises e ON tr.enterprise_id = e.id "
                 + "JOIN Services s ON tr.service_id = s.id "
                 + "LEFT JOIN Contracts c ON tr.contract_id = c.id "
-                // Bỏ JOIN Statuses
-                + "LEFT JOIN MaintenanceSchedules ms ON ms.technical_request_id = tr.id "
-                + "LEFT JOIN MaintenanceAssignments ma ON ma.maintenance_schedule_id = ms.id "
-                + "LEFT JOIN Users u ON ma.user_id = u.id "
-                + "WHERE tr.is_deleted = 0 "
+                + "LEFT JOIN Users assignee ON tr.assigned_to_id = assignee.id "
+                + "WHERE tr.is_deleted = 0"
         );
 
         if (query != null && !query.trim().isEmpty()) {
             sql.append(" AND (tr.request_code LIKE ? OR e.name LIKE ?)");
-            String q = "%" + query.trim() + "%";
-            params.add(q);
-            params.add(q);
+            params.add("%" + query.trim() + "%");
+            params.add("%" + query.trim() + "%");
         }
-
-        // Lọc theo status trực tiếp từ TechnicalRequests
-        if (status != null && !status.trim().isEmpty() && !"all".equalsIgnoreCase(status.trim())) {
+        if (status != null && !status.isEmpty() && !status.equals("all")) {
             sql.append(" AND tr.status = ?");
-            params.add(status.trim());
+            params.add(status);
         }
-
         if (serviceId > 0) {
             sql.append(" AND tr.service_id = ?");
             params.add(serviceId);
         }
 
-        sql.append(" GROUP BY tr.id ");
         sql.append(" ORDER BY tr.created_at DESC LIMIT ? OFFSET ?");
         params.add(limit);
         params.add(offset);
 
+        // ... phần try-catch thực thi query giữ nguyên ...
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
@@ -82,18 +69,14 @@ public class TechnicalRequestDAO {
                     TechnicalRequest req = new TechnicalRequest();
                     req.setId(rs.getInt("id"));
                     req.setRequestCode(rs.getString("request_code"));
-                    req.setTitle(rs.getString("title"));
-                    req.setDescription(rs.getString("description"));
-                    req.setPriority(rs.getString("priority"));
-                    req.setStatus(rs.getString("status")); // Lấy trực tiếp từ TR
+                    req.setStatus(rs.getString("status"));
                     req.setIsBillable(rs.getBoolean("is_billable"));
-                    req.setEstimatedCost(rs.getDouble("estimated_cost"));
                     req.setCreatedAt(rs.getTimestamp("created_at"));
-                    req.setResolvedAt(rs.getTimestamp("resolved_at"));
                     req.setEnterpriseName(rs.getString("enterpriseName"));
                     req.setContractCode(rs.getString("contractCode"));
                     req.setServiceName(rs.getString("serviceName"));
-                    req.setAssignedToNames(rs.getString("assignedToNames"));
+                    req.setAssignedToName(rs.getString("assignedToName"));
+                    req.setEstimatedCost(rs.getDouble("estimated_cost"));
                     requests.add(req);
                 }
             }
@@ -103,30 +86,25 @@ public class TechnicalRequestDAO {
 
     public TechnicalRequest getTechnicalRequestById(int id) throws SQLException {
         TechnicalRequest req = null;
-        String sql = """
-        SELECT tr.*, 
-               e.name AS enterpriseName,
-               c.contract_code AS contractCode,
-               s.name AS serviceName,
-               GROUP_CONCAT(DISTINCT CONCAT(u.last_name, ' ', u.middle_name, ' ', u.first_name) SEPARATOR ', ') AS assignedToNames,
-               CONCAT(reporter.last_name, ' ', reporter.middle_name, ' ', reporter.first_name) AS reporterName
-        FROM TechnicalRequests tr
-        JOIN Enterprises e ON tr.enterprise_id = e.id
-        JOIN Services s ON tr.service_id = s.id
-        JOIN Users reporter ON tr.reporter_id = reporter.id
-        LEFT JOIN Contracts c ON tr.contract_id = c.id
-        LEFT JOIN MaintenanceSchedules ms ON ms.technical_request_id = tr.id
-        LEFT JOIN MaintenanceAssignments ma ON ma.maintenance_schedule_id = ms.id
-        LEFT JOIN Users u ON ma.user_id = u.id
-        WHERE tr.id = ?
-        GROUP BY tr.id
-    """;
+
+        String sql = "SELECT tr.*, e.name as enterpriseName, e.business_email as enterpriseEmail, c.contract_code as contractCode, s.name as serviceName, "
+                + "CONCAT(assignee.last_name, ' ', assignee.middle_name, ' ', assignee.first_name) as assignedToName, "
+                + "CONCAT(reporter.last_name, ' ', reporter.middle_name, ' ', reporter.first_name) as reporterName "
+                + "FROM TechnicalRequests tr "
+                + "JOIN Enterprises e ON tr.enterprise_id = e.id "
+                + "JOIN Services s ON tr.service_id = s.id "
+                + "JOIN Users reporter ON tr.reporter_id = reporter.id "
+                + "LEFT JOIN Contracts c ON tr.contract_id = c.id "
+                + "LEFT JOIN Users assignee ON tr.assigned_to_id = assignee.id "
+                + "WHERE tr.id = ?";
+
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     req = new TechnicalRequest();
                     req.setId(rs.getInt("id"));
+
                     req.setEnterpriseId(rs.getInt("enterprise_id"));
                     req.setRequestCode(rs.getString("request_code"));
                     req.setTitle(rs.getString("title"));
@@ -137,22 +115,12 @@ public class TechnicalRequestDAO {
                     req.setEstimatedCost(rs.getDouble("estimated_cost"));
                     req.setCreatedAt(rs.getTimestamp("created_at"));
                     req.setResolvedAt(rs.getTimestamp("resolved_at"));
-
-                    // Đọc contract_id (Integer, có thể null)
-                    int cid = rs.getInt("contract_id");
-                    req.setContractId(rs.wasNull() ? null : cid);
-
-                    // ĐỌC service_id (int)
-                    req.setServiceId(rs.getInt("service_id"));
-
-                    // Các trường hiển thị
                     req.setEnterpriseName(rs.getString("enterpriseName"));
+                    req.setEnterpriseEmail(rs.getString("enterpriseEmail"));
                     req.setContractCode(rs.getString("contractCode"));
                     req.setServiceName(rs.getString("serviceName"));
-                    req.setAssignedToNames(rs.getString("assignedToNames"));
+                    req.setAssignedToName(rs.getString("assignedToName"));
                     req.setReporterName(rs.getString("reporterName"));
-
-                    // Danh sách thiết bị liên kết
                     req.setDevices(getDevicesForRequest(id));
                 }
             }
@@ -244,110 +212,116 @@ public class TechnicalRequestDAO {
     }
 
     public Integer createTechnicalRequest(TechnicalRequest request, List<TechnicalRequestDevice> devices) {
-        Connection conn = null;
+    Connection conn = null;
 
-        // Đổi status_id -> `status`
-        String sqlRequest = """
-        INSERT INTO TechnicalRequests (
-          request_code, enterprise_id, contract_id, service_id,
-          title, description, priority, `status`, reporter_id,
-          is_billable, estimated_cost, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    // Đã sửa: Thêm ? thứ 13 cho created_at
+    String sqlRequest = """
+    INSERT INTO TechnicalRequests (
+      request_code, enterprise_id, contract_id, service_id,
+      title, description, priority, `status`, reporter_id, assigned_to_id, 
+      is_billable, estimated_cost, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """;
 
-        String sqlDevice = """
-        INSERT INTO TechnicalRequestDevices (
-          technical_request_id, device_name, serial_number, problem_description
-        ) VALUES (?, ?, ?, ?)
+    String sqlDevice = """
+    INSERT INTO TechnicalRequestDevices (
+      technical_request_id, device_name, serial_number, problem_description
+    ) VALUES (?, ?, ?, ?)
     """;
 
-        try {
-            conn = DBContext.getConnection();
-            conn.setAutoCommit(false);
-            int newRequestId;
+    try {
+        conn = DBContext.getConnection();
+        conn.setAutoCommit(false);
+        int newRequestId;
 
-            // ---- Insert TechnicalRequest ----
-            try (PreparedStatement psRequest = conn.prepareStatement(sqlRequest, Statement.RETURN_GENERATED_KEYS)) {
-                psRequest.setString(1, "REQ-" + System.currentTimeMillis());
-                psRequest.setInt(2, request.getEnterpriseId());
+        // ---- Insert TechnicalRequest ----
+        try (PreparedStatement psRequest = conn.prepareStatement(sqlRequest, Statement.RETURN_GENERATED_KEYS)) {
+            psRequest.setString(1, "REQ-" + System.currentTimeMillis());
+            psRequest.setInt(2, request.getEnterpriseId());
 
-                if (request.getContractId() != null) {
-                    psRequest.setInt(3, request.getContractId());
+            if (request.getContractId() != null) {
+                psRequest.setInt(3, request.getContractId());
+            } else {
+                psRequest.setNull(3, Types.INTEGER);
+            }
+
+            psRequest.setInt(4, request.getServiceId());
+            psRequest.setString(5, request.getTitle());
+            psRequest.setString(6, request.getDescription());
+            psRequest.setString(7, request.getPriority());
+
+            // status dạng String
+            String status = (request.getStatus() != null && !request.getStatus().isBlank())
+                    ? request.getStatus().trim()
+                    : "Mới tạo";
+            psRequest.setString(8, status);
+
+            psRequest.setInt(9, request.getReporterId());
+            if (request.getAssignedToId() != null) {
+                psRequest.setInt(10, request.getAssignedToId());
+            } else {
+                psRequest.setNull(10, Types.INTEGER);
+            }
+            psRequest.setBoolean(11, request.isIsBillable());
+            psRequest.setDouble(12, request.getEstimatedCost());
+            psRequest.setTimestamp(13, new java.sql.Timestamp(System.currentTimeMillis()));
+
+            if (psRequest.executeUpdate() == 0) {
+                throw new SQLException("Tạo yêu cầu thất bại.");
+            }
+
+            try (ResultSet generatedKeys = psRequest.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    newRequestId = generatedKeys.getInt(1);
                 } else {
-                    psRequest.setNull(3, Types.INTEGER);
-                }
-
-                psRequest.setInt(4, request.getServiceId());
-                psRequest.setString(5, request.getTitle());
-                psRequest.setString(6, request.getDescription());
-                psRequest.setString(7, request.getPriority());
-
-                // status dạng String
-                String status = (request.getStatus() != null && !request.getStatus().isBlank())
-                        ? request.getStatus().trim()
-                        : "Mới tạo";
-                psRequest.setString(8, status);
-
-                psRequest.setInt(9, request.getReporterId());
-                psRequest.setBoolean(10, request.isIsBillable());
-                psRequest.setDouble(11, request.getEstimatedCost());
-                psRequest.setTimestamp(12, new java.sql.Timestamp(System.currentTimeMillis()));
-
-                if (psRequest.executeUpdate() == 0) {
-                    throw new SQLException("Tạo yêu cầu thất bại.");
-                }
-
-                try (ResultSet generatedKeys = psRequest.getGeneratedKeys()) {
-                    if (generatedKeys.next()) {
-                        newRequestId = generatedKeys.getInt(1);
-                    } else {
-                        throw new SQLException("Không lấy được ID yêu cầu.");
-                    }
-                }
-            }
-
-            // ---- Insert danh sách thiết bị ----
-            if (devices != null && !devices.isEmpty()) {
-                try (PreparedStatement psDevice = conn.prepareStatement(sqlDevice)) {
-                    for (TechnicalRequestDevice device : devices) {
-                        psDevice.setInt(1, newRequestId);
-                        psDevice.setString(2, device.getDeviceName());
-                        psDevice.setString(3, device.getSerialNumber());
-                        psDevice.setString(4, device.getProblemDescription());
-                        psDevice.addBatch();
-                    }
-                    psDevice.executeBatch();
-                }
-            }
-
-            conn.commit();
-            return newRequestId; // Trả về ID vừa tạo
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
-            return null;
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(true);
-                    conn.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
+                    throw new SQLException("Không lấy được ID yêu cầu.");
                 }
             }
         }
+
+        // ---- Insert danh sách thiết bị ----
+        if (devices != null && !devices.isEmpty()) {
+            try (PreparedStatement psDevice = conn.prepareStatement(sqlDevice)) {
+                for (TechnicalRequestDevice device : devices) {
+                    psDevice.setInt(1, newRequestId);
+                    psDevice.setString(2, device.getDeviceName());
+                    psDevice.setString(3, device.getSerialNumber());
+                    psDevice.setString(4, device.getProblemDescription());
+                    psDevice.addBatch();
+                }
+                psDevice.executeBatch();
+            }
+        }
+
+        conn.commit();
+        return newRequestId; // Trả về ID vừa tạo
+
+    } catch (SQLException e) {
+        e.printStackTrace();
+        if (conn != null) {
+            try {
+                conn.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
+        return null;
+    } finally {
+        if (conn != null) {
+            try {
+                conn.setAutoCommit(true);
+                conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
     }
+}
+
 
     public List<Contract> getAllActiveContracts() throws SQLException {
         List<Contract> contracts = new ArrayList<>();
-        String sql = "SELECT id, contract_code FROM contracts ORDER BY created_at DESC";
+        String sql = "SELECT id, contract_code FROM contracts WHERE status = 'active' ORDER BY created_at DESC";
 
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
@@ -385,27 +359,30 @@ public class TechnicalRequestDAO {
         Connection conn = null;
         // Đổi status_id -> `status` (string)
         String sqlUpdateTicket = """
-        UPDATE TechnicalRequests
-        SET 
-          enterprise_id=?, 
-          contract_id=?, 
-          service_id=?, 
-          title=?, 
-          description=?, 
-          priority=?, 
-          `status`=?, 
-          is_billable=?, 
-          estimated_cost=?
-        WHERE id=?
-    """;
-        String sqlDeleteDevices = "DELETE FROM TechnicalRequestDevices WHERE technical_request_id = ?";
-        String sqlInsertDevice = """
-        INSERT INTO TechnicalRequestDevices (
-            technical_request_id, device_name, serial_number, problem_description
-        ) VALUES (?, ?, ?, ?)
-    """;
+    UPDATE TechnicalRequests
+    SET 
+      enterprise_id = ?, 
+      contract_id   = ?, 
+      service_id    = ?, 
+      title         = ?, 
+      description   = ?, 
+      priority      = ?, 
+      `status`      = ?, 
+      is_billable   = ?, 
+      estimated_cost= ?,
+      assigned_to_id= ?          -- thêm cột này
+    WHERE id = ?
+""";
 
-        // Các câu lệnh cho phần assigned nhân viên
+        String sqlDeleteDevices = "DELETE FROM TechnicalRequestDevices WHERE technical_request_id = ?";
+
+        String sqlInsertDevice = """
+    INSERT INTO TechnicalRequestDevices (
+        technical_request_id, device_name, serial_number, problem_description
+    ) VALUES (?, ?, ?, ?)
+""";
+
+// Đồng bộ assigned theo schedule
         String sqlGetSchedule = "SELECT id FROM MaintenanceSchedules WHERE technical_request_id = ?";
         String sqlDeleteAssignments = "DELETE FROM MaintenanceAssignments WHERE maintenance_schedule_id = ?";
         String sqlInsertAssignment = "INSERT INTO MaintenanceAssignments (maintenance_schedule_id, user_id) VALUES (?, ?)";
@@ -414,7 +391,7 @@ public class TechnicalRequestDAO {
             conn = DBContext.getConnection();
             conn.setAutoCommit(false);
 
-            // 1️⃣ Update bản ghi TechnicalRequest
+            // 1) Update TechnicalRequests (có assigned_to_id)
             try (PreparedStatement psUpdate = conn.prepareStatement(sqlUpdateTicket)) {
                 psUpdate.setInt(1, request.getEnterpriseId());
 
@@ -429,26 +406,31 @@ public class TechnicalRequestDAO {
                 psUpdate.setString(5, request.getDescription());
                 psUpdate.setString(6, request.getPriority());
 
-                // status dạng String
                 String status = (request.getStatus() != null && !request.getStatus().isBlank())
                         ? request.getStatus().trim()
                         : "Mới tạo";
                 psUpdate.setString(7, status);
-
                 psUpdate.setBoolean(8, request.isIsBillable());
+                // estimated_cost có thể null? Nếu có, dùng setObject với Types.DECIMAL
                 psUpdate.setDouble(9, request.getEstimatedCost());
+                // assigned_to_id (có thể null)
+                if (request.getAssignedToId() == null) {
+                    psUpdate.setNull(10, Types.INTEGER);
+                } else {
+                    psUpdate.setInt(10, request.getAssignedToId());
+                }
 
-                psUpdate.setInt(10, request.getId());
+                psUpdate.setInt(11, request.getId()); // WHERE id = ?
                 psUpdate.executeUpdate();
             }
 
-            // 2️⃣ Xoá tất cả thiết bị cũ
+            // 2) Xóa devices cũ
             try (PreparedStatement psDelete = conn.prepareStatement(sqlDeleteDevices)) {
                 psDelete.setInt(1, request.getId());
                 psDelete.executeUpdate();
             }
 
-            // 3️⃣ Thêm danh sách thiết bị mới
+            // 3) Thêm devices mới
             if (devices != null && !devices.isEmpty()) {
                 try (PreparedStatement psInsert = conn.prepareStatement(sqlInsertDevice)) {
                     for (TechnicalRequestDevice device : devices) {
@@ -462,29 +444,35 @@ public class TechnicalRequestDAO {
                 }
             }
 
-            // 4️⃣ Cập nhật Assigned nhân viên (nếu có)
+            // 4) Đồng bộ assigned nhân viên vào MaintenanceAssignments (nếu có schedule)
             List<Integer> assignedUserIds = request.getAssignedUserIds();
             if (assignedUserIds != null) {
                 int scheduleId = -1;
-                // Lấy schedule id
+
+                // 4.1 Lấy schedule ID theo technical_request_id
                 try (PreparedStatement psGetSchedule = conn.prepareStatement(sqlGetSchedule)) {
                     psGetSchedule.setInt(1, request.getId());
-                    try (ResultSet rsSchedule = psGetSchedule.executeQuery()) {
-                        if (rsSchedule.next()) {
-                            scheduleId = rsSchedule.getInt("id");
+                    try (ResultSet rs = psGetSchedule.executeQuery()) {
+                        if (rs.next()) {
+                            scheduleId = rs.getInt("id");
                         }
                     }
                 }
+
                 if (scheduleId > 0) {
-                    // Xoá assigned cũ
+                    // 4.2 Xóa assignments cũ
                     try (PreparedStatement psDelAssign = conn.prepareStatement(sqlDeleteAssignments)) {
                         psDelAssign.setInt(1, scheduleId);
                         psDelAssign.executeUpdate();
                     }
-                    // Thêm assigned mới
+
+                    // 4.3 Thêm assignments mới
                     if (!assignedUserIds.isEmpty()) {
                         try (PreparedStatement psInsAssign = conn.prepareStatement(sqlInsertAssignment)) {
                             for (Integer userId : assignedUserIds) {
+                                if (userId == null) {
+                                    continue;
+                                }
                                 psInsAssign.setInt(1, scheduleId);
                                 psInsAssign.setInt(2, userId);
                                 psInsAssign.addBatch();
@@ -497,6 +485,7 @@ public class TechnicalRequestDAO {
 
             conn.commit();
             return true;
+
         } catch (SQLException e) {
             e.printStackTrace();
             if (conn != null) {
@@ -516,6 +505,40 @@ public class TechnicalRequestDAO {
                     e.printStackTrace();
                 }
             }
+        }
+
+    }
+
+    public List<String> getDistinctStatuses() throws SQLException {
+        List<String> statuses = new ArrayList<>();
+        String sql = "SELECT DISTINCT status FROM TechnicalRequests WHERE is_deleted = 0 ORDER BY status";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                statuses.add(rs.getString("status"));
+            }
+        }
+        return statuses;
+    }
+
+    public boolean updateTechnicalRequestTitleAndDesc(TechnicalRequest request) {
+        final String SQL = """
+        UPDATE TechnicalRequests
+        SET title       = ?,
+            description = ?
+        WHERE id = ?
+        """;
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(SQL)) {
+
+            ps.setString(1, request.getTitle());
+            ps.setString(2, request.getDescription());
+            ps.setInt(3, request.getId());
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
         }
     }
 
@@ -725,8 +748,31 @@ public class TechnicalRequestDAO {
     }
 
     public static void main(String[] args) throws SQLException {
+
         TechnicalRequestDAO dao = new TechnicalRequestDAO();
 
+        // 2. Tạo đối tượng TechnicalRequest với dữ liệu mới để cập nhật
+        TechnicalRequest testRequest = new TechnicalRequest();
+
+        // ❗ QUAN TRỌNG: Thay đổi số 1 thành một ID thực sự tồn tại trong bảng TechnicalRequests của bạn
+        testRequest.setId(1);
+
+        // Tạo title và description mới để dễ dàng nhận ra sự thay đổi
+        String currentTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss dd-MM-yyyy"));
+        testRequest.setTitle("Tiêu đề được cập nhật @ " + currentTime);
+        testRequest.setDescription("Mô tả mới được cập nhật từ phương thức main.");
+
+        // 3. Gọi hàm cần kiểm tra
+        System.out.println("Đang thực hiện cập nhật cho request có ID = " + testRequest.getId());
+        boolean isSuccess = dao.updateTechnicalRequestTitleAndDesc(testRequest);
+
+        // 4. In kết quả ra màn hình
+        if (isSuccess) {
+            System.out.println("✅ Cập nhật thành công!");
+            System.out.println("Vui lòng kiểm tra lại cơ sở dữ liệu để xác nhận thay đổi.");
+        } else {
+            System.out.println("❌ Cập nhật thất bại. Có thể ID không tồn tại hoặc có lỗi kết nối DB.");
+        }
         // Case 5 (nếu DB của bạn có cột tr.status dạng chuỗi):
         // runCase(dao, "Lọc theo status='pending'", null, "pending", 0, 10, 0);
         // Nếu schema dùng status_id + bảng Statuses, hãy sửa DAO để join theo status_name rồi mới test.

@@ -54,17 +54,23 @@
                                     <label for="title">Tiêu đề (*)</label>
                                     <input type="text" id="title" name="title" class="form-control" value="${schedule.title}" required>
                                 </div>
-
                                 <div class="form-group">
-                                    <label for="technicalRequestId">Yêu cầu kỹ thuật</label>
-                                    <select id="technicalRequestId" name="technicalRequestId" class="form-control">
-                                        <option value="">-- Chọn yêu cầu kỹ thuật --</option>
-                                        <c:forEach var="techRequest" items="${technicalRequests}">
-                                            <option value="${techRequest.id}" ${techRequest.id == schedule.technicalRequestId ? 'selected' : ''}>${techRequest.title}</option>
+                                    <label for="statusId">Trạng thái</label>
+                                    <select id="statusId" name="statusId" class="form-control" required>
+                                        <option value="" disabled
+                                                ${empty schedule.statusId ? 'selected="selected"' : ''}>
+                                            -- Chọn trạng thái --
+                                        </option>
+
+                                        <!-- Lặp qua List<Status> đã setAttribute -->
+                                        <c:forEach var="st" items="${statusList}">
+                                            <option value="${st.id}"
+                                                    ${st.id == schedule.statusId ? 'selected="selected"' : ''}>
+                                                ${st.statusName}
+                                            </option>
                                         </c:forEach>
                                     </select>
                                 </div>
-
                                 <div class="form-group">
                                     <label for="scheduledDate">Ngày bắt đầu (*)</label>
                                     <input type="date" id="scheduledDate" name="scheduledDate" class="form-control" value="${schedule.scheduledDate}" required>
@@ -126,14 +132,8 @@
                                         <div id="userDropdown" class="user-dropdown"></div>
                                     </div>
                                 </div>
-                                <div class="form-group">
-                                    <label for="status">Trạng thái</label>
-                                    <select id="status" name="status" class="form-control">
-                                        <option value="upcoming" ${schedule.status == 'upcoming' ? 'selected' : ''}>Sắp tới</option>
-                                        <option value="inprogress" ${schedule.status == 'inprogress' ? 'selected' : ''}>Đang thực hiện</option>
-                                        <option value="completed" ${schedule.status == 'completed' ? 'selected' : ''}>Hoàn thành</option>
-                                    </select>
-                                </div>
+
+
                                 <div class="form-group">
                                     <label>Màu sắc</label>
                                     <div class="color-palette">
@@ -195,7 +195,6 @@
             });
             </c:forEach>
         </script>
-
 
         <script src="${pageContext.request.contextPath}/js/addressHandler.js"></script>
         <script src="${pageContext.request.contextPath}/js/editSchedule.js"></script> <%-- Can reuse create script --%>
