@@ -1,6 +1,6 @@
 <%--
-    Document   : viewCustomerDetail
-    Author     : anhndhe172050
+    Document    : viewCustomerDetail
+    Author      : anhndhe172050
     Description: Displays detailed information about a single customer, including their recent contracts.
 --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
@@ -33,7 +33,7 @@
                         <div class="page-content">
                             <div class="detail-header">
                                 <a href="${BASE_URL}/customer/list" class="back-link"><i data-feather="arrow-left"></i><span>Quay lại danh sách</span></a>
-                                        <%-- /jsp/sales/viewCustomerDetail.jsp --%>
+                                    <%-- /jsp/sales/viewCustomerDetail.jsp --%>
 
                                 <div class="header-actions">
                                     <%-- Nút Sửa: Chỉ Admin và Kinh doanh có quyền --%>
@@ -127,16 +127,18 @@
                                                         <tbody>
                                                             <c:forEach var="contract" items="${recentContracts}">
                                                                 <tr>
-                                                                    <td><a href="${BASE_URL}/viewContract?id=${contract.id}" class="contract-code"><c:out value="${contract.contractCode}"/></a></td>
+                                                                    <td><a href="${BASE_URL}/contract?action=view&id=${contract.id}" class="contract-code"><c:out value="${contract.contractCode}"/></a></td>
                                                                     <td><c:out value="${contract.contractName}"/></td>
                                                                     <td><fmt:formatDate value="${contract.signedDate}" pattern="dd/MM/yyyy"/></td>
                                                                     <td><fmt:formatNumber value="${contract.totalValue}" type="currency" currencyCode="VND"/></td>
                                                                     <td>
+                                                                        <%-- ===== KHẮC PHỤC LỖI Ở ĐÂY ===== --%>
+                                                                        <%-- Đổi tất cả contract.status thành contract.statusName --%>
                                                                         <c:choose>
-                                                                            <c:when test="${contract.status == 'active'}"><span class="status-pill status-active">Còn hiệu lực</span></c:when>
-                                                                            <c:when test="${contract.status == 'expiring'}"><span class="status-pill status-expiring">Sắp hết hạn</span></c:when>
-                                                                            <c:when test="${contract.status == 'expired'}"><span class="status-pill status-expired">Đã hết hạn</span></c:when>
-                                                                            <c:otherwise><span class="status-pill"><c:out value="${contract.status}"/></span></c:otherwise>
+                                                                            <c:when test="${contract.statusName == 'Còn hiệu lực'}"><span class="status-pill status-active">Còn hiệu lực</span></c:when>
+                                                                            <c:when test="${contract.statusName == 'Sắp hết hạn'}"><span class="status-pill status-expiring">Sắp hết hạn</span></c:when>
+                                                                            <c:when test="${contract.statusName == 'Đã hết hạn'}"><span class="status-pill status-expired">Đã hết hạn</span></c:when>
+                                                                            <c:otherwise><span class="status-pill"><c:out value="${contract.statusName}"/></span></c:otherwise>
                                                                         </c:choose>
                                                                     </td>
                                                                 </tr>
@@ -171,7 +173,7 @@
                                                 <span class="value"><fmt:formatDate value="${customer.createdAt}" pattern="dd/MM/yyyy"/></span>
                                             </div>
                                         </div>
-                                    </div>                                    
+                                    </div>                                        
 
                                     <div class="detail-card">
                                         <h3 class="card-title">Giao dịch gần đây</h3>

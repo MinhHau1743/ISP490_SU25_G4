@@ -309,7 +309,7 @@ public class ContractController extends HttpServlet {
                 item.setQuantity(quantity);
                 item.setName(originalProduct.getName());
                 item.setProductCode(originalProduct.getProductCode());
-                item.setUnitPrice(new BigDecimal(originalProduct.getPrice()));
+                item.setUnitPrice(originalProduct.getPrice());
                 item.setDescription(originalProduct.getDescription());
                 contractItems.add(item);
             }
