@@ -26,11 +26,56 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/viewTransaction.css?v=<%= System.currentTimeMillis()%>">
 
         <script src="https://unpkg.com/feather-icons"></script>
+        <style>
+            /* CSS cho các hộp thông báo */
+            .alert {
+                padding: 1rem;
+                margin-bottom: 1.5rem;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                font-weight: 500;
+            }
+            .alert-success {
+                background-color: #dcfce7; /* green-100 */
+                color: #166534; /* green-800 */
+                border: 1px solid #86efac; /* green-300 */
+            }
+            .alert-danger {
+                background-color: #fee2e2; /* red-100 */
+                color: #991b1b; /* red-800 */
+                border: 1px solid #fca5a5; /* red-300 */
+            }
+            .alert .feather {
+                width: 20px;
+                height: 20px;
+            }
+        </style>
     </head>
     <body>
         <div class="app-container">
             <jsp:include page="/mainMenu.jsp"/>
             <main class="main-content">
+
+                <div class="page-content" style="padding-top: 0; padding-bottom: 0;">
+                    <c:if test="${param.update == 'success'}">
+                        <div class="alert alert-success">
+                            <i data-feather="check-circle"></i>
+                            <span>Cập nhật thông tin giao dịch thành công!</span>
+                            <%-- Kiểm tra thêm nếu email đã được gửi --%>
+                            <c:if test="${param.surveySent == 'true'}">
+                                <strong>Email khảo sát đã được tự động gửi đến khách hàng.</strong>
+                            </c:if>
+                        </div>
+                    </c:if>
+                    <c:if test="${param.update == 'failed'}">
+                        <div class="alert alert-danger">
+                            <i data-feather="alert-triangle"></i>
+                            <span>Đã có lỗi xảy ra. Cập nhật thất bại!</span>
+                        </div>
+                    </c:if>
+                </div>
                 <div class="page-content">
 
                     <div class="detail-header">

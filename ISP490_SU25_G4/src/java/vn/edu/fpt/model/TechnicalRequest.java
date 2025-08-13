@@ -14,26 +14,34 @@ public class TechnicalRequest {
     private String title;
     private String description;
     private String priority;
-    private Integer statusId;  
     private String status;
     private int reporterId;
-    private String assignedToNames;
+    private Integer assignedToId;
     private boolean isBillable;
     private double estimatedCost;
     private Timestamp createdAt;
     private Timestamp resolvedAt;
-  
+
     // Các trường ảo để hiển thị
     private String enterpriseName;
     private String contractCode;
     private String serviceName;
     private String assignedToName;
     private String reporterName;
-    private List<Integer> assignedUserIds;
+    private String enterpriseEmail;
+
     // SỬA LẠI Ở ĐÂY: Đảm bảo sử dụng đúng danh sách TechnicalRequestDevice
     private List<TechnicalRequestDevice> devices;
 
     public TechnicalRequest() {
+    }
+
+    public String getEnterpriseEmail() {
+        return enterpriseEmail;
+    }
+
+    public void setEnterpriseEmail(String enterpriseEmail) {
+        this.enterpriseEmail = enterpriseEmail;
     }
 
     // Getters and Setters cho tất cả các trường...
@@ -117,12 +125,12 @@ public class TechnicalRequest {
         this.reporterId = reporterId;
     }
 
-    public String getAssignedToNames() {
-        return assignedToNames;
+    public Integer getAssignedToId() {
+        return assignedToId;
     }
 
-    public void setAssignedToNames(String assignedToNames) {
-        this.assignedToNames = assignedToNames;
+    public void setAssignedToId(Integer assignedToId) {
+        this.assignedToId = assignedToId;
     }
 
     public boolean isIsBillable() {
@@ -205,21 +213,4 @@ public class TechnicalRequest {
     public void setDevices(List<TechnicalRequestDevice> devices) {
         this.devices = devices;
     }
-
-    public Integer getStatusId() {
-        return statusId;
-    }
-
-    public void setStatusId(Integer statusId) {
-        this.statusId = statusId;
-    }
-
-    public List<Integer> getAssignedUserIds() {
-        return assignedUserIds;
-    }
-
-    public void setAssignedUserIds(List<Integer> assignedUserIds) {
-        this.assignedUserIds = assignedUserIds;
-    }
-    
 }

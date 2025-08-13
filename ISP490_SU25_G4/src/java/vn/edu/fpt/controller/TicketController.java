@@ -11,32 +11,24 @@ import vn.edu.fpt.model.Contract;
 import vn.edu.fpt.model.TechnicalRequest;
 import vn.edu.fpt.model.TechnicalRequestDevice;
 import vn.edu.fpt.model.Product;
-import vn.edu.fpt.dao.AddressDAO;
+
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.sql.SQLException;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import vn.edu.fpt.dao.EnterpriseDAO;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import vn.edu.fpt.common.EmailServiceFeedback;
 import vn.edu.fpt.dao.FeedbackDAO;
-import vn.edu.fpt.dao.MaintenanceScheduleDAO;
-import vn.edu.fpt.model.District;
-import vn.edu.fpt.model.MaintenanceSchedule;
-import vn.edu.fpt.model.Province;
+import vn.edu.fpt.model.ContractProduct;
 import vn.edu.fpt.model.Service;
-import vn.edu.fpt.model.Ward;
 
 @WebServlet(name = "TicketController", urlPatterns = {"/ticket"})
 public class TicketController extends HttpServlet {
 
     private TechnicalRequestDAO dao;
     private final Gson gson = new Gson();
+    private final ExecutorService emailExecutor = Executors.newSingleThreadExecutor();
 
     @Override
     public void init() {
@@ -66,17 +58,12 @@ public class TicketController extends HttpServlet {
                 case "edit":
                     showEditForm(request, response);
                     break;
+
                 case "getProducts":
                     getProducts(request, response);
                     break;
-                case "delete":
+                case "delete": // <-- THÊM CASE NÀY
                     deleteTicket(request, response);
-                    break;
-                case "getDistricts":
-                    getDistricts(request, response);
-                    break;
-                case "getWards":
-                    getWards(request, response);
                     break;
 
                 case "list":
@@ -87,8 +74,6 @@ public class TicketController extends HttpServlet {
         } catch (SQLException e) {
             e.printStackTrace(); // In lỗi ra log server để debug
             throw new ServletException("Database access error.", e);
-        } catch (Exception ex) {
-            Logger.getLogger(TicketController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -104,7 +89,7 @@ public class TicketController extends HttpServlet {
         }
     }
 
-    private void listTickets(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException, Exception {
+    private void listTickets(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
         // 1. Lấy tất cả tham số lọc và phân trang
         String query = request.getParameter("query");
         String status = request.getParameter("status");
@@ -147,6 +132,8 @@ public class TicketController extends HttpServlet {
         // 5. Lấy danh sách cho các dropdown bộ lọc
         List<Service> serviceList = dao.getAllServices();
         List<String> statusList = dao.getDistinctStatuses();
+
+        // 6. Gửi tất cả dữ liệu sang JSP
         request.setAttribute("transactions", transactionList);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("currentPage", page);
@@ -158,16 +145,12 @@ public class TicketController extends HttpServlet {
         request.getRequestDispatcher("/jsp/customerSupport/listTransaction.jsp").forward(request, response);
     }
 
-    private void showCreateForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException, Exception {
-        AddressDAO addressDAO = new AddressDAO();
-        List<Province> provinces = addressDAO.getAllProvinces();
-
-        // 6. Gửi tất cả dữ liệu sang JSP
+    private void showCreateForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
         request.setAttribute("customerList", dao.getAllEnterprises());
         request.setAttribute("employeeList", dao.getAllTechnicians());
         request.setAttribute("serviceList", dao.getAllServices());
         request.setAttribute("contractList", dao.getAllActiveContracts()); // <--- THÊM DÒNG NÀY
-        request.setAttribute("provinces", provinces);
+
         request.setAttribute("activeMenu", "createTicket");
         request.getRequestDispatcher("/jsp/customerSupport/createTicket.jsp").forward(request, response);
     }
@@ -232,76 +215,140 @@ public class TicketController extends HttpServlet {
 
 // 2. Thêm phương thức mới để xử lý việc cập nhật (POST)
     private void updateTicket(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        try {
-            int ticketId = Integer.parseInt(request.getParameter("id"));
+        // Luôn đặt phần xử lý request trong try-catch để bắt lỗi và chuyển hướng
+        String ticketIdStr = request.getParameter("id");
+        if (ticketIdStr == null || ticketIdStr.isEmpty()) {
+            response.sendRedirect(request.getContextPath() + "/ticket?action=list&error=missingId");
+            return;
+        }
 
-            // 1. Lấy tất cả thông tin từ form
+        try {
+            int ticketId = Integer.parseInt(ticketIdStr);
+
+            // --- BƯỚC 1: LẤY THÔNG TIN TICKET CŨ TRƯỚC KHI CẬP NHẬT ---
+            // Quan trọng để so sánh trạng thái và lấy email khách hàng
+            TechnicalRequest oldTicket = dao.getTechnicalRequestById(ticketId);
+            if (oldTicket == null) {
+                response.sendRedirect(request.getContextPath() + "/ticket?action=list&error=notFound");
+                return;
+            }
+            String oldStatus = oldTicket.getStatus();
+
+            // --- BƯỚC 2: THU THẬP DỮ LIỆU MỚI TỪ FORM ---
             TechnicalRequest updatedRequest = new TechnicalRequest();
             updatedRequest.setId(ticketId);
+
+            // Lấy các thông tin cơ bản
             updatedRequest.setEnterpriseId(Integer.parseInt(request.getParameter("enterpriseId")));
             updatedRequest.setServiceId(Integer.parseInt(request.getParameter("serviceId")));
-            int employeeId = Integer.parseInt(request.getParameter("employeeId"));
-            updatedRequest.setAssignedUserIds(Collections.singletonList(employeeId));
+            updatedRequest.setAssignedToId(Integer.parseInt(request.getParameter("employeeId")));
+            updatedRequest.setPriority(request.getParameter("priority"));
+            String newStatus = request.getParameter("status");
+            updatedRequest.setStatus(newStatus);
 
+            // Lấy mô tả và tự tạo tiêu đề
             String description = request.getParameter("description");
             updatedRequest.setDescription(description);
-            // Tự động tạo title từ description
             updatedRequest.setTitle(description.length() > 100 ? description.substring(0, 100) + "..." : description);
 
-            updatedRequest.setPriority(request.getParameter("priority"));
-            updatedRequest.setStatus(request.getParameter("status"));
-
-            boolean isBillable = Boolean.parseBoolean(request.getParameter("isBillable"));
+            // Xử lý thông tin thanh toán
+            boolean isBillable = "true".equalsIgnoreCase(request.getParameter("isBillable"));
             updatedRequest.setIsBillable(isBillable);
             if (isBillable) {
-                String amountStr = request.getParameter("amount");
+                String amountStr = request.getParameter("amount").replace(",", ""); // Xóa dấu phẩy nếu có
                 updatedRequest.setEstimatedCost(amountStr == null || amountStr.isEmpty() ? 0 : Double.parseDouble(amountStr));
             } else {
                 updatedRequest.setEstimatedCost(0);
             }
 
-            // 2. Xử lý danh sách thiết bị một cách ổn định
+            // Thu thập danh sách thiết bị
             List<TechnicalRequestDevice> devices = new ArrayList<>();
-            // Vòng lặp này sẽ chạy từ 1 đến N (ví dụ 100) để tìm tất cả các thiết bị có thể có
-            // Cách này đảm bảo lấy được hết thiết bị kể cả khi người dùng xóa dòng ở giữa
+            // Vòng lặp an toàn để lấy hết các thiết bị, kể cả khi có dòng bị xóa ở giữa
             for (int i = 1; i < 100; i++) {
                 String deviceName = request.getParameter("deviceName_" + i);
-                // Nếu không tìm thấy deviceName, nghĩa là đã hết thiết bị, dừng vòng lặp
                 if (deviceName == null) {
-                    break;
+                    break; // Dừng lại khi không còn thiết bị
                 }
-                // Chỉ xử lý nếu deviceName không rỗng
                 if (!deviceName.trim().isEmpty()) {
-                    String serial = request.getParameter("deviceSerial_" + i);
-                    String note = request.getParameter("deviceNote_" + i);
-
                     TechnicalRequestDevice device = new TechnicalRequestDevice();
                     device.setDeviceName(deviceName);
-                    device.setSerialNumber(serial);
-                    device.setProblemDescription(note);
+                    device.setSerialNumber(request.getParameter("deviceSerial_" + i));
+                    device.setProblemDescription(request.getParameter("deviceNote_" + i));
                     devices.add(device);
                 }
             }
 
-            // 3. Gọi hàm update trong DAO
+            // --- BƯỚC 3: CẬP NHẬT VÀO DATABASE ---
             boolean success = dao.updateTechnicalRequest(updatedRequest, devices);
 
-            // 4. Chuyển hướng về trang xem chi tiết
-            response.sendRedirect(request.getContextPath() + "/ticket?action=view&id=" + ticketId + "&update=" + (success ? "success" : "failed"));
+            // --- BƯỚC 4: KIỂM TRA ĐIỀU KIỆN VÀ GỬI EMAIL KHẢO SÁT ---
+            String surveySentParam = ""; // Chuẩn bị tham số cho URL chuyển hướng
+            if (success) {
+                // Điều kiện: Trạng thái MỚI là 'resolved' hoặc 'closed'
+                // VÀ trạng thái CŨ KHÔNG PHẢI là 'resolved' hoặc 'closed'
+                boolean shouldSendEmail = (newStatus.equals("resolved") || newStatus.equals("closed"))
+                        && !(oldStatus.equals("resolved") || oldStatus.equals("closed"));
+
+                if (shouldSendEmail) {
+                    surveySentParam = "&surveySent=true"; // Gán giá trị nếu email được gửi
+
+                    // Lấy thông tin cần thiết từ đối tượng `oldTicket` đã lấy ở trên
+                    String recipientEmail = oldTicket.getEnterpriseEmail();
+                    String enterpriseName = oldTicket.getEnterpriseName();
+                    String requestCode = oldTicket.getRequestCode();
+
+                    if (recipientEmail != null && !recipientEmail.trim().isEmpty()) {
+                        // Gửi email trong luồng riêng để không làm chậm trải nghiệm người dùng
+                        emailExecutor.submit(() -> {
+                            try {
+                                // Tạo link khảo sát động
+                                String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
+                                String surveyLink = baseUrl + "/feedback?action=create&technicalRequestId=" + ticketId;
+
+                                // Soạn tiêu đề và nội dung email
+                                String subject = "Mời bạn đánh giá chất lượng dịch vụ cho yêu cầu #" + requestCode;
+                                String body = "<html>"
+                                        + "<body style='font-family: Arial, sans-serif; line-height: 1.6;'>"
+                                        + "<h3>Kính gửi Quý khách hàng " + enterpriseName + ",</h3>"
+                                        + "<p>Yêu cầu hỗ trợ kỹ thuật với mã số <strong>" + requestCode + "</strong> của Quý khách đã được xử lý xong.</p>"
+                                        + "<p>Chúng tôi rất mong nhận được những ý kiến đóng góp quý báu của Quý khách để cải thiện chất lượng dịch vụ. Vui lòng dành chút thời gian để thực hiện khảo sát bằng cách nhấn vào nút bên dưới:</p>"
+                                        + "<div style='text-align: center; margin: 25px 0;'>"
+                                        + "<a href=\"" + surveyLink + "\" style='background-color:#2563eb;color:white;padding:12px 25px;text-align:center;text-decoration:none;display:inline-block;border-radius:8px;font-size:16px;'><strong>Thực hiện khảo sát</strong></a>"
+                                        + "</div>"
+                                        + "<p>Nếu nút bấm không hoạt động, vui lòng sao chép và dán đường dẫn sau vào trình duyệt của bạn:<br><a href='" + surveyLink + "'>" + surveyLink + "</a></p>"
+                                        + "<p>Trân trọng cảm ơn,<br><strong>Đội ngũ DPCRM</strong>.</p>"
+                                        + "</body>"
+                                        + "</html>";
+
+                                EmailServiceFeedback.sendMail(recipientEmail, subject, body);
+                            } catch (Exception e) {
+                                System.err.println("Lỗi nghiêm trọng xảy ra trong luồng gửi email:");
+                                e.printStackTrace();
+                            }
+                        });
+                    } else {
+                        System.out.println("CẢNH BÁO: Không thể gửi email khảo sát cho yêu cầu #" + requestCode + " vì doanh nghiệp '" + enterpriseName + "' không có địa chỉ email.");
+                    }
+                }
+            }
+
+            // --- BƯỚC 5: CHUYỂN HƯỚNG NGƯỜI DÙNG ---
+            // Nối tất cả các tham số vào URL chuyển hướng để hiển thị thông báo chính xác
+            response.sendRedirect(request.getContextPath() + "/ticket?action=view&id=" + ticketId
+                    + "&update=" + (success ? "success" : "failed")
+                    + surveySentParam);
 
         } catch (Exception e) {
+            // Bắt mọi lỗi có thể xảy ra (NumberFormatException, SQLException, etc.)
             e.printStackTrace();
-            String ticketId = request.getParameter("id");
-            response.sendRedirect(request.getContextPath() + "/ticket?action=edit&id=" + ticketId + "&error=unknown");
+            // Chuyển hướng về trang sửa với thông báo lỗi
+            response.sendRedirect(request.getContextPath() + "/ticket?action=edit&id=" + ticketIdStr + "&error=unknown");
         }
     }
 
     private void createTicket(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
-            MaintenanceScheduleDAO scheduleDAO = new MaintenanceScheduleDAO();
-            MaintenanceSchedule schedule = new MaintenanceSchedule();
             TechnicalRequest newRequest = new TechnicalRequest();
-            AddressDAO addressDAO = new AddressDAO();
             newRequest.setReporterId(1); // Giả sử ID người báo cáo là 1
 
             // --- Sửa lỗi NumberFormatException ---
@@ -318,90 +365,14 @@ public class TicketController extends HttpServlet {
 
             String employeeIdStr = request.getParameter("employeeId");
             if (employeeIdStr != null && !employeeIdStr.isEmpty()) {
-                int employeeId = Integer.parseInt(employeeIdStr);
-                newRequest.setAssignedUserIds(Collections.singletonList(employeeId));
+                newRequest.setAssignedToId(Integer.parseInt(employeeIdStr));
             }
 
             String contractIdStr = request.getParameter("contractId");
             if (contractIdStr != null && !contractIdStr.isEmpty()) {
                 newRequest.setContractId(Integer.parseInt(contractIdStr));
             }
-            String provinceIdStr = request.getParameter("province");
-            String districtIdStr = request.getParameter("district");
-            String wardIdStr = request.getParameter("ward");
-            String streetAddress = request.getParameter("streetAddress");
 
-            if (provinceIdStr == null || provinceIdStr.isBlank()
-                    || districtIdStr == null || districtIdStr.isBlank()
-                    || wardIdStr == null || wardIdStr.isBlank()) {
-                throw new IllegalArgumentException("Vui lòng chọn đầy đủ Tỉnh/Thành, Quận/Huyện, và Phường/Xã.");
-            }
-                // --- Xử lý địa chỉ (tách ra khỏi block end_time) ---
-            try {
-                // --- Xử lý ngày giờ ---
-                String scheduledDateStr = request.getParameter("scheduled_date");
-                if (scheduledDateStr != null && !scheduledDateStr.isEmpty()) {
-                    LocalDate scheduledDate = LocalDate.parse(scheduledDateStr);
-                    schedule.setScheduledDate(scheduledDate);
-                }
-
-                String endDateStr = request.getParameter("end_date");
-                if (endDateStr != null && !endDateStr.isEmpty()) {
-                    LocalDate endDate = LocalDate.parse(endDateStr);
-                    schedule.setEndDate(endDate);
-                }
-
-                String startTimeStr = request.getParameter("start_time");
-                if (startTimeStr != null && !startTimeStr.isEmpty()) {
-                    LocalTime startTime = LocalTime.parse(startTimeStr);
-                    schedule.setStartTime(startTime);
-                }
-
-                String endTimeStr = request.getParameter("end_time");
-                if (endTimeStr != null && !endTimeStr.isEmpty()) {
-                    LocalTime endTime = LocalTime.parse(endTimeStr);
-                    schedule.setEndTime(endTime);
-                }
-
-
-                if (provinceIdStr != null && !provinceIdStr.isEmpty()
-                        && districtIdStr != null && !districtIdStr.isEmpty()
-                        && wardIdStr != null && !wardIdStr.isEmpty()) {
-
-                    int provinceId = Integer.parseInt(provinceIdStr);
-                    int districtId = Integer.parseInt(districtIdStr);
-                    int wardId = Integer.parseInt(wardIdStr);
-
-                    // Tạo hoặc tìm địa chỉ trong database
-                    int addressId = addressDAO.findOrCreateAddress(streetAddress, wardId, districtId, provinceId);
-
-                    // Khởi tạo schedule nếu cần thiết
-                    if (schedule == null) {
-                        schedule = new MaintenanceSchedule(); // Hoặc class tương ứng
-                    }
-
-                    // Gán addressId vào object schedule
-                    schedule.setAddressId(addressId);
-
-                    // Hoặc nếu bạn muốn gán vào newRequest:
-                    // newRequest.setAddressId(addressId);
-                    System.out.println("Address ID đã được gán: " + addressId);
-                } else {
-                    System.out.println("Thông tin địa chỉ không đầy đủ");
-                }
-
-            } catch (DateTimeParseException e) {
-                System.err.println("Lỗi parse ngày/giờ: " + e.getMessage());
-                // Xử lý lỗi ngày giờ
-            } catch (NumberFormatException e) {
-                System.err.println("Lỗi parse số: " + e.getMessage());
-                // Xử lý lỗi parse số
-            } catch (Exception e) {
-                System.err.println("Lỗi khi xử lý dữ liệu: " + e.getMessage());
-                e.printStackTrace();
-            }
-
-            int scheduleId = scheduleDAO.addMaintenanceScheduleAndReturnId(schedule);
             // --- Giữ nguyên logic lấy mô tả ---
             String description = request.getParameter("description");
             newRequest.setDescription(description);
@@ -496,44 +467,6 @@ public class TicketController extends HttpServlet {
             e.printStackTrace();
             // Nếu có lỗi, cũng chuyển hướng về trang danh sách với thông báo lỗi
             response.sendRedirect(request.getContextPath() + "/ticket?action=list&error=deleteFailed");
-        }
-    }
-
-    private void getDistricts(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        String provinceIdStr = request.getParameter("provinceId");
-        List<District> districts = Collections.emptyList();
-        if (provinceIdStr != null && !provinceIdStr.trim().isEmpty()) {
-            try {
-                districts = new EnterpriseDAO().getDistrictsByProvinceId(Integer.parseInt(provinceIdStr));
-            } catch (Exception e) {
-                e.printStackTrace();
-                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            }
-        }
-        try (PrintWriter out = response.getWriter()) {
-            out.print(new Gson().toJson(districts));
-            out.flush();
-        }
-    }
-
-    private void getWards(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        String districtIdStr = request.getParameter("districtId");
-        List<Ward> wards = Collections.emptyList();
-        if (districtIdStr != null && !districtIdStr.trim().isEmpty()) {
-            try {
-                wards = new EnterpriseDAO().getWardsByDistrictId(Integer.parseInt(districtIdStr));
-            } catch (Exception e) {
-                e.printStackTrace();
-                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            }
-        }
-        try (PrintWriter out = response.getWriter()) {
-            out.print(new Gson().toJson(wards));
-            out.flush();
         }
     }
 }

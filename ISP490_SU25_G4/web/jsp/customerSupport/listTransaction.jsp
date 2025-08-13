@@ -13,6 +13,7 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
@@ -30,6 +31,12 @@
                 </jsp:include>
 
                 <div class="page-content">
+                    <c:if test="${param.feedback == 'success'}">
+                        <div class="alert alert-success">
+                            <i data-feather="star"></i>
+                            <span>Phản hồi của khách hàng đã được ghi nhận thành công.</span>
+                        </div>
+                    </c:if>
                     <div class="content-card">
                         <form class="table-toolbar" action="${pageContext.request.contextPath}/ticket" method="get">
                             <input type="hidden" name="action" value="list">
@@ -40,15 +47,11 @@
                                 </div>
                                 <button type="submit" class="btn btn-primary"><i data-feather="search"></i> Tìm kiếm</button>
                             </div>
-                            <a href="${pageContext.request.contextPath}/ticket?action=create" class="btn btn-success">
-                                <i data-feather="plus"></i> Thêm mới
-                            </a>
                             <div class="toolbar-actions">
                                 <a href="${pageContext.request.contextPath}/ticket?action=list" class="btn btn-secondary">
                                     <i data-feather="refresh-cw"></i> Reset
                                 </a>
                             </div>
-
                         </form>
 
                         <div class="transaction-grid">
