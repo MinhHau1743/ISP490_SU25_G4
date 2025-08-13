@@ -11,13 +11,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/createTicket.css">
-        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
         <script src="https://unpkg.com/feather-icons"></script>
-
     </head>
     <body>
         <div class="app-container">
@@ -35,14 +29,7 @@
                             <div class="detail-card">
                                 <h2 class="card-title">Thông tin Phiếu Giao Việc</h2>
                                 <div class="form-grid">
-                                    <div class="form-group full-width">
-                                        <label>Tiêu đề</label>
-                                        <input type="text" name="title" class="form-control" value="">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Mã Phiếu</label>
-                                        <input type="text" class="form-control" value="(Tự động tạo)" readonly>
-                                    </div>
+                                    <div class="form-group"><label>Mã Phiếu</label><input type="text" class="form-control" value="(Tự động tạo)" readonly></div>
                                     <div class="form-group">
                                         <label for="enterpriseId">Khách hàng (*)</label>
                                         <select id="enterpriseId" name="enterpriseId" class="form-control" required>
@@ -54,8 +41,9 @@
                                     </div>
                                     <div class="form-group">
                                         <label for="contractId">Hợp đồng</label>
+                                        <%-- Bỏ 'disabled' và dùng JSTL để lặp --%>
                                         <select id="contractId" name="contractId" class="form-control">
-                                            <option value="">-- Chọn hợp đồng --</option>
+                                            <option value="">-- Chọn hợp đồng  --</option>
                                             <c:forEach var="contract" items="${contractList}">
                                                 <option value="${contract.id}">${contract.contractCode}</option>
                                             </c:forEach>
@@ -65,67 +53,26 @@
                                         <label for="serviceId">Loại phiếu (*)</label>
                                         <select id="serviceId" name="serviceId" class="form-control" required>
                                             <option value="" disabled selected>-- Chọn loại phiếu --</option>
-                                            <c:forEach var="service" items="${serviceList}">
-                                                <option value="${service.id}">${service.name}</option>
-                                            </c:forEach>
-                                        </select>
-                                    </div>
-
-                                    <!-- Địa chỉ Section -->
-                                    <div class="form-group full-width">
-                                        <div class="address-section">
-                                            <h3>Địa chỉ thực hiện công việc</h3>
-                                            <div class="address-grid">
-                                                <div class="form-group">
-                                                    <label for="province">Tỉnh/Thành phố (*)</label>
-                                                    <%-- ĐÂY LÀ DẠNG ĐÚNG --%>
-                                                    <select id="province" name="province" class="form-control" required>
-                                                        <option value="" disabled selected>-- Chọn Tỉnh/Thành --</option>
-                                                        <c:forEach var="p" items="${provinces}">
-                                                            <option value="${p.id}">${p.name}</option>
-                                                        </c:forEach>
-                                                    </select>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label for="district">Quận/Huyện (*)</label>
-                                                    <select id="district" name="district" class="form-control" required disabled>
-                                                        <option value="" disabled selected>-- Chọn Quận/Huyện --</option>
-                                                    </select>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label for="ward">Phường/Xã (*)</label>
-                                                    <select id="ward" name="ward" class="form-control" required disabled>
-                                                        <option value="" disabled selected>-- Chọn Phường/Xã --</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="streetAddress">Địa chỉ cụ thể (*)</label>
-                                                <input type="text" id="streetAddress" name="streetAddress" class="form-control" placeholder="Nhập số nhà, tên đường, ngõ/hẻm..." required>
-                                            </div>
+                                            <c:forEach var="service" items="${serviceList}"><option value="${service.id}">${service.name}</option></c:forEach>
+                                            </select>
                                         </div>
-                                    </div>
-
-                                    <div class="form-group full-width">
-                                        <label for="description">Mô tả chung (*)</label>
-                                        <textarea id="description" name="description" class="form-control" rows="4" placeholder="Mô tả rõ ràng vấn đề khách hàng đang gặp phải..." required></textarea>
+                                        <div class="form-group full-width"><label for="description">Mô tả chung (*)</label><textarea id="description" name="description" class="form-control" rows="4" placeholder="Mô tả rõ ràng vấn đề khách hàng đang gặp phải..." required></textarea></div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="detail-card">
-                                <h2 class="card-title">Các thiết bị liên quan</h2>
+                                <div class="detail-card">
+                                    <h2 class="card-title">Các thiết bị liên quan</h2>
 
-                                <table class="device-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Tên thiết bị</th>
-                                            <th>Serial Number</th>
-                                            <th>Mô tả sự cố của thiết bị</th>
-                                            <th class="action-col"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="device-tbody">
+                                    <table class="device-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Tên thiết bị</th>
+                                                <th>Serial Number</th>
+                                                <th>Mô tả sự cố của thiết bị</th>
+                                                <th class="action-col"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="device-tbody">
                                         <%-- JavaScript sẽ chèn các dòng <tr> vào đây --%>
                                     </tbody>
                                 </table>
@@ -140,121 +87,21 @@
                         <div class="sidebar-column">
                             <div class="detail-card sidebar-form">
                                 <h2 class="card-title">Chi tiết Giao việc</h2>
-
-                                <div class="sidebar-form-row">
-                                    <label for="priority">Mức độ ưu tiên</label>
-                                    <div class="input-with-icon">
-                                        <select id="priority" name="priority" class="form-control">
-                                            <option value="medium">Thông thường</option>
-                                            <option value="high">Cao</option>
-                                            <option value="urgent">Khẩn cấp</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="sidebar-form-row">
-                                    <label for="status">Trạng thái</label>
-                                    <div class="input-with-icon">
-                                        <select id="status" name="status" class="form-control" required>
-                                            <option value="new">Mới tạo</option>
-                                            <option value="in_progress">Đang thực hiện</option>
-                                            <option value="resolved">Đã giải quyết</option>
-                                            <option value="closed">Đã đóng</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="sidebar-form-row">
-                                    <label for="employeeId">Gán cho</label>
-                                    <div class="input-with-icon">
-                                        <select id="employeeId" name="employeeId" class="form-control" required>
-                                            <option value="" disabled selected>-- Chọn kỹ thuật viên --</option>
-                                            <c:forEach var="employee" items="${employeeList}">
-                                                <option value="${employee.id}">${employee.lastName} ${employee.middleName} ${employee.firstName}</option>
-                                            </c:forEach>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="sidebar-form-row">
-                                    <label for="employeeId">Nhân viên phụ trách</label>
-                                    <div class="input-with-icon">
-                                        <select id="employeeId2" name="employeesId" class="form-control" multiple required>
-                                            <%-- Không cần option mặc định trong giao diện chọn nhiều --%>
-                                            <c:forEach var="employee" items="${employeeList}">
-                                                <option value="${employee.id}">${employee.lastName} ${employee.middleName} ${employee.firstName}</option>
-                                            </c:forEach>
-                                        </select>
-                                    </div>
-                                </div>
-
-
-                                <div class="sidebar-form-row">
-                                    <label>Ngày tạo</label>
-                                    <div class="input-with-icon">
-                                        <input type="date" id="createdDate" name="createdDate" class="form-control" readonly>
-                                    </div>
-                                </div>
-
-                                <div class="sidebar-form-row row-2col">
-                                    <label>Khoảng ngày</label>
-                                    <div class="control">
-                                        <input type="date" id="scheduled_date" name="scheduled_date" value="${scheduled_date}" class="form-control" required>
-                                        <div class="field-hint">Bắt đầu</div>
-                                    </div>
-                                    <div class="control">
-                                        <input type="date" id="end_date" name="end_date" value="${end_date}" class="form-control">
-                                        <div class="field-hint">Kết thúc</div>
-                                    </div>
-                                </div>
-
-                                <div class="sidebar-form-row row-2col">
-                                    <label>Khung giờ</label>
-                                    <div class="control">
-                                        <input type="time" id="start_time" name="start_time" value="${start_time}" class="form-control">
-                                        <div class="field-hint">Từ</div>
-                                    </div>
-                                    <div class="control">
-                                        <input type="time" id="end_time" name="end_time" value="${end_time}" class="form-control">
-                                        <div class="field-hint">Đến</div>
-                                    </div>
-                                </div>
-
-                                <div class="sidebar-form-row">
-                                    <label>Chi phí dự kiến</label>
-                                    <div class="radio-group">
-                                        <label><input type="radio" name="isBillable" value="true"> Có</label>
-                                        <label><input type="radio" name="isBillable" value="false" checked> Không</label>
-                                    </div>
-                                </div>
-
-                                <div id="amount-group" class="sidebar-form-row" style="display:none;">
-                                    <label for="amount">Số tiền (VND)</label>
-                                    <input type="number" id="amount" name="amount" class="form-control" min="0" value="0">
+                                <div class="sidebar-form-row"><label for="priority">Mức độ ưu tiên</label><select id="priority" name="priority" class="form-control"><option>Thông thường</option><option>Cao</option><option>Khẩn cấp</option></select></div>
+                                <div class="sidebar-form-row"><label for="employeeId">Gán cho nhân viên</label><select id="employeeId" name="employeeId" class="form-control" required><option value="" disabled selected>-- Chọn kỹ thuật viên --</option><c:forEach var="employee" items="${employeeList}"><option value="${employee.id}">${employee.lastName} ${employee.middleName} ${employee.firstName}</option></c:forEach></select></div>
+                                    <div class="sidebar-form-row"><label>Ngày tạo</label><input type="date" id="createdDate" name="createdDate" class="form-control" readonly></div>
+                                    <div class="sidebar-form-row"><label>Chi phí </label><div class="radio-group"><label><input type="radio" name="isBillable" value="true"> Có</label><label><input type="radio" name="isBillable" value="false" checked> Không</label></div></div>
+                                    <div id="amount-group" class="sidebar-form-row" style="display: none;"><label for="amount">Số tiền (VND)</label><input type="number" id="amount" name="amount" class="form-control" value="0"></div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </form>
-            </main>
-        </div>
-        <%-- Đặt khối script này ở cuối file /jsp/customerSupport/createTicket.jsp, trước thẻ </body> --%>
-        <!-- Ở cuối file JSP, trước các script khác -->
-        <script>
-            window.contextPath = '<%= request.getContextPath()%>';
-        </script>
-        <script>
-            $(document).ready(function () {
-                // Gọi Select2 cho thẻ select có id là 'employeeId'
-                $('#employeeId2').select2({
-                    placeholder: "Chọn nhân viên phụ trách",
-                    allowClear: true
-                });
-            });
-        </script>
-        <!-- nạp file js nghiệp vụ sau khi đã có APP_CONFIG -->
-        <script src="${pageContext.request.contextPath}/js/createTicket.js" defer></script>
-        <!-- file khác như mainMenu.js để sau cũng được -->
-        <script src="${pageContext.request.contextPath}/js/mainMenu.js" defer></script>
+                    </form>
+                </main>
+            </div>
+
+            <script>const contextPath = '${pageContext.request.contextPath}';</script>    
+        <script src="${pageContext.request.contextPath}/js/createTicket.js?v=<%= System.currentTimeMillis()%>"></script>
+        <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
 
     </body>
 </html>
