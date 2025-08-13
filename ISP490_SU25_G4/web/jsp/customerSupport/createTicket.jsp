@@ -11,6 +11,11 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/createTicket.css">
+        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
         <script src="https://unpkg.com/feather-icons"></script>
 
     </head>
@@ -170,6 +175,18 @@
                                         </select>
                                     </div>
                                 </div>
+                                <div class="sidebar-form-row">
+                                    <label for="employeeId">Nhân viên phụ trách</label>
+                                    <div class="input-with-icon">
+                                        <select id="employeeId2" name="employeesId" class="form-control" multiple required>
+                                            <%-- Không cần option mặc định trong giao diện chọn nhiều --%>
+                                            <c:forEach var="employee" items="${employeeList}">
+                                                <option value="${employee.id}">${employee.lastName} ${employee.middleName} ${employee.firstName}</option>
+                                            </c:forEach>
+                                        </select>
+                                    </div>
+                                </div>
+
 
                                 <div class="sidebar-form-row">
                                     <label>Ngày tạo</label>
@@ -223,7 +240,16 @@
         <%-- Đặt khối script này ở cuối file /jsp/customerSupport/createTicket.jsp, trước thẻ </body> --%>
         <!-- Ở cuối file JSP, trước các script khác -->
         <script>
-         window.contextPath = '<%= request.getContextPath()%>';
+            window.contextPath = '<%= request.getContextPath()%>';
+        </script>
+        <script>
+            $(document).ready(function () {
+                // Gọi Select2 cho thẻ select có id là 'employeeId'
+                $('#employeeId2').select2({
+                    placeholder: "Chọn nhân viên phụ trách",
+                    allowClear: true
+                });
+            });
         </script>
         <!-- nạp file js nghiệp vụ sau khi đã có APP_CONFIG -->
         <script src="${pageContext.request.contextPath}/js/createTicket.js" defer></script>

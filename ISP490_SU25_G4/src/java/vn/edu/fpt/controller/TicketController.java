@@ -336,6 +336,7 @@ public class TicketController extends HttpServlet {
             if (employeeIdStr != null && !employeeIdStr.isEmpty()) {
                 int employeeId = Integer.parseInt(employeeIdStr);
                 newRequest.setAssignedUserIds(Collections.singletonList(employeeId));
+                schedule.setAssignedUserId(employeeId);
             }
 
             String contractIdStr = request.getParameter("contractId");
@@ -459,6 +460,8 @@ public class TicketController extends HttpServlet {
                 }
                 i++;
             }
+            // Lấy một MẢNG các ID của nhân viên được chọn
+            String[] selectedEmployeeIds = request.getParameterValues("employeeId");
             Integer newRequestId = dao.createTechnicalRequest(newRequest, devices);
 
             if (newRequestId != null) {
@@ -466,7 +469,32 @@ public class TicketController extends HttpServlet {
                 schedule.setTechnicalRequestId(newRequestId);
                 schedule.setColor("#FFA726");
                 schedule.setStatusId(2);
+                Integer firstUserId = null;
+
+                if (selectedEmployeeIds != null && selectedEmployeeIds.length > 0) {
+                    String raw = selectedEmployeeIds[0];
+                    if (raw != null && !raw.isBlank()) {
+                        try {
+                            firstUserId = Integer.valueOf(raw.trim());   // có thể ném NumberFormatException
+                        } catch (NumberFormatException ex) {
+                            System.err.println("ID nhân viên không hợp lệ: " + raw);
+                        }
+                    }
+                }
+
+                /* -------- 2. Insert MaintenanceSchedule và gán nhân viên -------- */
                 int scheduleId = scheduleDAO.addMaintenanceScheduleAndReturnId(schedule);
+
+                if (scheduleId > 0 && firstUserId != null) {
+                    // Phương thức DAO đã có: addMaintenanceAssignments(int scheduleId, List<Integer> userIds)
+                    scheduleDAO.addMaintenanceAssignments(
+                            scheduleId,
+                            java.util.Collections.singletonList(firstUserId));
+                    System.out.println("Đã gán nhân viên ID " + firstUserId + " cho lịch ID " + scheduleId);
+                } else {
+                    System.out.println("Không gán nhân viên nào cho lịch (scheduleId=" + scheduleId + ", firstUserId=" + firstUserId + ")");
+                }
+
                 // Lệnh chuyển hướng: thành công nếu cả hai ID đều có kết quả
                 if (scheduleId > 0) {
                     response.sendRedirect("ticket?action=list&create=success");

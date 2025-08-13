@@ -121,109 +121,195 @@ public class MaintenanceScheduleDAO extends DBContext {
 
     public MaintenanceSchedule getMaintenanceScheduleById(int id) {
         MaintenanceSchedule schedule = null;
-
-        String sql = "SELECT "
-                + "    ms.*, "
-                + "    a.street_address, a.province_id, a.district_id, a.ward_id, "
-                + "    p.name AS province_name, "
-                + "    d.name AS district_name, "
-                + "    w.name AS ward_name "
-                + "FROM MaintenanceSchedules ms "
-                + "LEFT JOIN Addresses a ON ms.address_id = a.id "
-                + "LEFT JOIN Provinces p ON a.province_id = p.id "
-                + "LEFT JOIN Districts d ON a.district_id = d.id "
-                + "LEFT JOIN Wards w ON a.ward_id = w.id "
-                + "WHERE ms.id = ?";
+        String sql = """
+        SELECT
+            ms.id,
+            ms.technical_request_id,
+            ms.campaign_id,
+            ms.color,
+            ms.scheduled_date,
+            ms.end_date,
+            ms.start_time,
+            ms.end_time,
+            ms.address_id,
+            ms.status_id,
+            ms.created_at,
+            ms.updated_at,
+            a.street_address,
+            a.province_id,
+            a.district_id,
+            a.ward_id,
+            p.name AS province_name,
+            d.name AS district_name,
+            w.name AS ward_name,
+            tr.title AS technical_request_title        -- NEW
+        FROM MaintenanceSchedules ms
+        LEFT JOIN Addresses a        ON ms.address_id          = a.id
+        LEFT JOIN Provinces p        ON a.province_id          = p.id
+        LEFT JOIN Districts d        ON a.district_id          = d.id
+        LEFT JOIN Wards w            ON a.ward_id              = w.id
+        LEFT JOIN TechnicalRequests tr ON ms.technical_request_id = tr.id   -- NEW
+        WHERE ms.id = ?
+        """;
 
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, id);
+
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     schedule = new MaintenanceSchedule();
 
-                    // Các trường từ bảng MaintenanceSchedules
+                    // ------ Basic fields ------
                     schedule.setId(rs.getInt("id"));
-                    schedule.setTechnicalRequestId(rs.getInt("technical_request_id"));
-                    schedule.setTitle(rs.getString("title"));
+
+                    int techReqId = rs.getInt("technical_request_id");
+                    schedule.setTechnicalRequestId(rs.wasNull() ? null : techReqId);
+
+                    int campaignId = rs.getInt("campaign_id");
+                    schedule.setCampaignId(rs.wasNull() ? null : campaignId);
+
                     schedule.setColor(rs.getString("color"));
+
                     java.sql.Date schDate = rs.getDate("scheduled_date");
                     if (schDate != null) {
                         schedule.setScheduledDate(schDate.toLocalDate());
                     }
+
                     java.sql.Date endDate = rs.getDate("end_date");
                     if (endDate != null) {
                         schedule.setEndDate(endDate.toLocalDate());
                     }
-                    java.sql.Time startTime = rs.getTime("start_time");
-                    if (startTime != null) {
-                        schedule.setStartTime(startTime.toLocalTime());
-                    }
-                    java.sql.Time endTime = rs.getTime("end_time");
-                    if (endTime != null) {
-                        schedule.setEndTime(endTime.toLocalTime());
-                    }
-                    int addrId = rs.getInt("address_id");
-                    schedule.setAddressId(rs.wasNull() ? null : addrId);
-                    schedule.setStatus(rs.getString("status"));
-                    schedule.setNotes(rs.getString("notes"));
-                    java.sql.Timestamp createdAt = rs.getTimestamp("created_at");
-                    if (createdAt != null) {
-                        schedule.setCreatedAt(createdAt.toLocalDateTime());
-                    }
-                    java.sql.Timestamp updatedAt = rs.getTimestamp("updated_at");
-                    if (updatedAt != null) {
-                        schedule.setUpdatedAt(updatedAt.toLocalDateTime());
+
+                    java.sql.Time st = rs.getTime("start_time");
+                    if (st != null) {
+                        schedule.setStartTime(st.toLocalTime());
                     }
 
-                    // Các trường bổ sung từ JOIN địa chỉ
+                    java.sql.Time et = rs.getTime("end_time");
+                    if (et != null) {
+                        schedule.setEndTime(et.toLocalTime());
+                    }
+
+                    int addrId = rs.getInt("address_id");
+                    schedule.setAddressId(rs.wasNull() ? null : addrId);
+
+                    int statusId = rs.getInt("status_id");
+                    schedule.setStatusId(rs.wasNull() ? null : statusId);
+
+                    java.sql.Timestamp ca = rs.getTimestamp("created_at");
+                    if (ca != null) {
+                        schedule.setCreatedAt(ca.toLocalDateTime());
+                    }
+
+                    java.sql.Timestamp ua = rs.getTimestamp("updated_at");
+                    if (ua != null) {
+                        schedule.setUpdatedAt(ua.toLocalDateTime());
+                    }
+
+                    // ------ Address joins ------
                     schedule.setStreetAddress(rs.getString("street_address"));
-                    int provinceId = rs.getInt("province_id");
-                    schedule.setProvinceId(rs.wasNull() ? null : provinceId);
+
+                    int provId = rs.getInt("province_id");
+                    schedule.setProvinceId(rs.wasNull() ? null : provId);
                     schedule.setProvinceName(rs.getString("province_name"));
-                    int districtId = rs.getInt("district_id");
-                    schedule.setDistrictId(rs.wasNull() ? null : districtId);
+
+                    int distId = rs.getInt("district_id");
+                    schedule.setDistrictId(rs.wasNull() ? null : distId);
                     schedule.setDistrictName(rs.getString("district_name"));
+
                     int wardId = rs.getInt("ward_id");
                     schedule.setWardId(rs.wasNull() ? null : wardId);
                     schedule.setWardName(rs.getString("ward_name"));
 
-                    // Nếu có thêm các trường khác, bổ sung tương tự ở đây!
+                    // ------ TechnicalRequest title ------
+                    schedule.setTitle(rs.getString("technical_request_title"));   // NEW
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
         }
         return schedule;
     }
 
-    public int addMaintenanceScheduleAndReturnId(MaintenanceSchedule schedule) {
-        String sql = "INSERT INTO MaintenanceSchedules "
-                + "(technical_request_id, campaign_id, color, scheduled_date, end_date, start_time, end_time, address_id, status_id, created_at, updated_at) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, NULL)";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setObject(1, schedule.getTechnicalRequestId());
-            ps.setObject(2, schedule.getCampaignId());
-            ps.setString(3, schedule.getColor());
-            ps.setObject(4, schedule.getScheduledDate());
-            ps.setObject(5, schedule.getEndDate());
-            ps.setObject(6, schedule.getStartTime());
-            ps.setObject(7, schedule.getEndTime());
-            ps.setObject(8, schedule.getAddressId());
-            ps.setObject(9, schedule.getStatusId()); // status_id là int
+    public int addScheduleWithAssignments(MaintenanceSchedule schedule,
+            List<Integer> userIds) {
+        final String INSERT_SCHEDULE_SQL = """
+        INSERT INTO MaintenanceSchedules
+        (technical_request_id, campaign_id, color,
+         scheduled_date, end_date, start_time, end_time,
+         address_id, status_id, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        """;
 
-            int rowsInserted = ps.executeUpdate();
-            if (rowsInserted > 0) {
+        final String INSERT_ASSIGN_SQL
+                = "INSERT INTO MaintenanceAssignments "
+                + "(maintenance_schedule_id, user_id) VALUES (?, ?)";
+
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);                 // 1) BẮT ĐẦU GIAO DỊCH
+
+            /* ---------- Insert MaintenanceSchedule ---------- */
+            int scheduleId;
+            try (PreparedStatement ps = conn.prepareStatement(
+                    INSERT_SCHEDULE_SQL, Statement.RETURN_GENERATED_KEYS)) {
+
+                ps.setObject(1, schedule.getTechnicalRequestId());
+                ps.setObject(2, schedule.getCampaignId());
+                ps.setString(3, schedule.getColor());
+                ps.setObject(4, schedule.getScheduledDate());
+                ps.setObject(5, schedule.getEndDate());
+                ps.setObject(6, schedule.getStartTime());
+                ps.setObject(7, schedule.getEndTime());
+                ps.setObject(8, schedule.getAddressId());
+                ps.setObject(9, schedule.getStatusId());
+
+                if (ps.executeUpdate() == 0) {
+                    throw new SQLException("Insert schedule failed, no rows affected.");
+                }
+
                 try (ResultSet rs = ps.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        return rs.getInt(1); // ID vừa insert
+                    if (!rs.next()) {
+                        throw new SQLException("Insert schedule failed, no ID obtained.");
                     }
+                    scheduleId = rs.getInt(1);
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+
+            /* ---------- Insert MaintenanceAssignments ---------- */
+            if (userIds != null && !userIds.isEmpty()) {
+                try (PreparedStatement psAssign = conn.prepareStatement(INSERT_ASSIGN_SQL)) {
+                    for (Integer uid : userIds) {
+                        if (uid == null) {
+                            continue;     // bỏ qua giá trị null
+                        }
+                        psAssign.setInt(1, scheduleId);
+                        psAssign.setInt(2, uid);
+                        psAssign.addBatch();
+                    }
+                    psAssign.executeBatch();
+                }
+            }
+
+            conn.commit();                             // 2) COMMIT
+            return scheduleId;
+
+        } catch (SQLException ex) {
+            if (conn != null) try {
+                conn.rollback();
+            } catch (SQLException ignore) {
+            }
+            ex.printStackTrace();
+            return -1;
+        } finally {
+            if (conn != null) try {
+                conn.setAutoCommit(true);
+                conn.close();
+            } catch (SQLException ignore) {
+            }
         }
-        return -1; // Thất bại
     }
 
     public boolean updateMaintenanceSchedule(MaintenanceSchedule schedule) {
@@ -263,6 +349,35 @@ public class MaintenanceScheduleDAO extends DBContext {
             e.printStackTrace();
             return false;
         }
+    }
+
+        public int addMaintenanceScheduleAndReturnId(MaintenanceSchedule schedule) {
+        String sql = "INSERT INTO MaintenanceSchedules "
+                + "(technical_request_id, campaign_id, color, scheduled_date, end_date, start_time, end_time, address_id, status_id, created_at, updated_at) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, NULL)";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setObject(1, schedule.getTechnicalRequestId());
+            ps.setObject(2, schedule.getCampaignId());
+            ps.setString(3, schedule.getColor());
+            ps.setObject(4, schedule.getScheduledDate());
+            ps.setObject(5, schedule.getEndDate());
+            ps.setObject(6, schedule.getStartTime());
+            ps.setObject(7, schedule.getEndTime());
+            ps.setObject(8, schedule.getAddressId());
+            ps.setObject(9, schedule.getStatusId()); // status_id là int
+
+            int rowsInserted = ps.executeUpdate();
+            if (rowsInserted > 0) {
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        return rs.getInt(1); // ID vừa insert
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1; // Thất bại
     }
 
     // Thêm hàm private này vào trong class MaintenanceScheduleDAO

@@ -47,7 +47,12 @@
 
                                 <div class="form-group">
                                     <label for="title">Tiêu đề (*)</label>
-                                    <input type="text" id="title" name="title" class="form-control" value="${title}" placeholder="VD: Bảo trì hệ thống điều hòa" required>
+                                    <input type="text" id="title" name="title" 
+                                           class="form-control ${not empty fieldErrors.title ? 'is-invalid' : ''}" 
+                                           value="${title}" placeholder="VD: Bảo trì hệ thống điều hòa" required>
+                                    <c:if test="${not empty fieldErrors.title}">
+                                        <div class="invalid-feedback">${fieldErrors.title}</div>
+                                    </c:if>
                                 </div>
 
                                 <div class="form-group">
