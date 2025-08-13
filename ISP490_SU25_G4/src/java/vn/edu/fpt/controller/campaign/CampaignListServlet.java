@@ -1,137 +1,124 @@
-//package vn.edu.fpt.controller.campaign;
-//
-//import java.io.IOException;
-//import jakarta.servlet.ServletException;
-//import jakarta.servlet.annotation.WebServlet;
-//import jakarta.servlet.http.HttpServlet;
-//import jakarta.servlet.http.HttpServletRequest;
-//import jakarta.servlet.http.HttpServletResponse;
-//import java.net.URLEncoder; // Cần import này để encode URL
-//import java.util.List;
-//import vn.edu.fpt.dao.CampaignDAO;
-//import vn.edu.fpt.model.Campaign;
-//
-///**
-// * Servlet này xử lý việc hiển thị danh sách các chiến dịch (Campaign)
-// * với chức năng phân trang và tìm kiếm theo tên.
-// * Nó lấy dữ liệu từ CampaignDAO và chuyển tiếp đến trang JSP để hiển thị.
-// *
-// * @author minhh (đã được cải tiến)
-// */
-//@WebServlet(name = "CampaignListServlet", urlPatterns = {"/list-campaign"})
-//public class CampaignListServlet extends HttpServlet {
-//
-//    /**
-//     * Số lượng bản ghi (chiến dịch) hiển thị trên mỗi trang.
-//     */
-//    private static final int PAGE_SIZE = 3;
-//    private final CampaignDAO campaignDAO = new CampaignDAO();
-//
-//    /**
-//     * Xử lý các yêu cầu HTTP GET và POST.
-//     *
-//     * @param request  đối tượng request của servlet
-//     * @param response đối tượng response của servlet
-//     * @throws ServletException nếu có lỗi đặc trưng của servlet
-//     * @throws IOException      nếu có lỗi I/O
-//     */
-//    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-//            throws ServletException, IOException {
-//        response.setContentType("text/html;charset=UTF-8");
-//        request.setCharacterEncoding("UTF-8"); // Đảm bảo hỗ trợ tiếng Việt trong tham số URL
-//
-//        // 1. Lấy số trang hiện tại từ request parameter, mặc định là 1 nếu không có hoặc không hợp lệ.
-//        String pageStr = request.getParameter("page");
-//        int currentPage = 1;
-//        if (pageStr != null && !pageStr.trim().isEmpty()) {
-//            try {
-//                currentPage = Integer.parseInt(pageStr);
-//                if (currentPage < 1) {
-//                    currentPage = 1; // Đảm bảo số trang không bao giờ nhỏ hơn 1
-//                }
-//            } catch (NumberFormatException e) {
-//                // Giữ currentPage là 1 nếu tham số không phải là số
-//                currentPage = 1;
-//                System.err.println("Tham số 'page' không hợp lệ: " + pageStr);
-//            }
-//        }
-//
-//        // 2. Lấy từ khóa tìm kiếm từ request parameter
-//        // THAY ĐỔI MỚI: Lấy tham số tìm kiếm
-//        String searchTerm = request.getParameter("search");
-//        // Đảm bảo searchTerm không phải là null để tránh NullPointerException trong DAO
-//        if (searchTerm == null) {
-//            searchTerm = "";
-//        }
-//        searchTerm = searchTerm.trim(); // Loại bỏ khoảng trắng thừa
-//
-//        // 3. Lấy dữ liệu từ DAO
-//        // THAY ĐỔI MỚI: Truyền searchTerm vào phương thức DAO
-//        List<Campaign> campaigns = campaignDAO.getCampaigns(currentPage, PAGE_SIZE, searchTerm);
-//
-//        // THAY ĐỔI MỚI: Lấy tổng số chiến dịch dựa trên từ khóa tìm kiếm
-//        int totalRecords = campaignDAO.countCampaigns(searchTerm);
-//        int totalPages = (int) Math.ceil((double) totalRecords / PAGE_SIZE);
-//
-//        // 4. Đặt các thuộc tính vào request để chuyển sang view (JSP)
-//        request.setAttribute("campaigns", campaigns);
-//        request.setAttribute("currentPage", currentPage);
-//        request.setAttribute("totalPages", totalPages);
-//        // THAY ĐỔI MỚI: Đặt lại searchTerm vào request để giữ giá trị trong ô tìm kiếm
-//        request.setAttribute("searchTerm", searchTerm);
-//        
-//        // **QUAN TRỌNG**: Thêm baseUrl để component phân trang hoạt động đúng
-//        // Cần đảm bảo baseUrl bao gồm cả searchTerm khi có
-//        String baseUrl = request.getContextPath() + "/list-campaign";
-//        // THAY ĐỔI MỚI: Thêm searchTerm vào baseUrl nếu có, cần encode URL
-//        if (!searchTerm.isEmpty()) {
-//             // Sử dụng & thay vì ? nếu đã có tham số page, nhưng trong trường hợp này page luôn là param đầu tiên nếu có search.
-//             // Để đơn giản, ta sẽ xây dựng lại logic URL trong pagination.jsp
-//             // Chỉ cần truyền searchTerm thô và baseURL thô là đủ.
-//             // baseUrl += "?search=" + URLEncoder.encode(searchTerm, "UTF-8"); // Không cần làm phức tạp ở đây nữa
-//        }
-//        request.setAttribute("baseUrl", baseUrl);
-//
-//        // 5. Chuyển tiếp yêu cầu đến trang JSP để hiển thị giao diện
-//        // Lưu ý: Đã đổi đường dẫn JSP của bạn thành /jsp/admin/listCampaign.jsp như đã thấy trong code Servlet trước
-//        request.getRequestDispatcher("/jsp/customerSupport/listCampaign.jsp").forward(request, response);
-//    }
-//
-//    /**
-//     * Xử lý phương thức HTTP GET.
-//     *
-//     * @param request  đối tượng request của servlet
-//     * @param response đối tượng response của servlet
-//     * @throws ServletException nếu có lỗi đặc trưng của servlet
-//     * @throws IOException      nếu có lỗi I/O
-//     */
-//    @Override
-//    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-//            throws ServletException, IOException {
-//        processRequest(request, response);
-//    }
-//
-//    /**
-//     * Xử lý phương thức HTTP POST.
-//     *
-//     * @param request  đối tượng request của servlet
-//     * @param response đối tượng response của servlet
-//     * @throws ServletException nếu có lỗi đặc trưng của servlet
-//     * @throws IOException      nếu có lỗi I/O
-//     */
-//    @Override
-//    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-//            throws ServletException, IOException {
-//        processRequest(request, response);
-//    }
-//
-//    /**
-//     * Trả về mô tả ngắn của servlet.
-//     *
-//     * @return một chuỗi String chứa mô tả của servlet
-//     */
-//    @Override
-//    public String getServletInfo() {
-//        return "Servlet responsible for listing, paginating, and searching campaigns.";
-//    }
-//}
+package vn.edu.fpt.controller.campaign;
+
+import java.io.IOException;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import vn.edu.fpt.dao.CampaignDAO;
+import vn.edu.fpt.model.Campaign;
+import vn.edu.fpt.model.CampaignType; // Giả sử bạn có model này
+import vn.edu.fpt.model.Status;       // Giả sử bạn có model này
+
+@WebServlet(name = "CampaignListServlet", urlPatterns = {"/list-campaign"})
+public class CampaignListServlet extends HttpServlet {
+
+    private static final int PAGE_SIZE = 5; // Tăng PAGE_SIZE cho hợp lý hơn
+    private final CampaignDAO campaignDAO = new CampaignDAO();
+
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException {
+    response.setContentType("text/html;charset=UTF-8");
+    request.setCharacterEncoding("UTF-8");
+
+    try {
+        // 1. Lấy tham số cho phân trang
+        String pageStr = request.getParameter("page");
+        int currentPage = 1;
+        if (pageStr != null && pageStr.matches("\\d+")) {
+            currentPage = Integer.parseInt(pageStr);
+            if (currentPage < 1) currentPage = 1;
+        }
+
+        // 2. Lấy tham số cho tìm kiếm và tất cả các bộ lọc
+        String searchTerm = request.getParameter("search") != null ? request.getParameter("search").trim() : "";
+        String statusFilter = request.getParameter("status") != null ? request.getParameter("status").trim() : "";
+        int typeIdFilter = 0;
+        String typeIdStr = request.getParameter("typeId");
+        if (typeIdStr != null && !typeIdStr.isEmpty() && !typeIdStr.equals("0")) {
+            typeIdFilter = Integer.parseInt(typeIdStr);
+        }
+        // --- ĐÃ THÊM MỚI: Xử lý bộ lọc ngày tháng ---
+        String startDateFilter = request.getParameter("startDate") != null ? request.getParameter("startDate").trim() : "";
+        String endDateFilter = request.getParameter("endDate") != null ? request.getParameter("endDate").trim() : "";
+
+        // 3. Lấy dữ liệu từ DAO (với đầy đủ các bộ lọc)
+        List<Campaign> campaigns = campaignDAO.getCampaigns(currentPage, PAGE_SIZE, searchTerm, statusFilter, typeIdFilter, startDateFilter, endDateFilter);
+        int totalRecords = campaignDAO.countCampaigns(searchTerm, statusFilter, typeIdFilter, startDateFilter, endDateFilter);
+        int totalPages = (int) Math.ceil((double) totalRecords / PAGE_SIZE);
+
+        // Lấy dữ liệu cho các thẻ thống kê
+        int activeCampaigns = campaignDAO.countCampaigns("", "active", 0, "", "");
+        int completedCampaigns = campaignDAO.countCampaigns("", "ended", 0, "", "");
+        
+        // Lấy dữ liệu cho dropdown "Loại chiến dịch"
+        List<CampaignType> allCampaignTypes = campaignDAO.getAllCampaignTypes();
+
+        // --- ĐÃ THÊM MỚI: Tạo query string cho phân trang ---
+        StringBuilder queryString = new StringBuilder();
+        if (!searchTerm.isEmpty()) {
+            queryString.append("&search=").append(URLEncoder.encode(searchTerm, "UTF-8"));
+        }
+        if (!statusFilter.isEmpty()) {
+            queryString.append("&status=").append(URLEncoder.encode(statusFilter, "UTF-8"));
+        }
+        if (typeIdFilter > 0) {
+            queryString.append("&typeId=").append(typeIdFilter);
+        }
+        if (!startDateFilter.isEmpty()) {
+            queryString.append("&startDate=").append(URLEncoder.encode(startDateFilter, "UTF-8"));
+        }
+        if (!endDateFilter.isEmpty()) {
+            queryString.append("&endDate=").append(URLEncoder.encode(endDateFilter, "UTF-8"));
+        }
+
+        // 5. Đặt tất cả các thuộc tính vào request
+        request.setAttribute("campaigns", campaigns);
+        request.setAttribute("currentPage", currentPage);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalRecords", totalRecords);
+        request.setAttribute("activeCampaigns", activeCampaigns);
+        request.setAttribute("completedCampaigns", completedCampaigns);
+        request.setAttribute("allCampaignTypes", allCampaignTypes);
+        
+        // Đặt lại các giá trị lọc để hiển thị trên form
+        request.setAttribute("searchTerm", searchTerm);
+        request.setAttribute("statusFilter", statusFilter);
+        request.setAttribute("typeIdFilter", typeIdFilter);
+        request.setAttribute("startDateFilter", startDateFilter);
+        request.setAttribute("endDateFilter", endDateFilter);
+        
+        // Đặt query string cho phân trang
+        request.setAttribute("queryString", queryString.toString());
+
+        // 6. Chuyển tiếp yêu cầu đến trang JSP
+        request.getRequestDispatcher("/jsp/customerSupport/listCampaign.jsp").forward(request, response);
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        request.setAttribute("errorMessage", "Đã có lỗi xảy ra khi tải danh sách chiến dịch: " + e.getMessage());
+        request.getRequestDispatcher("/jsp/error.jsp").forward(request, response);
+    }
+}
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        processRequest(request, response);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        processRequest(request, response);
+    }
+
+    @Override
+    public String getServletInfo() {
+        return "Servlet responsible for listing, paginating, searching and filtering campaigns.";
+    }
+}

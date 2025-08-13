@@ -1,10 +1,11 @@
 package vn.edu.fpt.model;
 
 import java.sql.Timestamp;
+import java.util.Date; // ĐÃ THÊM: import java.util.Date
 
 /**
- * Lớp Model này đại diện cho một chiến dịch (Campaign).
- * Cấu trúc đã được cập nhật để phù hợp với CSDL đã cải tiến.
+ * Lớp Model này đại diện cho một chiến dịch (Campaign). Cấu trúc đã được cập
+ * nhật để phù hợp với CSDL đã cải tiến.
  */
 public class Campaign {
 
@@ -13,16 +14,19 @@ public class Campaign {
     private String name;
     private String description;
     private int enterpriseId;
-    private int statusId;
+    private String status;
     private int typeId;
     private int createdBy;
     private Integer updatedBy;
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
+    // ĐÃ THÊM: Các trường cho ngày bắt đầu và kết thúc lấy từ MaintenanceSchedules
+    private Date startDate;
+    private Date endDate;
+
     // Các thuộc tính bổ sung để chứa đối tượng liên quan (giúp hiển thị trên JSP)
     private User creator; // Đối tượng người tạo chiến dịch
-    private Status status; // Đối tượng trạng thái
     private String enterpriseName; // Tên khách hàng
     private String typeName; // Tên loại chiến dịch
 
@@ -32,7 +36,7 @@ public class Campaign {
     public Campaign() {
     }
 
-    // Getters and Setters
+    // --- Getters and Setters ---
     public int getCampaignId() {
         return campaignId;
     }
@@ -65,12 +69,12 @@ public class Campaign {
         this.enterpriseId = enterpriseId;
     }
 
-    public int getStatusId() {
-        return statusId;
+    public String getStatus() {
+        return status;
     }
 
-    public void setStatusId(int statusId) {
-        this.statusId = statusId;
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public int getTypeId() {
@@ -113,6 +117,24 @@ public class Campaign {
         this.updatedAt = updatedAt;
     }
 
+    // ---- BẮT ĐẦU PHẦN ĐÃ THÊM ----
+    public Date getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(Date startDate) {
+        this.startDate = startDate;
+    }
+
+    public Date getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
+    }
+    // ---- KẾT THÚC PHẦN ĐÃ THÊM ----
+
     // --- Getters & Setters cho các thuộc tính đối tượng bổ sung ---
     public User getCreator() {
         return creator;
@@ -120,14 +142,6 @@ public class Campaign {
 
     public void setCreator(User creator) {
         this.creator = creator;
-    }
-
-    public Status getStatus() {
-        return status;
-    }
-
-    public void setStatus(Status status) {
-        this.status = status;
     }
 
     public String getEnterpriseName() {
@@ -144,17 +158,5 @@ public class Campaign {
 
     public void setTypeName(String typeName) {
         this.typeName = typeName;
-    }
-
-    @Override
-    public String toString() {
-        return "Campaign{" +
-                "campaignId=" + campaignId +
-                ", name='" + name + '\'' +
-                ", enterpriseId=" + enterpriseId +
-                ", statusId=" + statusId +
-                ", typeId=" + typeId +
-                ", createdBy=" + createdBy +
-                '}';
     }
 }

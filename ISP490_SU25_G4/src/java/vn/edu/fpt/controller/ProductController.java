@@ -211,7 +211,7 @@ public class ProductController extends HttpServlet {
 
             // DEBUG 2: In ra thông tin lấy từ Session
             System.out.println("[CONTROLLER] 2. Kiểm tra thông tin Session:");
-            Integer userId = (Integer) session.getAttribute("userID"); // Sửa 'd' thành 'D'
+            Integer userId = (Integer) session.getAttribute("userId"); // Sửa 'd' thành 'D'
             System.out.println("   - userId lấy được: " + userId);
             if (userId == null) {
                 System.out.println("   -> LỖI: userId là null. Chuyển hướng về trang login.");
@@ -308,7 +308,7 @@ public class ProductController extends HttpServlet {
     private void processEditProduct(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession();
         // KHẮC PHỤC: Lấy userId
-        Integer userId = (Integer) session.getAttribute("userID"); // Sửa 'd' thành 'D'
+        Integer userId = (Integer) session.getAttribute("userId"); // Sửa 'd' thành 'D'
         if (userId == null) {
             response.sendRedirect(request.getContextPath() + "/login.jsp");
             return;
