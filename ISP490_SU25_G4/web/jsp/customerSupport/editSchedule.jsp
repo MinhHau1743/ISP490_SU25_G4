@@ -40,14 +40,15 @@
                             <h1>Chỉnh sửa Lịch bảo trì #${schedule.id}</h1>
 
                         </div>
-
+                   
                         <c:if test="${not empty error}">
                             <div class="alert alert-danger" role="alert">${error}</div>
                         </c:if>
 
                         <form action="${pageContext.request.contextPath}/schedule?action=updateSchedule" method="post" class="form-container">
                             <input type="hidden" name="id" value="${schedule.id}">
-
+                            <input type="hidden" name="technicalRequestId" value="${schedule.technicalRequestId}">
+          
                             <div class="form-grid">
 
                                 <div class="form-group">

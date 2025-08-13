@@ -2186,7 +2186,7 @@
                 document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
                 const detailsPanel = document.getElementById('event-details-panel');
                 const scheduleId = detailsPanel.querySelector('.event-id').textContent;
-                fetch('deleteSchedule', {
+                fetch('${pageContext.request.contextPath}/schedule?action=delete', {
                 method: 'POST',
                         headers: {
                         'Content-Type': 'application/json',

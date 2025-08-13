@@ -16,6 +16,7 @@ import java.util.List;
 public class MaintenanceSchedule {
 
     private int id;
+
     private int technicalRequestId;
     private Integer campaignId;
     private String title;
@@ -107,9 +108,20 @@ public class MaintenanceSchedule {
     return technicalRequestId;
 }
 
+    // ================= SỬA LỖI Ở ĐÂY =================
+    /**
+     * Sửa lỗi NullPointerException bằng cách kiểm tra giá trị đầu vào.
+     * Nếu technicalRequestId là null, gán một giá trị mặc định (0) để tránh lỗi.
+     * @param technicalRequestId ID của yêu cầu kỹ thuật, có thể là null từ DB.
+     */
     public void setTechnicalRequestId(Integer technicalRequestId) {
-        this.technicalRequestId = technicalRequestId;
+        if (technicalRequestId != null) {
+            this.technicalRequestId = technicalRequestId; // Gán giá trị nếu không phải null
+        } else {
+            this.technicalRequestId = 0; // Gán giá trị mặc định nếu là null
+        }
     }
+    // ================= KẾT THÚC SỬA LỖI =================
 
     public String getTitle() {
         return title;
@@ -270,5 +282,4 @@ public class MaintenanceSchedule {
     public void setWardName(String wardName) {
         this.wardName = wardName;
     }
-
 }

@@ -73,8 +73,10 @@ public class ScheduleController extends HttpServlet {
         } else if ("getWards".equals(action)) {
             getWards(request, response);
             return;
+        } else if ("delete".equals(action)) {
+            deleteGet(request, response);
+            return;
         }
-
         // Mặc định (hoặc action=listSchedule): hiển thị lịch
         viewSchedule(request, response);
     }
@@ -90,6 +92,9 @@ public class ScheduleController extends HttpServlet {
             return;
         } else if ("updateSchedule".equals(action)) {
             handleEditSubmit(request, response);
+            return;
+        } else if ("delete".equals(action)) {
+            deletePost(request, response);
             return;
         }
         // Nếu không khớp action, về GET
@@ -1053,6 +1058,50 @@ public class ScheduleController extends HttpServlet {
         }
     }
     // ---------- Helper Methods ----------
+
+    private void deleteGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        // Không hỗ trợ GET, trả lỗi
+        response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+        response.getWriter().print("{\"status\": \"error\", \"message\": \"Phương thức không được hỗ trợ\"}");
+    }
+
+    private void deletePost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType("application/json");
+        PrintWriter out = response.getWriter();
+
+        try {
+            // Đọc JSON từ request body
+            StringBuilder sb = new StringBuilder();
+            BufferedReader reader = request.getReader();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+            JSONObject json = new JSONObject(sb.toString());
+            int scheduleId = json.getInt("id");
+
+            // Gọi DAO để xóa
+            MaintenanceScheduleDAO dao = new MaintenanceScheduleDAO();
+            boolean deleteSuccess = dao.deleteMaintenanceSchedule(scheduleId);
+
+            if (deleteSuccess) {
+                response.setStatus(HttpServletResponse.SC_OK);
+                out.print("{\"status\": \"success\"}");
+            } else {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                out.print("{\"status\": \"error\", \"message\": \"Không thể xóa lịch bảo trì\"}");
+            }
+
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            out.print("{\"status\": \"error\", \"message\": \"Có lỗi xảy ra khi xóa lịch bảo trì: " + e.getMessage() + "\"}");
+            e.printStackTrace();
+        } finally {
+            out.flush();
+        }
+    }
 
     private LocalDate parseNullableDate(JSONObject json, String key) {
         if (!json.has(key) || json.isNull(key)) {
