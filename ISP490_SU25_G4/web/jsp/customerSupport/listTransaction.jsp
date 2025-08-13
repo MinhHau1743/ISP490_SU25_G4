@@ -46,11 +46,12 @@
                                     <input type="text" name="query" placeholder="Tìm theo mã phiếu, khách hàng..." value="${param.query}">
                                 </div>
                                 <button type="submit" class="btn btn-primary"><i data-feather="search"></i> Tìm kiếm</button>
+                                <a href="${pageContext.request.contextPath}/ticket?action=create" class="btn btn-primary">
+                                    <i data-feather="calendar"></i> Tạo lịch bảo trì
+                                </a>
                             </div>
 
-                            <a href="${pageContext.request.contextPath}/ticket?action=create" class="btn btn-success">
-                                <i data-feather="calendar"></i> Tạo lịch bảo trì
-                            </a>
+
                             <div class="toolbar-actions">
                                 <a href="${pageContext.request.contextPath}/ticket?action=list" class="btn btn-secondary">
                                     <i data-feather="refresh-cw"></i> Reset

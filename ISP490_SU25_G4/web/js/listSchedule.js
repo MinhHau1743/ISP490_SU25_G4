@@ -57,3 +57,136 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
+async function markScheduleAsComplete(ev) {
+  ev?.preventDefault?.();
+
+  const detailsPanel = document.getElementById('event-details-panel');
+  if (!detailsPanel) return;
+
+  // Lấy ID từ panel
+  const rawId = detailsPanel.querySelector('.event-id')?.textContent?.trim();
+  const scheduleId = Number.parseInt(rawId, 10);
+  if (!Number.isFinite(scheduleId) || scheduleId <= 0) {
+    alert('Không tìm thấy ID hợp lệ của lịch trình.');
+    return;
+  }
+
+  // Nếu đã hoàn thành, chỉ đảm bảo UI đúng trạng thái rồi thoát
+  const sch = Array.isArray(window.schedules)
+    ? window.schedules.find(s => Number(s.id) === scheduleId)
+    : null;
+  const isAlreadyCompleted = sch
+    ? (sch.statusId === 3 || (sch.statusName || '').toLowerCase().includes('hoàn thành'))
+    : false;
+  if (isAlreadyCompleted) {
+    if (typeof setScheduleCompletedUI === 'function') {
+      setScheduleCompletedUI(scheduleId);
+    } else {
+      document
+        .querySelectorAll(
+          `#event-${scheduleId}, .event[data-schedule-id="${scheduleId}"], .task-item[data-schedule-id="${scheduleId}"], .event-item[data-schedule-id="${scheduleId}"]`
+        )
+        .forEach(el => {
+          el.classList.add('is-completed');
+          el.style.opacity = '0.6';
+          if (el.classList.contains('event')) el.setAttribute('draggable', 'false');
+        });
+      const statusSpan = detailsPanel.querySelector('.event-status');
+      if (statusSpan) {
+        statusSpan.textContent = 'Hoàn thành';
+        statusSpan.className = 'event-status badge px-2 py-1 badge-completed';
+      }
+    }
+    return;
+  }
+
+  // Khóa nút click
+  const trigger = ev?.currentTarget || ev?.target;
+  const prevHTML = trigger?.innerHTML;
+  if (trigger && 'disabled' in trigger) {
+    trigger.disabled = true;
+    trigger.setAttribute('aria-busy', 'true');
+    trigger.innerHTML = '<span class="spinner" aria-hidden="true"></span> Đang cập nhật...';
+  }
+
+  // Endpoint (fallback khi thiếu contextPath)
+  const base =
+    (typeof contextPath === 'string' && contextPath) ||
+    ('/' + (location.pathname.split('/')[1] || ''));
+  const url = `${base}/schedule?action=markAsComplete`;
+
+  // Lưu badge cũ để revert khi lỗi
+  const statusSpan = detailsPanel.querySelector('.event-status');
+  const oldStatusText = statusSpan?.textContent;
+  const oldStatusClass = statusSpan?.className;
+
+  // Timeout bằng AbortController (10s)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10_000);
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json;charset=UTF-8' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ id: scheduleId }),
+      signal: controller.signal
+    });
+
+    let data = {};
+    try { data = await res.json(); } catch {}
+
+    if (!res.ok) {
+      const msg = data?.message || `Cập nhật thất bại (HTTP ${res.status})`;
+      throw new Error(msg);
+    }
+
+    // --- CẬP NHẬT UI ---
+    if (typeof setScheduleCompletedUI === 'function') {
+      setScheduleCompletedUI(scheduleId);
+    } else {
+      // Badge panel chi tiết
+      if (statusSpan) {
+        statusSpan.textContent = 'Hoàn thành';
+        statusSpan.className = 'event-status badge px-2 py-1 badge-completed';
+      }
+      // Model JS
+      if (sch) {
+        sch.statusName = 'Hoàn thành';
+        sch.statusId = 3;
+        sch.updatedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
+      }
+      // Mờ event + chặn kéo ở mọi view
+      document
+        .querySelectorAll(
+          `#event-${scheduleId}, .event[data-schedule-id="${scheduleId}"], .task-item[data-schedule-id="${scheduleId}"], .event-item[data-schedule-id="${scheduleId}"]`
+        )
+        .forEach(el => {
+          el.classList.add('is-completed');
+          el.style.opacity = '0.6';
+          if (el.classList.contains('event')) el.setAttribute('draggable', 'false');
+        });
+    }
+
+    if (typeof showToast === 'function') {
+      showToast(data?.message || 'Đã đánh dấu Hoàn thành', 'success');
+    } else {
+      console.log(data?.message || 'Đã đánh dấu Hoàn thành');
+    }
+  } catch (err) {
+    // Revert badge nếu đã đổi
+    if (statusSpan) {
+      statusSpan.textContent = oldStatusText ?? '—';
+      if (oldStatusClass) statusSpan.className = oldStatusClass;
+    }
+    alert(err?.message || 'Có lỗi xảy ra khi cập nhật.');
+  } finally {
+    clearTimeout(timeoutId);
+    if (trigger && 'disabled' in trigger) {
+      trigger.disabled = false;
+      trigger.removeAttribute('aria-busy');
+      if (prevHTML != null) trigger.innerHTML = prevHTML;
+    }
+  }
+}
+

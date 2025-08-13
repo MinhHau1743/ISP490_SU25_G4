@@ -146,6 +146,14 @@
                                         <span class="color-swatch" data-color="#17a2b8" style="background-color: #17a2b8;"></span>
                                         <span class="color-swatch" data-color="#6610f2" style="background-color: #6610f2;"></span>
                                         <span class="color-swatch" data-color="#343a40" style="background-color: #343a40;"></span>
+                                        <span class="color-swatch" data-color="#e83e8c" style="background-color: #e83e8c;"></span>
+                                        <span class="color-swatch" data-color="#6c757d" style="background-color: #6c757d;"></span> 
+                                        <span class="color-swatch" data-color="#20c997" style="background-color: #20c997;"></span> 
+                                        <span class="color-swatch" data-color="#4B0082" style="background-color: #4B0082;"></span> 
+                                        <span class="color-swatch" data-color="#ADFF2F" style="background-color: #ADFF2F;"></span> 
+                                        <span class="color-swatch" data-color="#A52A2A" style="background-color: #A52A2A;"></span> 
+                                        <span class="color-swatch" data-color="#FFD700" style="background-color: #FFD700;"></span> 
+                                        <span class="color-swatch" data-color="#87CEEB" style="background-color: #87CEEB;"></span>
                                     </div>
                                     <input type="hidden" id="color" name="color"
                                            value="${param.color != null ? param.color : (not empty schedule.color ? schedule.color : '#007bff')}">

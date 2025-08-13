@@ -402,7 +402,7 @@ public class TicketController extends HttpServlet {
                 newRequest.setServiceId(Integer.parseInt(serviceIdStr));
             }
 
-            String employeeIdStr = request.getParameter("employeeId");
+            String employeeIdStr = request.getParameter("employeesId");
             if (employeeIdStr != null && !employeeIdStr.isEmpty()) {
                 int employeeId = Integer.parseInt(employeeIdStr);
                 newRequest.setAssignedUserIds(Collections.singletonList(employeeId));
@@ -501,7 +501,6 @@ public class TicketController extends HttpServlet {
             } else {
                 newRequest.setPriority("medium"); // Mặc định
             }
-
             // --- Giữ nguyên logic các phần còn lại ---
             boolean isBillable = Boolean.parseBoolean(request.getParameter("isBillable"));
             newRequest.setIsBillable(isBillable);
@@ -531,13 +530,13 @@ public class TicketController extends HttpServlet {
                 i++;
             }
             // Lấy một MẢNG các ID của nhân viên được chọn
-            String[] selectedEmployeeIds = request.getParameterValues("employeeId");
+            String[] selectedEmployeeIds = request.getParameterValues("employeesId");
             Integer newRequestId = dao.createTechnicalRequest(newRequest, devices);
-
+            String color = request.getParameter("color");
             if (newRequestId != null) {
                 // Tạo schedule: gán technicalRequestId từ newRequestId cho schedule
                 schedule.setTechnicalRequestId(newRequestId);
-                schedule.setColor("#FFA726");
+                schedule.setColor(color);
                 schedule.setStatusId(2);
                 Integer firstUserId = null;
 
@@ -613,6 +612,9 @@ public class TicketController extends HttpServlet {
             int id = Integer.parseInt(request.getParameter("id"));
             boolean success = dao.deleteTechnicalRequest(id);
             // Chuyển hướng về trang danh sách với tham số báo kết quả
+            
+            MaintenanceScheduleDAO dao = new MaintenanceScheduleDAO();
+            boolean deleteSuccess = dao.deleteMaintenanceSchedule(id);
             response.sendRedirect(request.getContextPath() + "/ticket?action=list&delete=" + (success ? "success" : "failed"));
         } catch (Exception e) {
             e.printStackTrace();

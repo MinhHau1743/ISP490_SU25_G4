@@ -163,18 +163,6 @@
                                         </select>
                                     </div>
                                 </div>
-
-                                <div class="sidebar-form-row">
-                                    <label for="employeeId">Gán cho</label>
-                                    <div class="input-with-icon">
-                                        <select id="employeeId" name="employeeId" class="form-control" required>
-                                            <option value="" disabled selected>-- Chọn kỹ thuật viên --</option>
-                                            <c:forEach var="employee" items="${employeeList}">
-                                                <option value="${employee.id}">${employee.lastName} ${employee.middleName} ${employee.firstName}</option>
-                                            </c:forEach>
-                                        </select>
-                                    </div>
-                                </div>
                                 <div class="sidebar-form-row">
                                     <label for="employeeId">Nhân viên phụ trách</label>
                                     <div class="input-with-icon">
@@ -218,7 +206,31 @@
                                         <div class="field-hint">Đến</div>
                                     </div>
                                 </div>
+                                <div class="sidebar-form-row">
+                                    <label>Màu sắc</label>
+                                    <div class="color-palette">
+                                        <span class="color-swatch" data-color="#007bff" style="background-color: #007bff;"></span>
+                                        <span class="color-swatch" data-color="#dc3545" style="background-color: #dc3545;"></span>
+                                        <span class="color-swatch" data-color="#28a745" style="background-color: #28a745;"></span>
+                                        <span class="color-swatch" data-color="#ffc107" style="background-color: #ffc107;"></span>
+                                        <span class="color-swatch" data-color="#fd7e14" style="background-color: #fd7e14;"></span>
+                                        <span class="color-swatch" data-color="#17a2b8" style="background-color: #17a2b8;"></span>
+                                        <span class="color-swatch" data-color="#6610f2" style="background-color: #6610f2;"></span>
+                                        <span class="color-swatch" data-color="#343a40" style="background-color: #343a40;"></span>
+                                        <span class="color-swatch" data-color="#e83e8c" style="background-color: #e83e8c;"></span>
+                                        <span class="color-swatch" data-color="#6c757d" style="background-color: #6c757d;"></span> 
+                                        <span class="color-swatch" data-color="#20c997" style="background-color: #20c997;"></span> 
+                                        <span class="color-swatch" data-color="#4B0082" style="background-color: #4B0082;"></span> 
+                                        <span class="color-swatch" data-color="#ADFF2F" style="background-color: #ADFF2F;"></span> 
+                                        <span class="color-swatch" data-color="#A52A2A" style="background-color: #A52A2A;"></span> 
+                                        <span class="color-swatch" data-color="#FFD700" style="background-color: #FFD700;"></span> 
+                                        <span class="color-swatch" data-color="#87CEEB" style="background-color: #87CEEB;"></span>
+                                    </div>
 
+                                    <%-- THÊM DÒNG NÀY VÀO --%>
+                                    <%-- Giá trị mặc định là #007bff, hoặc lấy từ đối tượng nếu là form edit --%>
+                                    <input type="hidden" id="color" name="color" value="${not empty schedule.color ? schedule.color : '#007bff'}">
+                                </div>
                                 <div class="sidebar-form-row">
                                     <label>Chi phí dự kiến</label>
                                     <div class="radio-group">

@@ -1137,6 +1137,24 @@
                 max-height: calc(1.3em * 2 + 6px); /* khớp với số dòng ở trên */
                 word-break: break-word;  /* phòng trường hợp từ quá dài */
             }
+            /* day/week view */
+            .event.is-completed{
+                opacity:.6;
+                filter: grayscale(10%);
+                border: 1px dashed #28a745;
+                cursor: default;
+            }
+            .event.is-completed[draggable="true"] {
+                cursor: default;
+            }
+
+            /* month/list item */
+            .task-item.is-completed,
+            .event-item.is-completed{
+                opacity:.6;
+                text-decoration: line-through;
+            }
+
         </style>
     </head>
     <body>
@@ -1360,8 +1378,10 @@
                             </div>
                             <div class="event-details" id="event-details-panel">
                                 <div class="actions">
+                                    <a href="#" id="complete-schedule-btn" onclick="markScheduleAsComplete(event)" title="Hoàn thành">
+                                        <i class="bi bi-check2-circle"></i>
+                                    </a>
                                     <a href="#"  title="Sửa"><i class="bi bi-pencil" aria-label="Edit Icon"></i></a>
-                                    <a href="#" onclick="openDeleteModal(event)" title="Xóa"><i class="bi bi-trash" aria-label="Delete Icon"></i></a>
                                     <a href="#" onclick="closeDetails()" title="Đóng"><i class="bi bi-x-lg" aria-label="Close Icon"></i></a>
                                 </div>
                                 <div class="event-header">
@@ -1397,33 +1417,9 @@
                                     <span class="event-label">Trạng thái:</span>
                                     <span class="event-status badge px-2 py-1" style="font-size: 13px;"></span>
                                 </div>
-
-                                <div class="event-info">
-                                    <!-- Differentiated: Upload icon for Created At -->
-                                    <i class="bi bi-upload" aria-label="Created At Icon"></i>Created at:  <span class="event-created-at"></span>
-                                </div>
-                                <div class="event-info">
-                                    <!-- Differentiated: Arrow-repeat icon for Updated At -->
-                                    <i class="bi bi-arrow-repeat" aria-label="Updated At Icon"></i> Updated at:  <span class="event-updated-at"></span>
-                                </div>
                             </div>
 
-                            <div id="deleteConfirmModal" class="modal-overlay">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h3 class="modal-title">Xác nhận xóa</h3>
-                                        <button class="close-modal-btn"><i data-feather="x"></i></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <i data-feather="alert-triangle" class="warning-icon"></i>
-                                        <p id="deleteMessage"></p>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" id="cancelDeleteBtn">Hủy</button>
-                                        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Xóa</button>
-                                    </div>
-                                </div>
-                            </div>
+
                     </section>
                 </div>
             </div>
@@ -1466,8 +1462,6 @@
                     location: "${schedule.fullAddress != null ? fn:escapeXml(schedule.fullAddress.fullAddress) : 'Không xác định'}",
                     statusName: "${schedule.statusName}",
                     notes: "${schedule.notes}",
-                    createdAt: "${schedule.createdAt}",
-                    updatedAt: "${schedule.updatedAt}",
                     // THÊM PHẦN ASSIGNMENTS VÀO ĐÂY
                     assignments: [
                 <c:forEach var="assignment" items="${schedule.assignments}" varStatus="assignStatus">
@@ -1487,6 +1481,7 @@
             if (typeof val !== 'string' || !val.trim()) return null;
             return /^([01]\d|2[0-3]):([0-5]\d)$/.test(val.trim()) ? val.trim() : null;
             }
+// File: listSchedule.js hoặc trong thẻ <script>
 
             function updateEvent(scheduleId, newScheduledDate, newEndDate, newStartTime, newEndTime) {
             const url = contextPath + '/schedule?action=updateScheduleTime';
@@ -1699,8 +1694,45 @@
                 }
 
                 document.querySelectorAll('.time-slot, .all-day-slot').forEach(bindSlotDnD);
-// Improved drag function
+// Không cho kéo khi hoàn thành, cả hàm trong file js nữa
+                function setScheduleCompletedUI(scheduleId) {
+                const sid = String(scheduleId);
+                // Cập nhật model cục bộ
+                const sch = schedules.find(s => String(s.id) === sid);
+                if (sch) {
+                sch.statusName = 'Hoàn thành';
+                sch.statusId = 3; // tùy hệ thống của bạn
+                }
+
+                // Day/Week view: các .event
+                document.querySelectorAll(`#event-${sid}, .event[data-schedule-id="${sid}"]`)
+                        .forEach(el => {
+                        el.classList.add('is-completed');
+                        el.setAttribute('draggable', 'false'); // ngừng kéo
+                        });
+                // Month/List view: các item theo data-schedule-id
+                document.querySelectorAll(`.task-item[data-schedule-id="${sid}"], .event-item[data-schedule-id="${sid}"]`)
+                        .forEach(el => el.classList.add('is-completed'));
+                // Panel chi tiết (nếu đang mở)
+                const panel = document.getElementById('event-details-panel');
+                if (panel && panel.classList.contains('show')) {
+                const openedId = panel.querySelector('.event-id')?.textContent?.trim();
+                if (openedId === sid) {
+                const statusSpan = panel.querySelector('.event-status');
+                if (statusSpan) {
+                statusSpan.textContent = 'Hoàn thành';
+                statusSpan.className = 'event-status badge px-2 py-1 badge-completed';
+                }
+                }
+                }
+                }
+
                 function drag(ev) {
+                if (ev.target.classList.contains('is-completed')) {
+                ev.preventDefault();
+                showToast && showToast('Không thể kéo lịch đã hoàn thành', 'warning');
+                return;
+                }
                 ev.dataTransfer.setData("text/plain", ev.target.id);
                 ev.dataTransfer.effectAllowed = "move";
                 isInteracting = true;
@@ -2008,29 +2040,39 @@
                 detailsPanel.querySelector('.event-time-range').textContent = schedule.startTime ? schedule.startTime + (schedule.endTime ? ' - ' + schedule.endTime : '') : 'Cả ngày';
                 detailsPanel.querySelector('.event-location').textContent = schedule.location || 'Không xác định';
                 detailsPanel.querySelector('.event-notes').textContent = schedule.notes || 'Không có ghi chú';
-                detailsPanel.querySelector('.event-created-at').textContent = schedule.createdAt || 'N/A';
-                detailsPanel.querySelector('.event-updated-at').textContent = schedule.updatedAt || 'N/A';
                 // --- BẮT ĐẦU PHẦN CẬP NHẬT ĐỂ HIỂN THỊ THẺ NHÂN VIÊN ---
 
                 const assignmentsContainer = detailsPanel.querySelector('.event-assignments');
                 assignmentsContainer.innerHTML = ''; // Bắt đầu bằng việc xóa sạch nội dung cũ
                 const statusSpan = detailsPanel.querySelector('.event-status');
                 if (statusSpan) {
-                const raw = schedule.statusName;
-                const statusVal = (typeof raw === 'string' && raw.trim() !== '') ? raw.trim()
-                        : (schedule.statusId ? ({1:'Upcoming', 2:'In Progress', 3:'Completed'}[schedule.statusId] || 'N/A') : 'N/A');
-                statusSpan.textContent = statusVal;
-                statusSpan.className = 'event-status badge px-2 py-1';
-                statusSpan.classList.remove('bg-secondary', 'bg-info', 'bg-success', 'bg-warning', 'bg-danger');
-                const colorMap = {
-                'Upcoming': 'bg-secondary',
-                        'In Progress': 'bg-info',
-                        'Completed': 'bg-success',
-                        'Đang thực hiện': 'bg-info',
-                        'Hoàn thành': 'bg-success',
+                // 1) Chuẩn hoá về tiếng Việt
+                const fromName = (schedule.statusName || '').trim();
+                const mapEnToVi = {
+                'Upcoming': 'Sắp tới',
+                        'In Progress': 'Đang thực hiện',
+                        'Completed': 'Hoàn thành',
+                        'Overdue': 'Quá hạn',
+                        'Cancelled': 'Đã hủy'
                 };
-                statusSpan.classList.add(colorMap[statusVal] || 'bg-secondary');
+                const mapIdToVi = { 1: 'Sắp tới', 2: 'Đang thực hiện', 3: 'Hoàn thành', 4: 'Quá hạn', 5: 'Đã hủy' };
+                const statusVi =
+                        fromName
+                        ? (mapEnToVi[fromName] || fromName)                       // nếu có statusName -> đổi EN->VI
+                        : (mapIdToVi[schedule.statusId] || 'Sắp tới'); // fallback theo ID
+
+                // 2) Gắn class badge theo trạng thái (đổi màu tại đây)
+                const classByStatus = {
+                'Sắp tới': 'badge-upcoming',
+                        'Đang thực hiện': 'badge-inprogress',
+                        'Hoàn thành': 'badge-completed',
+                        'Quá hạn': 'badge-cancelled', // hoặc tạo riêng badge-overdue nếu muốn
+                        'Đã hủy': 'badge-cancelled'
+                };
+                statusSpan.textContent = statusVi;
+                statusSpan.className = 'event-status badge px-2 py-1 ' + (classByStatus[statusVi] || 'badge-upcoming');
                 }
+
                 // Hàm trợ giúp để lấy 2 chữ cái đầu của tên
                 function getInitials(name) {
                 if (!name || typeof name !== 'string' || name.trim() === '') {
@@ -2213,46 +2255,6 @@
                 document.getElementById("nextDayBtn").addEventListener("click", function () {
                 handleNav("next");
                 });
-                });
-                function openDeleteModal(e) {
-                e.preventDefault(); // Ngăn chặn hành vi mặc định của link
-                const detailsPanel = document.getElementById('event-details-panel');
-                const scheduleId = detailsPanel.querySelector('.event-id').textContent;
-                const title = detailsPanel.querySelector('.event-title').textContent;
-                const message = `Bạn có chắc chắn muốn xóa lịch bảo trì ?`;
-                document.getElementById('deleteMessage').textContent = message;
-                document.getElementById('deleteConfirmModal').classList.add('show');
-                }
-
-// Hàm đóng modal
-                function closeDeleteModal() {
-                document.getElementById('deleteConfirmModal').classList.remove('show');
-                }
-
-// Event listener cho nút close và hủy
-                document.querySelector('.close-modal-btn').addEventListener('click', closeDeleteModal);
-                document.getElementById('cancelDeleteBtn').addEventListener('click', closeDeleteModal);
-// Event listener cho nút xác nhận xóa
-                document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
-                const detailsPanel = document.getElementById('event-details-panel');
-                const scheduleId = detailsPanel.querySelector('.event-id').textContent;
-                fetch('${pageContext.request.contextPath}/schedule?action=delete', {
-                method: 'POST',
-                        headers: {
-                        'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({id: scheduleId}),
-                }).then(response => {
-                if (response.ok) {
-                location.reload(); // Reload trang để cập nhật danh sách
-                } else {
-                alert('Xóa thất bại!');
-                }
-                }).catch(error => {
-                console.error('Error:', error);
-                alert('Đã xảy ra lỗi khi xóa!');
-                });
-                closeDeleteModal(); // Đóng modal ngay lập tức
                 });
                 document.addEventListener('DOMContentLoaded', function() {
                 // Tìm đến phần tử hiển thị ngày
