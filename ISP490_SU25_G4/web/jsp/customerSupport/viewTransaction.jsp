@@ -57,6 +57,7 @@
         <div class="app-container">
             <jsp:include page="/mainMenu.jsp"/>
             <main class="main-content">
+
                 <div class="page-content" style="padding-top: 0; padding-bottom: 0;">
                     <c:if test="${param.update == 'success'}">
                         <div class="alert alert-success">
