@@ -16,9 +16,8 @@ import java.util.List;
 public class MaintenanceSchedule {
 
     private int id;
-
-    private int technicalRequestId;
-    private Integer campaignId;
+    private int technicalRequestId; // Kiểu int không thể null
+    private int campaignId;
     private String title;
     private String color;
     private LocalDate scheduledDate;
@@ -72,11 +71,11 @@ public class MaintenanceSchedule {
         this.assignedUserId = assignedUserId;
     }
 
-    public Integer getCampaignId() {
+    public int getCampaignId() {
         return campaignId;
     }
 
-    public void setCampaignId(Integer campaignId) {
+    public void setCampaignId(int campaignId) {
         this.campaignId = campaignId;
     }
 
@@ -104,14 +103,15 @@ public class MaintenanceSchedule {
         this.id = id;
     }
 
-    public Integer getTechnicalRequestId() {
-    return technicalRequestId;
-}
+    public int getTechnicalRequestId() {
+        return technicalRequestId;
+    }
 
     // ================= SỬA LỖI Ở ĐÂY =================
     /**
-     * Sửa lỗi NullPointerException bằng cách kiểm tra giá trị đầu vào.
-     * Nếu technicalRequestId là null, gán một giá trị mặc định (0) để tránh lỗi.
+     * Sửa lỗi NullPointerException bằng cách kiểm tra giá trị đầu vào. Nếu
+     * technicalRequestId là null, gán một giá trị mặc định (0) để tránh lỗi.
+     *
      * @param technicalRequestId ID của yêu cầu kỹ thuật, có thể là null từ DB.
      */
     public void setTechnicalRequestId(Integer technicalRequestId) {
