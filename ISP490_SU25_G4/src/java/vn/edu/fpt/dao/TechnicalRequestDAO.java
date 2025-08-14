@@ -212,10 +212,10 @@ public class TechnicalRequestDAO {
     }
 
     public Integer createTechnicalRequest(TechnicalRequest request, List<TechnicalRequestDevice> devices) {
-    Connection conn = null;
+        Connection conn = null;
 
-    // Đã sửa: Thêm ? thứ 13 cho created_at
-    String sqlRequest = """
+        // Đã sửa: Thêm ? thứ 13 cho created_at
+        String sqlRequest = """
     INSERT INTO TechnicalRequests (
       request_code, enterprise_id, contract_id, service_id,
       title, description, priority, `status`, reporter_id, assigned_to_id, 
@@ -223,105 +223,112 @@ public class TechnicalRequestDAO {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """;
 
-    String sqlDevice = """
+        String sqlDevice = """
     INSERT INTO TechnicalRequestDevices (
       technical_request_id, device_name, serial_number, problem_description
     ) VALUES (?, ?, ?, ?)
     """;
 
-    try {
-        conn = DBContext.getConnection();
-        conn.setAutoCommit(false);
-        int newRequestId;
+        try {
+            conn = DBContext.getConnection();
+            conn.setAutoCommit(false);
+            int newRequestId;
 
-        // ---- Insert TechnicalRequest ----
-        try (PreparedStatement psRequest = conn.prepareStatement(sqlRequest, Statement.RETURN_GENERATED_KEYS)) {
-            psRequest.setString(1, "REQ-" + System.currentTimeMillis());
-            psRequest.setInt(2, request.getEnterpriseId());
+            // ---- Insert TechnicalRequest ----
+            try (PreparedStatement psRequest = conn.prepareStatement(sqlRequest, Statement.RETURN_GENERATED_KEYS)) {
+                psRequest.setString(1, "REQ-" + System.currentTimeMillis());
+                psRequest.setInt(2, request.getEnterpriseId());
 
-            if (request.getContractId() != null) {
-                psRequest.setInt(3, request.getContractId());
-            } else {
-                psRequest.setNull(3, Types.INTEGER);
-            }
-
-            psRequest.setInt(4, request.getServiceId());
-            psRequest.setString(5, request.getTitle());
-            psRequest.setString(6, request.getDescription());
-            psRequest.setString(7, request.getPriority());
-
-            // status dạng String
-            String status = (request.getStatus() != null && !request.getStatus().isBlank())
-                    ? request.getStatus().trim()
-                    : "Mới tạo";
-            psRequest.setString(8, status);
-
-            psRequest.setInt(9, request.getReporterId());
-            if (request.getAssignedToId() != null) {
-                psRequest.setInt(10, request.getAssignedToId());
-            } else {
-                psRequest.setNull(10, Types.INTEGER);
-            }
-            psRequest.setBoolean(11, request.isIsBillable());
-            psRequest.setDouble(12, request.getEstimatedCost());
-            psRequest.setTimestamp(13, new java.sql.Timestamp(System.currentTimeMillis()));
-
-            if (psRequest.executeUpdate() == 0) {
-                throw new SQLException("Tạo yêu cầu thất bại.");
-            }
-
-            try (ResultSet generatedKeys = psRequest.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    newRequestId = generatedKeys.getInt(1);
+                if (request.getContractId() != null) {
+                    psRequest.setInt(3, request.getContractId());
                 } else {
-                    throw new SQLException("Không lấy được ID yêu cầu.");
+                    psRequest.setNull(3, Types.INTEGER);
+                }
+
+                psRequest.setInt(4, request.getServiceId());
+                psRequest.setString(5, request.getTitle());
+                psRequest.setString(6, request.getDescription());
+                psRequest.setString(7, request.getPriority());
+
+                // status dạng String
+                String status = (request.getStatus() != null && !request.getStatus().isBlank())
+                        ? request.getStatus().trim()
+                        : "Mới tạo";
+                psRequest.setString(8, status);
+
+                psRequest.setInt(9, request.getReporterId());
+                if (request.getAssignedToId() != null) {
+                    psRequest.setInt(10, request.getAssignedToId());
+                } else {
+                    psRequest.setNull(10, Types.INTEGER);
+                }
+                psRequest.setBoolean(11, request.isIsBillable());
+                psRequest.setDouble(12, request.getEstimatedCost());
+                psRequest.setTimestamp(13, new java.sql.Timestamp(System.currentTimeMillis()));
+
+                if (psRequest.executeUpdate() == 0) {
+                    throw new SQLException("Tạo yêu cầu thất bại.");
+                }
+
+                try (ResultSet generatedKeys = psRequest.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        newRequestId = generatedKeys.getInt(1);
+                    } else {
+                        throw new SQLException("Không lấy được ID yêu cầu.");
+                    }
                 }
             }
-        }
 
-        // ---- Insert danh sách thiết bị ----
-        if (devices != null && !devices.isEmpty()) {
-            try (PreparedStatement psDevice = conn.prepareStatement(sqlDevice)) {
-                for (TechnicalRequestDevice device : devices) {
-                    psDevice.setInt(1, newRequestId);
-                    psDevice.setString(2, device.getDeviceName());
-                    psDevice.setString(3, device.getSerialNumber());
-                    psDevice.setString(4, device.getProblemDescription());
-                    psDevice.addBatch();
+            // ---- Insert danh sách thiết bị ----
+            if (devices != null && !devices.isEmpty()) {
+                try (PreparedStatement psDevice = conn.prepareStatement(sqlDevice)) {
+                    for (TechnicalRequestDevice device : devices) {
+                        psDevice.setInt(1, newRequestId);
+                        psDevice.setString(2, device.getDeviceName());
+                        psDevice.setString(3, device.getSerialNumber());
+                        psDevice.setString(4, device.getProblemDescription());
+                        psDevice.addBatch();
+                    }
+                    psDevice.executeBatch();
                 }
-                psDevice.executeBatch();
             }
-        }
 
-        conn.commit();
-        return newRequestId; // Trả về ID vừa tạo
+            conn.commit();
+            return newRequestId; // Trả về ID vừa tạo
 
-    } catch (SQLException e) {
-        e.printStackTrace();
-        if (conn != null) {
-            try {
-                conn.rollback();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
             }
-        }
-        return null;
-    } finally {
-        if (conn != null) {
-            try {
-                conn.setAutoCommit(true);
-                conn.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
+            return null;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
-}
-
 
     public List<Contract> getAllActiveContracts() throws SQLException {
         List<Contract> contracts = new ArrayList<>();
-        String sql = "SELECT id, contract_code FROM contracts WHERE status = 'active' ORDER BY created_at DESC";
+        // Sửa lại câu SQL:
+        // 1. JOIN với bảng contract_statuses để lấy được tên trạng thái.
+        // 2. Lọc theo cs.name = 'Đang triển khai' thay vì status = 'active'.
+        // 3. Sử dụng alias (c, cs) cho các bảng để câu lệnh rõ ràng hơn.
+        String sql = "SELECT c.id, c.contract_code "
+                + "FROM contracts c "
+                + "JOIN contract_statuses cs ON c.status_id = cs.id "
+                + "WHERE cs.name = 'Đang triển khai' AND c.is_deleted = 0 "
+                + "ORDER BY c.created_at DESC";
 
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
@@ -337,11 +344,16 @@ public class TechnicalRequestDAO {
 
     public List<Contract> getActiveContractsByEnterpriseId(int enterpriseId) throws SQLException {
         List<Contract> contracts = new ArrayList<>();
-        String sql = "SELECT id, contract_code FROM contracts WHERE enterprise_id = ? AND status = 'active' ORDER BY created_at DESC";
+        // Tương tự, sửa lại câu lệnh SQL để JOIN và lọc cho đúng.
+        String sql = "SELECT c.id, c.contract_code "
+                + "FROM contracts c "
+                + "JOIN contract_statuses cs ON c.status_id = cs.id "
+                + "WHERE c.enterprise_id = ? AND cs.name = 'Đang triển khai' AND c.is_deleted = 0 "
+                + "ORDER BY c.created_at DESC";
 
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, enterpriseId); // Gán enterpriseId vào câu lệnh SQL
+            ps.setInt(1, enterpriseId);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {

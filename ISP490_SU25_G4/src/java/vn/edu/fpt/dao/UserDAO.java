@@ -1148,4 +1148,41 @@ public class UserDAO {
         }
         return list;
     }
+
+    // Thêm phương thức này vào trong lớp UserDAO.java
+    public List<User> getAllActiveUsers() throws SQLException {
+        List<User> list = new ArrayList<>();
+        // Lấy các người dùng chưa bị xóa
+        String sql = "SELECT * FROM Users WHERE is_deleted = 0 ORDER BY first_name, last_name";
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                User user = new User();
+                user.setId(rs.getInt("id"));
+                user.setEmail(rs.getString("email"));
+                // Không lấy password_hash để đảm bảo an toàn
+                user.setLastName(rs.getString("last_name"));
+                user.setMiddleName(rs.getString("middle_name"));
+                user.setFirstName(rs.getString("first_name"));
+                user.setAvatarUrl(rs.getString("avatar_url"));
+                user.setEmployeeCode(rs.getString("employee_code"));
+                user.setPhoneNumber(rs.getString("phone_number"));
+                if (rs.getDate("date_of_birth") != null) {
+                    user.setDateOfBirth(rs.getDate("date_of_birth").toLocalDate());
+                }
+                user.setGender(rs.getString("gender"));
+                user.setIdentityCardNumber(rs.getString("identity_card_number"));
+                user.setNotes(rs.getString("notes"));
+                user.setAddressId(rs.getInt("address_id"));
+                user.setPositionId(rs.getInt("position_id"));
+                user.setDepartmentId(rs.getInt("department_id"));
+                user.setRoleId(rs.getInt("role_id"));
+
+                list.add(user);
+            }
+        }
+        return list;
+    }
+
 }

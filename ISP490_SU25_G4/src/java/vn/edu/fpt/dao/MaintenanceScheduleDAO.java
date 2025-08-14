@@ -602,6 +602,63 @@ public class MaintenanceScheduleDAO extends DBContext {
         }
     }
 
+    // MỚI: Thêm phương thức NẠP CHỒNG (overloaded) để hỗ trợ transaction
+// Chỉ dùng cho các servlet cần transaction như AddCampaignServlet
+    public int addMaintenanceScheduleAndReturnId(MaintenanceSchedule schedule, Connection conn) throws SQLException {
+        String sql = "INSERT INTO MaintenanceSchedules "
+                + "(campaign_id, scheduled_date, status_id, color, address_id, start_time, end_time, end_date) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+        // Sử dụng connection được truyền vào để đảm bảo transaction
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            // Dùng setObject để xử lý null an toàn cho các ID có thể không có
+            if (schedule.getCampaignId() != null && schedule.getCampaignId() > 0) {
+                ps.setInt(1, schedule.getCampaignId());
+            } else {
+                ps.setNull(1, java.sql.Types.INTEGER);
+            }
+
+            ps.setDate(2, java.sql.Date.valueOf(schedule.getScheduledDate()));
+            ps.setInt(3, schedule.getStatusId());
+            ps.setString(4, schedule.getColor());
+            ps.setInt(5, schedule.getAddressId());
+
+            // Xử lý các trường thời gian có thể bị null
+            if (schedule.getStartTime() != null) {
+                ps.setTime(6, java.sql.Time.valueOf(schedule.getStartTime()));
+            } else {
+                ps.setNull(6, java.sql.Types.TIME);
+            }
+
+            if (schedule.getEndTime() != null) {
+                ps.setTime(7, java.sql.Time.valueOf(schedule.getEndTime()));
+            } else {
+                ps.setNull(7, java.sql.Types.TIME);
+            }
+
+            if (schedule.getEndDate() != null) {
+                ps.setDate(8, java.sql.Date.valueOf(schedule.getEndDate()));
+            } else {
+                ps.setNull(8, java.sql.Types.DATE);
+            }
+
+            int affectedRows = ps.executeUpdate();
+
+            if (affectedRows == 0) {
+                throw new SQLException("Tạo lịch trình thất bại, không có dòng nào được thêm.");
+            }
+
+            try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    return generatedKeys.getInt(1); // Trả về ID của lịch trình vừa tạo
+                } else {
+                    throw new SQLException("Tạo lịch trình thất bại, không lấy được ID.");
+                }
+            }
+        }
+    }
+
     public static void main(String[] args) {
         MaintenanceScheduleDAO dao = new MaintenanceScheduleDAO();
         MaintenanceSchedule schedule = dao.getMaintenanceScheduleById(37);

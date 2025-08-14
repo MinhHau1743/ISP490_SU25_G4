@@ -750,4 +750,31 @@ public class EnterpriseDAO extends DBContext {
 
     }
 
+    // Thêm phương thức này vào trong lớp EnterpriseDAO.java
+    public List<Enterprise> getAllEnterprises() throws SQLException {
+        List<Enterprise> list = new ArrayList<>();
+        // Lấy các doanh nghiệp chưa bị xóa
+        String sql = "SELECT * FROM Enterprises WHERE is_deleted = 0 ORDER BY name";
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                Enterprise enterprise = new Enterprise();
+                enterprise.setId(rs.getInt("id"));
+                enterprise.setEnterpriseCode(rs.getString("enterprise_code"));
+                enterprise.setName(rs.getString("name"));
+                enterprise.setTaxCode(rs.getString("tax_code"));
+                enterprise.setHotline(rs.getString("hotline"));
+                enterprise.setBankNumber(rs.getString("bank_number"));
+                enterprise.setBusinessEmail(rs.getString("business_email"));
+                enterprise.setCustomerTypeId(rs.getInt("customer_type_id"));
+                enterprise.setAddressId(rs.getInt("address_id"));
+                enterprise.setAvatarUrl(rs.getString("avatar_url"));
+
+                list.add(enterprise);
+            }
+        }
+        return list;
+    }
+
 }

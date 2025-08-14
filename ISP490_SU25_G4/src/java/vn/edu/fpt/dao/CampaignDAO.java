@@ -1,5 +1,6 @@
 package vn.edu.fpt.dao;
 
+import java.sql.Statement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -219,5 +220,34 @@ public class CampaignDAO {
             e.printStackTrace();
         }
         return types;
+    }
+
+    public int addCampaignAndReturnId(Campaign campaign, Connection conn) throws SQLException {
+        String sql = "INSERT INTO Campaigns (name, type_id, enterprise_id, description, status) VALUES (?, ?, ?, ?, ?)";
+
+        // Sử dụng connection được truyền vào để đảm bảo transaction
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            ps.setString(1, campaign.getName());
+            ps.setInt(2, campaign.getTypeId());
+            ps.setInt(3, campaign.getEnterpriseId());
+            ps.setString(4, campaign.getDescription());
+            ps.setString(5, campaign.getStatus()); // Ví dụ: "pending"
+
+            int affectedRows = ps.executeUpdate();
+
+            if (affectedRows == 0) {
+                throw new SQLException("Tạo chiến dịch thất bại, không có dòng nào được thêm.");
+            }
+
+            try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    // Trả về ID của bản ghi vừa được tạo
+                    return generatedKeys.getInt(1);
+                } else {
+                    throw new SQLException("Tạo chiến dịch thất bại, không lấy được ID.");
+                }
+            }
+        }
     }
 }
