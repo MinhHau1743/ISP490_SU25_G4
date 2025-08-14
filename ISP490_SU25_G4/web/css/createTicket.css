@@ -466,3 +466,25 @@ input[type="radio"] {
         grid-template-columns: 1fr;
     }
 }
+/* Style cho các ô màu */
+.color-swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-block;
+    margin: 4px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 2px solid transparent; /* Thêm viền trong suốt để không bị giật layout */
+}
+
+.color-swatch:hover {
+    transform: scale(1.1);
+}
+
+/* Style cho ô màu ĐANG ĐƯỢC CHỌN */
+.color-swatch.active {
+    border-color: #333; /* Viền đen để làm nổi bật */
+    box-shadow: 0 0 0 2px white, 0 0 0 4px #333; /* Tạo hiệu ứng 2 lớp viền đẹp mắt */
+    transform: scale(1.1);
+}

@@ -198,3 +198,38 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
     });
 });
+document.addEventListener('DOMContentLoaded', function () {
+    const colorPalette = document.querySelector('.color-palette');
+    const hiddenColorInput = document.getElementById('color');
+    const swatches = colorPalette.querySelectorAll('.color-swatch');
+
+    // Hàm để cập nhật trạng thái active
+    function setActiveColor(selectedColor) {
+        // 1. Cập nhật giá trị cho input ẩn
+        hiddenColorInput.value = selectedColor;
+
+        // 2. Cập nhật giao diện
+        swatches.forEach(swatch => {
+            if (swatch.dataset.color === selectedColor) {
+                swatch.classList.add('active');
+            } else {
+                swatch.classList.remove('active');
+            }
+        });
+    }
+
+    // Xử lý sự kiện click vào một ô màu
+    colorPalette.addEventListener('click', function (event) {
+        const clickedSwatch = event.target;
+        if (clickedSwatch.classList.contains('color-swatch')) {
+            const selectedColor = clickedSwatch.dataset.color;
+            setActiveColor(selectedColor);
+        }
+    });
+
+    // Chạy lần đầu khi tải trang để highlight màu đã được lưu
+    const initialColor = hiddenColorInput.value;
+    if (initialColor) {
+        setActiveColor(initialColor);
+    }
+});

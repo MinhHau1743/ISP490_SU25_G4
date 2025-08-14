@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
@@ -73,8 +74,8 @@ public class ScheduleController extends HttpServlet {
         } else if ("getWards".equals(action)) {
             getWards(request, response);
             return;
-        } else if ("delete".equals(action)) {
-            deleteGet(request, response);
+        } else if ("markAsComplete".equals(action)) {
+            handleMarkAsComplete(request, response);
             return;
         }
         // Mặc định (hoặc action=listSchedule): hiển thị lịch
@@ -93,10 +94,7 @@ public class ScheduleController extends HttpServlet {
         } else if ("updateSchedule".equals(action)) {
             handleEditSubmit(request, response);
             return;
-        } else if ("delete".equals(action)) {
-            deletePost(request, response);
-            return;
-        }
+        } 
         // Nếu không khớp action, về GET
         doGet(request, response);
     }
@@ -315,7 +313,7 @@ public class ScheduleController extends HttpServlet {
 
         Map<LocalDate, List<MaintenanceSchedule>> groupedSchedules
                 = schedules.stream().collect(Collectors.groupingBy(MaintenanceSchedule::getScheduledDate));
-
+        updateScheduleStatuses(schedules);
         // Set attribute ra JSP
         request.setAttribute("groupedSchedules", groupedSchedules);
         request.setAttribute("schedules", schedules);
@@ -1059,49 +1057,7 @@ public class ScheduleController extends HttpServlet {
     }
     // ---------- Helper Methods ----------
 
-    private void deleteGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        // Không hỗ trợ GET, trả lỗi
-        response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-        response.getWriter().print("{\"status\": \"error\", \"message\": \"Phương thức không được hỗ trợ\"}");
-    }
-
-    private void deletePost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("application/json");
-        PrintWriter out = response.getWriter();
-
-        try {
-            // Đọc JSON từ request body
-            StringBuilder sb = new StringBuilder();
-            BufferedReader reader = request.getReader();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                sb.append(line);
-            }
-            JSONObject json = new JSONObject(sb.toString());
-            int scheduleId = json.getInt("id");
-
-            // Gọi DAO để xóa
-            MaintenanceScheduleDAO dao = new MaintenanceScheduleDAO();
-            boolean deleteSuccess = dao.deleteMaintenanceSchedule(scheduleId);
-
-            if (deleteSuccess) {
-                response.setStatus(HttpServletResponse.SC_OK);
-                out.print("{\"status\": \"success\"}");
-            } else {
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                out.print("{\"status\": \"error\", \"message\": \"Không thể xóa lịch bảo trì\"}");
-            }
-
-        } catch (Exception e) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            out.print("{\"status\": \"error\", \"message\": \"Có lỗi xảy ra khi xóa lịch bảo trì: " + e.getMessage() + "\"}");
-            e.printStackTrace();
-        } finally {
-            out.flush();
-        }
-    }
+    
 
     private LocalDate parseNullableDate(JSONObject json, String key) {
         if (!json.has(key) || json.isNull(key)) {
@@ -1173,5 +1129,136 @@ public class ScheduleController extends HttpServlet {
             out.flush();
         }
     }
+
+    private void updateScheduleStatuses(List<MaintenanceSchedule> schedules) {
+        // Lấy thời gian hiện tại MỘT LẦN DUY NHẤT để đảm bảo tính nhất quán
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = now.toLocalDate();
+
+        // Duyệt qua từng lịch trình để cập nhật
+        for (MaintenanceSchedule schedule : schedules) {
+
+            // --- ƯU TIÊN SỐ 1: Nếu đã "Hoàn thành", không thay đổi nữa ---
+            if (schedule.getStatusName() != null && schedule.getStatusName().equalsIgnoreCase("Hoàn thành")) {
+                // Đặt lại ID cho chắc chắn
+                schedule.setStatusId(3);
+                continue; // Bỏ qua và chuyển sang lịch trình tiếp theo
+            }
+
+            // Lấy thông tin ngày giờ của lịch trình
+            LocalDate scheduledDate = schedule.getScheduledDate();
+            LocalDate endDate = schedule.getEndDate() != null ? schedule.getEndDate() : scheduledDate; // Nếu không có ngày kết thúc, coi như là trong ngày
+
+            LocalTime startTime = schedule.getStartTime();
+            LocalTime endTime = schedule.getEndTime();
+
+            // Mặc định cho sự kiện cả ngày (all-day)
+            LocalDateTime scheduleStartDateTime = scheduledDate.atStartOfDay(); // 00:00 của ngày bắt đầu
+            LocalDateTime scheduleEndDateTime = endDate.atTime(LocalTime.MAX);   // 23:59:59 của ngày kết thúc
+
+            // Nếu có giờ cụ thể, dùng giờ đó
+            if (startTime != null) {
+                scheduleStartDateTime = scheduledDate.atTime(startTime);
+            }
+            if (endTime != null) {
+                scheduleEndDateTime = endDate.atTime(endTime);
+            }
+
+            // --- ÁP DỤNG CÁC QUY TẮC ĐỂ XÁC ĐỊNH TRẠNG THÁI ---
+            // QUY TẮC 1: QUÁ HẠN
+            // Nếu thời gian kết thúc của lịch trình đã qua VÀ nó chưa được "Hoàn thành"
+            if (scheduleEndDateTime.isBefore(now)) {
+                schedule.setStatusName("Quá hạn");
+                schedule.setStatusId(4); // ID của "Quá hạn"
+            } // QUY TẮC 2: ĐANG THỰC HIỆN
+            // Nếu thời gian hiện tại nằm trong khoảng [bắt đầu, kết thúc]
+            else if (!now.isBefore(scheduleStartDateTime) && !now.isAfter(scheduleEndDateTime)) {
+                schedule.setStatusName("Đang thực hiện");
+                schedule.setStatusId(2); // ID của "Đang thực hiện"
+            } // QUY TẮC 3: SẮP TỚI
+            // Nếu thời gian bắt đầu của lịch trình vẫn chưa tới
+            else if (scheduleStartDateTime.isAfter(now)) {
+                schedule.setStatusName("Sắp tới");
+                schedule.setStatusId(1); // ID của "Sắp tới"
+            }
+        }
+    }
+
+ private void handleMarkAsComplete(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    response.setContentType("application/json;charset=UTF-8");
+    request.setCharacterEncoding("UTF-8");
+
+    try {
+        // Đọc body
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader reader = request.getReader()) {
+            String line;
+            while ((line = reader.readLine()) != null) sb.append(line);
+        }
+        String raw = sb.toString().trim();
+
+        Integer scheduleId = null;
+
+        // Ưu tiên JSON body nếu Content-Type là application/json
+        String ct = request.getContentType();
+        if (!raw.isEmpty() && ct != null && ct.toLowerCase().contains("application/json")) {
+            // Dùng parser kiểu cũ (tương thích rộng)
+            com.google.gson.JsonParser parser = new com.google.gson.JsonParser();
+            com.google.gson.JsonElement je = parser.parse(raw);
+
+            if (je.isJsonPrimitive()) {
+                // body = 123 hoặc "123"
+                if (je.getAsJsonPrimitive().isNumber()) {
+                    scheduleId = je.getAsInt();
+                } else {
+                    String s = je.getAsString();
+                    if (s != null && !s.trim().isEmpty()) {
+                        scheduleId = Integer.parseInt(s.trim());
+                    }
+                }
+            } else if (je.isJsonObject()) {
+                com.google.gson.JsonObject obj = je.getAsJsonObject();
+                if (obj.has("id")) {
+                    scheduleId = Integer.parseInt(obj.get("id").getAsString().trim());
+                } else if (obj.has("scheduleId")) {
+                    scheduleId = Integer.parseInt(obj.get("scheduleId").getAsString().trim());
+                } else if (obj.has("schedule") && obj.get("schedule").isJsonObject()) {
+                    com.google.gson.JsonObject sch = obj.getAsJsonObject("schedule");
+                    if (sch.has("id")) {
+                        scheduleId = Integer.parseInt(sch.get("id").getAsString().trim());
+                    }
+                }
+            }
+        }
+
+        // Fallback: form-urlencoded ?id=123
+        if (scheduleId == null) {
+            String p = request.getParameter("id");
+            if (p != null && !p.isBlank()) {
+                try { scheduleId = Integer.parseInt(p.trim()); } catch (NumberFormatException ignore) {}
+            }
+        }
+
+        if (scheduleId == null || scheduleId <= 0) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write("{\"message\":\"Dữ liệu không hợp lệ: thiếu hoặc sai ID.\"}");
+            return;
+        }
+
+        boolean ok = new MaintenanceScheduleDAO().markAsCompleted(scheduleId);
+        if (ok) {
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.getWriter().write("{\"message\":\"Cập nhật trạng thái thành công!\",\"id\":" + scheduleId + "}");
+        } else {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            response.getWriter().write("{\"message\":\"Không tìm thấy lịch trình với ID đã cho.\"}");
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        String msg = e.getMessage() == null ? "" : (" - " + e.getMessage().replace("\"","\\\""));
+        response.getWriter().write("{\"message\":\"Lỗi server: " + e.getClass().getSimpleName() + msg + "\"}");
+    }
+}
 
 }

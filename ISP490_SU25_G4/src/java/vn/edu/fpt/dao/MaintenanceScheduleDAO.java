@@ -59,6 +59,24 @@ public class MaintenanceScheduleDAO extends DBContext {
         }
         return schedules;
     }
+// File: MaintenanceScheduleDAO.java
+
+    public boolean markAsCompleted(int scheduleId) {
+        // Giả định ID của trạng thái 'Hoàn thành' là 3
+        String sql = "UPDATE MaintenanceSchedules SET status_id = 3, updated_at = NOW() WHERE id = ?";
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, scheduleId);
+
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
     public boolean updateScheduleByDragDrop(int id, LocalDate scheduledDate, LocalDate endDate, LocalTime startTime, LocalTime endTime) {
         // Chỉ cần MỘT câu lệnh UPDATE
@@ -106,7 +124,7 @@ public class MaintenanceScheduleDAO extends DBContext {
     }
 
     public boolean deleteMaintenanceSchedule(int scheduleId) {
-        String sql = "DELETE FROM MaintenanceSchedules WHERE id = ?";
+        String sql = "DELETE FROM MaintenanceSchedules WHERE technical_request_id = ?";
 
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -587,7 +605,7 @@ public class MaintenanceScheduleDAO extends DBContext {
     public static void main(String[] args) {
         MaintenanceScheduleDAO dao = new MaintenanceScheduleDAO();
         MaintenanceSchedule schedule = dao.getMaintenanceScheduleById(37);
-        
+
         if (schedule != null) {
             System.out.println("✅ Tìm thấy MaintenanceSchedule:");
             System.out.println("ID: " + schedule.getId());
@@ -603,14 +621,14 @@ public class MaintenanceScheduleDAO extends DBContext {
             System.out.println("Created At: " + schedule.getCreatedAt());
             System.out.println("Updated At: " + schedule.getUpdatedAt());
             System.out.println("Notes: " + schedule.getNotes());
-            
+
             // Address fields
             System.out.println("\n--- Address Information ---");
             System.out.println("Street Address: " + schedule.getStreetAddress());
             System.out.println("Province: " + schedule.getProvinceName() + " (ID: " + schedule.getProvinceId() + ")");
             System.out.println("District: " + schedule.getDistrictName() + " (ID: " + schedule.getDistrictId() + ")");
             System.out.println("Ward: " + schedule.getWardName() + " (ID: " + schedule.getWardId() + ")");
-            
+
             // TechnicalRequest fields
             System.out.println("\n--- Technical Request Information ---");
             System.out.println("Title: " + schedule.getTitle());

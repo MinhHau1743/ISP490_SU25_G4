@@ -67,8 +67,8 @@
                                         <div class="snippet"><span class="snippet-label">Xuất xứ</span><span class="snippet-value">${product.origin}</span></div>
                                         <div class="snippet"><span class="snippet-label">Ngày tạo</span><span class="snippet-value">${product.createdAt}</span></div>
                                         <div class="snippet"><span class="snippet-label">Cập nhật</span><span class="snippet-value">${product.updatedAt}</span></div>
-                                        <div class="snippet"><span class="snippet-label">Người tạo</span><span class="snippet-value">${product.createdBy}</span></div>
-                                        <div class="snippet"><span class="snippet-label">Người cập nhật</span><span class="snippet-value">${product.updatedBy}</span></div>
+                                        <div class="snippet"><span class="snippet-label">Người tạo</span><span class="snippet-value">${product.createdByName}</span></div>
+                                        <div class="snippet"><span class="snippet-label">Người cập nhật</span><span class="snippet-value">${product.updatedByName}</span></div>
                                     </div>
 
                                     <div class="view-actions">
