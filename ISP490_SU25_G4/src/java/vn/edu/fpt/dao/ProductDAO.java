@@ -36,7 +36,7 @@ public class ProductDAO extends DBContext {
         p.setUpdatedAt(rs.getTimestamp("updated_at"));
         p.setCreatedBy(rs.getInt("created_by"));
         p.setUpdatedBy(rs.getInt("updated_by"));
-
+        p.setDescription(rs.getString("description"));
         // Đọc dữ liệu từ 2 cột ảo được tạo bởi JOIN
         p.setCreatedByName(rs.getString("created_by_name"));
         p.setUpdatedByName(rs.getString("updated_by_name"));

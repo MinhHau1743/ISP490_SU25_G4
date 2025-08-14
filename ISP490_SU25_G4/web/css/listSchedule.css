@@ -446,3 +446,25 @@ html, body {
 .popover-action.delete:hover {
     background-color: #fbebeb;
 }
+/* ==== KHÓA CỘT WEEK VIEW KHÔNG BỊ XÊ DỊCH ==== */
+
+
+
+/* Cho phép nội dung trong 7 cột ngày thu nhỏ, không đẩy giãn cột */
+#week-view .time-slot,
+#week-view .all-day-slot,
+#week-view .day-header-cell{
+  min-width: 0 !important;     /* quan trọng để không bị “đội cột” */
+  text-overflow: ellipsis;
+}
+
+/* Sự kiện bên trong cũng không được đẩy giãn cột */
+#week-view .event{
+  min-width: 0 !important;
+}
+
+/* Nếu trước đó có đặt flex-wrap: nowrap gây đùn ngang, bỏ nó đi */
+#week-view .time-slot,
+#week-view .all-day-slot{
+  flex-wrap: wrap !important;   /* nhiều event sẽ xuống dòng, không đẩy giãn cột */
+}
