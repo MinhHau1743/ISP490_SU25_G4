@@ -41,7 +41,9 @@ public class MaintenanceSchedule {
     private String wardName;
     private String statusName;
     private Integer assignedUserId;
-
+    private Address address;
+    
+    
     public MaintenanceSchedule() {
     }
 
@@ -271,4 +273,14 @@ public class MaintenanceSchedule {
     public void setWardName(String wardName) {
         this.wardName = wardName;
     }
+    
+    
+    public Address getAddress() {
+        return address;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
+    }
+    
 }

@@ -1,0 +1,163 @@
+/*
+    File: viewCampaignDetails.css
+    Description: CSS đã gộp và hoàn chỉnh cho trang "Xem chi tiết chiến dịch".
+    Author: DPCRM Assistant
+    Last Updated: 15/08/2025
+*/
+
+/* ======================================================= */
+/* === 1. BỐ CỤC CHUNG CỦA TRANG                       === */
+/* ======================================================= */
+
+/* Container chính của trang, làm nhiệm vụ căn giữa nội dung */
+.page-container {
+    width: 100%;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Đặt chiều rộng tối đa cho header và card nội dung */
+.page-container .page-header,
+.page-container .content-card {
+    width: 100%;
+    max-width: 1100px;
+}
+
+
+/* ======================================================= */
+/* === 2. CÁC THÀNH PHẦN GIAO DIỆN CHUNG               === */
+/* ======================================================= */
+
+/* --- 2.1. Header và Card --- */
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.page-header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.content-card {
+    background-color: var(--white);
+    padding: 24px 32px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.sub-header {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-top: 24px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.content-card h3:first-of-type {
+    margin-top: 0;
+}
+
+
+/* --- 2.2. Lưới và Nhóm thông tin --- */
+
+/* ĐÃ SỬA: Chuyển lưới thành 1 cột duy nhất */
+.detail-row {
+    display: grid;
+    grid-template-columns: 1fr; /* Chỉ hiển thị 1 cột */
+    gap: 0; /* Bỏ khoảng cách cột, vì giờ chỉ có 1 cột */
+}
+
+.detail-group {
+    margin-bottom: 16px;
+}
+
+.detail-group label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    display: block;
+}
+
+.detail-value {
+    width: 100%;
+    min-height: 42px;
+    padding: 10px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: #f9fafb;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    word-break: break-word;
+    line-height: 1.5;
+}
+
+.detail-value.description {
+    height: auto;
+    min-height: 80px;
+    align-items: flex-start;
+}
+
+
+/* Trong file viewCampaignDetails.css */
+
+/* --- 2.3. Thẻ trạng thái (Status Pills) --- */
+
+.status-pill {
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ĐÃ THÊM: Style cho trạng thái "pending" */
+.status-pill.status-pending {
+    background-color: #fef9c3; /* Vàng nhạt */
+    color: #a16207; /* Vàng đậm */
+}
+
+.status-pill.status-active {
+    background-color: #dcfce7;
+    color: #166534;
+}
+.status-pill.status-ended {
+    background-color: #e5e7eb;
+    color: #4b5563;
+}
+.status-pill.status-canceled {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+.status-pill.status-draft {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+
+/* --- 2.4. Nút bấm --- */
+/* Đảm bảo các nút bấm được định dạng đúng */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 24px;
+    margin-top: 24px;
+    border-top: 1px solid #f3f4f6;
+}
+

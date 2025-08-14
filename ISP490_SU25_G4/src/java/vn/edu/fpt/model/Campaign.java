@@ -1,48 +1,61 @@
 package vn.edu.fpt.model;
 
 import java.sql.Timestamp;
-import java.util.Date; // ĐÃ THÊM: import java.util.Date
+import java.util.Date;
 
 /**
- * Lớp Model này đại diện cho một chiến dịch (Campaign). Cấu trúc đã được cập
- * nhật để phù hợp với CSDL đã cải tiến.
+ * Model Campaign (đã đồng bộ với DB mới): - Không lưu status text trong bảng
+ * Campaigns. - Trạng thái lấy từ MaintenanceSchedules.status_id ->
+ * Statuses.status_name. - Ngày bắt đầu/kết thúc hiển thị lấy từ lịch trình mới
+ * nhất.
  */
 public class Campaign {
 
-    // Các trường tương ứng với cột trong DB
+    // ====== Fields map trực tiếp từ bảng Campaigns ======
     private int campaignId;
+    private String campaignCode;
     private String name;
     private String description;
     private int enterpriseId;
-    private String status;
     private int typeId;
     private int createdBy;
     private Integer updatedBy;
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
-    // ĐÃ THÊM: Các trường cho ngày bắt đầu và kết thúc lấy từ MaintenanceSchedules
-    private Date startDate;
-    private Date endDate;
+    // ====== Dữ liệu bổ sung từ bảng liên quan (để hiển thị) ======
+    // Lịch trình mới nhất
+    private Date startDate;   // = scheduled_date
+    private Date endDate;     // = end_date
 
-    // Các thuộc tính bổ sung để chứa đối tượng liên quan (giúp hiển thị trên JSP)
-    private User creator; // Đối tượng người tạo chiến dịch
-    private String enterpriseName; // Tên khách hàng
-    private String typeName; // Tên loại chiến dịch
+    // Trạng thái từ Statuses (qua MaintenanceSchedules.status_id)
+    private Integer statusId;
+    private String statusName;
 
-    /**
-     * Constructor mặc định
-     */
+    // Thông tin hiển thị thêm
+    private User creator;         // Users
+    private String enterpriseName;
+    private String typeName;
+
+    // ====== Constructors ======
     public Campaign() {
     }
 
-    // --- Getters and Setters ---
+    // ====== Getters / Setters ======
     public int getCampaignId() {
         return campaignId;
     }
 
     public void setCampaignId(int campaignId) {
         this.campaignId = campaignId;
+    }
+
+    public String getCampaignCode() {
+        return campaignCode;
+    }
+
+    public void setCampaignCode(String campaignCode) {
+        this.campaignCode = campaignCode;
     }
 
     public String getName() {
@@ -67,14 +80,6 @@ public class Campaign {
 
     public void setEnterpriseId(int enterpriseId) {
         this.enterpriseId = enterpriseId;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
     }
 
     public int getTypeId() {
@@ -117,7 +122,7 @@ public class Campaign {
         this.updatedAt = updatedAt;
     }
 
-    // ---- BẮT ĐẦU PHẦN ĐÃ THÊM ----
+    // Lịch trình (mới nhất)
     public Date getStartDate() {
         return startDate;
     }
@@ -133,9 +138,25 @@ public class Campaign {
     public void setEndDate(Date endDate) {
         this.endDate = endDate;
     }
-    // ---- KẾT THÚC PHẦN ĐÃ THÊM ----
 
-    // --- Getters & Setters cho các thuộc tính đối tượng bổ sung ---
+    // Trạng thái (qua Statuses)
+    public Integer getStatusId() {
+        return statusId;
+    }
+
+    public void setStatusId(Integer statusId) {
+        this.statusId = statusId;
+    }
+
+    public String getStatusName() {
+        return statusName;
+    }
+
+    public void setStatusName(String statusName) {
+        this.statusName = statusName;
+    }
+
+    // Thông tin hiển thị thêm
     public User getCreator() {
         return creator;
     }
@@ -158,5 +179,44 @@ public class Campaign {
 
     public void setTypeName(String typeName) {
         this.typeName = typeName;
+    }
+
+    // ====== Aliases để tương thích JSP/DAO cũ ======
+    /**
+     * Alias cho scheduled_date để không phải đổi JSP (list dùng
+     * ${campaign.scheduledDate}).
+     */
+    public Date getScheduledDate() {
+        return startDate;
+    }
+
+    public void setScheduledDate(Date scheduledDate) {
+        this.startDate = scheduledDate;
+    }
+
+    /**
+     * Alias cho status text nếu code cũ còn gọi getStatus()/setStatus(...).
+     */
+    public String getStatus() {
+        return statusName;
+    }
+
+    public void setStatus(String status) {
+        this.statusName = status;
+    }
+
+    @Override
+    public String toString() {
+        return "Campaign{"
+                + "campaignId=" + campaignId
+                + ", campaignCode='" + campaignCode + '\''
+                + ", name='" + name + '\''
+                + ", enterpriseId=" + enterpriseId
+                + ", typeId=" + typeId
+                + ", statusId=" + statusId
+                + ", statusName='" + statusName + '\''
+                + ", startDate=" + startDate
+                + ", endDate=" + endDate
+                + '}';
     }
 }

@@ -8,6 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import static vn.edu.fpt.dao.DBContext.getConnection;
 
 public class StatusDAO {
 
@@ -36,4 +37,53 @@ public class StatusDAO {
 
     // Bạn có thể thêm các phương thức khác ở đây nếu cần, ví dụ:
     // public Status getStatusById(int id) { ... }
+    public Status getStatusById(int statusId) {
+        String sql = "SELECT * FROM Statuses WHERE id = ?";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, statusId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Status status = new Status();
+                    status.setId(rs.getInt("id"));
+                    status.setStatusName(rs.getString("status_name"));
+                    return status;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace(); // In lỗi ra console để debug
+        }
+        return null; // Trả về null nếu có lỗi hoặc không tìm thấy
+    }
+
+    /**
+     * Lấy id theo status_name. Trả về null nếu không thấy. (Dùng connection sẵn
+     * có)
+     */
+    public Integer getIdByName(String name, Connection conn) throws SQLException {
+        String sql = "SELECT id FROM Statuses WHERE status_name = ? LIMIT 1";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, name);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("id");
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Overload: tự mở connection từ DBContext.
+     */
+    public Integer getIdByName(String name) {
+        try (Connection conn = DBContext.getConnection()) {
+            return getIdByName(name, conn);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 }

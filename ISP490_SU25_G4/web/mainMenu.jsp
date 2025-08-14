@@ -1,7 +1,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
-<%-- Lấy tên của trang hoặc servlet hiện tại để làm nổi bật menu --%>
+<%-- Lấy tên của trang hoặc servlet hiện tại để làm nổi bật menu (Phần này đã rất tốt) --%>
 <c:set var="rawPage" value="${pageContext.request.servletPath.substring(1)}" />
 <c:set var="currentPage" value="${rawPage.replace('.jsp', '')}" />
 
@@ -12,7 +12,6 @@
             <img src="${pageContext.request.contextPath}/image/logo.png" alt="logo" class="logo-img">
             <span class="sidebar-title">DPCRM</span>
         </div>
-        <%-- Nút ghim để thu/mở menu --%>
         <button class="pin-btn" title="Thu gọn menu">
             <i data-feather="unlock"></i>
         </button>
@@ -21,14 +20,13 @@
     <%-- PHẦN MENU ĐIỀU HƯỚNG --%>
     <nav class="sidebar-nav">
         <ul>
-            <%-- ===== NHÓM CHỨC NĂNG CHÍNH ===== --%>
             <li>
                 <a href="${pageContext.request.contextPath}/dashboard" class="${currentPage == 'dashboard' ? 'active' : ''}">
                     <i data-feather="grid"></i><span>Tổng quan</span>
                 </a>
             </li>
 
-            <%-- ===== NHÓM QUẢN LÝ ===== --%>
+            <%-- Đoạn này đã đúng logic --%>
             <li>
                 <a href="${pageContext.request.contextPath}/customer" class="${currentPage.contains('Customer') ? 'active' : ''}">
                     <i data-feather="users"></i><span>Khách hàng</span>
@@ -51,8 +49,11 @@
             </li>
 
             <%-- ===== NHÓM NGHIỆP VỤ ===== --%>
+            <%-- Trong file mainMenu.jsp --%>
             <li>
-                <a href="${pageContext.request.contextPath}/ticket" class="${currentPage.contains('ticket') ? 'active' : ''}">
+                <%-- SỬA LẠI ĐIỀU KIỆN KIỂM TRA ĐỂ NHẬN DIỆN CẢ CHỮ HOA VÀ THƯỜNG --%>
+                <a href="${pageContext.request.contextPath}/ticket" 
+                   class="${currentPage.contains('Ticket') || currentPage.contains('ticket') ? 'active' : ''}">
                     <i data-feather="tool"></i><span>Hỗ trợ Kỹ thuật</span>
                 </a>
             </li>
@@ -66,9 +67,13 @@
                     <i data-feather="pie-chart"></i><span>Báo cáo</span>
                 </a>
             </li>
+
+            <%-- ===== SỬA LỖI Ở ĐÂY ===== --%>
             <li>
-                <a href="${pageContext.request.contextPath}/list-campaign" class="main-menu-link">
-                    <i data-feather="clipboard"></i>
+                <%-- 1. Thêm logic kiểm tra currentPage để gán class 'active' --%>
+                <%-- 2. Gợi ý: Đổi icon thành 'send' hoặc 'megaphone' sẽ hợp với "Chiến dịch" hơn --%>
+                <a href="${pageContext.request.contextPath}/list-campaign" class="${currentPage.contains('Campaign') || currentPage.contains('campaign') ? 'active' : ''}">
+                    <i data-feather="send"></i>
                     <span>Chiến dịch</span>
                 </a>
             </li>

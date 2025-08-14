@@ -9,14 +9,18 @@ package vn.edu.fpt.model;
  * @author ducanh
  */
 public class Address {
-     private int id;
+
+    private int id;
     private String streetAddress;
     private int wardId;
     private int districtId;
     private int provinceId;
     private String fullAddress;
-    
-     // Constructor chỉ với street_address như trong form hiện tại
+    private Province province;
+    private District district;
+    private Ward ward;
+    // Constructor chỉ với street_address như trong form hiện tại
+
     public Address(String streetAddress) {
         this.streetAddress = streetAddress;
     }
@@ -81,10 +85,34 @@ public class Address {
         this.fullAddress = fullAddress;
     }
 
+    // VÀ THÊM CẶP GET/SET NÀY
+    public Province getProvince() {
+        return province;
+    }
+
+    public void setProvince(Province province) {
+        this.province = province;
+    }
+
+    // VÀ THÊM CẶP GET/SET NÀY
+    public District getDistrict() {
+        return district;
+    }
+
+    public void setDistrict(District district) {
+        this.district = district;
+    }
+    // VÀ THÊM CẶP GET/SET NÀY
+    public Ward getWard() {
+        return ward;
+    }
+
+    public void setWard(Ward ward) {
+        this.ward = ward;
+    }
     @Override
     public String toString() {
         return "Address{" + "id=" + id + ", streetAddress=" + streetAddress + ", wardId=" + wardId + ", districtId=" + districtId + ", provinceId=" + provinceId + ", fullAddress=" + fullAddress + '}';
     }
-    
-    
+
 }

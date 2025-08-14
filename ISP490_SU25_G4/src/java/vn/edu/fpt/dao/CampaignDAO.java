@@ -1,10 +1,6 @@
 package vn.edu.fpt.dao;
 
-import java.sql.Statement;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import vn.edu.fpt.model.Campaign;
@@ -13,86 +9,128 @@ import vn.edu.fpt.model.User;
 
 public class CampaignDAO {
 
-    /**
-     * Lấy danh sách chiến dịch có phân trang và áp dụng các bộ lọc.
-     */
-    public List<Campaign> getCampaigns(int pageNumber, int pageSize, String searchTerm, String statusFilter, int typeIdFilter, String startDateFilter, String endDateFilter) {
+    /* ===================== DANH SÁCH ===================== */
+    public List<Campaign> getCampaigns(
+            int pageNumber, int pageSize,
+            String searchTerm,
+            Integer statusIdFilter, // lọc theo Statuses.id của bất kỳ schedule nào
+            int typeIdFilter, // lọc theo c.type_id
+            String startDateFilter, // lọc theo mốc ngày trên bất kỳ schedule nào
+            String endDateFilter) {
+
         List<Campaign> campaigns = new ArrayList<>();
         List<Object> params = new ArrayList<>();
         int offset = (pageNumber - 1) * pageSize;
 
-        StringBuilder sqlBuilder = new StringBuilder();
-        sqlBuilder.append("SELECT c.campaign_id, c.name, c.description, c.status, c.enterprise_id, ");
-        sqlBuilder.append("c.created_by, c.created_at, c.updated_by, c.updated_at, ");
-        sqlBuilder.append("u.id AS user_id, u.first_name, u.last_name, u.middle_name, u.employee_code, ");
-        sqlBuilder.append("ms.scheduled_date AS start_date, ms.end_date AS end_date, ");
-        sqlBuilder.append("e.name AS enterpriseName, ct.type_name AS campaignTypeName ");
-        sqlBuilder.append("FROM Campaigns c ");
-        sqlBuilder.append("LEFT JOIN Users u ON c.created_by = u.id ");
-        sqlBuilder.append("LEFT JOIN Enterprises e ON c.enterprise_id = e.id ");
-        sqlBuilder.append("LEFT JOIN CampaignTypes ct ON c.type_id = ct.id ");
-        sqlBuilder.append("LEFT JOIN MaintenanceSchedules ms ON c.campaign_id = ms.campaign_id ");
-        sqlBuilder.append("WHERE 1=1 ");
+        StringBuilder sql = new StringBuilder();
+        sql.append(
+                "SELECT c.campaign_id, c.campaign_code, c.name, c.description, "
+                + "       c.enterprise_id, c.type_id, c.created_by, c.created_at, c.updated_by, c.updated_at, "
+                + "       u.id AS user_id, u.first_name, u.last_name, u.middle_name, u.employee_code, "
+                + "       e.name AS enterpriseName, ct.type_name AS campaignTypeName, "
+                + "       ms_rep.scheduled_date AS scheduled_date, ms_rep.end_date AS end_date, "
+                + "       ms_rep.status_id AS status_id, s.status_name AS status_name "
+                + "FROM Campaigns c "
+                + "LEFT JOIN Users u           ON u.id = c.created_by "
+                + "LEFT JOIN Enterprises e     ON e.id = c.enterprise_id "
+                + "LEFT JOIN CampaignTypes ct  ON ct.id = c.type_id "
+                + // --- Lịch đại diện (mới nhất) để hiển thị ---
+                "LEFT JOIN ( "
+                + "    SELECT ms1.* "
+                + "    FROM MaintenanceSchedules ms1 "
+                + "    JOIN ( "
+                + "        SELECT campaign_id, MAX(scheduled_date) AS max_date "
+                + "        FROM MaintenanceSchedules "
+                + "        GROUP BY campaign_id "
+                + "    ) x ON x.campaign_id = ms1.campaign_id AND x.max_date = ms1.scheduled_date "
+                + ") ms_rep ON ms_rep.campaign_id = c.campaign_id "
+                + "LEFT JOIN Statuses s ON s.id = ms_rep.status_id "
+                + "WHERE 1=1 "
+        );
 
-        if (searchTerm != null && !searchTerm.isEmpty()) {
-            sqlBuilder.append("AND (c.name LIKE ? OR e.name LIKE ?) ");
-            params.add("%" + searchTerm + "%");
-            params.add("%" + searchTerm + "%");
-        }
-        if (statusFilter != null && !statusFilter.isEmpty()) {
-            sqlBuilder.append("AND c.status = ? ");
-            params.add(statusFilter);
+        // Ẩn campaign đã xoá mềm (nếu DB đã có cột này)
+        sql.append("AND (c.is_deleted IS NULL OR c.is_deleted = 0) ");
+
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            sql.append("AND (c.name LIKE ? OR e.name LIKE ?) ");
+            String like = "%" + searchTerm.trim() + "%";
+            params.add(like);
+            params.add(like);
         }
         if (typeIdFilter > 0) {
-            sqlBuilder.append("AND c.type_id = ? ");
+            sql.append("AND c.type_id = ? ");
             params.add(typeIdFilter);
         }
+        // Lọc theo trạng thái của BẤT KỲ lịch nào thuộc campaign (EXISTS)
+        if (statusIdFilter != null) {
+            sql.append("AND EXISTS (SELECT 1 FROM MaintenanceSchedules m ")
+                    .append("            WHERE m.campaign_id = c.campaign_id AND m.status_id = ?) ");
+            params.add(statusIdFilter);
+        }
+        // Lọc theo khoảng ngày của BẤT KỲ lịch nào thuộc campaign (EXISTS)
         if (startDateFilter != null && !startDateFilter.isEmpty()) {
-            sqlBuilder.append("AND ms.scheduled_date >= ? ");
+            sql.append("AND EXISTS (SELECT 1 FROM MaintenanceSchedules m ")
+                    .append("            WHERE m.campaign_id = c.campaign_id AND m.scheduled_date >= ?) ");
             params.add(startDateFilter);
         }
         if (endDateFilter != null && !endDateFilter.isEmpty()) {
-            sqlBuilder.append("AND ms.scheduled_date <= ? ");
+            sql.append("AND EXISTS (SELECT 1 FROM MaintenanceSchedules m ")
+                    .append("            WHERE m.campaign_id = c.campaign_id AND m.scheduled_date <= ?) ");
             params.add(endDateFilter);
         }
 
-        sqlBuilder.append("ORDER BY c.campaign_id DESC ");
-        sqlBuilder.append("LIMIT ? OFFSET ?");
+        sql.append("ORDER BY c.campaign_id DESC ");
+        sql.append("LIMIT ? OFFSET ? ");
         params.add(pageSize);
         params.add(offset);
 
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sqlBuilder.toString())) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
             }
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                // --- BẮT ĐẦU PHẦN MAPPING DỮ LIỆU ---
-                Campaign campaign = new Campaign();
-                campaign.setCampaignId(rs.getInt("campaign_id"));
-                campaign.setName(rs.getString("name"));
-                campaign.setDescription(rs.getString("description"));
-                campaign.setStartDate(rs.getDate("start_date"));
-                campaign.setEndDate(rs.getDate("end_date"));
-                campaign.setStatus(rs.getString("status"));
-                campaign.setCreatedBy(rs.getInt("created_by"));
-                campaign.setCreatedAt(rs.getTimestamp("created_at"));
-                campaign.setEnterpriseId(rs.getInt("enterprise_id"));
-                campaign.setEnterpriseName(rs.getString("enterpriseName"));
-                campaign.setTypeName(rs.getString("campaignTypeName"));
 
-                int userId = rs.getInt("user_id");
-                if (!rs.wasNull()) {
-                    User user = new User();
-                    user.setId(userId);
-                    user.setFirstName(rs.getString("first_name"));
-                    user.setMiddleName(rs.getString("middle_name"));
-                    user.setLastName(rs.getString("last_name"));
-                    user.setEmployeeCode(rs.getString("employee_code"));
-                    campaign.setCreator(user);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Campaign c = new Campaign();
+                    c.setCampaignId(rs.getInt("campaign_id"));
+                    c.setCampaignCode(rs.getString("campaign_code"));
+                    c.setName(rs.getString("name"));
+                    c.setDescription(rs.getString("description"));
+
+                    c.setEnterpriseId(rs.getInt("enterprise_id"));
+                    c.setEnterpriseName(rs.getString("enterpriseName"));
+
+                    c.setTypeId(rs.getInt("type_id"));
+                    c.setTypeName(rs.getString("campaignTypeName"));
+
+                    c.setCreatedBy(rs.getInt("created_by"));
+                    c.setCreatedAt(rs.getTimestamp("created_at"));
+                    c.setUpdatedBy((Integer) rs.getObject("updated_by"));
+                    c.setUpdatedAt(rs.getTimestamp("updated_at"));
+
+                    // Lịch đại diện (mới nhất)
+                    c.setScheduledDate(rs.getDate("scheduled_date"));
+                    c.setEndDate(rs.getDate("end_date"));
+
+                    // Trạng thái của lịch đại diện
+                    c.setStatusId((Integer) rs.getObject("status_id"));
+                    c.setStatusName(rs.getString("status_name"));
+
+                    // Creator
+                    int userId = rs.getInt("user_id");
+                    if (!rs.wasNull()) {
+                        User u = new User();
+                        u.setId(userId);
+                        u.setFirstName(rs.getString("first_name"));
+                        u.setMiddleName(rs.getString("middle_name"));
+                        u.setLastName(rs.getString("last_name"));
+                        u.setEmployeeCode(rs.getString("employee_code"));
+                        c.setCreator(u);
+                    }
+
+                    campaigns.add(c);
                 }
-                campaigns.add(campaign);
-                // --- KẾT THÚC PHẦN MAPPING DỮ LIỆU ---
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -100,100 +138,59 @@ public class CampaignDAO {
         return campaigns;
     }
 
-    /**
-     * Lấy thông tin chi tiết của một chiến dịch bằng ID.
-     */
-    public Campaign getCampaignById(int campaignId) {
-        Campaign campaign = null;
-        // --- ĐÃ SỬA: Bổ sung JOIN và SELECT để lấy đầy đủ thông tin ---
-        String sql = "SELECT c.campaign_id, c.name, c.description, c.status, c.enterprise_id, "
-                + "c.created_by, c.created_at, c.updated_by, c.updated_at, "
-                + "u.id AS user_id, u.first_name, u.last_name, u.middle_name, u.employee_code, "
-                + "ms.scheduled_date AS start_date, ms.end_date AS end_date, "
-                + "e.name AS enterpriseName, ct.type_name AS campaignTypeName "
-                + "FROM Campaigns c "
-                + "LEFT JOIN Users u ON c.created_by = u.id "
-                + "LEFT JOIN Enterprises e ON c.enterprise_id = e.id "
-                + "LEFT JOIN CampaignTypes ct ON c.type_id = ct.id "
-                + "LEFT JOIN MaintenanceSchedules ms ON c.campaign_id = ms.campaign_id "
-                + "WHERE c.campaign_id = ?";
+    /* ===================== ĐẾM ===================== */
+    public int countCampaigns(String searchTerm,
+            Integer statusIdFilter,
+            int typeIdFilter,
+            String startDateFilter,
+            String endDateFilter) {
 
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, campaignId);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                campaign = new Campaign();
-                // --- BẮT ĐẦU PHẦN MAPPING DỮ LIỆU ---
-                campaign.setCampaignId(rs.getInt("campaign_id"));
-                campaign.setName(rs.getString("name"));
-                campaign.setDescription(rs.getString("description"));
-                campaign.setStartDate(rs.getDate("start_date"));
-                campaign.setEndDate(rs.getDate("end_date"));
-                campaign.setStatus(rs.getString("status"));
-                campaign.setCreatedBy(rs.getInt("created_by"));
-                campaign.setCreatedAt(rs.getTimestamp("created_at"));
-                campaign.setEnterpriseId(rs.getInt("enterprise_id"));
-                campaign.setEnterpriseName(rs.getString("enterpriseName"));
-                campaign.setTypeName(rs.getString("campaignTypeName"));
-
-                int userId = rs.getInt("user_id");
-                if (!rs.wasNull()) {
-                    User user = new User();
-                    user.setId(userId);
-                    user.setFirstName(rs.getString("first_name"));
-                    user.setMiddleName(rs.getString("middle_name"));
-                    user.setLastName(rs.getString("last_name"));
-                    user.setEmployeeCode(rs.getString("employee_code"));
-                    campaign.setCreator(user);
-                }
-                // --- KẾT THÚC PHẦN MAPPING DỮ LIỆU ---
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return campaign;
-    }
-
-    /**
-     * Đếm tổng số chiến dịch có áp dụng các bộ lọc.
-     */
-    public int countCampaigns(String searchTerm, String statusFilter, int typeIdFilter, String startDateFilter, String endDateFilter) {
         List<Object> params = new ArrayList<>();
-        StringBuilder sqlBuilder = new StringBuilder();
-        sqlBuilder.append("SELECT COUNT(DISTINCT c.campaign_id) FROM Campaigns c ");
-        sqlBuilder.append("LEFT JOIN Enterprises e ON c.enterprise_id = e.id ");
-        sqlBuilder.append("LEFT JOIN MaintenanceSchedules ms ON c.campaign_id = ms.campaign_id ");
-        sqlBuilder.append("WHERE 1=1 ");
+        StringBuilder sql = new StringBuilder();
+        sql.append(
+                "SELECT COUNT(DISTINCT c.campaign_id) "
+                + "FROM Campaigns c "
+                + "LEFT JOIN Enterprises e ON e.id = c.enterprise_id "
+                + "WHERE 1=1 "
+        );
 
-        if (searchTerm != null && !searchTerm.isEmpty()) {
-            sqlBuilder.append("AND (c.name LIKE ? OR e.name LIKE ?) ");
-            params.add("%" + searchTerm + "%");
-            params.add("%" + searchTerm + "%");
-        }
-        if (statusFilter != null && !statusFilter.isEmpty()) {
-            sqlBuilder.append("AND c.status = ? ");
-            params.add(statusFilter);
+        // Ẩn campaign đã xoá mềm (nếu DB đã có cột này)
+        sql.append("AND (c.is_deleted IS NULL OR c.is_deleted = 0) ");
+
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            sql.append("AND (c.name LIKE ? OR e.name LIKE ?) ");
+            String like = "%" + searchTerm.trim() + "%";
+            params.add(like);
+            params.add(like);
         }
         if (typeIdFilter > 0) {
-            sqlBuilder.append("AND c.type_id = ? ");
+            sql.append("AND c.type_id = ? ");
             params.add(typeIdFilter);
         }
+        if (statusIdFilter != null) {
+            sql.append("AND EXISTS (SELECT 1 FROM MaintenanceSchedules m ")
+                    .append("            WHERE m.campaign_id = c.campaign_id AND m.status_id = ?) ");
+            params.add(statusIdFilter);
+        }
         if (startDateFilter != null && !startDateFilter.isEmpty()) {
-            sqlBuilder.append("AND ms.scheduled_date >= ? ");
+            sql.append("AND EXISTS (SELECT 1 FROM MaintenanceSchedules m ")
+                    .append("            WHERE m.campaign_id = c.campaign_id AND m.scheduled_date >= ?) ");
             params.add(startDateFilter);
         }
         if (endDateFilter != null && !endDateFilter.isEmpty()) {
-            sqlBuilder.append("AND ms.scheduled_date <= ? ");
+            sql.append("AND EXISTS (SELECT 1 FROM MaintenanceSchedules m ")
+                    .append("            WHERE m.campaign_id = c.campaign_id AND m.scheduled_date <= ?) ");
             params.add(endDateFilter);
         }
 
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sqlBuilder.toString())) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
             }
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -201,9 +198,78 @@ public class CampaignDAO {
         return 0;
     }
 
-    /**
-     * Lấy tất cả các loại chiến dịch.
-     */
+    /* ===================== CHI TIẾT ===================== */
+    public Campaign getCampaignById(int campaignId) {
+        Campaign c = null;
+        String sql
+                = "SELECT c.campaign_id, c.campaign_code, c.name, c.description, "
+                + "       c.enterprise_id, c.type_id, c.created_by, c.created_at, c.updated_by, c.updated_at, "
+                + "       u.id AS user_id, u.first_name, u.last_name, u.middle_name, u.employee_code, "
+                + "       e.name AS enterpriseName, ct.type_name AS campaignTypeName, "
+                + "       ms_rep.scheduled_date AS scheduled_date, ms_rep.end_date AS end_date, "
+                + "       ms_rep.status_id AS status_id, s.status_name AS status_name "
+                + "FROM Campaigns c "
+                + "LEFT JOIN Users u           ON u.id = c.created_by "
+                + "LEFT JOIN Enterprises e     ON e.id = c.enterprise_id "
+                + "LEFT JOIN CampaignTypes ct  ON ct.id = c.type_id "
+                + "LEFT JOIN ( "
+                + "    SELECT ms1.* "
+                + "    FROM MaintenanceSchedules ms1 "
+                + "    JOIN ( "
+                + "        SELECT campaign_id, MAX(scheduled_date) AS max_date "
+                + "        FROM MaintenanceSchedules GROUP BY campaign_id "
+                + "    ) x ON x.campaign_id = ms1.campaign_id AND x.max_date = ms1.scheduled_date "
+                + ") ms_rep ON ms_rep.campaign_id = c.campaign_id "
+                + "LEFT JOIN Statuses s ON s.id = ms_rep.status_id "
+                + "WHERE c.campaign_id = ? "
+                + "  AND (c.is_deleted IS NULL OR c.is_deleted = 0)";
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, campaignId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    c = new Campaign();
+                    c.setCampaignId(rs.getInt("campaign_id"));
+                    c.setCampaignCode(rs.getString("campaign_code"));
+                    c.setName(rs.getString("name"));
+                    c.setDescription(rs.getString("description"));
+
+                    c.setEnterpriseId(rs.getInt("enterprise_id"));
+                    c.setEnterpriseName(rs.getString("enterpriseName"));
+
+                    c.setTypeId(rs.getInt("type_id"));
+                    c.setTypeName(rs.getString("campaignTypeName"));
+
+                    c.setCreatedBy(rs.getInt("created_by"));
+                    c.setCreatedAt(rs.getTimestamp("created_at"));
+                    c.setUpdatedBy((Integer) rs.getObject("updated_by"));
+                    c.setUpdatedAt(rs.getTimestamp("updated_at"));
+
+                    c.setScheduledDate(rs.getDate("scheduled_date"));
+                    c.setEndDate(rs.getDate("end_date"));
+                    c.setStatusId((Integer) rs.getObject("status_id"));
+                    c.setStatusName(rs.getString("status_name"));
+
+                    int userId = rs.getInt("user_id");
+                    if (!rs.wasNull()) {
+                        User u = new User();
+                        u.setId(userId);
+                        u.setFirstName(rs.getString("first_name"));
+                        u.setMiddleName(rs.getString("middle_name"));
+                        u.setLastName(rs.getString("last_name"));
+                        u.setEmployeeCode(rs.getString("employee_code"));
+                        c.setCreator(u);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return c;
+    }
+
+    /* ===================== MASTER DATA ===================== */
     public List<CampaignType> getAllCampaignTypes() {
         List<CampaignType> types = new ArrayList<>();
         String sql = "SELECT id, type_name FROM CampaignTypes ORDER BY type_name ASC";
@@ -211,10 +277,10 @@ public class CampaignDAO {
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-                CampaignType type = new CampaignType();
-                type.setId(rs.getInt("id"));
-                type.setTypeName(rs.getString("type_name"));
-                types.add(type);
+                CampaignType t = new CampaignType();
+                t.setId(rs.getInt("id"));
+                t.setTypeName(rs.getString("type_name"));
+                types.add(t);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -222,32 +288,52 @@ public class CampaignDAO {
         return types;
     }
 
+    /* ===================== TẠO MỚI ===================== */
     public int addCampaignAndReturnId(Campaign campaign, Connection conn) throws SQLException {
-        String sql = "INSERT INTO Campaigns (name, type_id, enterprise_id, description, status) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Campaigns (campaign_code, name, type_id, enterprise_id, description, created_by) "
+                + "VALUES (?, ?, ?, ?, ?, ?)";
 
-        // Sử dụng connection được truyền vào để đảm bảo transaction
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, campaign.getCampaignCode());
+            ps.setString(2, campaign.getName());
+            ps.setInt(3, campaign.getTypeId());
+            ps.setInt(4, campaign.getEnterpriseId());
+            ps.setString(5, campaign.getDescription());
+            ps.setInt(6, campaign.getCreatedBy());
 
-            ps.setString(1, campaign.getName());
-            ps.setInt(2, campaign.getTypeId());
-            ps.setInt(3, campaign.getEnterpriseId());
-            ps.setString(4, campaign.getDescription());
-            ps.setString(5, campaign.getStatus()); // Ví dụ: "pending"
-
-            int affectedRows = ps.executeUpdate();
-
-            if (affectedRows == 0) {
+            int affected = ps.executeUpdate();
+            if (affected == 0) {
                 throw new SQLException("Tạo chiến dịch thất bại, không có dòng nào được thêm.");
             }
 
-            try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    // Trả về ID của bản ghi vừa được tạo
-                    return generatedKeys.getInt(1);
-                } else {
-                    throw new SQLException("Tạo chiến dịch thất bại, không lấy được ID.");
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) {
+                    return keys.getInt(1);
                 }
+                throw new SQLException("Tạo chiến dịch thất bại, không lấy được ID.");
             }
         }
+    }
+
+    /* ====== Overload cũ (giữ tương thích khi controller truyền status là chuỗi) ====== */
+    @Deprecated
+    public List<Campaign> getCampaigns(int pageNumber, int pageSize,
+            String searchTerm, String statusFilter,
+            int typeIdFilter, String startDateFilter, String endDateFilter) {
+        Integer statusId = null;
+        if (statusFilter != null && statusFilter.matches("\\d+")) {
+            statusId = Integer.valueOf(statusFilter);
+        }
+        return getCampaigns(pageNumber, pageSize, searchTerm, statusId, typeIdFilter, startDateFilter, endDateFilter);
+    }
+
+    @Deprecated
+    public int countCampaigns(String searchTerm, String statusFilter,
+            int typeIdFilter, String startDateFilter, String endDateFilter) {
+        Integer statusId = null;
+        if (statusFilter != null && statusFilter.matches("\\d+")) {
+            statusId = Integer.valueOf(statusFilter);
+        }
+        return countCampaigns(searchTerm, statusId, typeIdFilter, startDateFilter, endDateFilter);
     }
 }
