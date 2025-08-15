@@ -695,7 +695,7 @@ public class CampaignController extends HttpServlet {
             throws ServletException, IOException {
         e.printStackTrace();
         request.setAttribute("errorMessage", "Lỗi khi " + action + ": " + e.getMessage());
-        request.getRequestDispatcher("/jsp/error.jsp").forward(request, response);
+        request.getRequestDispatcher("/error.jsp").forward(request, response);
     }
 
     @Override
