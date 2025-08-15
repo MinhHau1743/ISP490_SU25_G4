@@ -7,8 +7,10 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 
-<c:set var="currentPage" value="campaigns" />
+<c:set var="currentPage" value="campaign" />
+<c:set var="BASE_URL" value="${pageContext.request.contextPath}" />
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -23,305 +25,170 @@
 
         <script src="https://unpkg.com/feather-icons"></script>
 
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/listCampaign.css">
-
-        <style>
-            /* THIẾT KẾ MỚI DỰ TRÊN HÌNH ẢNH CUNG CẤP */
-            .main-content {
-                padding: 20px 30px;
-                background-color: #f4f7f9; /* Thêm màu nền cho khu vực nội dung chính */
-            }
-            .detail-container {
-                background: var(--white);
-                padding: 30px 40px;
-                border-radius: 12px;
-                width: 100%;
-                max-width: 900px; /* Làm cho form rộng ra */
-                margin: 20px auto; /* Căn form ra giữa */
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-                border: 1px solid #e9ecef;
-            }
-
-            .detail-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 30px;
-                padding-bottom: 20px;
-                border-bottom: 1px solid #e9ecef;
-            }
-
-            .detail-header h1 {
-                margin: 0;
-                font-size: 1.8em;
-                color: #212529;
-                font-weight: 600;
-            }
-
-            /* ĐÃ SỬA: CSS cho nút Quay lại */
-            .btn-back {
-                /* Loại bỏ padding, border, background để chỉ hiển thị icon */
-                padding: 0; /* Xóa padding */
-                border: none; /* Xóa border */
-                background-color: transparent; /* Xóa nền */
-                
-                font-size: 1.5em; /* Tăng kích thước icon nếu muốn */
-                color: #6c757d; /* Màu icon */
-                cursor: pointer;
-                display: inline-flex; /* Đảm bảo icon căn giữa */
-                align-items: center;
-                justify-content: center;
-                width: 30px; /* Đặt chiều rộng và cao để căn giữa tốt hơn */
-                height: 30px;
-                border-radius: 50%; /* Có thể làm tròn nếu muốn */
-                transition: color 0.2s, background-color 0.2s; /* Thêm hiệu ứng hover */
-            }
-            .btn-back:hover {
-                color: #212529; /* Đậm hơn khi hover */
-                background-color: #e9ecef; /* Có thể thêm nền mờ khi hover */
-            }
-            /* Đảm bảo icon Feather vẫn được hiển thị đúng */
-            .btn-back i {
-                 width: 1em; /* Sử dụng em để kích thước theo font-size của parent */
-                 height: 1em;
-            }
-            
-            .detail-body {
-                display: flex;
-                flex-direction: column;
-                gap: 20px; /* Khoảng cách giữa các dòng thông tin */
-            }
-
-            .detail-group {
-                margin: 0;
-            }
-
-            .detail-group label {
-                display: block;
-                font-weight: 500;
-                margin-bottom: 8px;
-                color: #6c757d;
-                font-size: 0.8em;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
-
-            .detail-value {
-                padding: 12px 15px;
-                background-color: #f8f9fa;
-                border: 1px solid #e9ecef;
-                border-radius: 6px;
-                font-size: 1em;
-                font-weight: 500;
-                color: #212529;
-                word-wrap: break-word;
-                min-height: 45px;
-                display: flex;
-                align-items: center;
-            }
-            
-            .detail-row {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 20px;
-            }
-            
-            .error-message {
-                text-align: center;
-                padding: 15px;
-                background-color: #f8d7da;
-                color: #721c24;
-                border: 1px solid #f5c6cb;
-                border-radius: 6px;
-            }
-            
-            .text-muted {
-                color: var(--text-secondary);
-                font-weight: 400;
-            }
-            
-            /* Ghi đè style cho status badge để không có box nền xám */
-            .status-group .detail-value {
-                background: none;
-                border: none;
-                padding: 0;
-            }
-            
-            .attachment-link {
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-                text-decoration: none;
-                font-weight: 500;
-                color: #0056b3;
-            }
-            .attachment-link:hover {
-                text-decoration: underline;
-            }
-            
-            .detail-footer {
-                display: flex;
-                justify-content: flex-end;
-                margin-top: 30px;
-                padding-top: 20px;
-                border-top: 1px solid #e9ecef;
-            }
-            .btn-edit {
-                padding: 8px 16px;
-                border-radius: 6px;
-                font-size: 0.9em;
-                font-weight: 500;
-                text-decoration: none;
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                background-color: #007bff;
-                color: white;
-                border: 1px solid #007bff;
-                transition: background-color 0.2s, border-color 0.2s;
-            }
-             .btn-edit:hover {
-                background-color: #0056b3;
-                border-color: #0056b3;
-            }
-        </style>
-
+        <link rel="stylesheet" href="${BASE_URL}/css/style.css">
+        <link rel="stylesheet" href="${BASE_URL}/css/header.css">
+        <link rel="stylesheet" href="${BASE_URL}/css/mainMenu.css">
+        <link rel="stylesheet" href="${BASE_URL}/css/viewCampaignDetails.css">
     </head>
     <body>
         <div class="app-container">
             <jsp:include page="/mainMenu.jsp"/>
 
-            <div class="content-area">
-                <main class="main-content">
-                    <div class="detail-container">
-                        <c:if test="${empty campaign}">
-                            <div class="error-message">Không tìm thấy chiến dịch.</div>
-                        </c:if>
+            <div class="main-content">
+                <jsp:include page="/header.jsp"/>
 
-                        <c:if test="${not empty campaign}">
-                            <div class="detail-header">
-                                <h1>Chi tiết: <c:out value="${campaign.name}"/></h1>
-                                <%-- ĐÃ SỬA: Xóa chữ "Quay lại" và chỉ giữ lại icon --%>
-                                <a href="${pageContext.request.contextPath}/list-campaign" class="btn-back">
-                                    <i data-feather="arrow-left" style="width: 16px; height: 16px;"></i> 
+                <div class="page-container">
+
+                    <c:if test="${empty campaign}">
+                        <div class="page-header">
+                            <h1>Không tìm thấy chiến dịch</h1>
+                        </div>
+                        <div class="content-card">
+                            <p>Chiến dịch bạn yêu cầu không tồn tại hoặc đã bị xóa.</p>
+                            <div class="form-actions">
+                                <a href="${BASE_URL}/list-campaign" class="btn btn-secondary">
+                                    <i data-feather="arrow-left" style="width:16px; height:16px;"></i> Quay lại danh sách
                                 </a>
                             </div>
-                            
-                            <div class="detail-body">
-                                <div class="detail-group">
-                                    <label>Tên Chiến dịch</label>
-                                    <div class="detail-value"><c:out value="${campaign.name}"/></div>
-                                </div>
+                        </div>
+                    </c:if>
 
+                    <c:if test="${not empty campaign}">
+                        <div class="page-header">
+                            <a href="${BASE_URL}/list-campaign" class="btn btn-secondary">
+                                <i data-feather="arrow-left" style="width:16px; height:16px;"></i> Quay lại
+                            </a>
+                            <h1><c:out value="${campaign.name}"/></h1>
+                        </div>
+
+                        <div class="content-card">
+                            <!-- 1) Thông tin chiến dịch -->
+                            <h3 class="sub-header">Thông tin chiến dịch</h3>
+                            <div class="detail-row" style="grid-template-columns: 1fr 1fr; gap: 24px;">
                                 <div class="detail-group">
-                                    <label>Người tạo</label>
+                                    <label>Khách hàng</label>
+                                    <div class="detail-value">${campaign.enterpriseName}</div>
+                                </div>
+                                <div class="detail-group">
+                                    <label>Loại chiến dịch</label>
+                                    <div class="detail-value">${campaign.typeName}</div>
+                                </div>
+                            </div>
+
+                            <div class="detail-row" style="grid-template-columns: 1fr 1fr; gap: 24px;">
+                                <div class="detail-group">
+                                    <label>Người thực hiện</label>
                                     <div class="detail-value">
-                                        <c:if test="${not empty campaign.user}">
-                                            <c:out value="${campaign.user.lastName} ${campaign.user.middleName} ${campaign.user.firstName}"/>
-                                            <span class="text-muted" style="margin-left: 5px;">(<c:out value="${campaign.user.employeeCode}"/>)</span>
-                                        </c:if>
-                                        <c:if test="${empty campaign.user}">
-                                            <span class="text-muted">Không xác định (ID: <c:out value="${campaign.createdBy}"/>)</span>
-                                        </c:if>
+                                        ${campaign.creator.lastName} ${campaign.creator.middleName} ${campaign.creator.firstName}
+                                        <span style="color: var(--text-secondary); margin-left: 5px;">(${campaign.creator.employeeCode})</span>
                                     </div>
                                 </div>
 
-                                <div class="detail-row">
-                                    <div class="detail-group">
-                                        <label>Ngày bắt đầu</label>
-                                        <div class="detail-value">
-                                            <fmt:formatDate value="${campaign.startDate}" pattern="dd/MM/yyyy" />
-                                        </div>
-                                    </div>
-                                    <div class="detail-group">
-                                        <label>Ngày kết thúc</label>
-                                        <div class="detail-value">
-                                            <fmt:formatDate value="${campaign.endDate}" pattern="dd/MM/yyyy" />
-                                        </div>
-                                    </div>
-                                </div>
+                                <!-- Map class màu cho trạng thái lịch -->
+                                <c:set var="stLower" value="${fn:toLowerCase(maintenanceSchedule.statusName)}"/>
+                                <c:set var="stClass"
+                                       value="${
+                                       stLower eq 'đã hủy' ? 'status-canceled' :
+                                           (stLower eq 'quá hạn' ? 'status-overdue' : '')
+                                       }"/>
 
-                                <div class="detail-group status-group">
+                                <div class="detail-group">
                                     <label>Trạng thái</label>
-                                    <div class="detail-value">
-                                        <span class="status-badge 
-                                              <c:choose>
-                                                  <c:when test="${campaign.status == 'draft'}">status-draft</c:when>
-                                                  <c:when test="${campaign.status == 'active'}">status-active</c:when>
-                                                  <c:when test="${campaign.status == 'ended'}">status-ended</c:when>
-                                                  <c:when test="${campaign.status == 'canceled'}">status-canceled</c:when>
-                                              </c:choose>">
+                                    <div>
+                                        <span class="status-pill ${stClass}">
                                             <c:choose>
-                                                <c:when test="${campaign.status == 'draft'}"><i data-feather="edit-3"></i> Nháp</c:when>
-                                                <c:when test="${campaign.status == 'active'}"><i data-feather="play-circle"></i> Đang hoạt động</c:when>
-                                                <c:when test="${campaign.status == 'ended'}"><i data-feather="check-circle"></i> Đã kết thúc</c:when>
-                                                <c:when test="${campaign.status == 'canceled'}"><i data-feather="x-circle"></i> Đã hủy</c:when>
+                                                <c:when test="${maintenanceSchedule.statusName eq 'Sắp tới'}">
+                                                    <i data-feather="clock"></i> Sắp tới
+                                                </c:when>
+                                                <c:when test="${maintenanceSchedule.statusName eq 'Đang thực hiện'}">
+                                                    <i data-feather="play-circle"></i> Đang thực hiện
+                                                </c:when>
+                                                <c:when test="${maintenanceSchedule.statusName eq 'Hoàn thành'}">
+                                                    <i data-feather="check-circle"></i> Hoàn thành
+                                                </c:when>
+                                                <c:when test="${maintenanceSchedule.statusName eq 'Quá hạn'}">
+                                                    <i data-feather="alert-triangle"></i> Quá hạn
+                                                </c:when>
+                                                <c:when test="${maintenanceSchedule.statusName eq 'Đã hủy'}">
+                                                    <i data-feather="x-circle"></i> Đã hủy
+                                                </c:when>
+                                                <c:otherwise>
+                                                    ${maintenanceSchedule.statusName}
+                                                </c:otherwise>
                                             </c:choose>
                                         </span>
                                     </div>
                                 </div>
-
-                                <div class="detail-row">
-                                    <div class="detail-group">
-                                        <label>Ngày tạo</label>
-                                        <div class="detail-value">
-                                            <fmt:formatDate value="${campaign.createdAt}" pattern="HH:mm dd/MM/yyyy" />
-                                        </div>
-                                    </div>
-                                    <div class="detail-group">
-                                        <label>Ngày cập nhật</label>
-                                        <div class="detail-value">
-                                            <fmt:formatDate value="${campaign.updatedAt}" pattern="HH:mm dd/MM/yyyy" />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="detail-group">
-                                    <label>Mô tả</label>
-                                    <div class="detail-value">
-                                        <c:out value="${not empty campaign.description ? campaign.description : 'Không có mô tả.'}"/>
-                                    </div>
-                                </div>
-
-                                <div class="detail-group">
-                                    <label>Tệp đính kèm</label>
-                                    <div class="detail-value">
-                                        <c:choose>
-                                            <c:when test="${not empty campaign.attachmentFileName}">
-                                                <a href="${pageContext.request.contextPath}/download-attachment?file=${campaign.attachmentFileName}" class="attachment-link" target="_blank">
-                                                    <i data-feather="paperclip"></i>
-                                                    <span><c:out value="${campaign.attachmentFileName}"/></span>
-                                                </a>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <span class="text-muted">Không có tệp đính kèm.</span>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </div>
-                                </div>
-                                
-                                <div class="detail-footer">
-                                    <a href="${pageContext.request.contextPath}/edit-campaign?id=${campaign.campaignId}" class="btn-edit">
-                                        <i data-feather="edit" style="width: 16px; height: 16px;"></i> Sửa
-                                    </a>
-                                </div>
-
                             </div>
-                        </c:if>
-                    </div>
-                </main>
+
+                            <div class="detail-group">
+                                <label>Mô tả</label>
+                                <div class="detail-value description">
+                                    ${not empty campaign.description ? campaign.description : 'Không có mô tả.'}
+                                </div>
+                            </div>
+
+                            <!-- 2) Thông tin lịch trình & Địa điểm -->
+                            <h3 class="sub-header">Thông tin lịch trình & Địa điểm</h3>
+                            <c:choose>
+                                <c:when test="${not empty maintenanceSchedule}">
+                                    <div class="detail-row" style="grid-template-columns: 1fr 1fr; gap: 24px;">
+                                        <div class="detail-group">
+                                            <label>Thời gian bắt đầu</label>
+                                            <div class="detail-value">
+                                                ${maintenanceSchedule.startTime}
+                                                ${scheduledDateStr}
+                                            </div>
+                                        </div>
+                                        <div class="detail-group">
+                                            <label>Thời gian kết thúc</label>
+                                            <div class="detail-value">
+                                                ${maintenanceSchedule.endTime}
+                                                ${endDateStr}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="detail-group">
+                                        <label>Địa chỉ đầy đủ</label>
+                                        <div class="detail-value description">
+                                            <c:choose>
+                                                <c:when test="${not empty maintenanceSchedule.address}">
+                                                    ${maintenanceSchedule.address.streetAddress},
+                                                    ${maintenanceSchedule.address.ward.name},
+                                                    ${maintenanceSchedule.address.district.name},
+                                                    ${maintenanceSchedule.address.province.name}
+                                                </c:when>
+                                                <c:otherwise>
+                                                    Chưa cập nhật địa chỉ.
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </div>
+                                    </div>
+                                </c:when>
+                                <c:otherwise>
+                                    <div class="detail-group">
+                                        <div class="detail-value" style="color: var(--text-secondary);">
+                                            Chưa có lịch trình cho chiến dịch này.
+                                        </div>
+                                    </div>
+                                </c:otherwise>
+                            </c:choose>
+
+                            <div class="form-actions">
+                                <a href="${BASE_URL}/edit-campaign?id=${campaign.campaignId}" class="btn btn-primary">
+                                    <i data-feather="edit" style="width: 16px; height: 16px;"></i> Sửa
+                                </a>
+                            </div>
+                        </div>
+                    </c:if>
+                </div>
             </div>
         </div>
 
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                feather.replace({
-                    width: '1em',
-                    height: '1em'
-                });
+                feather.replace();
             });
         </script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>

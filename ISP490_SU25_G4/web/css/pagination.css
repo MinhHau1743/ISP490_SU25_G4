@@ -1,44 +1,79 @@
-/*
-Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
-Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
-*/
-/* 
-    Created on : Jun 6, 2025, 1:38:30 PM
-    Author     : NGUYEN MINH
-*/
+/* --- Pagination (compatible with <ul class="pagination"><li class="page-item"><a class="page-link">) --- */
+.pagination-nav {
+    display: flex;
+    justify-content: center;
+    margin: 16px 0 8px;
+}
 
+.pagination-nav .pagination {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: inline-flex;
+    gap: 8px;
+    font-size: 14px;
+}
+
+/* Nút trang */
+.pagination-nav .page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 38px;
+    height: 38px;
+    padding: 0 12px;
+    border: 1px solid var(--border-color, #e5e7eb);
+    background: #fff;
+    color: var(--text-secondary, #4b5563);
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all .15s ease;
+}
+
+/* Hover */
+.pagination-nav .page-link:hover {
+    border-color: var(--primary-color, #0d9488);
+    color: var(--primary-color, #0d9488);
+    box-shadow: 0 2px 6px rgba(0,0,0,.06);
+}
+
+/* Active */
+.pagination-nav .page-item.active .page-link {
+    background: var(--primary-color, #0d9488);
+    color: #fff;
+    border-color: var(--primary-color, #0d9488);
+}
+
+/* Disabled */
+.pagination-nav .page-item.disabled .page-link {
+    pointer-events: none;
+    opacity: .45;
+    color: var(--text-inactive, #9ca3af);
+}
+
+/* Dấu … (ellipsis) */
+.pagination-nav .page-item.disabled .page-link,
+.pagination-nav .page-item.disabled span.page-link {
+    background: #fff;
+    border: 1px solid var(--border-color, #e5e7eb);
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+    .pagination-nav .pagination {
+        gap: 6px;
+    }
+    .pagination-nav .page-link {
+        min-width: 34px;
+        height: 34px;
+        padding: 0 10px;
+    }
+}
+
+/* Giữ footer bảng như cũ */
 .table-footer {
     border-top: 1px solid var(--border-color);
     margin: 0 -32px -24px -32px;
     padding: 10px 32px;
-}
-.pagination {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 14px;
-    color: var(--text-secondary);
-}
-.pagination-icon {
-    color: var(--text-inactive);
-}
-.pagination .feather {
-    width: 18px;
-    height: 18px;
-}
-.page-number.active {
-    color: var(--primary-color);
-    font-weight: 600;
-}
-.page-nav {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--text-inactive);
-    display: flex;
-    align-items: center;
-}
-.page-nav.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
 }

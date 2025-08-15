@@ -1,8 +1,7 @@
 <%--
     Document    : listCampaign.jsp
     Created on  : Aug 13, 2025
-    Author      : Gemini Assistant
-    Description : Trang quản lý danh sách chiến dịch, phiên bản hoàn chỉnh với bộ lọc và giao diện nhất quán.
+    Description : Trang quản lý danh sách chiến dịch (đã cập nhật: mã chiến dịch clickable, khách hàng không link).
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
@@ -19,33 +18,30 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Quản lý Chiến dịch</title>
 
-        <%-- Các thư viện CSS --%>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
-        <%-- Các file CSS tự định nghĩa --%>
         <link rel="stylesheet" href="${BASE_URL}/css/style.css">
         <link rel="stylesheet" href="${BASE_URL}/css/header.css">
         <link rel="stylesheet" href="${BASE_URL}/css/mainMenu.css">
         <link rel="stylesheet" href="${BASE_URL}/css/listCampaign.css">
-
+        <link rel="stylesheet" href="${BASE_URL}/css/pagination.css">
     </head>
     <body>
         <div class="app-container">
-            <%-- Include Menu chính --%>
             <jsp:include page="/mainMenu.jsp"/>
 
             <main class="main-content">
-                <%-- Include Header và truyền vào tiêu đề trang --%>
                 <jsp:include page="/header.jsp">
                     <jsp:param name="pageTitle" value="Quản lý Chiến dịch"/>
                 </jsp:include>
 
+
                 <div class="page-content">
 
-                    <%-- Phần thống kê nhanh --%>
+                    <!-- Stats -->
                     <section class="stats-grid">
                         <div class="stat-card">
                             <div class="icon-container icon-yellow"><i data-feather="mail"></i></div>
@@ -70,7 +66,7 @@
                         </div>
                     </section>
 
-                    <%-- Form chứa bộ lọc và thanh tìm kiếm --%>
+                    <!-- Filters -->
                     <form action="${BASE_URL}/list-campaign" method="GET">
                         <section class="campaign-toolbar">
                             <div class="toolbar-top">
@@ -94,16 +90,18 @@
                                         </c:forEach>
                                     </select>
                                 </div>
+
+                                <!-- Trạng thái lấy từ Statuses -->
                                 <div class="filter-group">
                                     <label for="statusFilter">Trạng thái</label>
-                                    <select id="statusFilter" name="status">
+                                    <select id="statusFilter" name="statusId">
                                         <option value="">Tất cả trạng thái</option>
-                                        <option value="pending" ${statusFilter == 'pending' ? 'selected' : ''}>Chờ duyệt</option>
-                                        <option value="active" ${statusFilter == 'active' ? 'selected' : ''}>Đang hoạt động</option>
-                                        <option value="ended" ${statusFilter == 'ended' ? 'selected' : ''}>Đã kết thúc</option>
-                                        <option value="canceled" ${statusFilter == 'canceled' ? 'selected' : ''}>Đã hủy</option>
+                                        <c:forEach var="st" items="${statusList}">
+                                            <option value="${st.id}" ${statusIdFilter == st.id ? 'selected' : ''}>${st.statusName}</option>
+                                        </c:forEach>
                                     </select>
                                 </div>
+
                                 <div class="filter-group">
                                     <label for="startDateFilter">Từ ngày</label>
                                     <input type="date" id="startDateFilter" name="startDate" value="${startDateFilter}">
@@ -120,12 +118,12 @@
                         </section>
                     </form>
 
-                    <%-- Bảng hiển thị dữ liệu --%>
+                    <!-- Table -->
                     <section class="data-table-container content-card">
                         <table class="data-table">
                             <thead>
-                                <tr>    
-                                    <th>ID</th>
+                                <tr>
+                                    <th>Mã chiến dịch</th>
                                     <th>Tên chiến dịch</th>
                                     <th>Khách hàng</th>
                                     <th>Loại chiến dịch</th>
@@ -138,23 +136,35 @@
                             <tbody>
                                 <c:forEach var="campaign" items="${campaigns}">
                                     <tr>
-                                        <td>${campaign.campaignId}</td>
-                                        <td><strong>${campaign.name}</strong></td>
-                                        <td><a href="${BASE_URL}/customer?action=view&id=${campaign.enterpriseId}">${campaign.enterpriseName}</a></td>
-                                        <td>${campaign.typeName}</td>
-                                        <td><fmt:formatDate value="${campaign.startDate}" pattern="dd/MM/yyyy" /></td>
-                                        <td><fmt:formatDate value="${campaign.endDate}" pattern="dd/MM/yyyy" /></td>
+                                        <!-- Mã chiến dịch (click sang trang chi tiết) -->
                                         <td>
-                                            <span class="status-badge status-${campaign.status}">
-                                                <c:choose>
-                                                    <c:when test="${campaign.status == 'pending'}">Chờ duyệt</c:when>
-                                                    <c:when test="${campaign.status == 'active'}">Đang hoạt động</c:when>
-                                                    <c:when test="${campaign.status == 'ended'}">Đã kết thúc</c:when>
-                                                    <c:when test="${campaign.status == 'canceled'}">Đã hủy</c:when>
-                                                    <c:otherwise>${campaign.status}</c:otherwise>
-                                                </c:choose>
+                                            <a href="${BASE_URL}/view-campaign?id=${campaign.campaignId}">
+                                                ${empty campaign.campaignCode ? '—' : campaign.campaignCode}
+                                            </a>
+                                        </td>
+
+                                        <td><strong>${campaign.name}</strong></td>
+
+                                        <!-- Khách hàng: bỏ link, chỉ hiển thị tên -->
+                                        <td>${campaign.enterpriseName}</td>
+
+                                        <td>${campaign.typeName}</td>
+
+                                        <!-- Ngày từ MaintenanceSchedules -->
+                                        <td><fmt:formatDate value="${campaign.scheduledDate}" pattern="dd/MM/yyyy" /></td>
+                                        <td><fmt:formatDate value="${campaign.endDate}" pattern="dd/MM/yyyy" /></td>
+
+                                        <!-- Trạng thái hiển thị theo Statuses.status_name, giữ màu class cũ -->
+                                        <td>
+                                            <c:set var="statusKey"
+                                                   value="${campaign.statusName == 'Sắp tới' ? 'pending' :
+                                                            (campaign.statusName == 'Đang thực hiện' ? 'active' :
+                                                            (campaign.statusName == 'Hoàn thành' ? 'ended' : 'canceled'))}" />
+                                            <span class="status-badge status-${statusKey}">
+                                                ${campaign.statusName}
                                             </span>
                                         </td>
+
                                         <td class="actions-cell">
                                             <a href="${BASE_URL}/view-campaign?id=${campaign.campaignId}" class="icon-btn" title="Xem"><i data-feather="eye"></i></a>
                                             <a href="${BASE_URL}/edit-campaign?id=${campaign.campaignId}" class="icon-btn" title="Sửa"><i data-feather="edit"></i></a>
@@ -171,20 +181,19 @@
                         </table>
                     </section>
 
-                    <%-- Include component phân trang --%>
-                    <jsp:include page="/pagination.jsp"/>
+                    <jsp:include page="/pagination.jsp">
+                        <jsp:param name="actionUrl" value="/list-campaign"/>
+                    </jsp:include>
 
                 </div>
             </main>
         </div>
 
-        <%-- Các thư viện JavaScript --%>
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>  
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
         <script src="https://unpkg.com/feather-icons"></script>
-        <script src="${BASE_URL}/js/mainMenu.js"></script> 
+        <script src="${BASE_URL}/js/mainMenu.js"></script>
         <script>
                                                 feather.replace();
-
                                                 function confirmDelete(campaignId) {
                                                     Swal.fire({
                                                         title: 'Bạn có chắc chắn không?',
@@ -193,13 +202,13 @@
                                                         showCancelButton: true,
                                                         confirmButtonColor: '#d33',
                                                         cancelButtonColor: '#3085d6',
-                                                        confirmButtonText: 'Vâng, xóa nó!',
+                                                        confirmButtonText: 'Xoá',
                                                         cancelButtonText: 'Hủy'
                                                     }).then((result) => {
                                                         if (result.isConfirmed) {
                                                             const form = document.createElement('form');
                                                             form.method = 'POST';
-                                                            form.action = '${BASE_URL}/delete-campaign'; // URL servlet xử lý xóa
+                                                            form.action = '${BASE_URL}/delete-campaign';
                                                             const hiddenField = document.createElement('input');
                                                             hiddenField.type = 'hidden';
                                                             hiddenField.name = 'campaignId';
@@ -210,6 +219,6 @@
                                                         }
                                                     });
                                                 }
-        </script>   
-    </body> 
+        </script>
+    </body>
 </html>

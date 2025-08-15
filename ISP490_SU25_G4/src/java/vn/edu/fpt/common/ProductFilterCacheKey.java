@@ -1,4 +1,4 @@
-package vn.edu.fpt.model;
+package vn.edu.fpt.common;
 
 import java.io.Serializable;
 import java.util.Objects;

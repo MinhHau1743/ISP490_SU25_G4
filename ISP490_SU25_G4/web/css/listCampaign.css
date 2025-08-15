@@ -253,3 +253,70 @@
     background-color: #fee2e2; /* Đỏ nhạt */
     color: #991b1b; /* Đỏ đậm */
 }
+
+/* Pagination cho markup: <nav class="pagination-nav"><ul class="pagination">... */
+.pagination-nav{
+    display:flex;
+    justify-content:center;
+    margin:16px 0 8px;
+}
+.pagination-nav .pagination{
+    list-style:none;
+    display:inline-flex;
+    gap:8px;
+    padding:0;
+    margin:0;
+    font-size:14px;
+}
+.pagination-nav .page-link{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:38px;
+    height:38px;
+    padding:0 12px;
+    border:1px solid var(--border-color,#e5e7eb);
+    background:#fff;
+    color:var(--text-secondary,#4b5563);
+    border-radius:10px;
+    text-decoration:none;
+    font-weight:500;
+    transition:all .15s ease;
+}
+.pagination-nav .page-link:hover{
+    border-color:var(--primary-color,#0d9488);
+    color:var(--primary-color,#0d9488);
+    box-shadow:0 2px 6px rgba(0,0,0,.06);
+}
+.pagination-nav .page-item.active .page-link{
+    background:var(--primary-color,#0d9488);
+    color:#fff;
+    border-color:var(--primary-color,#0d9488);
+}
+.pagination-nav .page-item.disabled .page-link{
+    pointer-events:none;
+    opacity:.45;
+    color:var(--text-inactive,#9ca3af);
+}
+@media (max-width:640px){
+    .pagination-nav .pagination{
+        gap:6px
+    }
+    .pagination-nav .page-link{
+        min-width:34px;
+        height:34px;
+        padding:0 10px
+    }
+}
+
+/* Màu link ở cột "MÃ CHIẾN DỊCH" -> teal đậm */
+.data-table td:nth-child(1) a:link,
+.data-table td:nth-child(1) a:visited {
+  color: #0f766e; /* teal-700 */
+}
+
+.data-table td:nth-child(1) a:hover,
+.data-table td:nth-child(1) a:focus {
+  color: #115e59; /* hover teal đậm hơn */
+  text-decoration: underline;
+}

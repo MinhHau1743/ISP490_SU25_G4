@@ -1,0 +1,224 @@
+/*
+    File: addNewCampaign.css
+    Description: CSS đã tối ưu và hoàn chỉnh cho trang "Thêm chiến dịch".
+    Author: DPCRM Assistant
+    Last Updated: 15/08/2025
+*/
+
+/* ======================================================= */
+/* === 1. BỐ CỤC DÀNH RIÊNG CHO TRANG                  === */
+/* ======================================================= */
+
+/* Container chính của trang, làm nhiệm vụ căn giữa nội dung */
+.campaign-page-container {
+    width: 100%;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Đặt chiều rộng tối đa cho header và form để chúng thẳng hàng */
+.campaign-page-container .page-header,
+.campaign-page-container .campaign-form-container {
+    width: 100%;
+    max-width: 1100px;
+}
+
+/* ======================================================= */
+/* === 2. CÁC THÀNH PHẦN GIAO DIỆN CỦA TRANG           === */
+/* ======================================================= */
+
+/* --- 2.1. Header và Card --- */
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.page-header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.campaign-form-container {
+    background-color: var(--white);
+    padding: 24px 32px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.sub-header {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-top: 24px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.campaign-form-container h3:first-of-type {
+    margin-top: 0;
+}
+
+/* --- 2.2. Lưới Form (Form Grids) --- */
+
+.form-row, .form-row-x3 {
+    display: grid;
+    gap: 24px;
+    margin-bottom: 16px;
+}
+.form-row {
+    grid-template-columns: repeat(2, 1fr);
+}
+.form-row-x3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+
+/* --- 2.3. Ô Nhập Liệu (Form Controls) --- */
+
+.form-group label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.form-control, .form-control[readonly] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+
+    width: 100%;
+    height: 42px;
+    padding: 0 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: #f9fafb;
+    color: var(--text-primary);
+    transition: all 0.2s ease-in-out;
+}
+
+.form-control::placeholder {
+    color: #9ca3af;
+}
+
+.form-control:focus {
+    position: relative;
+    z-index: 10;
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-color-light);
+    background-color: var(--white);
+}
+
+select.form-control {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1.25em 1.25em;
+    padding-right: 2.5rem;
+}
+
+textarea.form-control {
+    height: auto;
+    min-height: 80px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+/* --- 2.4. Nút Bấm (Buttons) --- */
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 24px;
+    margin-top: 24px;
+    border-top: 1px solid #f3f4f6;
+}
+
+/* Các lớp .btn, .btn-primary, .btn-secondary nên nằm trong style.css, 
+   nhưng được giữ ở đây để đảm bảo file hoạt động độc lập nếu cần. */
+.btn.btn-secondary {
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    color: #374151;
+    font-weight: 600;
+}
+.btn.btn-secondary:hover {
+    background-color: #f9fafb;
+}
+
+.btn.btn-primary {
+    background-color: var(--primary-color);
+    color: var(--white);
+    border: 1px solid var(--primary-color);
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.btn.btn-primary:hover {
+    opacity: 0.9;
+}
+
+
+/* --- 2.5. Bộ Chọn Màu (Color Picker) --- */
+
+.color-picker-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 42px;
+}
+
+.color-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.color-dot:hover {
+    transform: scale(1.1);
+}
+
+.color-dot.selected {
+    box-shadow: 0 0 0 2px var(--white), 0 0 0 4px var(--primary-color);
+    transform: scale(1.1);
+}
+
+/* Error block tổng */
+.error-message {
+  background: #fff3f3;
+  border: 1px solid #f5c2c7;
+  color: #842029;
+  padding: 12px 14px;
+  border-radius: 8px;
+  line-height: 1.5;
+}
+
+/* Lỗi ngay dưới từng field */
+.field-error {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #d92d20; /* đỏ tiêu chuẩn trong palette */
+}
+
+/* Bo đỏ input có lỗi */
+.form-control.invalid {
+  border-color: #d92d20 !important;
+  background-color: #fff7f7;
+}

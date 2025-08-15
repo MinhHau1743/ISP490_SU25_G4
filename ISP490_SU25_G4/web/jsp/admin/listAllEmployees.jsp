@@ -25,6 +25,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/employeeCard.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pagination.css">
 
         <style>
             /* === BIẾN MÀU SẮC TRUNG TÂM === */
@@ -374,8 +375,9 @@
                     <c:set var="queryString" value=""/>
                     <c:if test="${not empty searchQuery}"><c:set var="queryString" value="&searchQuery=${searchQuery}" /></c:if>
                     <jsp:include page="/pagination.jsp">
-                        <jsp:param name="queryString" value="${queryString}"/>
+                        <jsp:param name="actionUrl" value="/employee"/>
                     </jsp:include>
+
                 </section>
             </main>
         </div>

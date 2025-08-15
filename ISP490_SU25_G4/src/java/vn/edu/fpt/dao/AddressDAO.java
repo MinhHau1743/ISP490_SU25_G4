@@ -10,6 +10,7 @@ import java.util.List;
 import vn.edu.fpt.model.District;
 import vn.edu.fpt.model.Province;
 import vn.edu.fpt.model.Ward;
+import vn.edu.fpt.model.Address;
 
 /**
  * Lớp DAO quản lý các truy vấn liên quan đến địa chỉ. Phiên bản này đã được sửa
@@ -120,6 +121,55 @@ public class AddressDAO extends DBContext {
                 } else {
                     // Nếu không tìm thấy, tạo mới bằng phương thức đã được sửa
                     return insertAddress(streetAddress, wardId, districtId, provinceId);
+                }
+            }
+        }
+    }
+    
+    // =========================================================================
+// MỚI: Thêm 2 phương thức NẠP CHỒNG để hỗ trợ transaction
+// =========================================================================
+    /**
+     * Phiên bản NẠP CHỒNG của findOrCreateAddress, nhận vào Connection. Chỉ
+     * dùng cho các servlet cần transaction.
+     */
+    public int findOrCreateAddress(Address address, Connection conn) throws SQLException {
+        String findSql = "SELECT id FROM Addresses WHERE province_id = ? AND district_id = ? AND ward_id = ? AND street_address = ?";
+
+        try (PreparedStatement psFind = conn.prepareStatement(findSql)) {
+            psFind.setInt(1, address.getProvinceId());
+            psFind.setInt(2, address.getDistrictId());
+            psFind.setInt(3, address.getWardId());
+            psFind.setString(4, address.getStreetAddress());
+
+            try (ResultSet rs = psFind.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("id");
+                } else {
+                    // Gọi đến phiên bản insertAddress hỗ trợ transaction
+                    return insertAddress(address, conn);
+                }
+            }
+        }
+    }
+
+    /**
+     * Phiên bản NẠP CHỒNG của insertAddress, nhận vào Connection.
+     */
+    public int insertAddress(Address address, Connection conn) throws SQLException {
+        String sql = "INSERT INTO Addresses (street_address, ward_id, district_id, province_id) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, address.getStreetAddress());
+            ps.setInt(2, address.getWardId());
+            ps.setInt(3, address.getDistrictId());
+            ps.setInt(4, address.getProvinceId());
+            ps.executeUpdate();
+
+            try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    return generatedKeys.getInt(1);
+                } else {
+                    throw new SQLException("Tạo địa chỉ thất bại, không nhận được ID.");
                 }
             }
         }

@@ -41,7 +41,9 @@ public class MaintenanceSchedule {
     private String wardName;
     private String statusName;
     private Integer assignedUserId;
-
+    private Address address;
+    
+    
     public MaintenanceSchedule() {
     }
 
@@ -71,11 +73,11 @@ public class MaintenanceSchedule {
         this.assignedUserId = assignedUserId;
     }
 
-    public Integer getCampaignId() {
+    public Integer getCampaignId() { // Sửa ở đây
         return campaignId;
     }
 
-    public void setCampaignId(Integer campaignId) {
+    public void setCampaignId(Integer campaignId) { // Sửa ở đây
         this.campaignId = campaignId;
     }
 
@@ -107,19 +109,8 @@ public class MaintenanceSchedule {
         return technicalRequestId;
     }
 
-    // ================= SỬA LỖI Ở ĐÂY =================
-    /**
-     * Sửa lỗi NullPointerException bằng cách kiểm tra giá trị đầu vào. Nếu
-     * technicalRequestId là null, gán một giá trị mặc định (0) để tránh lỗi.
-     *
-     * @param technicalRequestId ID của yêu cầu kỹ thuật, có thể là null từ DB.
-     */
     public void setTechnicalRequestId(Integer technicalRequestId) {
-        if (technicalRequestId != null) {
-            this.technicalRequestId = technicalRequestId; // Gán giá trị nếu không phải null
-        } else {
-            this.technicalRequestId = 0; // Gán giá trị mặc định nếu là null
-        }
+        this.technicalRequestId = technicalRequestId;
     }
     // ================= KẾT THÚC SỬA LỖI =================
 
@@ -282,4 +273,14 @@ public class MaintenanceSchedule {
     public void setWardName(String wardName) {
         this.wardName = wardName;
     }
+    
+    
+    public Address getAddress() {
+        return address;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
+    }
+    
 }
