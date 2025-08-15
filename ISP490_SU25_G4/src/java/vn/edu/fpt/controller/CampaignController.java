@@ -232,7 +232,7 @@ public class CampaignController extends HttpServlet {
             throws ServletException, IOException {
         try {
             loadFormDropdowns(request);
-            request.getRequestDispatcher("/jsp/customerSupport/addNewCampaign.jsp").forward(request, response);
+            request.getRequestDispatcher("/jsp/customerSupport/createCampaign.jsp").forward(request, response);
         } catch (Exception e) {
             handleException(request, response, e, "tải dữ liệu cho form thêm mới");
         }
@@ -507,7 +507,7 @@ public class CampaignController extends HttpServlet {
 
             request.setAttribute("campaign", campaign);
             request.setAttribute("maintenanceSchedule", ms);
-            request.getRequestDispatcher("/jsp/customerSupport/viewCampaignDetails.jsp").forward(request, response);
+            request.getRequestDispatcher("/jsp/customerSupport/viewCampaign.jsp").forward(request, response);
         } catch (Exception e) {
             handleException(request, response, e, "xem chi tiết chiến dịch");
         }
