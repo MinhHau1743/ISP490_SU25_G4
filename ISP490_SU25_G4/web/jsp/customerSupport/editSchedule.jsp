@@ -94,7 +94,7 @@
                                         <select id="province" name="province" class="form-control" required>
                                             <option value="">-- Chọn Tỉnh/Thành --</option>
                                             <c:forEach var="p" items="${provinces}">
-                                                <option value="${p.id}" ${p.id == schedule.provinceId ? 'selected' : ''}>${p.name}</option>
+                                                <option value="${p.id}" ${p.id == schedule.address.provinceId ? 'selected' : ''}>${p.name}</option>
                                             </c:forEach>
                                         </select>
                                     </div>
@@ -103,7 +103,7 @@
                                         <select id="district" name="district" class="form-control" required>
                                             <option value="">-- Chọn Quận/Huyện --</option>
                                             <c:forEach var="d" items="${districts}">
-                                                <option value="${d.id}" ${d.id == schedule.districtId ? 'selected' : ''}>${d.name}</option>
+                                                <option value="${d.id}" ${d.id == schedule.address.districtId ? 'selected' : ''}>${d.name}</option>
                                             </c:forEach>
                                         </select>
                                     </div>
@@ -112,14 +112,14 @@
                                         <select id="ward" name="ward" class="form-control" required>
                                             <option value="">-- Chọn Phường/Xã --</option>
                                             <c:forEach var="w" items="${wards}">
-                                                <option value="${w.id}" ${w.id == schedule.wardId ? 'selected' : ''}>${w.name}</option>
+                                                <option value="${w.id}" ${w.id == schedule.address.wardId ? 'selected' : ''}>${w.name}</option>
                                             </c:forEach>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <label for="streetAddress">Địa chỉ cụ thể</label>
-                                    <input type="text" id="streetAddress" name="streetAddress" class="form-control" value="${schedule.streetAddress}" placeholder="Số nhà, tên đường...">
+                                    <input type="text" id="streetAddress" name="streetAddress" class="form-control" value="${schedule.address.streetAddress}" placeholder="Số nhà, tên đường...">
                                 </div>
                                 <div class="form-group">
                                     <label for="assignedUsers">Người phân công</label>
@@ -181,9 +181,9 @@
         <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
         <script>
             window.PRESELECTED_ADDRESS = {
-                provinceId: '${param.province != null ? param.province : schedule.provinceId}',
-                districtId: '${param.district != null ? param.district : schedule.districtId}',
-                wardId: '${param.ward != null ? param.ward : schedule.wardId}'
+                provinceId: '${param.province != null ? param.province : schedule.address.provinceId}',
+                districtId: '${param.district != null ? param.district : schedule.address.districtId}',
+                wardId: '${param.ward != null ? param.ward : schedule.address.wardId}'
             };
             window.ADDR_CONTEXT_PATH = '${pageContext.request.contextPath}';
             // Tất cả users có thể chọn

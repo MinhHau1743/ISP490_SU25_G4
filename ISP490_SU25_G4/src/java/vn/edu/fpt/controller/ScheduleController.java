@@ -94,7 +94,7 @@ public class ScheduleController extends HttpServlet {
         } else if ("updateSchedule".equals(action)) {
             handleEditSubmit(request, response);
             return;
-        } 
+        }
         // Nếu không khớp action, về GET
         doGet(request, response);
     }
@@ -307,8 +307,15 @@ public class ScheduleController extends HttpServlet {
 
         Map<Integer, List<MaintenanceAssignments>> assignmentMap
                 = assignments.stream().collect(Collectors.groupingBy(MaintenanceAssignments::getMaintenanceScheduleId));
+
+// Gán vào schedule: setAssignedUserIds từ List<MaintenanceAssignments>
         for (MaintenanceSchedule schedule : schedules) {
-            schedule.setAssignments(assignmentMap.getOrDefault(schedule.getId(), new ArrayList<>()));
+            List<MaintenanceAssignments> assigns = assignmentMap.getOrDefault(schedule.getId(), Collections.emptyList());
+            List<Integer> assignedUserIds = assigns.stream()
+                    .map(MaintenanceAssignments::getUserId)
+                    .collect(Collectors.toList());
+            schedule.setAssignedUserIds(assignedUserIds);
+            schedule.setAssignments(assigns);
         }
 
         Map<LocalDate, List<MaintenanceSchedule>> groupedSchedules
@@ -767,9 +774,9 @@ public class ScheduleController extends HttpServlet {
             request.setAttribute("provinces", provinces);
 
             // 5. Tải sẵn danh sách Quận/Huyện và Phường/Xã nếu lịch trình đã có địa chỉ
-            if (schedule.getFullAddress() != null) {
-                request.setAttribute("districts", addressDAO.getDistrictsByProvinceId(schedule.getFullAddress().getProvinceId()));
-                request.setAttribute("wards", addressDAO.getWardsByDistrictId(schedule.getFullAddress().getDistrictId()));
+            if (schedule.getAddress() != null) {
+                request.setAttribute("districts", addressDAO.getDistrictsByProvinceId(schedule.getAddress().getProvinceId()));
+                request.setAttribute("wards", addressDAO.getWardsByDistrictId(schedule.getAddress().getDistrictId()));
             }
 
             // 6. Chuyển hướng đến trang JSP
@@ -1057,8 +1064,6 @@ public class ScheduleController extends HttpServlet {
     }
     // ---------- Helper Methods ----------
 
-    
-
     private LocalDate parseNullableDate(JSONObject json, String key) {
         if (!json.has(key) || json.isNull(key)) {
             return null;
@@ -1184,81 +1189,86 @@ public class ScheduleController extends HttpServlet {
         }
     }
 
- private void handleMarkAsComplete(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    response.setContentType("application/json;charset=UTF-8");
-    request.setCharacterEncoding("UTF-8");
+    private void handleMarkAsComplete(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        request.setCharacterEncoding("UTF-8");
 
-    try {
-        // Đọc body
-        StringBuilder sb = new StringBuilder();
-        try (BufferedReader reader = request.getReader()) {
-            String line;
-            while ((line = reader.readLine()) != null) sb.append(line);
-        }
-        String raw = sb.toString().trim();
-
-        Integer scheduleId = null;
-
-        // Ưu tiên JSON body nếu Content-Type là application/json
-        String ct = request.getContentType();
-        if (!raw.isEmpty() && ct != null && ct.toLowerCase().contains("application/json")) {
-            // Dùng parser kiểu cũ (tương thích rộng)
-            com.google.gson.JsonParser parser = new com.google.gson.JsonParser();
-            com.google.gson.JsonElement je = parser.parse(raw);
-
-            if (je.isJsonPrimitive()) {
-                // body = 123 hoặc "123"
-                if (je.getAsJsonPrimitive().isNumber()) {
-                    scheduleId = je.getAsInt();
-                } else {
-                    String s = je.getAsString();
-                    if (s != null && !s.trim().isEmpty()) {
-                        scheduleId = Integer.parseInt(s.trim());
-                    }
+        try {
+            // Đọc body
+            StringBuilder sb = new StringBuilder();
+            try (BufferedReader reader = request.getReader()) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line);
                 }
-            } else if (je.isJsonObject()) {
-                com.google.gson.JsonObject obj = je.getAsJsonObject();
-                if (obj.has("id")) {
-                    scheduleId = Integer.parseInt(obj.get("id").getAsString().trim());
-                } else if (obj.has("scheduleId")) {
-                    scheduleId = Integer.parseInt(obj.get("scheduleId").getAsString().trim());
-                } else if (obj.has("schedule") && obj.get("schedule").isJsonObject()) {
-                    com.google.gson.JsonObject sch = obj.getAsJsonObject("schedule");
-                    if (sch.has("id")) {
-                        scheduleId = Integer.parseInt(sch.get("id").getAsString().trim());
+            }
+            String raw = sb.toString().trim();
+
+            Integer scheduleId = null;
+
+            // Ưu tiên JSON body nếu Content-Type là application/json
+            String ct = request.getContentType();
+            if (!raw.isEmpty() && ct != null && ct.toLowerCase().contains("application/json")) {
+                // Dùng parser kiểu cũ (tương thích rộng)
+                com.google.gson.JsonParser parser = new com.google.gson.JsonParser();
+                com.google.gson.JsonElement je = parser.parse(raw);
+
+                if (je.isJsonPrimitive()) {
+                    // body = 123 hoặc "123"
+                    if (je.getAsJsonPrimitive().isNumber()) {
+                        scheduleId = je.getAsInt();
+                    } else {
+                        String s = je.getAsString();
+                        if (s != null && !s.trim().isEmpty()) {
+                            scheduleId = Integer.parseInt(s.trim());
+                        }
+                    }
+                } else if (je.isJsonObject()) {
+                    com.google.gson.JsonObject obj = je.getAsJsonObject();
+                    if (obj.has("id")) {
+                        scheduleId = Integer.parseInt(obj.get("id").getAsString().trim());
+                    } else if (obj.has("scheduleId")) {
+                        scheduleId = Integer.parseInt(obj.get("scheduleId").getAsString().trim());
+                    } else if (obj.has("schedule") && obj.get("schedule").isJsonObject()) {
+                        com.google.gson.JsonObject sch = obj.getAsJsonObject("schedule");
+                        if (sch.has("id")) {
+                            scheduleId = Integer.parseInt(sch.get("id").getAsString().trim());
+                        }
                     }
                 }
             }
-        }
 
-        // Fallback: form-urlencoded ?id=123
-        if (scheduleId == null) {
-            String p = request.getParameter("id");
-            if (p != null && !p.isBlank()) {
-                try { scheduleId = Integer.parseInt(p.trim()); } catch (NumberFormatException ignore) {}
+            // Fallback: form-urlencoded ?id=123
+            if (scheduleId == null) {
+                String p = request.getParameter("id");
+                if (p != null && !p.isBlank()) {
+                    try {
+                        scheduleId = Integer.parseInt(p.trim());
+                    } catch (NumberFormatException ignore) {
+                    }
+                }
             }
-        }
 
-        if (scheduleId == null || scheduleId <= 0) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write("{\"message\":\"Dữ liệu không hợp lệ: thiếu hoặc sai ID.\"}");
-            return;
-        }
+            if (scheduleId == null || scheduleId <= 0) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                response.getWriter().write("{\"message\":\"Dữ liệu không hợp lệ: thiếu hoặc sai ID.\"}");
+                return;
+            }
 
-        boolean ok = new MaintenanceScheduleDAO().markAsCompleted(scheduleId);
-        if (ok) {
-            response.setStatus(HttpServletResponse.SC_OK);
-            response.getWriter().write("{\"message\":\"Cập nhật trạng thái thành công!\",\"id\":" + scheduleId + "}");
-        } else {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            response.getWriter().write("{\"message\":\"Không tìm thấy lịch trình với ID đã cho.\"}");
+            boolean ok = new MaintenanceScheduleDAO().markAsCompleted(scheduleId);
+            if (ok) {
+                response.setStatus(HttpServletResponse.SC_OK);
+                response.getWriter().write("{\"message\":\"Cập nhật trạng thái thành công!\",\"id\":" + scheduleId + "}");
+            } else {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                response.getWriter().write("{\"message\":\"Không tìm thấy lịch trình với ID đã cho.\"}");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            String msg = e.getMessage() == null ? "" : (" - " + e.getMessage().replace("\"", "\\\""));
+            response.getWriter().write("{\"message\":\"Lỗi server: " + e.getClass().getSimpleName() + msg + "\"}");
         }
-    } catch (Exception e) {
-        e.printStackTrace();
-        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        String msg = e.getMessage() == null ? "" : (" - " + e.getMessage().replace("\"","\\\""));
-        response.getWriter().write("{\"message\":\"Lỗi server: " + e.getClass().getSimpleName() + msg + "\"}");
     }
-}
 
 }

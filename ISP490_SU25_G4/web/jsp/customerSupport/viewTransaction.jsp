@@ -133,6 +133,47 @@
                                         <span class="label">Loại phiếu</span>
                                         <div class="value">${ticket.serviceName}</div>
                                     </div>
+                                    <div class="form-group full-width">
+                                        <div class="address-section">
+                                            <h3>Địa chỉ thực hiện công việc</h3>
+
+                                            <div class="address-grid">
+                                                <div class="field">
+                                                    <span class="label">Tỉnh/Thành phố:</span>
+                                                    <span class="value">
+                                                        <c:forEach var="p" items="${provinces}">
+                                                            <c:if test="${p.id == schedule.address.provinceId}">${p.name}</c:if>
+                                                        </c:forEach>
+                                                    </span>
+                                                </div>
+
+                                                <div class="field">
+                                                    <span class="label">Quận/Huyện:</span>
+                                                    <span class="value">
+                                                        <c:forEach var="d" items="${districts}">
+                                                            <c:if test="${d.id == schedule.address.districtId}">${d.name}</c:if>
+                                                        </c:forEach>
+                                                    </span>
+                                                </div>
+
+                                                <div class="field">
+                                                    <span class="label">Phường/Xã:</span>
+                                                    <span class="value">
+                                                        <c:forEach var="w" items="${wards}">
+                                                            <c:if test="${w.id == schedule.address.wardId}">${w.name}</c:if>
+                                                        </c:forEach>
+                                                    </span>
+                                                </div>
+
+                                                <!-- ĐỊA CHỈ CỤ THỂ: span toàn hàng -->
+                                                <div class="field full-row">
+                                                    <span class="label">Địa chỉ cụ thể:</span>
+                                                    <span class="value">${schedule.address.streetAddress}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div class="info-item full-width">
                                         <span class="label">Mô tả chi tiết</span>
                                         <div class="value">${ticket.description}</div>
@@ -201,7 +242,18 @@
                                 </div>
                                 <div class="info-item">
                                     <span class="label">Nhân viên phụ trách</span>
-                                    <span class="value">${not empty ticket.assignedToName ? ticket.assignedToName : 'Chưa gán'}</span>
+                                    <div class="value">
+                                        <c:set var="hasAssignedUsers" value="${false}" />
+                                        <c:forEach var="employee" items="${employeeList}">
+                                            <c:if test="${assignedUserIds.contains(employee.id)}">
+                                                <span class="user-tag">${employee.lastName} ${employee.middleName} ${employee.firstName}</span>
+                                                <c:set var="hasAssignedUsers" value="${true}" />
+                                            </c:if>
+                                        </c:forEach>
+                                        <c:if test="${!hasAssignedUsers}">
+                                            Chưa gán
+                                        </c:if>
+                                    </div>
                                 </div>
                                 <div class="info-item">
                                     <span class="label">Người tạo phiếu</span>
@@ -216,9 +268,34 @@
                                     </span>
                                 </div>
                                 <div class="info-item">
+                                    <label class="label"">Ngày bắt đầu (*)</label>
+                                    <span class="value">${schedule.scheduledDate}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label class="label">Ngày kết thúc</label>
+                                    <span class="value">${schedule.endDate}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label class="label">Giờ bắt đầu</label>
+                                    <span class="value">${schedule.startTime}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label class="label">Giờ kết thúc</label>
+                                    <span class="value">${schedule.endTime}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Màu sắc</span>
+                                    <div class="value">
+                                        <div class="color-swatch-display" 
+                                             style="background-color: ${not empty schedule.color ? schedule.color : '#6c757d'};">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="info-item">
                                     <span class="label">Tính phí</span>
                                     <span class="value">${ticket.isBillable ? 'Có' : 'Không (Bảo hành)'}</span>
                                 </div>
+
                                 <c:if test="${ticket.isBillable}">
                                     <div class="info-item">
                                         <span class="label">Chi phí dự kiến</span>

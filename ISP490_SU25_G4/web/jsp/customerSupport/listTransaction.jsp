@@ -2,7 +2,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
-<c:set var="currentPage" value="ticket" />
+
 <!DOCTYPE html>
 <html lang="vi">
     <head>
@@ -13,11 +13,10 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/listTransaction.css?v=<%= System.currentTimeMillis()%>"> 
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/listTransaction.css"> 
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pagination.css">
     </head>
     <body>
@@ -153,17 +152,16 @@
                 </div>
             </div>
         </div>
-
         <script src="https://unpkg.com/feather-icons"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 feather.replace();
             });
         </script>
-        <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
         <script>
             window.APP_CONTEXT_PATH = "${pageContext.request.contextPath}";
         </script>
+        <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
         <script src="${pageContext.request.contextPath}/js/listTransaction.js"></script>
     </body>
 </html>

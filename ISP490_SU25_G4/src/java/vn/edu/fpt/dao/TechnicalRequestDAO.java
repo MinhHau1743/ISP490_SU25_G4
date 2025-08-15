@@ -24,6 +24,7 @@ import java.time.LocalTime;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import vn.edu.fpt.model.Address;
 
 public class TechnicalRequestDAO {
 
@@ -606,11 +607,20 @@ public class TechnicalRequestDAO {
                 ms.setStatusName(rs.getString("status_name"));
 
                 // Địa chỉ chi tiết
-                ms.setStreetAddress(rs.getString("street_address"));
-                ms.setWardId((Integer) rs.getObject("ward_id"));
-                ms.setDistrictId((Integer) rs.getObject("district_id"));
-                ms.setProvinceId((Integer) rs.getObject("province_id"));
-                ms.setAssignedUserId((Integer) rs.getObject("assigned_user_id"));
+                Address address = new Address();
+                address.setId((Integer) rs.getObject("address_id"));
+                address.setStreetAddress(rs.getString("street_address"));
+                address.setWardId((Integer) rs.getObject("ward_id"));
+                address.setDistrictId((Integer) rs.getObject("district_id"));
+                address.setProvinceId((Integer) rs.getObject("province_id"));
+                ms.setAddress(address);
+                Integer onlyUserId = (Integer) rs.getObject("assigned_user_id");
+                List<Integer> assignedUserIds = new ArrayList<>();
+                if (onlyUserId != null) {
+                    assignedUserIds.add(onlyUserId);
+                }
+                ms.setAssignedUserIds(assignedUserIds);
+
                 // Ngày (LocalDate) với fallback
                 try {
                     ms.setScheduledDate(rs.getObject("scheduled_date", java.time.LocalDate.class));
@@ -759,36 +769,51 @@ public class TechnicalRequestDAO {
         return list;
     }
 
-    public static void main(String[] args) throws SQLException {
+    public static void main(String[] args) {
+        int testTechnicalRequestId = 18; // Thay bằng một id có thật
 
         TechnicalRequestDAO dao = new TechnicalRequestDAO();
+        try {
+            MaintenanceSchedule ms = dao.getScheduleByTechnicalRequestId(testTechnicalRequestId);
+            if (ms == null) {
+                System.out.println("Không tìm thấy schedule với technicalRequestId = " + testTechnicalRequestId);
+            } else {
+                System.out.println("=== MaintenanceSchedule ===============");
+                System.out.println("id = " + ms.getId());
+                System.out.println("technicalRequestId = " + ms.getTechnicalRequestId());
+                System.out.println("campaignId = " + ms.getCampaignId());
+                System.out.println("color = " + ms.getColor());
+                System.out.println("scheduledDate = " + ms.getScheduledDate());
+                System.out.println("endDate = " + ms.getEndDate());
+                System.out.println("startTime = " + ms.getStartTime());
+                System.out.println("endTime = " + ms.getEndTime());
+                System.out.println("addressId = " + ms.getAddressId());
+                System.out.println("statusId = " + ms.getStatusId());
+                System.out.println("statusName = " + ms.getStatusName());
+                System.out.println("assignedUserIds = " + ms.getAssignedUserIds());
+                System.out.println("createdAt = " + ms.getCreatedAt());
+                System.out.println("updatedAt = " + ms.getUpdatedAt());
 
-        // 2. Tạo đối tượng TechnicalRequest với dữ liệu mới để cập nhật
-        TechnicalRequest testRequest = new TechnicalRequest();
-
-        // ❗ QUAN TRỌNG: Thay đổi số 1 thành một ID thực sự tồn tại trong bảng TechnicalRequests của bạn
-        testRequest.setId(1);
-
-        // Tạo title và description mới để dễ dàng nhận ra sự thay đổi
-        String currentTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss dd-MM-yyyy"));
-        testRequest.setTitle("Tiêu đề được cập nhật @ " + currentTime);
-        testRequest.setDescription("Mô tả mới được cập nhật từ phương thức main.");
-
-        // 3. Gọi hàm cần kiểm tra
-        System.out.println("Đang thực hiện cập nhật cho request có ID = " + testRequest.getId());
-        boolean isSuccess = dao.updateTechnicalRequestTitleAndDesc(testRequest);
-
-        // 4. In kết quả ra màn hình
-        if (isSuccess) {
-            System.out.println("✅ Cập nhật thành công!");
-            System.out.println("Vui lòng kiểm tra lại cơ sở dữ liệu để xác nhận thay đổi.");
-        } else {
-            System.out.println("❌ Cập nhật thất bại. Có thể ID không tồn tại hoặc có lỗi kết nối DB.");
+                // In chi tiết địa chỉ nếu có
+                Address addr = ms.getAddress();
+                if (addr != null) {
+                    System.out.println("----- Address -----");
+                    System.out.println("address.id = " + addr.getId());
+                    System.out.println("address.streetAddress = " + addr.getStreetAddress());
+                    System.out.println("address.wardId = " + addr.getWardId());
+                    System.out.println("address.districtId = " + addr.getDistrictId());
+                    System.out.println("address.provinceId = " + addr.getProvinceId());
+                } else {
+                    System.out.println("Không có Address.");
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi truy vấn hoặc xử lý dữ liệu:");
+            e.printStackTrace();
         }
-        // Case 5 (nếu DB của bạn có cột tr.status dạng chuỗi):
-        // runCase(dao, "Lọc theo status='pending'", null, "pending", 0, 10, 0);
-        // Nếu schema dùng status_id + bảng Statuses, hãy sửa DAO để join theo status_name rồi mới test.
     }
+
+
 
     private static void runCase(TechnicalRequestDAO dao, String title,
             String query, String status, int serviceId,

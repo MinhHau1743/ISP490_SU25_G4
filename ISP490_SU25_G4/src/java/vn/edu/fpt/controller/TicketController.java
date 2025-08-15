@@ -29,6 +29,7 @@ import vn.edu.fpt.common.EmailServiceFeedback;
 import vn.edu.fpt.dao.EnterpriseDAO;
 import vn.edu.fpt.dao.FeedbackDAO;
 import vn.edu.fpt.dao.MaintenanceScheduleDAO;
+import vn.edu.fpt.model.Address;
 import vn.edu.fpt.model.District;
 import vn.edu.fpt.model.MaintenanceSchedule;
 import vn.edu.fpt.model.Province;
@@ -49,11 +50,6 @@ public class TicketController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        System.out.println("--- TICKET CONTROLLER: YÊU CẦU MỚI ---");
-        request.getParameterMap().forEach((key, value) -> {
-            System.out.println("Tham số nhận được: " + key + " = " + String.join(", ", value));
-        });
-        System.out.println("------------------------------------");
         String action = request.getParameter("action");
         if (action == null) {
             action = "list";
@@ -176,81 +172,135 @@ public class TicketController extends HttpServlet {
         request.getRequestDispatcher("/jsp/customerSupport/createTicket.jsp").forward(request, response);
     }
 
-    private void viewTicket(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+    private void viewTicket(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, Exception {
         try {
             int id = Integer.parseInt(request.getParameter("id"));
-            TechnicalRequest ticket = dao.getTechnicalRequestById(id);
+
+            // 1. Instantiate all necessary DAOs at the beginning
+            TechnicalRequestDAO ticketDAO = new TechnicalRequestDAO(); // Assuming 'dao' is an instance of this
+            MaintenanceScheduleDAO scheduleDAO = new MaintenanceScheduleDAO();
+            AddressDAO addressDAO = new AddressDAO();
+            EnterpriseDAO enterpriseDAO = new EnterpriseDAO(); // Needed for address fetching
+            FeedbackDAO feedbackDAO = new FeedbackDAO();
+
+            // 2. Fetch the main TechnicalRequest object
+            TechnicalRequest ticket = ticketDAO.getTechnicalRequestById(id);
 
             if (ticket != null) {
-
-                // --- PHẦN CODE CẬP NHẬT ---
-                // 1. Khởi tạo FeedbackDAO
-                FeedbackDAO feedbackDAO = new FeedbackDAO();
-
-                // 2. Kiểm tra xem feedback đã tồn tại cho ticket này chưa
-                boolean hasFeedback = feedbackDAO.feedbackExistsForTechnicalRequest(id);
-
-                // 3. Gửi cả ticket và kết quả kiểm tra sang JSP
+                // 3. Fetch the associated MaintenanceSchedule
+                MaintenanceSchedule schedule = dao.getScheduleByTechnicalRequestId(id);
+                request.setAttribute("employeeList", dao.getAllTechnicians());
+                // Set the ticket and schedule objects
                 request.setAttribute("ticket", ticket);
-                request.setAttribute("hasFeedback", hasFeedback); // <-- Gửi biến này sang JSP
+                request.setAttribute("schedule", schedule); // Will be null if no schedule exists
 
+                // 4. Fetch address data and assigned users ONLY if a schedule exists
+                if (schedule != null) {
+                    // This part is correct and remains the same
+                    List<Integer> assignedUserIds = scheduleDAO.getAssignedUserIdsByScheduleId(schedule.getId());
+                    request.setAttribute("assignedUserIds", assignedUserIds);
+
+                    // === BEGIN REPLACEMENT ===
+                    // 1. Always fetch the full list of provinces for the main dropdown
+                    request.setAttribute("provinces", addressDAO.getAllProvinces());
+
+                    // 2. Check if the schedule has an associated Address object
+                    Address scheduleAddress = schedule.getAddress();
+                    if (scheduleAddress != null && scheduleAddress.getId() > 0) {
+
+                        // 3. Pre-load the district and ward lists based on the existing address
+                        // (Assuming you have access to the EnterpriseDAO or similar DAO here)
+                        request.setAttribute("districts", enterpriseDAO.getDistrictsByProvinceId(scheduleAddress.getProvinceId()));
+                        request.setAttribute("wards", enterpriseDAO.getWardsByDistrictId(scheduleAddress.getDistrictId()));
+
+                    } else {
+                        // If there's no address, provide empty lists to prevent errors on the JSP
+                        request.setAttribute("districts", java.util.Collections.emptyList());
+                        request.setAttribute("wards", java.util.Collections.emptyList());
+                    }
+
+                    // === END REPLACEMENT ===
+                }
+                // 5. Check if feedback exists (your original logic)
+//                boolean hasFeedback = feedbackDAO.feedbackExistsForTechnicalRequest(id);
+//                request.setAttribute("hasFeedback", hasFeedback);
+                // 6. Forward to the view page
                 request.getRequestDispatcher("/jsp/customerSupport/viewTransaction.jsp").forward(request, response);
-                // --- KẾT THÚC PHẦN CẬP NHẬT ---
 
             } else {
-                response.sendRedirect("ticket?action=list&error=notFound");
+                response.sendRedirect(request.getContextPath() + "/ticket?action=list&error=notFound");
             }
         } catch (NumberFormatException e) {
-            response.sendRedirect("ticket?action=list&error=invalidId");
+            response.sendRedirect(request.getContextPath() + "/ticket?action=list&error=invalidId");
+        } catch (Exception e) {
+            e.printStackTrace(); // Log the full error for debugging
+            // Forward to an error page or show a generic error message
+            response.sendRedirect(request.getContextPath() + "/ticket?action=list&error=viewFailed");
         }
     }
 
-    private void showEditForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException, Exception {
+    private void showEditForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
-            MaintenanceScheduleDAO scheduleDao = new MaintenanceScheduleDAO();
+            int id = Integer.parseInt(request.getParameter("id"));
+
+            // 1. Instantiate all necessary DAOs
+            TechnicalRequestDAO ticketDAO = new TechnicalRequestDAO(); // Assuming 'dao' is an instance of this
+            MaintenanceScheduleDAO scheduleDAO = new MaintenanceScheduleDAO();
             AddressDAO addressDAO = new AddressDAO();
             EnterpriseDAO enterpriseDAO = new EnterpriseDAO();
-            List<Province> provinces = addressDAO.getAllProvinces();
-            int id = Integer.parseInt(request.getParameter("id"));
-            TechnicalRequest existingTicket = dao.getTechnicalRequestById(id);
+            Gson gson = new Gson(); // Assuming gson is an instance variable or created here
+
+            // 2. Fetch the main TechnicalRequest object
+            TechnicalRequest existingTicket = ticketDAO.getTechnicalRequestById(id);
+
             if (existingTicket != null) {
-                String allProductsJson = gson.toJson(dao.getAllProducts());
+                // 3. Fetch related data for the form
+                String allProductsJson = gson.toJson(ticketDAO.getAllProducts());
                 String existingDevicesJson = gson.toJson(existingTicket.getDevices());
 
                 request.setAttribute("ticket", existingTicket);
-                request.setAttribute("contractList", dao.getAllActiveContracts());
-                request.setAttribute("customerList", dao.getAllEnterprises());
-                request.setAttribute("employeeList", dao.getAllTechnicians());
-                request.setAttribute("serviceList", dao.getAllServices());
-
-                MaintenanceSchedule schedule = dao.getScheduleByTechnicalRequestId(id);
-
-                request.setAttribute("schedule", schedule);
-                request.setAttribute("provinces", provinces);
-
-                // Nạp sẵn quận/phường nếu có schedule
-                if (schedule != null && schedule.getProvinceId() != null) {
-                    request.setAttribute("districts", enterpriseDAO.getDistrictsByProvinceId(schedule.getProvinceId()));
-                    if (schedule.getDistrictId() != null) {
-                        request.setAttribute("wards", enterpriseDAO.getWardsByDistrictId(schedule.getDistrictId()));
-                    } else {
-                        request.setAttribute("wards", java.util.Collections.emptyList());
-                    }
-                } else {
-                    request.setAttribute("districts", java.util.Collections.emptyList());
-                    request.setAttribute("wards", java.util.Collections.emptyList());
-                }
-                List<Integer> assignedUserIds = scheduleDao.getAssignedUserIdsByScheduleId(schedule.getId());
-                request.setAttribute("assignedUserIds", assignedUserIds);
+                request.setAttribute("contractList", ticketDAO.getAllActiveContracts());
+                request.setAttribute("customerList", ticketDAO.getAllEnterprises());
+                request.setAttribute("employeeList", ticketDAO.getAllTechnicians());
+                request.setAttribute("serviceList", ticketDAO.getAllServices());
                 request.setAttribute("allProductsJson", allProductsJson);
                 request.setAttribute("existingDevicesJson", existingDevicesJson);
+
+                // 4. Fetch the associated MaintenanceSchedule
+                MaintenanceSchedule schedule = dao.getScheduleByTechnicalRequestId(id);
+                request.setAttribute("schedule", schedule);
+
+                // 5. Always load the full list of provinces for the dropdown
+                request.setAttribute("provinces", addressDAO.getAllProvinces());
+
+                // 6. Conditionally load dependent data (address, users) ONLY if a schedule exists
+                if (schedule != null) {
+                    // Fetch assigned user IDs for the schedule
+                    List<Integer> assignedUserIds = scheduleDAO.getAssignedUserIdsByScheduleId(schedule.getId());
+                    request.setAttribute("assignedUserIds", assignedUserIds);
+
+                    // Check for the encapsulated Address object
+                    Address scheduleAddress = schedule.getAddress();
+                    if (scheduleAddress != null && scheduleAddress.getProvinceId() > 0) {
+                        // Pre-load the district and ward lists using IDs from the Address object
+                        request.setAttribute("districts", enterpriseDAO.getDistrictsByProvinceId(scheduleAddress.getProvinceId()));
+                        if (scheduleAddress.getDistrictId() > 0) {
+                            request.setAttribute("wards", enterpriseDAO.getWardsByDistrictId(scheduleAddress.getDistrictId()));
+                        }
+                    }
+                }
+
+                // Forward to the edit page
                 request.getRequestDispatcher("/jsp/customerSupport/editTransaction.jsp").forward(request, response);
 
             } else {
-                response.sendRedirect("ticket?action=list&error=notFound");
+                response.sendRedirect(request.getContextPath() + "/ticket?action=list&error=notFound");
             }
         } catch (NumberFormatException e) {
-            response.sendRedirect("ticket?action=list&error=invalidId");
+            response.sendRedirect(request.getContextPath() + "/ticket?action=list&error=invalidId");
+        } catch (Exception e) {
+            e.printStackTrace(); // Log the error for debugging
+            response.sendRedirect(request.getContextPath() + "/ticket?action=list&error=editFailed");
         }
     }
 
@@ -274,7 +324,14 @@ public class TicketController extends HttpServlet {
             updatedRequest.setId(ticketId);
             updatedRequest.setEnterpriseId(Integer.parseInt(request.getParameter("enterpriseId")));
             updatedRequest.setServiceId(Integer.parseInt(request.getParameter("serviceId")));
-            int employeeId = Integer.parseInt(request.getParameter("employeeId"));
+            String employeeIdStr = request.getParameter("employeesId");
+            if (employeeIdStr == null || employeeIdStr.isEmpty()) {
+                // Có thể redirect hoặc thông báo lỗi hợp lệ cho người dùng
+                response.sendRedirect(request.getContextPath() + "/ticket?action=edit&id=" + ticketId + "&error=missingEmployee");
+                return;
+            }
+            int employeeId = Integer.parseInt(employeeIdStr);
+
             updatedRequest.setAssignedToId(employeeId);
             updatedRequest.setAssignedUserIds(Collections.singletonList(employeeId));
             updatedRequest.setPriority(request.getParameter("priority"));
@@ -405,16 +462,20 @@ public class TicketController extends HttpServlet {
                 newRequest.setServiceId(Integer.parseInt(serviceIdStr));
             }
 
-            String employeeIdStr = request.getParameter("employeesId");
-            if (employeeIdStr != null && !employeeIdStr.isEmpty()) {
-                int employeeId = Integer.parseInt(employeeIdStr);
-                newRequest.setAssignedUserIds(Collections.singletonList(employeeId));
-                schedule.setAssignedUserId(employeeId);
+            String[] employeeIdArr = request.getParameterValues("employeesId");
+            if (employeeIdArr != null && employeeIdArr.length > 0) {
+                List<Integer> employeeIds = new ArrayList<>();
+                for (String s : employeeIdArr) {
+                    if (s != null && !s.isEmpty()) {
+                        employeeIds.add(Integer.parseInt(s));
+                    }
+                }
+                newRequest.setAssignedUserIds(employeeIds);
+                schedule.setAssignedUserIds(employeeIds); // Sửa lại hàm này (List<Integer>), không phải setAssignedUserId(int)
             }
-
             String contractIdStr = request.getParameter("contractId");
             if (contractIdStr != null && !contractIdStr.isEmpty()) {
-                newRequest.setContractId(Integer.parseInt(contractIdStr));
+                newRequest.setContractId(Integer.valueOf(contractIdStr));
             }
             String status = request.getParameter("status");
             newRequest.setStatus(status);

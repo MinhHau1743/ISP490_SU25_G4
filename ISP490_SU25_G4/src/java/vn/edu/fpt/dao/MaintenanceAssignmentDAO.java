@@ -33,7 +33,25 @@ public class MaintenanceAssignmentDAO {
         // Nếu có lỗi, SQLException sẽ được ném ra và được xử lý ở servlet
     }
 
-    // Bạn có thể thêm các phương thức khác ở đây nếu cần, ví dụ:
-    // public List<User> getUsersByScheduleId(int scheduleId) { ... }
-    // public boolean removeAssignment(int scheduleId, int userId) { ... }
+    /**
+     * Thêm mới hoặc cập nhật người được phân công cho một lịch trình.
+     * Nếu lịch trình chưa có ai, sẽ thêm mới.
+     * Nếu lịch trình đã có người khác, sẽ cập nhật thành người mới.
+     * @param scheduleId ID của lịch trình.
+     * @param userId ID của nhân viên được gán.
+     * @param conn Connection được truyền từ servlet.
+     * @throws SQLException
+     */
+    public void upsertAssignment(int scheduleId, int userId, Connection conn) throws SQLException {
+        // SỬA LỖI: Đổi "schedule_id" thành "maintenance_schedule_id" để khớp với CSDL
+        // Yêu cầu phải có UNIQUE KEY trên cột `maintenance_schedule_id` để hoạt động chính xác
+        String sql = "INSERT INTO MaintenanceAssignments(maintenance_schedule_id, user_id) VALUES(?,?) "
+                   + "ON DUPLICATE KEY UPDATE user_id=VALUES(user_id)";
+        try (var ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, scheduleId);
+            ps.setInt(2, userId);
+            ps.executeUpdate();
+        }
+    }
+
 }

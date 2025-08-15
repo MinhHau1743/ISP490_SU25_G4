@@ -1314,7 +1314,7 @@
                                                 <div class="tasks-list">
                                                     <c:forEach var="schedule" items="${schedules}">
                                                         <c:if test="${schedule.scheduledDate.equals(monthDates[status.index])}">
-                                                            <div class="task-item status-${fn:toLowerCase(schedule.status)}"
+                                                            <div class="task-item status-${fn:toLowerCase(schedule.statusName)}"
                                                                  data-task-id="${schedule.id}"
                                                                  data-schedule-id="${schedule.id}"
                                                                  data-item-name="${schedule.title}"
@@ -1459,7 +1459,7 @@
                     endDate: "${schedule.endDate != null ? schedule.endDate : ''}",
                     startTime: "${schedule.startTime != null ? schedule.startTime : ''}",
                     endTime: "${schedule.endTime != null ? schedule.endTime : ''}",
-                    location: "${schedule.fullAddress != null ? fn:escapeXml(schedule.fullAddress.fullAddress) : 'Không xác định'}",
+                    location: "${schedule.address.fullAddress != null ? fn:escapeXml(schedule.address.fullAddress) : 'Không xác định'}",
                     statusName: "${schedule.statusName}",
                     notes: "${schedule.notes}",
                     // THÊM PHẦN ASSIGNMENTS VÀO ĐÂY

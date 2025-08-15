@@ -53,7 +53,7 @@
             <li>
                 <%-- SỬA LẠI ĐIỀU KIỆN KIỂM TRA ĐỂ NHẬN DIỆN CẢ CHỮ HOA VÀ THƯỜNG --%>
                 <a href="${pageContext.request.contextPath}/ticket" 
-                   class="${currentPage.contains('Ticket') || currentPage.contains('ticket') ? 'active' : ''}">
+                   class="${currentPage.contains('Transaction') || currentPage.contains('Transaction') ? 'active' : ''}">
                     <i data-feather="tool"></i><span>Hỗ trợ Kỹ thuật</span>
                 </a>
             </li>

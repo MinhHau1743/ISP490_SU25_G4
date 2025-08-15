@@ -7,8 +7,6 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
-
-<c:set var="currentPage" value="listTransaction" />
 <!DOCTYPE html>
 <html lang="vi">
     <head>
@@ -71,7 +69,7 @@
                                                     <select id="province" name="province" class="form-control" required>
                                                         <option value="" disabled selected>-- Chọn Tỉnh/Thành --</option>
                                                         <c:forEach var="p" items="${provinces}">
-                                                            <option value="${p.id}" ${p.id == schedule.provinceId ? 'selected' : ''}>
+                                                            <option value="${p.id}" ${p.id == schedule.address.provinceId ? 'selected' : ''}>
                                                                 ${p.name}
                                                             </option>
                                                         </c:forEach>
@@ -92,7 +90,7 @@
                                             </div>
                                             <div class="form-group">
                                                 <label for="streetAddress">Địa chỉ cụ thể (*)</label>
-                                                <input type="text" id="streetAddress" name="streetAddress" value="${schedule.streetAddress}" class="form-control" placeholder="Nhập số nhà, tên đường, ngõ/hẻm..." required>
+                                                <input type="text" id="streetAddress" name="streetAddress" value="${schedule.address.streetAddress}" class="form-control" placeholder="Nhập số nhà, tên đường, ngõ/hẻm..." required>
                                             </div>
                                         </div>
                                     </div>
@@ -233,19 +231,10 @@
         </script>
         <script>
             window.PRESELECTED_ADDRESS = {
-                provinceId: '${schedule.provinceId}',
-                districtId: '${schedule.districtId}',
-                wardId: '${schedule.wardId}'
+                provinceId: '${schedule.address.provinceId}',
+                districtId: '${schedule.address.districtId}',
+                wardId: '${schedule.address.wardId}'
             };
-        </script>
-        <script>
-            $(document).ready(function () {
-                // Gọi Select2 cho thẻ select có id là 'employeeId'
-                $('#employeeId2').select2({
-                    placeholder: "Chọn nhân viên phụ trách",
-                    allowClear: true
-                });
-            });
         </script>
         <script src="${pageContext.request.contextPath}/js/editTransaction.js?v=<%= System.currentTimeMillis()%>"></script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>

@@ -330,3 +330,43 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     background-color: #249aa0; /* Làm màu đậm hơn một chút khi di chuột vào */
     border-color: #249aa0;
 }
+.address-section {
+    margin-top: 1rem;
+    padding: 1rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+.address-section h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #333;
+    font-size: 1.1rem;
+}
+.address-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+@media (max-width: 768px) {
+    .address-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.address-grid .label{
+  font-weight: 600;
+  color: #333;
+}
+/* Style để hiển thị một ô màu duy nhất */
+.color-swatch-display {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%; /* Bo tròn để tạo thành hình tròn */
+    border: 1px solid #ddd; /* Thêm viền nhẹ cho đẹp hơn */
+    vertical-align: middle; /* Căn giữa với dòng chữ nếu có */
+}
