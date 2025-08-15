@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package vn.edu.fpt.model;
 
 import java.time.LocalDate;
@@ -10,93 +6,39 @@ import java.time.LocalTime;
 import java.util.List;
 
 /**
+ * Model cho Lịch trình bảo trì/công việc. Phiên bản đã được dọn dẹp và sửa lỗi
+ * đồng bộ dữ liệu địa chỉ.
  *
  * @author phamh
  */
 public class MaintenanceSchedule {
 
     private int id;
-    private Integer technicalRequestId; // Kiểu int không thể null
+    private Integer technicalRequestId;
     private Integer campaignId;
-    private String title;
     private String color;
     private LocalDate scheduledDate;
     private LocalDate endDate;
     private LocalTime startTime;
     private LocalTime endTime;
-    private Integer addressId;
-    private String status;
     private String notes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private List<MaintenanceAssignments> assignments;
     private Integer statusId;
-    private Address fullAddress;
-    private String streetAddress;
-    private Integer provinceId;
-    private String provinceName;
-    private Integer districtId;
-    private String districtName;
-    private Integer wardId;
-    private String wardName;
-    private String statusName;
-    private Integer assignedUserId;
+    private String statusName; // Dùng để hiển thị, không có trong CSDL
+    private Integer assignedUserId; // Dùng để hiển thị, không có trong CSDL
+
+    // =====================================================================
+    // THAY ĐỔI QUAN TRỌNG: Chỉ giữ lại 2 trường address và addressId
+    // và thêm logic để chúng luôn đồng bộ với nhau.
+    // =====================================================================
+    private Integer addressId;
     private Address address;
-    
-    
+
     public MaintenanceSchedule() {
     }
 
-    public MaintenanceSchedule(int id, int technicalRequestId, String title, String color, LocalDate scheduledDate, LocalDate endDate, LocalTime startTime, LocalTime endTime, Integer addressId, String status, String notes, LocalDateTime createdAt, LocalDateTime updatedAt, List<MaintenanceAssignments> assignments, Address fullAddress) {
-        this.id = id;
-        this.technicalRequestId = technicalRequestId;
-        this.title = title;
-        this.color = color;
-        this.scheduledDate = scheduledDate;
-        this.endDate = endDate;
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.addressId = addressId;
-        this.status = status;
-        this.notes = notes;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        this.assignments = assignments;
-        this.fullAddress = fullAddress;
-    }
-
-    public Integer getAssignedUserId() {
-        return assignedUserId;
-    }
-
-    public void setAssignedUserId(Integer assignedUserId) {
-        this.assignedUserId = assignedUserId;
-    }
-
-    public Integer getCampaignId() { // Sửa ở đây
-        return campaignId;
-    }
-
-    public void setCampaignId(Integer campaignId) { // Sửa ở đây
-        this.campaignId = campaignId;
-    }
-
-    public String getStatusName() {
-        return statusName;
-    }
-
-    public void setStatusName(String statusName) {
-        this.statusName = statusName;
-    }
-
-    public Integer getStatusId() {
-        return statusId;
-    }
-
-    public void setStatusId(Integer statusId) {
-        this.statusId = statusId;
-    }
-
+    // ----- CÁC GETTER/SETTER KHÁC GIỮ NGUYÊN -----
     public int getId() {
         return id;
     }
@@ -112,14 +54,13 @@ public class MaintenanceSchedule {
     public void setTechnicalRequestId(Integer technicalRequestId) {
         this.technicalRequestId = technicalRequestId;
     }
-    // ================= KẾT THÚC SỬA LỖI =================
 
-    public String getTitle() {
-        return title;
+    public Integer getCampaignId() {
+        return campaignId;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setCampaignId(Integer campaignId) {
+        this.campaignId = campaignId;
     }
 
     public String getColor() {
@@ -162,30 +103,6 @@ public class MaintenanceSchedule {
         this.endTime = endTime;
     }
 
-    public Integer getAddressId() {
-        return addressId;
-    }
-
-    public void setAddressId(Integer addressId) {
-        this.addressId = addressId;
-    }
-
-    public Address getFullAddress() {
-        return fullAddress;
-    }
-
-    public void setFullAddress(Address fullAddress) {
-        this.fullAddress = fullAddress;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
     public String getNotes() {
         return notes;
     }
@@ -210,77 +127,71 @@ public class MaintenanceSchedule {
         this.updatedAt = updatedAt;
     }
 
-    public List<MaintenanceAssignments> getAssignments() {
-        return assignments;
+    public Integer getStatusId() {
+        return statusId;
     }
 
-    public void setAssignments(List<MaintenanceAssignments> assignments) {
-        this.assignments = assignments;
+    public void setStatusId(Integer statusId) {
+        this.statusId = statusId;
     }
 
-    public String getStreetAddress() {
-        return streetAddress;
+    public String getStatusName() {
+        return statusName;
     }
 
-    public void setStreetAddress(String streetAddress) {
-        this.streetAddress = streetAddress;
+    public void setStatusName(String statusName) {
+        this.statusName = statusName;
     }
 
-    public Integer getProvinceId() {
-        return provinceId;
+    public Integer getAssignedUserId() {
+        return assignedUserId;
     }
 
-    public void setProvinceId(Integer provinceId) {
-        this.provinceId = provinceId;
+    public void setAssignedUserId(Integer assignedUserId) {
+        this.assignedUserId = assignedUserId;
     }
 
-    public String getProvinceName() {
-        return provinceName;
-    }
-
-    public void setProvinceName(String provinceName) {
-        this.provinceName = provinceName;
-    }
-
-    public Integer getDistrictId() {
-        return districtId;
-    }
-
-    public void setDistrictId(Integer districtId) {
-        this.districtId = districtId;
-    }
-
-    public String getDistrictName() {
-        return districtName;
-    }
-
-    public void setDistrictName(String districtName) {
-        this.districtName = districtName;
-    }
-
-    public Integer getWardId() {
-        return wardId;
-    }
-
-    public void setWardId(Integer wardId) {
-        this.wardId = wardId;
-    }
-
-    public String getWardName() {
-        return wardName;
-    }
-
-    public void setWardName(String wardName) {
-        this.wardName = wardName;
-    }
-    
-    
+    // =====================================================================
+    // CÁC GETTER/SETTER ĐỊA CHỈ ĐÃ ĐƯỢC SỬA LẠI
+    // =====================================================================
     public Address getAddress() {
         return address;
     }
 
+    /**
+     * Khi set một đối tượng Address, đồng thời cập nhật luôn cả addressId. Đây
+     * là phương thức chính để gán địa chỉ.
+     */
     public void setAddress(Address address) {
         this.address = address;
+        if (address != null && address.getId() > 0) {
+            this.addressId = address.getId();
+        } else {
+            this.addressId = null;
+        }
     }
-    
+
+    /**
+     * Getter này sẽ ưu tiên lấy ID từ đối tượng Address (nếu có) để đảm bảo
+     * luôn trả về ID đúng nhất.
+     */
+    public Integer getAddressId() {
+        if (this.address != null && this.address.getId() > 0) {
+            return this.address.getId();
+        }
+        return this.addressId;
+    }
+
+    /**
+     * Setter này vẫn được giữ lại để tương thích với code cũ, nó sẽ xóa đối
+     * tượng address để tránh gây nhiễu.
+     */
+    public void setAddressId(Integer addressId) {
+        this.addressId = addressId;
+        // Khi chỉ set ID, ta không chắc đối tượng address có còn khớp không,
+        // nên tốt nhất là xóa nó đi.
+        if (this.address != null && this.address.getId() != addressId) {
+            this.address = null;
+        }
+    }
 }

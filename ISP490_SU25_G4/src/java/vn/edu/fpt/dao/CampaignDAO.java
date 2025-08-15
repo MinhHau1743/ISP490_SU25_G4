@@ -7,7 +7,7 @@ import vn.edu.fpt.model.Campaign;
 import vn.edu.fpt.model.CampaignType;
 import vn.edu.fpt.model.User;
 
-public class CampaignDAO {
+public class CampaignDAO extends DBContext{
 
     /* ===================== DANH SÁCH ===================== */
     public List<Campaign> getCampaigns(
@@ -336,4 +336,76 @@ public class CampaignDAO {
         }
         return countCampaigns(searchTerm, statusId, typeIdFilter, startDateFilter, endDateFilter);
     }
+
+    // Cập nhật các trường cơ bản của Campaign
+    public void updateCampaignCore(Campaign c, Connection conn) throws SQLException {
+        String sql = "UPDATE Campaigns SET name=?, type_id=?, enterprise_id=?, description=?, "
+                + "updated_by=?, updated_at=NOW() WHERE campaign_id=?";
+        try (var ps = conn.prepareStatement(sql)) {
+            ps.setString(1, c.getName());
+            ps.setInt(2, c.getTypeId());
+            ps.setInt(3, c.getEnterpriseId());
+            ps.setString(4, c.getDescription());
+            if (c.getUpdatedBy() == null) {
+                ps.setNull(5, java.sql.Types.INTEGER);
+            } else {
+                ps.setInt(5, c.getUpdatedBy());
+            }
+            ps.setInt(6, c.getCampaignId());
+            ps.executeUpdate();
+        }
+    }
+    public boolean softDeleteCampaignById(int campaignId) {
+        // Câu lệnh SQL này cập nhật cờ is_deleted thành 1 (hoặc true)
+        String sql = "UPDATE Campaigns SET is_deleted = 1, updated_at = CURRENT_TIMESTAMP WHERE campaign_id = ?";
+
+        try (Connection conn = DBContext.getConnection(); // Hoặc getConnection()
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, campaignId);
+
+            // executeUpdate() trả về số dòng bị ảnh hưởng
+            int rowsAffected = ps.executeUpdate();
+
+            // Nếu có ít nhất 1 dòng bị ảnh hưởng, coi như thành công
+            return rowsAffected > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false; // Trả về false nếu có lỗi
+        }
+    }
+    /**
+     * Đếm số lượng chiến dịch đang hoạt động (chưa bị xóa) dựa trên TÊN của
+     * trạng thái.
+     *
+     * @param statusName Tên trạng thái cần đếm (ví dụ: "Hoàn thành").
+     * @return Số lượng chiến dịch khớp.
+     */
+    public int countCampaignsByStatusName(String statusName) {
+        // SQL này kết nối 3 bảng để đếm số chiến dịch (không trùng lặp)
+        // có lịch trình mang trạng thái được chỉ định.
+        String sql = "SELECT COUNT(DISTINCT c.campaign_id) "
+                + "FROM Campaigns c "
+                + "JOIN MaintenanceSchedules ms ON c.campaign_id = ms.campaign_id "
+                + "JOIN Statuses s ON ms.status_id = s.id "
+                + "WHERE s.status_name = ? AND c.is_deleted = 0";
+
+        try (Connection conn = getConnection(); // Hoặc DBContext.getConnection()
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, statusName);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1); // Trả về kết quả đếm
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace(); // In lỗi ra console nếu có
+        }
+
+        return 0; // Trả về 0 nếu có lỗi hoặc không tìm thấy
+    }
+    
 }

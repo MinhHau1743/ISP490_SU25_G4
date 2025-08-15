@@ -211,7 +211,7 @@
                                                             form.action = '${BASE_URL}/delete-campaign';
                                                             const hiddenField = document.createElement('input');
                                                             hiddenField.type = 'hidden';
-                                                            hiddenField.name = 'campaignId';
+                                                            hiddenField.name = 'id'; 
                                                             hiddenField.value = campaignId;
                                                             form.appendChild(hiddenField);
                                                             document.body.appendChild(form);

@@ -664,109 +664,87 @@ public class MaintenanceScheduleDAO extends DBContext {
         }
     }
 
-    // Lấy 1 lịch trình theo campaignId, kèm statusName và thông tin địa chỉ (JOIN Statuses + Addresses + Wards + Districts + Provinces)
-// Nếu có nhiều lịch trình cùng campaign, lấy bản mới nhất theo scheduled_date (bạn có thể đổi tiêu chí ORDER BY nếu muốn).
-    public MaintenanceSchedule getMaintenanceScheduleWithStatusByCampaignId(int campaignId) {
-        final String sql
-                = "SELECT "
-                + "  ms.id, ms.technical_request_id, ms.campaign_id, ms.color, "
-                + "  ms.scheduled_date, ms.end_date, ms.start_time, ms.end_time, "
-                + "  ms.address_id, ms.status_id, "
-                + "  s.status_name, "
-                + "  a.street_address, a.full_address, a.ward_id, a.district_id, a.province_id, "
-                + "  w.name AS ward_name, d.name AS district_name, p.name AS province_name "
-                + "FROM MaintenanceSchedules ms "
-                + "LEFT JOIN Statuses   s ON s.id = ms.status_id "
-                + "LEFT JOIN Addresses  a ON a.id = ms.address_id "
-                + "LEFT JOIN Wards      w ON w.id = a.ward_id "
-                + "LEFT JOIN Districts  d ON d.id = a.district_id "
-                + "LEFT JOIN Provinces  p ON p.id = a.province_id "
-                + "WHERE ms.campaign_id = ? "
-                + "ORDER BY ms.scheduled_date DESC, ms.id DESC "
-                + "LIMIT 1";
+   // TRONG FILE: MaintenanceScheduleDAO.java
 
-        try (Connection con = DBContext.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+public MaintenanceSchedule getMaintenanceScheduleWithStatusByCampaignId(int campaignId) {
+    // SỬA LỖI 1: Bổ sung JOIN và các cột địa chỉ chi tiết vào câu lệnh SQL
+    final String sql = "SELECT "
+            + "  ms.id, ms.campaign_id, ms.color, ms.scheduled_date, ms.end_date, "
+            + "  ms.start_time, ms.end_time, ms.address_id, ms.status_id, "
+            + "  s.status_name, "
+            + "  a.street_address, a.full_address, a.ward_id, a.district_id, a.province_id, "
+            + "  w.name AS ward_name, d.name AS district_name, p.name AS province_name, "
+            + "  ma.user_id "
+            + "FROM MaintenanceSchedules ms "
+            + "LEFT JOIN Statuses s ON s.id = ms.status_id "
+            + "LEFT JOIN Addresses a ON a.id = ms.address_id "
+            + "LEFT JOIN Wards w ON w.id = a.ward_id "
+            + "LEFT JOIN Districts d ON d.id = a.district_id "
+            + "LEFT JOIN Provinces p ON p.id = a.province_id "
+            + "LEFT JOIN MaintenanceAssignments ma ON ma.maintenance_schedule_id = ms.id "
+            + "WHERE ms.campaign_id = ? "
+            + "ORDER BY ms.scheduled_date DESC, ms.id DESC "
+            + "LIMIT 1";
 
-            ps.setInt(1, campaignId);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next()) {
-                    return null;
-                }
-
-                MaintenanceSchedule ms = new MaintenanceSchedule();
-                ms.setId(rs.getInt("id"));
-                ms.setTechnicalRequestId((Integer) rs.getObject("technical_request_id"));
-                ms.setCampaignId((Integer) rs.getObject("campaign_id"));
-                ms.setColor(rs.getString("color"));
-
-                // Tuỳ model của bạn dùng java.sql.Date/Time hay java.time.*, chỉnh lại setter tương ứng
-                java.sql.Date sd = rs.getDate("scheduled_date");
-                if (sd != null) {
-                    ms.setScheduledDate(sd.toLocalDate());
-                }
-
-                java.sql.Date ed = rs.getDate("end_date");
-                if (ed != null) {
-                    ms.setEndDate(ed.toLocalDate());
-                }
-
-                java.sql.Time st = rs.getTime("start_time");
-                if (st != null) {
-                    ms.setStartTime(st.toLocalTime());
-                }
-
-                java.sql.Time et = rs.getTime("end_time");
-                if (et != null) {
-                    ms.setEndTime(et.toLocalTime());
-                }
-
-                // Status
-                ms.setStatusId((Integer) rs.getObject("status_id"));
-                ms.setStatusName(rs.getString("status_name"));
-
-                // Address (lồng Ward/District/Province) — khớp với JSP: maintenanceSchedule.address.streetAddress, ...ward.name,...
-                Address address = null;
-                Integer addressId = (Integer) rs.getObject("address_id");
-                if (addressId != null) {
-                    address = new Address();
-                    address.setId(addressId);
-                    address.setStreetAddress(rs.getString("street_address"));
-                    address.setFullAddress(rs.getString("full_address"));
-
-                    Integer wardId = (Integer) rs.getObject("ward_id");
-                    if (wardId != null) {
-                        Ward ward = new Ward();
-                        ward.setId(wardId);
-                        ward.setName(rs.getString("ward_name"));
-                        address.setWard(ward);
-                    }
-
-                    Integer districtId = (Integer) rs.getObject("district_id");
-                    if (districtId != null) {
-                        District district = new District();
-                        district.setId(districtId);
-                        district.setName(rs.getString("district_name"));
-                        address.setDistrict(district);
-                    }
-
-                    Integer provinceId = (Integer) rs.getObject("province_id");
-                    if (provinceId != null) {
-                        Province province = new Province();
-                        province.setId(provinceId);
-                        province.setName(rs.getString("province_name"));
-                        address.setProvince(province);
-                    }
-                }
-                ms.setAddress(address);
-
-                return ms;
+    try (Connection con = DBContext.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+        ps.setInt(1, campaignId);
+        try (ResultSet rs = ps.executeQuery()) {
+            if (!rs.next()) {
+                return null;
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return null;
+
+            MaintenanceSchedule ms = new MaintenanceSchedule();
+            ms.setId(rs.getInt("id"));
+            ms.setCampaignId(rs.getInt("campaign_id"));
+            ms.setColor(rs.getString("color"));
+
+            // Xử lý ngày/giờ
+            if (rs.getDate("scheduled_date") != null) ms.setScheduledDate(rs.getDate("scheduled_date").toLocalDate());
+            if (rs.getDate("end_date") != null) ms.setEndDate(rs.getDate("end_date").toLocalDate());
+            if (rs.getTime("start_time") != null) ms.setStartTime(rs.getTime("start_time").toLocalTime());
+            if (rs.getTime("end_time") != null) ms.setEndTime(rs.getTime("end_time").toLocalTime());
+
+            // Xử lý status
+            ms.setStatusId(rs.getInt("status_id"));
+            ms.setStatusName(rs.getString("status_name"));
+            ms.setAssignedUserId((Integer) rs.getObject("user_id"));
+
+            // SỬA LỖI 2: Xử lý và tái tạo lại đầy đủ đối tượng Address
+            Integer addressId = (Integer) rs.getObject("address_id");
+            if (addressId != null) {
+                Address address = new Address();
+                address.setId(addressId);
+                address.setStreetAddress(rs.getString("street_address"));
+                address.setFullAddress(rs.getString("full_address"));
+
+                // Tạo và gán đối tượng Ward
+                Ward ward = new Ward();
+                ward.setId(rs.getInt("ward_id"));
+                ward.setName(rs.getString("ward_name"));
+                address.setWard(ward);
+
+                // Tạo và gán đối tượng District
+                District district = new District();
+                district.setId(rs.getInt("district_id"));
+                district.setName(rs.getString("district_name"));
+                address.setDistrict(district);
+
+                // Tạo và gán đối tượng Province
+                Province province = new Province();
+                province.setId(rs.getInt("province_id"));
+                province.setName(rs.getString("province_name"));
+                address.setProvince(province);
+                
+                ms.setAddress(address);
+            }
+
+            return ms;
         }
+    } catch (Exception e) {
+        e.printStackTrace();
+        return null;
     }
+}
 
 // Cập nhật status_id cho một MaintenanceSchedule theo id
     public boolean updateStatusIdById(int scheduleId, int statusId) {
@@ -779,6 +757,20 @@ public class MaintenanceScheduleDAO extends DBContext {
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    // --- ĐÃ THÊM: overload dùng connection bên ngoài ---
+    public boolean updateStatusIdById(int scheduleId, int statusId, Connection conn) throws SQLException {
+        final String sql
+                = "UPDATE MaintenanceSchedules "
+                + "SET status_id = ?, updated_at = CURRENT_TIMESTAMP "
+                + "WHERE id = ?";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, statusId);
+            ps.setInt(2, scheduleId);
+            return ps.executeUpdate() > 0;
         }
     }
 
@@ -818,9 +810,10 @@ public class MaintenanceScheduleDAO extends DBContext {
         }
     }
 
-    /**Code cbi cho upđate campaign
-     * Đổi status_id thành "Đã hủy" cho tất cả lịch của campaign mà thời điểm
-     * kết thúc CHƯA QUA (future hoặc còn lại trong hôm nay).
+    /**
+     * Code cbi cho upđate campaign Đổi status_id thành "Đã hủy" cho tất cả lịch
+     * của campaign mà thời điểm kết thúc CHƯA QUA (future hoặc còn lại trong
+     * hôm nay).
      *
      * @param campaignId id chiến dịch
      * @param canceledStatusId id status "Đã hủy"
@@ -883,4 +876,22 @@ public class MaintenanceScheduleDAO extends DBContext {
             return 0;
         }
     }
+
+    // Cập nhật lịch trình đại diện
+    public void updateScheduleCore(MaintenanceSchedule s, Connection conn) throws SQLException {
+        String sql = "UPDATE MaintenanceSchedules SET address_id=?, status_id=?, scheduled_date=?, "
+                + "end_date=?, start_time=?, end_time=?, color=? WHERE id=?";
+        try (var ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, s.getAddressId());
+            ps.setInt(2, s.getStatusId());
+            ps.setObject(3, s.getScheduledDate()); // LocalDate → JDBC 4.2
+            ps.setObject(4, s.getEndDate());
+            ps.setObject(5, s.getStartTime());     // LocalTime
+            ps.setObject(6, s.getEndTime());
+            ps.setString(7, s.getColor());
+            ps.setInt(8, s.getId());
+            ps.executeUpdate();
+        }
+    }
+
 }
