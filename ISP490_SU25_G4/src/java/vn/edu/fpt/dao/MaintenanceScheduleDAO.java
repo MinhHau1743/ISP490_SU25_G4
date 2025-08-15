@@ -632,103 +632,78 @@ public class MaintenanceScheduleDAO extends DBContext {
     // Lấy 1 lịch trình theo campaignId, kèm statusName và thông tin địa chỉ (JOIN Statuses + Addresses + Wards + Districts + Provinces)
 // Nếu có nhiều lịch trình cùng campaign, lấy bản mới nhất theo scheduled_date (bạn có thể đổi tiêu chí ORDER BY nếu muốn).
     // TRONG FILE: MaintenanceScheduleDAO.java
+    // TRONG FILE: MaintenanceScheduleDAO.java
     public MaintenanceSchedule getMaintenanceScheduleWithStatusByCampaignId(int campaignId) {
-        // SỬA LỖI 1: Bổ sung JOIN và các cột địa chỉ chi tiết vào câu lệnh SQL
+        // 1. Câu lệnh SQL chỉ để lấy thông tin Schedule, không JOIN với Assignments nữa
         final String sql = "SELECT "
                 + "  ms.id, ms.campaign_id, ms.color, ms.scheduled_date, ms.end_date, "
                 + "  ms.start_time, ms.end_time, ms.address_id, ms.status_id, "
                 + "  s.status_name, "
                 + "  a.street_address, a.full_address, a.ward_id, a.district_id, a.province_id, "
-                + "  w.name AS ward_name, d.name AS district_name, p.name AS province_name, "
-                + "  ma.user_id "
+                + "  w.name AS ward_name, d.name AS district_name, p.name AS province_name "
                 + "FROM MaintenanceSchedules ms "
                 + "LEFT JOIN Statuses s ON s.id = ms.status_id "
                 + "LEFT JOIN Addresses a ON a.id = ms.address_id "
                 + "LEFT JOIN Wards w ON w.id = a.ward_id "
                 + "LEFT JOIN Districts d ON d.id = a.district_id "
                 + "LEFT JOIN Provinces p ON p.id = a.province_id "
-                + "LEFT JOIN MaintenanceAssignments ma ON ma.maintenance_schedule_id = ms.id "
                 + "WHERE ms.campaign_id = ? "
                 + "ORDER BY ms.scheduled_date DESC, ms.id DESC "
                 + "LIMIT 1";
 
+        MaintenanceSchedule schedule = null;
+
         try (Connection con = DBContext.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+
             ps.setInt(1, campaignId);
             try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next()) {
-                    return null;
-                }
 
-                MaintenanceSchedule ms = new MaintenanceSchedule();
-                ms.setId(rs.getInt("id"));
-                ms.setCampaignId(rs.getInt("campaign_id"));
-                ms.setColor(rs.getString("color"));
+                // Chỉ cần một lệnh if, không cần vòng lặp while ở đây
+                if (rs.next()) {
+                    schedule = new MaintenanceSchedule();
+                    schedule.setId(rs.getInt("id"));
+                    schedule.setCampaignId(rs.getInt("campaign_id"));
+                    schedule.setColor(rs.getString("color"));
 
-                // Xử lý ngày/giờ
-                if (rs.getDate("scheduled_date") != null) {
-                    ms.setScheduledDate(rs.getDate("scheduled_date").toLocalDate());
-                }
-                if (rs.getDate("end_date") != null) {
-                    ms.setEndDate(rs.getDate("end_date").toLocalDate());
-                }
-                if (rs.getTime("start_time") != null) {
-                    ms.setStartTime(rs.getTime("start_time").toLocalTime());
-                }
-                if (rs.getTime("end_time") != null) {
-                    ms.setEndTime(rs.getTime("end_time").toLocalTime());
-                }
+                    // Dùng getObject để an toàn hơn với các giá trị NULL
+                    schedule.setScheduledDate(rs.getObject("scheduled_date", LocalDate.class));
+                    schedule.setEndDate(rs.getObject("end_date", LocalDate.class));
+                    schedule.setStartTime(rs.getObject("start_time", LocalTime.class));
+                    schedule.setEndTime(rs.getObject("end_time", LocalTime.class));
 
-                // Xử lý status
-                ms.setStatusId(rs.getInt("status_id"));
-                ms.setStatusName(rs.getString("status_name"));
-                List<Integer> assignedUserIds = new ArrayList<>();
-                while (rs.next()) {
-                    Integer uid = (Integer) rs.getObject("user_id");
-                    if (uid != null) {
-                        assignedUserIds.add(uid);
+                    schedule.setStatusId(rs.getInt("status_id"));
+                    schedule.setStatusName(rs.getString("status_name"));
+
+                    // Xử lý đối tượng Address
+                    Integer addressId = (Integer) rs.getObject("address_id");
+                    if (addressId != null) {
+                        Address address = new Address();
+                        address.setId(addressId);
+                        address.setStreetAddress(rs.getString("street_address"));
+                        address.setFullAddress(rs.getString("full_address"));
+                        address.setWard(new Ward(rs.getInt("ward_id"), rs.getString("ward_name")));
+                        address.setDistrict(new District(rs.getInt("district_id"), rs.getString("district_name")));
+                        address.setProvince(new Province(rs.getInt("province_id"), rs.getString("province_name")));
+                        schedule.setAddress(address);
                     }
                 }
-// Sau vòng lặp:
-                ms.setAssignedUserIds(assignedUserIds);
-
-                // SỬA LỖI 2: Xử lý và tái tạo lại đầy đủ đối tượng Address
-                Integer addressId = (Integer) rs.getObject("address_id");
-                if (addressId != null) {
-                    Address address = new Address();
-                    address.setId(addressId);
-                    address.setStreetAddress(rs.getString("street_address"));
-                    address.setFullAddress(rs.getString("full_address"));
-
-                    // Tạo và gán đối tượng Ward
-                    Ward ward = new Ward();
-                    ward.setId(rs.getInt("ward_id"));
-                    ward.setName(rs.getString("ward_name"));
-                    address.setWard(ward);
-
-                    // Tạo và gán đối tượng District
-                    District district = new District();
-                    district.setId(rs.getInt("district_id"));
-                    district.setName(rs.getString("district_name"));
-                    address.setDistrict(district);
-
-                    // Tạo và gán đối tượng Province
-                    Province province = new Province();
-                    province.setId(rs.getInt("province_id"));
-                    province.setName(rs.getString("province_name"));
-                    address.setProvince(province);
-
-                    ms.setAddress(address);
-                }
-
-                return ms;
             }
+
+            // 2. Nếu đã tìm thấy lịch trình, gọi hàm khác để lấy danh sách nhân viên
+            if (schedule != null) {
+                // Tái sử dụng hàm bạn đã có!
+                List<Integer> assignedUserIds = getAssignedUserIdsByScheduleId(schedule.getId());
+                schedule.setAssignedUserIds(assignedUserIds);
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
         }
-    }
 
+        return schedule;
+    }
 // Cập nhật status_id cho một MaintenanceSchedule theo id
+
     public boolean updateStatusIdById(int scheduleId, int statusId) {
         final String sql = "UPDATE MaintenanceSchedules SET status_id = ? WHERE id = ?";
         try (Connection con = DBContext.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {

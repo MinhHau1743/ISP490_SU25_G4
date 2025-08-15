@@ -1,6 +1,6 @@
 <%--
     Document    : editCampaign.jsp
-    Description : Form chỉnh sửa chiến dịch, đã sửa lỗi và đồng bộ với controller/model mới.
+    Description : Form chỉnh sửa chiến dịch, phiên bản cuối cùng với logic chọn một nhân viên.
 --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
@@ -52,13 +52,37 @@
 
                                 <input type="hidden" name="campaignId" value="${campaign.campaignId}">
 
+                                <%-- Khối thiết lập biến để xử lý logic hiển thị trên form --%>
+                                <c:set var="campaignName" value="${not empty param.name ? param.name : campaign.name}" />
+                                <c:set var="campaignDescription" value="${not empty param.description ? param.description : campaign.description}" />
+                                <c:set var="selectedTypeId" value="${not empty param.typeId ? param.typeId : campaign.typeId}" />
+                                <c:set var="selectedEnterpriseId" value="${not empty param.enterpriseId ? param.enterpriseId : campaign.enterpriseId}" />
+
+                                <c:set var="scheduledDate" value="${not empty param.scheduledDate ? param.scheduledDate : maintenanceSchedule.scheduledDate}" />
+                                <c:set var="endDate" value="${not empty param.endDate ? param.endDate : maintenanceSchedule.endDate}" />
+                                <c:set var="startTime" value="${not empty param.startTime ? param.startTime : fn:substring(maintenanceSchedule.startTime,0,5)}" />
+                                <c:set var="endTime" value="${not empty param.endTime ? param.endTime : fn:substring(maintenanceSchedule.endTime,0,5)}" />
+
+                                <c:set var="selectedProvinceId" value="${not empty param.province ? param.province : maintenanceSchedule.address.provinceId}" />
+                                <c:set var="selectedDistrictId" value="${not empty param.district ? param.district : maintenanceSchedule.address.districtId}" />
+                                <c:set var="selectedWardId" value="${not empty param.ward ? param.ward : maintenanceSchedule.address.wardId}" />
+                                <c:set var="streetAddress" value="${not empty param.streetAddress ? param.streetAddress : maintenanceSchedule.address.streetAddress}" />
+
+                                <c:set var="selectedStatusId" value="${not empty param.statusId ? param.statusId : maintenanceSchedule.statusId}" />
+                                <c:set var="selectedColor" value="${not empty param.color ? param.color : (not empty maintenanceSchedule.color ? maintenanceSchedule.color : '#0d9488')}" />
+
+                                <%-- Logic mới: Lấy ID nhân viên duy nhất một cách an toàn --%>
+                                <c:if test="${not empty maintenanceSchedule.assignedUserIds}">
+                                    <c:set var="dbUserId" value="${maintenanceSchedule.assignedUserIds[0]}" />
+                                </c:if>
+                                <c:set var="selectedUserId" value="${not empty param.assignedUserId ? param.assignedUserId : dbUserId}" />
+
+
                                 <%-- Khối hiển thị lỗi chung --%>
                                 <div id="formErrorContainer" class="error-message" style="${not empty errorMessage || not empty fieldErrors ? '' : 'display:none;'}; margin-bottom:16px;">
-                                    <%-- Hiển thị lỗi tổng quát (nếu có) --%>
                                     <c:if test="${not empty errorMessage}">
                                         <strong>${fn:escapeXml(errorMessage)}</strong>
                                     </c:if>
-                                    <%-- Hiển thị các lỗi cụ thể của từng trường --%>
                                     <c:if test="${not empty fieldErrors}">
                                         <ul style="margin:8px 0 0 18px;">
                                             <c:forEach var="e" items="${fieldErrors}">
@@ -73,8 +97,7 @@
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label for="campaignName">Tên chiến dịch <span class="required-star">*</span></label>
-                                        <input type="text" id="campaignName" name="name" class="form-control"
-                                               value="${not empty param.name ? param.name : campaign.name}" required>
+                                        <input type="text" id="campaignName" name="name" class="form-control" value="${campaignName}" required>
                                     </div>
                                     <div class="form-group">
                                         <label>Mã chiến dịch</label>
@@ -87,8 +110,7 @@
                                         <label for="campaignType">Loại Chiến dịch <span class="required-star">*</span></label>
                                         <select id="campaignType" name="typeId" class="form-control" required>
                                             <c:forEach var="type" items="${campaignTypes}">
-                                                <option value="${type.id}" 
-                                                        <c:if test="${(not empty param.typeId and param.typeId == type.id) or (empty param.typeId and campaign.typeId == type.id)}">selected</c:if>>
+                                                <option value="${type.id}" ${selectedTypeId == type.id ? 'selected' : ''}>
                                                     ${type.typeName}
                                                 </option>
                                             </c:forEach>
@@ -98,8 +120,7 @@
                                         <label for="enterpriseId">Khách hàng <span class="required-star">*</span></label>
                                         <select id="enterpriseId" name="enterpriseId" class="form-control" required>
                                             <c:forEach var="enterprise" items="${enterpriseList}">
-                                                <option value="${enterprise.id}"
-                                                        <c:if test="${(not empty param.enterpriseId and param.enterpriseId == enterprise.id) or (empty param.enterpriseId and campaign.enterpriseId == enterprise.id)}">selected</c:if>>
+                                                <option value="${enterprise.id}" ${selectedEnterpriseId == enterprise.id ? 'selected' : ''}>
                                                     ${enterprise.name}
                                                 </option>
                                             </c:forEach>
@@ -108,7 +129,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="description">Mô tả chiến dịch</label>
-                                    <textarea id="description" name="description" class="form-control" rows="3">${not empty param.description ? param.description : campaign.description}</textarea>
+                                    <textarea id="description" name="description" class="form-control" rows="3">${campaignDescription}</textarea>
                                 </div>
 
                                 <h3 class="sub-header">Thông tin lịch trình & Địa điểm</h3>
@@ -116,37 +137,31 @@
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label for="scheduledDate">Ngày bắt đầu <span class="required-star">*</span></label>
-                                        <input type="date" id="scheduledDate" name="scheduledDate" class="form-control"
-                                               value="${not empty param.scheduledDate ? param.scheduledDate : maintenanceSchedule.scheduledDate}" required>
+                                        <input type="date" id="scheduledDate" name="scheduledDate" class="form-control" value="${scheduledDate}" required>
                                     </div>
                                     <div class="form-group">
                                         <label for="endDate">Ngày kết thúc</label>
-                                        <input type="date" id="endDate" name="endDate" class="form-control"
-                                               value="${not empty param.endDate ? param.endDate : maintenanceSchedule.endDate}">
+                                        <input type="date" id="endDate" name="endDate" class="form-control" value="${endDate}">
                                     </div>
                                 </div>
 
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label for="startTime">Giờ bắt đầu</label>
-                                        <input type="time" id="startTime" name="startTime" class="form-control" 
-                                               value="${not empty param.startTime ? param.startTime : fn:substring(maintenanceSchedule.startTime,0,5)}">
+                                        <input type="time" id="startTime" name="startTime" class="form-control" value="${startTime}">
                                     </div>
                                     <div class="form-group">
                                         <label for="endTime">Giờ kết thúc</label>
-                                        <input type="time" id="endTime" name="endTime" class="form-control"
-                                               value="${not empty param.endTime ? param.endTime : fn:substring(maintenanceSchedule.endTime,0,5)}">
+                                        <input type="time" id="endTime" name="endTime" class="form-control" value="${endTime}">
                                     </div>
                                 </div>
 
-                                <%-- Địa chỉ động --%>
                                 <div class="form-row-x3">
                                     <div class="form-group">
                                         <label for="province">Tỉnh/Thành phố <span class="required-star">*</span></label>
                                         <select id="province" name="province" class="form-control" required>
                                             <c:forEach var="p" items="${provinces}">
-                                                <option value="${p.id}"
-                                                        <c:if test="${(not empty param.province and param.province == p.id) or (empty param.province and maintenanceSchedule.address.provinceId == p.id)}">selected</c:if>>
+                                                <option value="${p.id}" ${selectedProvinceId == p.id ? 'selected' : ''}>
                                                     ${p.name}
                                                 </option>
                                             </c:forEach>
@@ -154,12 +169,11 @@
                                     </div>
                                     <div class="form-group">
                                         <label for="district">Quận/Huyện <span class="required-star">*</span></label>
-                                        <select id="district" name="district" class="form-control" required ${empty districts ? 'disabled' : ''}>
+                                        <select id="district" name="district" class="form-control" required ${empty districts and empty selectedDistrictId ? 'disabled' : ''}>
                                             <option value="" disabled>-- Chọn Quận/Huyện --</option>
                                             <c:if test="${not empty districts}">
                                                 <c:forEach var="d" items="${districts}">
-                                                    <option value="${d.id}"
-                                                            <c:if test="${(not empty param.district and param.district == d.id) or (empty param.district and maintenanceSchedule.address.districtId == d.id)}">selected</c:if>>
+                                                    <option value="${d.id}" ${selectedDistrictId == d.id ? 'selected' : ''}>
                                                         ${d.name}
                                                     </option>
                                                 </c:forEach>
@@ -168,12 +182,11 @@
                                     </div>
                                     <div class="form-group">
                                         <label for="ward">Phường/Xã <span class="required-star">*</span></label>
-                                        <select id="ward" name="ward" class="form-control" required ${empty wards ? 'disabled' : ''}>
+                                        <select id="ward" name="ward" class="form-control" required ${empty wards and empty selectedWardId ? 'disabled' : ''}>
                                             <option value="" disabled>-- Chọn Phường/Xã --</option>
                                             <c:if test="${not empty wards}">
                                                 <c:forEach var="w" items="${wards}">
-                                                    <option value="${w.id}"
-                                                            <c:if test="${(not empty param.ward and param.ward == w.id) or (empty param.ward and maintenanceSchedule.address.wardId == w.id)}">selected</c:if>>
+                                                    <option value="${w.id}" ${selectedWardId == w.id ? 'selected' : ''}>
                                                         ${w.name}
                                                     </option>
                                                 </c:forEach>
@@ -184,8 +197,7 @@
 
                                 <div class="form-group">
                                     <label for="streetAddress">Địa chỉ cụ thể <span class="required-star">*</span></label>
-                                    <input type="text" id="streetAddress" name="streetAddress" class="form-control" placeholder="Số nhà, tên đường..."
-                                           value="${not empty param.streetAddress ? param.streetAddress : maintenanceSchedule.address.streetAddress}" required>
+                                    <input type="text" id="streetAddress" name="streetAddress" class="form-control" placeholder="Số nhà, tên đường..." value="${streetAddress}" required>
                                 </div>
 
                                 <h3 class="sub-header">Phân công & Hiển thị</h3>
@@ -193,9 +205,9 @@
                                     <div class="form-group">
                                         <label for="assignedUserId">Nhân viên thực hiện <span class="required-star">*</span></label>
                                         <select id="assignedUserId" name="assignedUserId" class="form-control" required>
+                                            <option value="" disabled ${empty selectedUserId ? 'selected' : ''}>-- Chọn nhân viên --</option>
                                             <c:forEach var="user" items="${userList}">
-                                                <option value="${user.id}"
-                                                        <c:if test="${(not empty param.assignedUserId and param.assignedUserId == user.id) or (empty param.assignedUserId and maintenanceSchedule.assignedUserId == user.id)}">selected</c:if>>
+                                                <option value="${user.id}" ${selectedUserId == user.id ? 'selected' : ''}>
                                                     ${user.lastName} ${user.firstName}
                                                 </option>
                                             </c:forEach>
@@ -205,8 +217,7 @@
                                         <label for="statusId">Trạng thái <span class="required-star">*</span></label>
                                         <select id="statusId" name="statusId" class="form-control" required>
                                             <c:forEach var="status" items="${statusList}">
-                                                <option value="${status.id}"
-                                                        <c:if test="${(not empty param.statusId and param.statusId == status.id) or (empty param.statusId and maintenanceSchedule.statusId == status.id)}">selected</c:if>>
+                                                <option value="${status.id}" ${selectedStatusId == status.id ? 'selected' : ''}>
                                                     ${status.statusName}
                                                 </option>
                                             </c:forEach>
@@ -217,8 +228,7 @@
                                 <div class="form-group">
                                     <label>Màu sắc hiển thị</label>
                                     <div class="color-picker-container" id="colorPicker">
-                                        <input type="hidden" name="color" id="selectedColor"
-                                               value="${not empty param.color ? param.color : (not empty maintenanceSchedule.color ? maintenanceSchedule.color : '#0d9488')}">
+                                        <input type="hidden" name="color" id="selectedColor" value="${selectedColor}">
                                         <div class="color-dot" data-color="#0d9488" style="background-color:#0d9488;"></div>
                                         <div class="color-dot" data-color="#dc3545" style="background-color:#dc3545;"></div>
                                         <div class="color-dot" data-color="#28a745" style="background-color:#28a745;"></div>
@@ -242,7 +252,6 @@
         </div>
 
         <script src="${BASE_URL}/js/mainMenu.js"></script>
-        <%-- File JS này sẽ xử lý địa chỉ động và color picker --%>
         <script src="${BASE_URL}/js/editCampaign.js" defer></script>
     </body>
 </html>
