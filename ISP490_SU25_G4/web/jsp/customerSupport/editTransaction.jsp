@@ -20,7 +20,11 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/createTicket.css?v=<%= System.currentTimeMillis()%>">
+        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
         <script src="https://unpkg.com/feather-icons"></script>
     </head>
     <body>
@@ -57,7 +61,42 @@
                                             <c:forEach var="service" items="${serviceList}"><option value="${service.id}" ${service.id == ticket.serviceId ? 'selected' : ''}>${service.name}</option></c:forEach>
                                             </select>
                                         </div>
-                                        <div class="form-group full-width"><label for="description">Mô tả chung (*)</label><textarea id="description" name="description" class="form-control" rows="4" required>${ticket.description}</textarea></div>
+                                        <div class="form-group full-width">
+                                            <div class="address-section">
+                                                <h3>Địa chỉ thực hiện công việc</h3>
+                                                <div class="address-grid">
+                                                    <div class="form-group">
+                                                        <label for="province">Tỉnh/Thành phố (*)</label>
+                                                    <%-- ĐÂY LÀ DẠNG ĐÚNG --%>
+                                                    <select id="province" name="province" class="form-control" required>
+                                                        <option value="" disabled selected>-- Chọn Tỉnh/Thành --</option>
+                                                        <c:forEach var="p" items="${provinces}">
+                                                            <option value="${p.id}" ${p.id == schedule.provinceId ? 'selected' : ''}>
+                                                                ${p.name}
+                                                            </option>
+                                                        </c:forEach>
+                                                    </select>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="district">Quận/Huyện (*)</label>
+                                                    <select id="district" name="district" class="form-control" required disabled>
+                                                        <option value="" disabled selected>-- Chọn Quận/Huyện --</option>
+                                                    </select>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="ward">Phường/Xã (*)</label>
+                                                    <select id="ward" name="ward" class="form-control" required disabled>
+                                                        <option value="" disabled selected>-- Chọn Phường/Xã --</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="streetAddress">Địa chỉ cụ thể (*)</label>
+                                                <input type="text" id="streetAddress" name="streetAddress" value="${schedule.streetAddress}" class="form-control" placeholder="Nhập số nhà, tên đường, ngõ/hẻm..." required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group full-width"><label for="description">Mô tả chung (*)</label><textarea id="description" name="description" class="form-control" rows="4" required>${ticket.description}</textarea></div>
                                 </div>
                             </div>
                             <div class="detail-card">
@@ -105,15 +144,75 @@
                                         <option value="low" ${ticket.priority == 'low' ? 'selected' : ''}>Thấp</option>
                                     </select>
                                 </div>
-                                <div class="sidebar-form-row"><label for="employeeId">Gán cho nhân viên (*)</label>
-                                    <select id="employeeId" name="employeeId" class="form-control" required>
-                                        <c:forEach var="employee" items="${employeeList}"><option value="${employee.id}" ${employee.id == ticket.assignedToId ? 'selected' : ''}>${employee.lastName} ${employee.middleName} ${employee.firstName}</option></c:forEach>
+                                <div class="sidebar-form-row">
+                                    <label for="employeeId">Nhân viên phụ trách</label>
+                                    <div class="input-with-icon">
+                                        <select id="employeeId2" name="employeesId" class="form-control" multiple required>
+                                            <%-- Không cần option mặc định trong giao diện chọn nhiều --%>
+                                            <c:forEach var="employee" items="${employeeList}">
+                                                <option value="${employee.id}" <c:if test="${assignedUserIds.contains(employee.id)}">selected</c:if>>${employee.lastName} ${employee.middleName} ${employee.firstName}</option>
+                                            </c:forEach> 
                                         </select>
                                     </div>
-                                    <div class="sidebar-form-row">
-                                        <label>Ngày tạo</label>
-                                    <fmt:formatDate value="${ticket.createdAt}" pattern="HH:mm dd/MM/yyyy" var="formattedDate"/>
-                                    <input type="text" class="form-control" value="${formattedDate}" readonly>
+                                </div>
+
+
+                                <div class="sidebar-form-row">
+                                    <label>Ngày tạo</label>
+                                    <div class="input-with-icon">
+                                        <input type="date" id="createdDate" 
+                                               name="createdDate" class="form-control" readonly 
+                                               value="<fmt:formatDate value='${ticket.createdAt}' pattern='yyyy-MM-dd' />">
+                                    </div>
+                                </div>
+
+                                <div class="sidebar-form-row row-2col">
+                                    <label>Khoảng ngày</label>
+                                    <div class="control">
+                                        <input type="date" id="scheduled_date" name="scheduled_date" value="${schedule.scheduledDate}" class="form-control" required>
+                                        <div class="field-hint">Bắt đầu</div>
+                                    </div>
+                                    <div class="control">
+                                        <input type="date" id="end_date" name="end_date" value="${schedule.endDate}" class="form-control">
+                                        <div class="field-hint">Kết thúc</div>
+                                    </div>
+                                </div>
+
+                                <div class="sidebar-form-row row-2col">
+                                    <label>Khung giờ</label>
+                                    <div class="control">
+                                        <input type="time" id="start_time" name="start_time" value="${schedule.startTime}" class="form-control">
+                                        <div class="field-hint">Từ</div>
+                                    </div>
+                                    <div class="control">
+                                        <input type="time" id="end_time" name="end_time" value="${schedule.endTime}" class="form-control">
+                                        <div class="field-hint">Đến</div>
+                                    </div>
+                                </div>
+                                <div class="sidebar-form-row">
+                                    <label>Màu sắc</label>
+                                    <div class="color-palette">
+                                        <span class="color-swatch" data-color="#007bff" style="background-color: #007bff;"></span>
+                                        <span class="color-swatch" data-color="#dc3545" style="background-color: #dc3545;"></span>
+                                        <span class="color-swatch" data-color="#28a745" style="background-color: #28a745;"></span>
+                                        <span class="color-swatch" data-color="#ffc107" style="background-color: #ffc107;"></span>
+                                        <span class="color-swatch" data-color="#fd7e14" style="background-color: #fd7e14;"></span>
+                                        <span class="color-swatch" data-color="#17a2b8" style="background-color: #17a2b8;"></span>
+                                        <span class="color-swatch" data-color="#6610f2" style="background-color: #6610f2;"></span>
+                                        <span class="color-swatch" data-color="#343a40" style="background-color: #343a40;"></span>
+                                        <span class="color-swatch" data-color="#e83e8c" style="background-color: #e83e8c;"></span>
+                                        <span class="color-swatch" data-color="#6c757d" style="background-color: #6c757d;"></span> 
+                                        <span class="color-swatch" data-color="#20c997" style="background-color: #20c997;"></span> 
+                                        <span class="color-swatch" data-color="#4B0082" style="background-color: #4B0082;"></span> 
+                                        <span class="color-swatch" data-color="#ADFF2F" style="background-color: #ADFF2F;"></span> 
+                                        <span class="color-swatch" data-color="#A52A2A" style="background-color: #A52A2A;"></span> 
+                                        <span class="color-swatch" data-color="#FFD700" style="background-color: #FFD700;"></span> 
+                                        <span class="color-swatch" data-color="#87CEEB" style="background-color: #87CEEB;"></span>
+                                    </div>
+
+                                    <%-- THÊM DÒNG NÀY VÀO --%>
+                                    <%-- Giá trị mặc định là #007bff, hoặc lấy từ đối tượng nếu là form edit --%>
+                                    <input type="hidden" id="color" name="color" value="${not empty schedule.color ? schedule.color : '#007bff'}">
                                 </div>
                                 <div class="sidebar-form-row"><label>Chi phí dự kiến</label><div class="radio-group"><label><input type="radio" name="isBillable" value="true" ${ticket.isBillable ? 'checked' : ''}> Có</label><label><input type="radio" name="isBillable" value="false" ${!ticket.isBillable ? 'checked' : ''}> Không</label></div></div>
                                 <div id="amount-group" class="sidebar-form-row" style="display: ${ticket.isBillable ? 'block' : 'none'};"><label for="amount">Số tiền dự kiến (VND)</label><input type="number" id="amount" name="amount" class="form-control" value="${ticket.estimatedCost}"></div>
@@ -132,7 +231,22 @@
             // Chúng ta có thể khởi tạo nó ở đây hoặc trong file JS
             let deviceIndex = 1;
         </script>
-
+        <script>
+            window.PRESELECTED_ADDRESS = {
+                provinceId: '${schedule.provinceId}',
+                districtId: '${schedule.districtId}',
+                wardId: '${schedule.wardId}'
+            };
+        </script>
+        <script>
+            $(document).ready(function () {
+                // Gọi Select2 cho thẻ select có id là 'employeeId'
+                $('#employeeId2').select2({
+                    placeholder: "Chọn nhân viên phụ trách",
+                    allowClear: true
+                });
+            });
+        </script>
         <script src="${pageContext.request.contextPath}/js/editTransaction.js?v=<%= System.currentTimeMillis()%>"></script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>

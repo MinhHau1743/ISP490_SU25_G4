@@ -16,8 +16,8 @@ import java.util.List;
 public class MaintenanceSchedule {
 
     private int id;
-    private int technicalRequestId; // Kiểu int không thể null
-    private int campaignId;
+    private Integer technicalRequestId; // Kiểu int không thể null
+    private Integer campaignId;
     private String title;
     private String color;
     private LocalDate scheduledDate;
@@ -71,11 +71,11 @@ public class MaintenanceSchedule {
         this.assignedUserId = assignedUserId;
     }
 
-    public int getCampaignId() {
+    public Integer getCampaignId() {
         return campaignId;
     }
 
-    public void setCampaignId(int campaignId) {
+    public void setCampaignId(Integer campaignId) {
         this.campaignId = campaignId;
     }
 
@@ -103,7 +103,7 @@ public class MaintenanceSchedule {
         this.id = id;
     }
 
-    public int getTechnicalRequestId() {
+    public Integer getTechnicalRequestId() {
         return technicalRequestId;
     }
 

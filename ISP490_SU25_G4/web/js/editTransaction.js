@@ -108,97 +108,139 @@ document.addEventListener('DOMContentLoaded', function () {
     const districtSelect = document.getElementById('district');
     const wardSelect = document.getElementById('ward');
 
-    // Lấy từ APP_CONFIG do JSP cung cấp, fallback sang pathname nếu thiếu
-    const contextPath =
-            (window.APP_CONFIG && window.APP_CONFIG.contextPath) ||
-            (function () {
-                const seg = window.location.pathname.split('/')[1] || '';
-                return seg ? '/' + seg : '';
-            })();
+    // Giả sử bạn có đối tượng này được định nghĩa trong JSP từ server
+    const PRESELECTED = window.PRESELECTED_ADDRESS || {};
+    
+    const contextPath = (function () {
+        const seg = window.location.pathname.split('/')[1] || '';
+        return seg ? '/' + seg : '';
+    })();
 
-    provinceSelect.addEventListener('change', function () {
-        const provinceId = this.value?.trim();
-        console.log('Selected Province ID:', provinceId);
-
-        // reset
-        districtSelect.innerHTML = '<option value="" disabled selected>-- Chọn Quận/Huyện --</option>';
-        districtSelect.disabled = true;
-        wardSelect.innerHTML = '<option value="" disabled selected>-- Chọn Phường/Xã --</option>';
-        wardSelect.disabled = true;
-
+    /**
+     * Tải và điền dữ liệu cho dropdown Quận/Huyện.
+     * @param {string} provinceId ID của Tỉnh/Thành phố.
+     * @param {string | null} districtIdToSelect ID của Quận/Huyện cần được chọn sẵn.
+     * @param {string | null} wardIdToSelect ID của Phường/Xã cần được chọn sẵn (để truyền cho hàm tiếp theo).
+     */
+    function loadDistricts(provinceId, districtIdToSelect, wardIdToSelect) {
         if (!provinceId) {
-            console.log('Province ID is empty or invalid');
+            districtSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
+            districtSelect.disabled = true;
             return;
         }
 
         districtSelect.innerHTML = '<option value="">-- Đang tải... --</option>';
         districtSelect.disabled = false;
-
-        const url = `${contextPath}/ticket?action=getDistricts&provinceId=${encodeURIComponent(provinceId)}`;
-        console.log('Request URL:', url);
+        wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+        wardSelect.disabled = true;
+        
+        const url = `${contextPath}/schedule?action=getDistricts&provinceId=${encodeURIComponent(provinceId)}`;
 
         fetch(url)
-                .then(r => {
-                    console.log('Response status:', r.status, 'URL:', r.url);
-                    if (!r.ok)
-                        throw new Error(`HTTP ${r.status}: ${r.statusText}`);
-                    return r.json();
-                })
-                .then(data => {
-                    console.log('Districts data received:', data);
-                    districtSelect.innerHTML = '<option value="" disabled selected>-- Chọn Quận/Huyện --</option>';
+            .then(r => r.ok ? r.json() : Promise.reject(r))
+            .then(data => {
+                districtSelect.innerHTML = '<option value="" disabled selected>-- Chọn Quận/Huyện --</option>';
+                if (Array.isArray(data)) {
+                    data.forEach(district => {
+                        districtSelect.add(new Option(district.name, district.id));
+                    });
 
-                    if (Array.isArray(data) && data.length) {
-                        for (const district of data) {
-                            districtSelect.add(new Option(district.name, district.id));
-                        }
-                    } else {
-                        districtSelect.innerHTML = '<option value="" disabled>-- Không có dữ liệu --</option>';
+                    // Nếu có districtId cần chọn, hãy chọn nó
+                    if (districtIdToSelect) {
+                        districtSelect.value = districtIdToSelect;
+                        // THAY ĐỔI QUAN TRỌNG: Gọi trực tiếp hàm loadWards thay vì dispatchEvent
+                        loadWards(districtIdToSelect, wardIdToSelect);
                     }
-                })
-                .catch(err => {
-                    console.error('Lỗi khi tải danh sách Quận/Huyện:', err);
-                    districtSelect.innerHTML = '<option value="">-- Lỗi tải dữ liệu --</option>';
-                });
-    });
-
-    districtSelect.addEventListener('change', function () {
-        const districtId = this.value?.trim();
-        console.log('Selected District ID:', districtId);
-
-        wardSelect.innerHTML = '<option value="" disabled selected>-- Chọn Phường/Xã --</option>';
-        wardSelect.disabled = true;
-
-        if (!districtId)
+                }
+            })
+            .catch(err => {
+                console.error('Lỗi khi tải Quận/Huyện:', err);
+                districtSelect.innerHTML = '<option value="">-- Lỗi tải dữ liệu --</option>';
+            });
+    }
+    function loadWards(districtId, wardIdToSelect) {
+        if (!districtId) {
+            wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+            wardSelect.disabled = true;
             return;
+        }
 
         wardSelect.innerHTML = '<option value="">-- Đang tải... --</option>';
         wardSelect.disabled = false;
 
-        const url = `${contextPath}/ticket?action=getWards&districtId=${encodeURIComponent(districtId)}`;
-        console.log('Ward request URL:', url);
+        const url = `${contextPath}/schedule?action=getWards&districtId=${encodeURIComponent(districtId)}`;
 
         fetch(url)
-                .then(r => {
-                    if (!r.ok)
-                        throw new Error(`HTTP ${r.status}: ${r.statusText}`);
-                    return r.json();
-                })
-                .then(data => {
-                    console.log('Wards data received:', data);
-                    wardSelect.innerHTML = '<option value="" disabled selected>-- Chọn Phường/Xã --</option>';
-
-                    if (Array.isArray(data) && data.length) {
-                        for (const ward of data) {
-                            wardSelect.add(new Option(ward.name, ward.id));
-                        }
-                    } else {
-                        wardSelect.innerHTML = '<option value="" disabled>-- Không có dữ liệu --</option>';
+            .then(r => r.ok ? r.json() : Promise.reject(r))
+            .then(data => {
+                wardSelect.innerHTML = '<option value="" disabled selected>-- Chọn Phường/Xã --</option>';
+                if (Array.isArray(data)) {
+                    data.forEach(ward => {
+                        wardSelect.add(new Option(ward.name, ward.id));
+                    });
+                    
+                    // Nếu có wardId cần chọn, hãy chọn nó
+                    if (wardIdToSelect) {
+                        wardSelect.value = wardIdToSelect;
                     }
-                })
-                .catch(err => {
-                    console.error('Lỗi khi tải danh sách Phường/Xã:', err);
-                    wardSelect.innerHTML = '<option value="">-- Lỗi tải dữ liệu --</option>';
-                });
+                }
+            })
+            .catch(err => {
+                console.error('Lỗi khi tải Phường/Xã:', err);
+                wardSelect.innerHTML = '<option value="">-- Lỗi tải dữ liệu --</option>';
+            });
+    }
+
+    // --- Event Listeners cho người dùng tương tác ---
+    
+    provinceSelect.addEventListener('change', function () {
+        loadDistricts(this.value, null, null); // Khi người dùng tự chọn, không cần chọn sẵn gì cả
     });
+
+    districtSelect.addEventListener('change', function () {
+        loadWards(this.value, null); // Tương tự
+    });
+
+    // --- Logic chạy khi tải trang lần đầu (cho form EDIT) ---
+    
+    if (PRESELECTED.provinceId) {
+        provinceSelect.value = PRESELECTED.provinceId;
+        // Bắt đầu chuỗi tải dữ liệu, truyền TẤT CẢ các ID đã lưu
+        loadDistricts(PRESELECTED.provinceId, PRESELECTED.districtId, PRESELECTED.wardId);
+    }
+});
+document.addEventListener('DOMContentLoaded', function () {
+    const colorPalette = document.querySelector('.color-palette');
+    const hiddenColorInput = document.getElementById('color');
+    const swatches = colorPalette.querySelectorAll('.color-swatch');
+
+    // Hàm để cập nhật trạng thái active
+    function setActiveColor(selectedColor) {
+        // 1. Cập nhật giá trị cho input ẩn
+        hiddenColorInput.value = selectedColor;
+
+        // 2. Cập nhật giao diện
+        swatches.forEach(swatch => {
+            if (swatch.dataset.color === selectedColor) {
+                swatch.classList.add('active');
+            } else {
+                swatch.classList.remove('active');
+            }
+        });
+    }
+
+    // Xử lý sự kiện click vào một ô màu
+    colorPalette.addEventListener('click', function (event) {
+        const clickedSwatch = event.target;
+        if (clickedSwatch.classList.contains('color-swatch')) {
+            const selectedColor = clickedSwatch.dataset.color;
+            setActiveColor(selectedColor);
+        }
+    });
+
+    // Chạy lần đầu khi tải trang để highlight màu đã được lưu
+    const initialColor = hiddenColorInput.value;
+    if (initialColor) {
+        setActiveColor(initialColor);
+    }
 });

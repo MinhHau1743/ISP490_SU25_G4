@@ -207,6 +207,7 @@ public class TicketController extends HttpServlet {
 
     private void showEditForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException, Exception {
         try {
+            MaintenanceScheduleDAO scheduleDao = new MaintenanceScheduleDAO();
             AddressDAO addressDAO = new AddressDAO();
             EnterpriseDAO enterpriseDAO = new EnterpriseDAO();
             List<Province> provinces = addressDAO.getAllProvinces();
@@ -223,6 +224,7 @@ public class TicketController extends HttpServlet {
                 request.setAttribute("serviceList", dao.getAllServices());
 
                 MaintenanceSchedule schedule = dao.getScheduleByTechnicalRequestId(id);
+
                 request.setAttribute("schedule", schedule);
                 request.setAttribute("provinces", provinces);
 
@@ -238,7 +240,8 @@ public class TicketController extends HttpServlet {
                     request.setAttribute("districts", java.util.Collections.emptyList());
                     request.setAttribute("wards", java.util.Collections.emptyList());
                 }
-
+                List<Integer> assignedUserIds = scheduleDao.getAssignedUserIdsByScheduleId(schedule.getId());
+                request.setAttribute("assignedUserIds", assignedUserIds);
                 request.setAttribute("allProductsJson", allProductsJson);
                 request.setAttribute("existingDevicesJson", existingDevicesJson);
                 request.getRequestDispatcher("/jsp/customerSupport/editTransaction.jsp").forward(request, response);
@@ -612,7 +615,7 @@ public class TicketController extends HttpServlet {
             int id = Integer.parseInt(request.getParameter("id"));
             boolean success = dao.deleteTechnicalRequest(id);
             // Chuyển hướng về trang danh sách với tham số báo kết quả
-            
+
             MaintenanceScheduleDAO dao = new MaintenanceScheduleDAO();
             boolean deleteSuccess = dao.deleteMaintenanceSchedule(id);
             response.sendRedirect(request.getContextPath() + "/ticket?action=list&delete=" + (success ? "success" : "failed"));
