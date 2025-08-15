@@ -86,4 +86,30 @@ public class StatusDAO {
         }
     }
 
+    // --- ĐÃ THÊM: lấy Status theo tên, dùng kết nối bên ngoài (không đóng conn) ---
+    public Status getStatusByName(String name, Connection conn) {
+        if (name == null || conn == null) {
+            return null;
+        }
+
+        String sql = "SELECT id, status_name "
+                + "FROM Statuses "
+                + "WHERE LOWER(TRIM(status_name)) = LOWER(TRIM(?))";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, name);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Status s = new Status();
+                    s.setId(rs.getInt("id"));
+                    s.setStatusName(rs.getString("status_name"));
+                    return s;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 }

@@ -1,7 +1,7 @@
 <%--
-    Document   : viewCampaignDetails
+    Document    : viewCampaignDetails.jsp
     Created on : Jul 30, 2025
-    Author     : minhh
+    Author      : minhh (Fixed by Gemini)
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
@@ -62,7 +62,6 @@
                         </div>
 
                         <div class="content-card">
-                            <!-- 1) Thông tin chiến dịch -->
                             <h3 class="sub-header">Thông tin chiến dịch</h3>
                             <div class="detail-row" style="grid-template-columns: 1fr 1fr; gap: 24px;">
                                 <div class="detail-group">
@@ -79,42 +78,23 @@
                                 <div class="detail-group">
                                     <label>Người thực hiện</label>
                                     <div class="detail-value">
+                                        <%-- Giả định campaign.creator đã được nạp đủ thông tin --%>
                                         ${campaign.creator.lastName} ${campaign.creator.middleName} ${campaign.creator.firstName}
                                         <span style="color: var(--text-secondary); margin-left: 5px;">(${campaign.creator.employeeCode})</span>
                                     </div>
                                 </div>
 
-                                <!-- Map class màu cho trạng thái lịch -->
-                                <c:set var="stLower" value="${fn:toLowerCase(maintenanceSchedule.statusName)}"/>
-                                <c:set var="stClass"
-                                       value="${
-                                       stLower eq 'đã hủy' ? 'status-canceled' :
-                                           (stLower eq 'quá hạn' ? 'status-overdue' : '')
-                                       }"/>
-
                                 <div class="detail-group">
                                     <label>Trạng thái</label>
                                     <div>
-                                        <span class="status-pill ${stClass}">
+                                        <span class="status-pill">
                                             <c:choose>
-                                                <c:when test="${maintenanceSchedule.statusName eq 'Sắp tới'}">
-                                                    <i data-feather="clock"></i> Sắp tới
-                                                </c:when>
-                                                <c:when test="${maintenanceSchedule.statusName eq 'Đang thực hiện'}">
-                                                    <i data-feather="play-circle"></i> Đang thực hiện
-                                                </c:when>
-                                                <c:when test="${maintenanceSchedule.statusName eq 'Hoàn thành'}">
-                                                    <i data-feather="check-circle"></i> Hoàn thành
-                                                </c:when>
-                                                <c:when test="${maintenanceSchedule.statusName eq 'Quá hạn'}">
-                                                    <i data-feather="alert-triangle"></i> Quá hạn
-                                                </c:when>
-                                                <c:when test="${maintenanceSchedule.statusName eq 'Đã hủy'}">
-                                                    <i data-feather="x-circle"></i> Đã hủy
-                                                </c:when>
-                                                <c:otherwise>
-                                                    ${maintenanceSchedule.statusName}
-                                                </c:otherwise>
+                                                <c:when test="${maintenanceSchedule.statusName eq 'Sắp tới'}"><i data-feather="clock"></i> Sắp tới</c:when>
+                                                <c:when test="${maintenanceSchedule.statusName eq 'Đang thực hiện'}"><i data-feather="play-circle"></i> Đang thực hiện</c:when>
+                                                <c:when test="${maintenanceSchedule.statusName eq 'Hoàn thành'}"><i data-feather="check-circle"></i> Hoàn thành</c:when>
+                                                <c:when test="${maintenanceSchedule.statusName eq 'Quá hạn'}"><i data-feather="alert-triangle"></i> Quá hạn</c:when>
+                                                <c:when test="${maintenanceSchedule.statusName eq 'Đã hủy'}"><i data-feather="x-circle"></i> Đã hủy</c:when>
+                                                <c:otherwise>${maintenanceSchedule.statusName}</c:otherwise>
                                             </c:choose>
                                         </span>
                                     </div>
@@ -128,7 +108,6 @@
                                 </div>
                             </div>
 
-                            <!-- 2) Thông tin lịch trình & Địa điểm -->
                             <h3 class="sub-header">Thông tin lịch trình & Địa điểm</h3>
                             <c:choose>
                                 <c:when test="${not empty maintenanceSchedule}">
@@ -136,28 +115,27 @@
                                         <div class="detail-group">
                                             <label>Thời gian bắt đầu</label>
                                             <div class="detail-value">
-                                                ${maintenanceSchedule.startTime}
-                                                ${scheduledDateStr}
+                                                ${maintenanceSchedule.startTime} ${scheduledDateStr}
                                             </div>
                                         </div>
                                         <div class="detail-group">
                                             <label>Thời gian kết thúc</label>
                                             <div class="detail-value">
-                                                ${maintenanceSchedule.endTime}
-                                                ${endDateStr}
+                                                ${maintenanceSchedule.endTime} ${endDateStr}
                                             </div>
                                         </div>
                                     </div>
 
+                                    <%-- ======================================================= --%>
+                                    <%-- SỬA LỖI HIỂN THỊ ĐỊA CHỈ TẠI ĐÂY --%>
+                                    <%-- ======================================================= --%>
                                     <div class="detail-group">
                                         <label>Địa chỉ đầy đủ</label>
                                         <div class="detail-value description">
                                             <c:choose>
-                                                <c:when test="${not empty maintenanceSchedule.address}">
-                                                    ${maintenanceSchedule.address.streetAddress},
-                                                    ${maintenanceSchedule.address.ward.name},
-                                                    ${maintenanceSchedule.address.district.name},
-                                                    ${maintenanceSchedule.address.province.name}
+                                                <%-- Thay vì ghép chuỗi, hiển thị trực tiếp trường fullAddress đã được lưu --%>
+                                                <c:when test="${not empty maintenanceSchedule.address.fullAddress}">
+                                                    ${maintenanceSchedule.address.fullAddress}
                                                 </c:when>
                                                 <c:otherwise>
                                                     Chưa cập nhật địa chỉ.
@@ -165,6 +143,7 @@
                                             </c:choose>
                                         </div>
                                     </div>
+
                                 </c:when>
                                 <c:otherwise>
                                     <div class="detail-group">

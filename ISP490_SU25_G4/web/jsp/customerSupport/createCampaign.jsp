@@ -281,7 +281,7 @@
                             </div>
 
                             <div class="form-actions">
-                                <a href="${BASE_URL}/campaigns" class="btn btn-secondary">Hủy bỏ</a>
+                                <a href="${BASE_URL}/list-campaign" class="btn btn-secondary">Hủy bỏ</a>
                                 <button type="submit" class="btn btn-primary">Lưu chiến dịch</button>
                             </div>
                         </form>
