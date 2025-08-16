@@ -1219,20 +1219,31 @@
                                                  <c:if test="${startTime != ''}">data-start-time="${startTime}"</c:if>
                                                      ondragover="allowDrop(event)" ondrop="drop(event)">
                                                  <c:forEach var="schedule" items="${schedules}">
-                                                     <c:if test="${schedule.scheduledDate.equals(today) 
-                                                                   && (startTime == '' ? schedule.startTime == null : 
-                                                                   (schedule.startTime != null && schedule.startTime.toString() == startTime))}">
-                                                           <div class="event ${startTime == '' ? 'all-day' : ''}" 
+                                                     <c:set var="slotHHmm" value="${startTime != '' ? fn:substring(startTime,0,5) : ''}" />
+                                                     <c:set var="schHHmm"  value="${schedule.startTime != null ? fn:substring(schedule.startTime.toString(),0,5) : ''}" />
+                                                     <c:set var="slotMin" value="${slotHHmm != '' ? fn:substring(slotHHmm,3,5) : ''}" />
+                                                     <c:set var="schMin"  value="${schHHmm  != '' ? fn:substring(schHHmm,3,5)  : ''}" />
+                                                     <c:set var="sameHour" value="${slotHHmm != '' && fn:substring(schHHmm,0,2) == fn:substring(slotHHmm,0,2)}" />
+                                                     <c:set var="inThisSlot"
+                                                            value="${
+                                                            sameHour and (
+                                                                (slotMin == '00' and schMin lt  '30') or
+                                                                (slotMin == '30' and schMin ge '30')
+                                                                )
+                                                            }" />
+                                                     <c:if test="${ schedule.scheduledDate.toString() == isoDayDate
+                                                                    && (slotHHmm == '' ? schedule.startTime == null : inThisSlot) }">
+                                                           <div class="event ${startTime == '' ? 'all-day' : ''}"
                                                                 id="event-${schedule.id}"
                                                                 data-schedule-id="${schedule.id}"
-                                                                data-start-time="${schedule.startTime}" 
+                                                                data-start-time="${schedule.startTime}"
                                                                 data-end-time="${schedule.endTime}"
                                                                 draggable="true"
-                                                                ondragstart="drag(event)" 
-                                                                onclick="showDetails(this)" 
-                                                                style="background-color: ${schedule.color};">
+                                                                ondragstart="drag(event)"
+                                                                onclick="showDetails(this)"
+                                                                style="background-color:${schedule.color};">
                                                                <div class="event-title">${schedule.title}</div>
-                                                               <span class="event-time">${schedule.startTime != null ? schedule.startTime : 'Cả ngày'}</span>
+                                                               <span class="event-time">${schedule.startTime != null ? schHHmm : 'Cả ngày'}</span>
                                                            </div>
                                                      </c:if>
                                                  </c:forEach>
@@ -1281,9 +1292,22 @@
                                                      data-date="${weekDates[ds.index]}"
                                                      ondragover="allowDrop(event)" ondrop="drop(event)">
                                                     <c:forEach var="schedule" items="${schedules}">
-                                                        <c:if test="${schedule.scheduledDate.equals(weekDates[ds.index]) 
-                                                                      && schedule.startTime != null 
-                                                                      && schedule.startTime.toString() == hour}">
+                                                        <c:set var="hourHHmm" value="${fn:substring(hour,0,5)}" />
+                                                        <c:set var="schHHmm"  value="${schedule.startTime != null ? fn:substring(schedule.startTime.toString(),0,5) : ''}" />
+                                                        <c:set var="slotMin"  value="${fn:substring(hourHHmm,3,5)}" />
+                                                        <c:set var="schMin"   value="${schHHmm != '' ? fn:substring(schHHmm,3,5) : ''}" />
+                                                        <c:set var="sameHour" value="${fn:substring(schHHmm,0,2) == fn:substring(hourHHmm,0,2)}" />
+                                                        <c:set var="inThisSlot"
+                                                               value="${
+                                                               sameHour and (
+                                                                   (slotMin == '00' and schMin lt  '30') or
+                                                                   (slotMin == '30' and schMin ge '30')
+                                                                   )
+                                                               }" />
+
+                                                        <c:if test="${ fn:substring(schedule.scheduledDate.toString(),0,10) == weekDates[ds.index]
+                                                                       && schedule.startTime != null
+                                                                       && inThisSlot }">
                                                               <div class="event"
                                                                    id="event-${schedule.id}"
                                                                    data-schedule-id="${schedule.id}"
