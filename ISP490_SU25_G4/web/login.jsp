@@ -11,25 +11,40 @@
     <head>
         <meta charset="UTF-8" />
         <title>Đăng nhập - CRM Đồng Phát</title>
-        <link rel="stylesheet" type="text/css" href="css/login.css" />
+        <%-- SỬA 1: Liên kết đến file CSS duy nhất --%>
+        <link rel="stylesheet" type="text/css" href="css/auth-style.css" />
     </head>
-    <body>
-        <div class="container">
-            <div class="left"></div>
-            <div class="right">
-                <form class="form-box" action="LoginController" method="post">
-                    <img src="image/logo.png" alt="Logo" width="220" style="display:block; margin:0 auto 0px;">
-                    <div class="company-name" style="color:red; text-align:center; margin-top: 10px; margin-bottom: 20px;">DONG PHAT JOINT STOCK COMPANY</div>
-                    <div class="input-group">
-                        <input type="email" name="email" placeholder="Email" required>
+
+    <%-- SỬA 2: Thêm class cho body --%>
+    <body class="auth-body page-login">
+       
+            <div class="left-side"></div>
+
+            <%-- SỬA 3: Cập nhật class cho container --%>
+            <div class="auth-container">
+                <form id="login-form" class="form-box" action="auth" method="post">
+                    <input type="hidden" name="action" value="login">
+
+                    <div class="logo">
+                        <img src="image/logo.png" alt="Logo" style="width: 150px;">
                     </div>
+                    <div class="company-name">DONG PHAT JOINT STOCK COMPANY</div>
+
                     <div class="input-group">
-                        <input type="password" name="password" placeholder="Mật khẩu" required>
+                        <input type="email" id="email" name="email" placeholder="Email" value="${param.email}" required>
+                        <p id="email-error" class="error-message-client"></p> <%-- Class này cần được định nghĩa trong auth-style.css --%>
                     </div>
+
+                    <div class="input-group">
+                        <input type="password" id="password" name="password" placeholder="Mật khẩu" required>
+                        <p id="password-error" class="error-message-client"></p>
+                    </div>
+
                     <c:if test="${not empty error}">
-                        <p style="color:red">${error}</p>
+                        <p class="message error-message">${error}</p>
                     </c:if>
-                    <button type="submit" class="btn">Đăng nhập</button>
+
+                    <button type="submit">Đăng nhập</button>
 
                     <div class="or-divider"><span>Hoặc</span></div>
                     <div class="register-link">
@@ -41,5 +56,48 @@
                 </div>
             </div>
         </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const form = document.getElementById('login-form');
+                const emailInput = document.getElementById('email');
+                const passwordInput = document.getElementById('password');
+                const emailError = document.getElementById('email-error');
+                const passwordError = document.getElementById('password-error');
+
+                form.addEventListener('submit', function (event) {
+                    let isValid = true;
+
+                    emailError.textContent = '';
+                    emailInput.classList.remove('input-error');
+                    passwordError.textContent = '';
+                    passwordInput.classList.remove('input-error');
+
+                    const emailValue = emailInput.value.trim();
+                    const passwordValue = passwordInput.value.trim();
+                    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+
+                    if (emailValue === '') {
+                        emailError.textContent = 'Vui lòng nhập email.';
+                        emailInput.classList.add('input-error');
+                        isValid = false;
+                    } else if (!emailRegex.test(emailValue)) {
+                        emailError.textContent = 'Định dạng email không hợp lệ.';
+                        emailInput.classList.add('input-error');
+                        isValid = false;
+                    }
+
+                    if (passwordValue === '') {
+                        passwordError.textContent = 'Vui lòng nhập mật khẩu.';
+                        passwordInput.classList.add('input-error');
+                        isValid = false;
+                    }
+
+                    if (!isValid) {
+                        event.preventDefault();
+                    }
+                });
+            });
+        </script>
     </body>
 </html>

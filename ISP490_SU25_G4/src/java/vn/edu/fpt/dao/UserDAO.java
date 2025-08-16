@@ -269,15 +269,42 @@ public class UserDAO {
         return -1; // Không tìm thấy
     }
 
-    public void updatePassword(String email, String rawPassword) {
-        String sql = "UPDATE Users SET password_hash = ? WHERE email = ?";
-        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+// Thay thế phương thức cũ trong UserDAO.java bằng phương thức này
+    public boolean updatePassword(String email, String rawPassword) {
+        String sql = "UPDATE Users SET password_hash = ?, require_change_password = 0, updated_at = CURRENT_TIMESTAMP WHERE email = ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
             String hashed = BCrypt.hashpw(rawPassword, BCrypt.gensalt());
             ps.setString(1, hashed);
             ps.setString(2, email);
-            ps.executeUpdate();
+
+            // executeUpdate() trả về số dòng đã được thay đổi
+            int rowsAffected = ps.executeUpdate();
+
+            // Nếu có ít nhất 1 dòng được cập nhật, trả về true
+            return rowsAffected > 0;
+
         } catch (Exception e) {
             e.printStackTrace();
+            // Nếu có lỗi xảy ra, trả về false
+            return false;
+        }
+    }
+
+    // Thêm phương thức này vào file UserDAO.java
+    public boolean setRequireChangePasswordFlag(String email, int flag) {
+        String sql = "UPDATE Users SET require_change_password = ? WHERE email = ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, flag); // Giá trị flag (trong trường hợp này là 0)
+            ps.setString(2, email);
+
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0; // Trả về true nếu cập nhật thành công
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
     }
 
