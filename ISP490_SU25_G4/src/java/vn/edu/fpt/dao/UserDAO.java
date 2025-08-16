@@ -132,30 +132,6 @@ public class UserDAO {
         return null; // Sai email, sai mật khẩu, hoặc có lỗi xảy ra
     }
 
-//    public void createUser(String lastName, String middleName, String firstName, String email, String rawPassword) {
-//        // Câu lệnh SQL đã được sửa để dùng các cột tên mới
-//        String sql = "INSERT INTO Users (last_name, middle_name, first_name, email, password_hash, role, status) VALUES (?, ?, ?, ?, ?, 'cskh', 'active')";
-//
-//        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-//
-//            // Mã hóa mật khẩu
-//            String hashedPassword = BCrypt.hashpw(rawPassword, BCrypt.gensalt());
-//
-//            // Thiết lập các tham số cho PreparedStatement theo đúng thứ tự
-//            ps.setString(1, lastName);
-//            ps.setString(2, middleName);
-//            ps.setString(3, firstName);
-//            ps.setString(4, email);
-//            ps.setString(5, hashedPassword);
-//
-//            // Thực thi câu lệnh
-//            ps.executeUpdate();
-//
-//        } catch (Exception e) {
-//            // In ra lỗi để dễ dàng gỡ rối
-//            e.printStackTrace();
-//        }
-//    }
     public void updateUser(User user) {
         String sql = "UPDATE Users SET "
                 + "email = ?, "
@@ -319,56 +295,6 @@ public class UserDAO {
         }
         return false;
     }
-//
-//    public boolean updateUserProfile(User user) {
-//        // Câu lệnh SQL để cập nhật các trường có thể chỉnh sửa
-//        String sql = "UPDATE Users SET "
-//                + "last_name = ?, middle_name = ?, first_name = ?, email = ?, phone_number = ?, "
-//                + "department = ?, position = ?, notes = ?, identity_card_number = ?, date_of_birth = ?, "
-//                + "gender = ?, address = ?, ward = ?, district = ?, city = ?, social_media_link = ?, "
-//                + "avatar_url = ? "
-//                + "WHERE id = ?";
-//
-//        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-//
-//            // Thiết lập các tham số cho câu lệnh PreparedStatement
-//            ps.setString(1, user.getLastName());
-//            ps.setString(2, user.getMiddleName());
-//            ps.setString(3, user.getFirstName());
-//            ps.setString(4, user.getEmail());
-//            ps.setString(5, user.getPhoneNumber());
-//            ps.setString(6, user.getDepartment());
-//            ps.setString(7, user.getPosition());
-//            ps.setString(8, user.getNotes());
-//            ps.setString(9, user.getIdentityCardNumber());
-//
-//            // Chuyển đổi từ kiểu java.time.LocalDate sang java.sql.Date
-//            if (user.getDateOfBirth() != null) {
-//                ps.setDate(10, java.sql.Date.valueOf(user.getDateOfBirth()));
-//            } else {
-//                ps.setNull(10, java.sql.Types.DATE);
-//            }
-//
-//            ps.setString(11, user.getGender());
-//            ps.setString(12, user.getAddress());
-//            ps.setString(13, user.getWard());
-//            ps.setString(14, user.getDistrict());
-//            ps.setString(15, user.getCity());
-//            ps.setString(16, user.getSocialMediaLink());
-//            ps.setString(17, user.getAvatarUrl());
-//
-//            // Điều kiện WHERE
-//            ps.setInt(18, user.getId());
-//
-//            // Thực thi lệnh update và kiểm tra xem có hàng nào được cập nhật không
-//            int rowsAffected = ps.executeUpdate();
-//            return rowsAffected > 0; // Trả về true nếu có ít nhất 1 dòng được cập nhật
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return false; // Trả về false nếu có lỗi xảy ra
-//        }
-//    }
 
 //  Lấy all thông tin user dựa vào ID
     public int insertAddress1(String streetAddress, int wardId, int districtId, int provinceId) throws SQLException {
@@ -647,36 +573,6 @@ public class UserDAO {
         } catch (Exception e) {
             e.printStackTrace();
             return false;
-        }
-    }
-
-    public static void main(String[] args) {
-        UserDAO dao = new UserDAO(); // hoặc tên class DAO của bạn
-        String roleName = "Chăm sóc khách hàng"; // Hoặc "Admin", "Nhân viên", ... theo dữ liệu role trong DB
-
-        List<User> users = dao.getUsersByRoleName(roleName);
-
-        if (users.isEmpty()) {
-            System.out.println("Không tìm thấy user nào với vai trò: " + roleName);
-        } else {
-            System.out.println("Danh sách user role = " + roleName + ":");
-            for (User u : users) {
-                System.out.println("----");
-                System.out.println("ID: " + u.getId());
-                System.out.println("Email: " + u.getEmail());
-                System.out.println("Họ tên: " + 
-                    (u.getLastName() != null ? u.getLastName() : "") + " " +
-                    (u.getMiddleName() != null ? u.getMiddleName() : "") + " " +
-                    (u.getFirstName() != null ? u.getFirstName() : "")
-                );
-                System.out.println("EmployeeCode: " + u.getEmployeeCode());
-                System.out.println("Phone: " + u.getPhoneNumber());
-                System.out.println("Avatar: " + u.getAvatarUrl());
-                System.out.println("Status: " + u.getStatus());
-                System.out.println("Role: " + u.getRoleName());
-                System.out.println("Position: " + u.getPositionName());
-                System.out.println("Department: " + u.getDepartmentName());
-            }
         }
     }
 
@@ -1195,6 +1091,36 @@ public class UserDAO {
             }
         }
         return list;
+    }
+
+    // Thêm phương thức này vào file UserDAO.java
+    /**
+     * Kiểm tra xem mật khẩu thô (raw password) do người dùng nhập có khớp với
+     * mật khẩu đã được mã hóa trong cơ sở dữ liệu hay không.
+     *
+     * @param email Email của người dùng để tìm kiếm.
+     * @param rawPassword Mật khẩu hiện tại (chưa mã hóa) do người dùng nhập.
+     * @return true nếu mật khẩu khớp, ngược lại trả về false.
+     */
+    public boolean checkPassword(String email, String rawPassword) {
+        String sql = "SELECT password_hash FROM Users WHERE email = ? AND is_deleted = 0";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, email);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                // Nếu tìm thấy người dùng với email tương ứng
+                if (rs.next()) {
+                    String hashedPassword = rs.getString("password_hash");
+                    // Dùng BCrypt để so sánh mật khẩu thô với mật khẩu đã mã hóa
+                    return BCrypt.checkpw(rawPassword, hashedPassword);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        // Trả về false nếu không tìm thấy user, mật khẩu sai, hoặc có lỗi xảy ra
+        return false;
     }
 
 }

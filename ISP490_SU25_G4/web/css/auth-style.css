@@ -4,13 +4,19 @@
     Ngày cập nhật: 16-08-2025
 */
 
-/* === 1. THIẾT LẬP CHUNG & BIẾN MÀU === */
+/* === 1A. THIẾT LẬP CHUNG & BIẾN MÀU MẶC ĐỊNH (XANH ĐẬM) === */
 :root {
     --white: #ffffff;
     --border-color: #e0e0e0;
     --text-primary: #333333;
     --text-secondary: #666666;
-    --primary-color: #15166F; /* Lấy màu xanh đậm làm màu chính */
+    --primary-color: #15166F; /* Màu xanh đậm làm màu chính */
+}
+
+/* === 1B. BIẾN MÀU RIÊNG CHO TRANG ĐỔI MẬT KHẨU (TEAL) === */
+.page-change-password-internal {
+    --primary-color: #009688;  /* Màu Teal chính cho nút Lưu */
+     
 }
 
 * {
@@ -35,7 +41,7 @@
     height: 100%;
     background-repeat: no-repeat;
     background-position: center center;
-    background-size: contain; /* Dùng contain để ảnh không bị cắt */
+    background-size: contain;
 }
 
 .auth-container {
@@ -63,7 +69,6 @@
     margin-bottom: 30px;
     text-align: center;
 }
-
 .auth-container h2 {
     font-size: 26px;
     color: #3C3838;
@@ -71,14 +76,12 @@
     margin-bottom: 25px;
     text-align: center;
 }
-
 .auth-container label {
     display: block;
     font-size: 16px;
     font-weight: 700;
     margin-bottom: 10px;
 }
-
 .auth-container input[type="email"],
 .auth-container input[type="password"],
 .auth-container input[type="text"] {
@@ -87,9 +90,8 @@
     border-radius: 6px;
     border: 1px solid #CDCDCD;
     font-size: 16px;
-    margin-bottom: 5px; /* Giảm margin để p lỗi nằm sát hơn */
+    margin-bottom: 5px;
 }
-
 .auth-container button {
     width: 100%;
     background-color: var(--primary-color);
@@ -106,7 +108,6 @@
 .auth-container button:hover {
     background-color: #0d1b5d;
 }
-
 .footer {
     font-size: 12px;
     color: #777;
@@ -116,8 +117,6 @@
     left: 50%;
     transform: translateX(-50%);
 }
-
-/* Thông báo lỗi & thành công (chung) */
 .message {
     padding: 12px 15px;
     margin-top: 15px;
@@ -140,11 +139,9 @@
 
 /* === 4. STYLE RIÊNG CHO TỪNG TRANG CÔNG KHAI === */
 
-/* === 4. STYLE RIÊNG CHO TỪNG TRANG CÔNG KHAI === */
-
 /* --- Trang Login --- */
 .page-login .left-side {
-    background-image: url('../image/login.png'); /* SỬA LỖI: Thêm ../ */
+    background-image: url('../image/login.png');
 }
 .page-login .form-box {
     width: 100%;
@@ -186,74 +183,7 @@
 
 /* --- Trang Forgot Password --- */
 .page-forgot .left-side {
-    background-image: url('../image/login.png'); /* SỬA LỖI: Thêm ../ */
-}
-.page-forgot .back-login {
-    text-align: center;
-    margin-top: 20px;
-    font-weight: 700;
-    color: var(--primary-color);
-    text-decoration: none;
-    display: block;
-}
-
-/* --- Trang Verify OTP --- */
-.page-verify .left-side {
-    background-image: url('../image/OTP.png');
-}
-.page-verify .info-text {
-    font-size: 22px;
-    text-align: center;
-    margin-bottom: 25px;
-}
-.page-verify .expire-message {
-    margin-top: 25px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-size: 15px;
-}
-.page-verify .resend-link {
-    margin-top: 15px;
-    text-align: center;
-    font-size: 0.9em;
-}
-
-/* --- Trang Reset Password --- */
-.page-reset .left-side {
-    background-image: url('../image/OTP.png');
-}
-.page-reset .password-requirements {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 20px;
-    color: #C49C00;
-    font-size: 14px;
-}
-.page-reset .warning-icon {
-    width: 24px;
-    height: 24px;
-    background: #FFF419;
-    border-radius: 4px;
-    position: relative;
-    flex-shrink: 0;
-}
-.page-reset .warning-icon::before {
-    content: "!";
-    color: #C49C00;
-    font-weight: 900;
-    font-size: 18px;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
-
-/* --- Trang Forgot Password --- */
-.page-forgot .left-side {
-    background-image: url('.../image/login.png');
+    background-image: url('../image/login.png');
 }
 .page-forgot .back-login {
     text-align: center;
@@ -362,25 +292,48 @@
     padding: 16px 25px;
     border-top: 1px solid var(--border-color);
 }
-
+.page-change-password-internal .form-footer .btn-cancel,
+.page-change-password-internal .form-footer .btn-save {
+    display: inline-block;
+    padding: 10px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    text-align: center;
+    line-height: 1.5;
+    transition: opacity 0.2s;
+}
+.page-change-password-internal .form-footer .btn-cancel:hover,
+.page-change-password-internal .form-footer .btn-save:hover {
+    opacity: 0.9;
+}
+.page-change-password-internal .btn-cancel {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+.page-change-password-internal .btn-save {
+    background: var(--primary-color);
+    color: var(--white);
+    border: none;
+}
 
 /* === 6. RESPONSIVE === */
 @media (max-width: 768px) {
-    /* --- Responsive cho các trang công khai --- */
     .auth-body .left-side {
-        display: none; /* Ẩn ảnh nền bên trái */
+        display: none;
     }
     .auth-body .auth-container {
-        width: 100%; /* Form chiếm toàn bộ chiều rộng */
+        width: 100%;
         padding: 20px;
     }
     .auth-body .footer {
-        position: static; /* Footer không bị đè lên nội dung */
+        position: static;
         transform: none;
         margin-top: 40px;
     }
-
-    /* --- Responsive cho trang đổi mật khẩu nội bộ --- */
     .page-change-password-internal .form-body {
         padding: 24px 30px;
     }
@@ -391,7 +344,7 @@
     }
 }
 
-/* Thêm vào auth-style.css */
+/* Style cho thông báo lỗi của JavaScript */
 .error-message-client {
     color: red;
     font-size: 0.9em;

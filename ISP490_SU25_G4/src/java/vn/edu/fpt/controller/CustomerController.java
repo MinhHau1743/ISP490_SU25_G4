@@ -727,15 +727,29 @@ public class CustomerController extends HttpServlet {
      * @param request HttpServletRequest để lấy session
      * @return true nếu là Admin hoặc Kinh doanh, ngược lại là false
      */
+    // Thay thế toàn bộ phương thức cũ bằng phương thức này
     private boolean hasWritePermission(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("user") == null) {
+            System.out.println("DEBUG PERMISSION: Khong tim thay session hoac user object.");
             return false;
         }
         User user = (User) session.getAttribute("user");
         String roleName = user.getRoleName();
 
-        // CHÚ Ý: Đảm bảo "Admin" và "Kinh doanh" là tên vai trò chính xác trong DB của bạn.
+        // IN RA ĐỂ KIỂM TRA GIÁ TRỊ THỰC TẾ
+        System.out.println("-------------------------------------------");
+        System.out.println("DEBUG PERMISSION: Kiem tra quyen...");
+        System.out.println("Role name lay tu session: '" + roleName + "'"); // Dùng '' để dễ thấy khoảng trắng
+        System.out.println("So sanh voi 'Admin': " + "Admin".equalsIgnoreCase(roleName));
+        System.out.println("So sanh voi 'Kinh doanh': " + "Kinh doanh".equalsIgnoreCase(roleName));
+        System.out.println("-------------------------------------------");
+
+        // Thêm .trim() để code an toàn hơn, tự động xóa khoảng trắng thừa
+        if (roleName != null) {
+            roleName = roleName.trim();
+        }
+
         return "Admin".equalsIgnoreCase(roleName) || "Kinh doanh".equalsIgnoreCase(roleName);
     }
 }
