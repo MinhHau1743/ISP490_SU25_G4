@@ -129,24 +129,6 @@ public class TechnicalRequestDAO {
         return req;
     }
 
-    public List<TechnicalRequest> getAllTechnicalRequestsIdAndTitle() throws SQLException {
-        List<TechnicalRequest> requests = new ArrayList<>();
-        String sql = "SELECT tr.id, tr.title " // Lấy đúng trường 'title' từ bảng TechnicalRequests
-                + "FROM TechnicalRequests tr ";
-
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    TechnicalRequest req = new TechnicalRequest();
-                    req.setId(rs.getInt("id"));
-                    req.setTitle(rs.getString("title"));
-                    requests.add(req);
-                }
-            }
-        }
-        return requests;
-    }
-
     private List<TechnicalRequestDevice> getDevicesForRequest(int requestId) throws SQLException {
         List<TechnicalRequestDevice> devices = new ArrayList<>();
         String sql = "SELECT * FROM TechnicalRequestDevices WHERE technical_request_id = ?";

@@ -39,7 +39,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.json.JSONException;
 import org.json.JSONObject;
+import vn.edu.fpt.dao.CampaignDAO;
 import vn.edu.fpt.dao.EnterpriseDAO;
+import vn.edu.fpt.model.Campaign;
 import vn.edu.fpt.model.District;
 import vn.edu.fpt.model.Status;
 import vn.edu.fpt.model.Ward;
@@ -58,11 +60,7 @@ public class ScheduleController extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
 
         String action = request.getParameter("action");
-        if ("createSchedule".equals(action)) {
-            // Hiển thị form tạo
-            showCreateForm(request, response);
-            return;
-        } else if ("updateSchedule".equals(action)) {
+        if ("updateSchedule".equals(action)) {
             editFormSchedule(request, response);
             return;
         } else if ("updateScheduleTime".equals(action)) {
@@ -88,10 +86,7 @@ public class ScheduleController extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
 
         String action = request.getParameter("action");
-        if ("createSchedule".equals(action)) {
-            handleCreateSubmit(request, response);
-            return;
-        } else if ("updateSchedule".equals(action)) {
+        if ("updateSchedule".equals(action)) {
             handleEditSubmit(request, response);
             return;
         }
@@ -327,7 +322,6 @@ public class ScheduleController extends HttpServlet {
         request.setAttribute("hourLabels", hourLabels);
         request.setAttribute("hours", hours);
         request.setAttribute("days", days);
-
         // Day view
         request.setAttribute("dayHeader", dayHeader.toUpperCase());
         request.setAttribute("dayTimeLabels", dayTimeLabels);
@@ -336,358 +330,20 @@ public class ScheduleController extends HttpServlet {
         request.setAttribute("displayDate", displayDate);
         request.setAttribute("today", today);
         request.setAttribute("dayDate", dayDate);
-
         // Week view
         request.setAttribute("dayHeaders", dayHeaders);
         request.setAttribute("weekDates", weekDates);
-
         // Month view
         request.setAttribute("dayNumbers", dayNumbers);
         request.setAttribute("isCurrentMonths", isCurrentMonths);
         request.setAttribute("monthDates", monthDates);
-
         // View mode
         request.setAttribute("viewMode", viewMode != null ? viewMode : "day-view");
 
         request.getRequestDispatcher("/jsp/customerSupport/listSchedule.jsp").forward(request, response);
     }
 
-    /* ====================================
-     * 2) SHOW CREATE FORM (GET)
-     * ==================================== */
-    private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            TechnicalRequestDAO technicalDAO = new TechnicalRequestDAO();
-            AddressDAO addressDAO = new AddressDAO();
-            UserDAO userDAO = new UserDAO();
-
-            // Dropdown data
-            List<User> assignments = userDAO.getAllTechnicalStaffIdAndFullName();
-            List<TechnicalRequest> technicalRequests = technicalDAO.getAllTechnicalRequestsIdAndTitle();
-            List<Province> provinces = addressDAO.getAllProvinces();
-
-            request.setAttribute("assignments", assignments);
-            request.setAttribute("technicalRequests", technicalRequests);
-            request.setAttribute("provinces", provinces);
-
-            request.getRequestDispatcher("jsp/customerSupport/createSchedule.jsp").forward(request, response);
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Không tải được form tạo lịch");
-        }
-    }
-
-    /* ====================================
-     * 3) HANDLE CREATE SUBMIT (POST)
-     * ==================================== */
-    private void handleCreateSubmit(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        TechnicalRequestDAO technicalDAO = new TechnicalRequestDAO();
-        AddressDAO addressDAO = new AddressDAO();
-        MaintenanceScheduleDAO scheduleDAO = new MaintenanceScheduleDAO();
-
-        Map<String, String> fieldErrors = new HashMap<>();
-        boolean hasErrors = false;
-
-        try {
-            // 1. Lấy form data
-            String technicalRequestIdStr = request.getParameter("technical_request_id");
-            String title = request.getParameter("title");
-            String color = request.getParameter("color");
-            String scheduledDateStr = request.getParameter("scheduled_date");
-            String endDateStr = request.getParameter("end_date");
-            String startTimeStr = request.getParameter("start_time");
-            String endTimeStr = request.getParameter("end_time");
-            String status = request.getParameter("status");
-            String notes = request.getParameter("notes");
-            String[] assignedUserIds = request.getParameterValues("assignedUserIds");
-
-            // Địa chỉ
-            String streetAddress = request.getParameter("streetAddress");
-            String provinceIdStr = request.getParameter("province");
-            String districtIdStr = request.getParameter("district");
-            String wardIdStr = request.getParameter("ward");
-
-            // 2. VALIDATE TỪNG FIELD
-            // Validate title
-            if (title == null || title.trim().isEmpty()) {
-                fieldErrors.put("title", "Vui lòng nhập tiêu đề lịch bảo trì.");
-                hasErrors = true;
-            } else if (title.trim().length() < 3) {
-                fieldErrors.put("title", "Tiêu đề phải có ít nhất 3 ký tự.");
-                hasErrors = true;
-            } else if (title.trim().length() > 255) {
-                fieldErrors.put("title", "Tiêu đề không được vượt quá 255 ký tự.");
-                hasErrors = true;
-            }
-
-            // Validate scheduled date
-            LocalDate scheduledDate = null;
-            if (scheduledDateStr == null || scheduledDateStr.trim().isEmpty()) {
-                fieldErrors.put("scheduled_date", "Vui lòng chọn ngày bắt đầu.");
-                hasErrors = true;
-            } else {
-                try {
-                    scheduledDate = LocalDate.parse(scheduledDateStr);
-                    if (scheduledDate.isBefore(LocalDate.now())) {
-                        fieldErrors.put("scheduled_date", "Ngày bắt đầu không được là ngày trong quá khứ.");
-                        hasErrors = true;
-                    }
-                    if (scheduledDate.isAfter(LocalDate.now().plusYears(1))) {
-                        fieldErrors.put("scheduled_date", "Ngày bắt đầu không được quá 1 năm kể từ hôm nay.");
-                        hasErrors = true;
-                    }
-                } catch (DateTimeParseException e) {
-                    fieldErrors.put("scheduled_date", "Định dạng ngày không hợp lệ.");
-                    hasErrors = true;
-                }
-            }
-
-            // Validate end date
-            LocalDate endDate = null;
-            if (endDateStr != null && !endDateStr.trim().isEmpty()) {
-                try {
-                    endDate = LocalDate.parse(endDateStr);
-                    if (scheduledDate != null && endDate.isBefore(scheduledDate)) {
-                        fieldErrors.put("end_date", "Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.");
-                        hasErrors = true;
-                    }
-                } catch (DateTimeParseException e) {
-                    fieldErrors.put("end_date", "Định dạng ngày không hợp lệ.");
-                    hasErrors = true;
-                }
-            }
-
-            // Validate start time
-            LocalTime startTime = null;
-            if (startTimeStr != null && !startTimeStr.trim().isEmpty()) {
-                try {
-                    startTime = LocalTime.parse(startTimeStr);
-                } catch (DateTimeParseException e) {
-                    fieldErrors.put("start_time", "Định dạng giờ không hợp lệ.");
-                    hasErrors = true;
-                }
-            }
-
-            // Validate end time
-            LocalTime endTime = null;
-            if (endTimeStr != null && !endTimeStr.trim().isEmpty()) {
-                try {
-                    endTime = LocalTime.parse(endTimeStr);
-                } catch (DateTimeParseException e) {
-                    fieldErrors.put("end_time", "Định dạng giờ không hợp lệ.");
-                    hasErrors = true;
-                }
-            }
-
-            // Validate time logic
-            if (startTime != null && endTime != null && !endTime.isAfter(startTime)) {
-                fieldErrors.put("end_time", "Giờ kết thúc phải sau giờ bắt đầu.");
-                hasErrors = true;
-            }
-
-            // Validate today's time
-            if (scheduledDate != null && scheduledDate.isEqual(LocalDate.now()) && startTime != null) {
-                if (startTime.isBefore(LocalTime.now().plusMinutes(30))) {
-                    fieldErrors.put("start_time", "Giờ bắt đầu phải ít nhất 30 phút sau thời điểm hiện tại.");
-                    hasErrors = true;
-                }
-            }
-
-            // Validate province
-            int provinceId = 0;
-            if (provinceIdStr == null || provinceIdStr.trim().isEmpty()) {
-                fieldErrors.put("province", "Vui lòng chọn Tỉnh/Thành phố.");
-                hasErrors = true;
-            } else {
-                try {
-                    provinceId = Integer.parseInt(provinceIdStr);
-                    if (provinceId <= 0) {
-                        fieldErrors.put("province", "Tỉnh/Thành phố không hợp lệ.");
-                        hasErrors = true;
-                    }
-                } catch (NumberFormatException e) {
-                    fieldErrors.put("province", "Tỉnh/Thành phố không hợp lệ.");
-                    hasErrors = true;
-                }
-            }
-
-            // Validate district
-            int districtId = 0;
-            if (districtIdStr == null || districtIdStr.trim().isEmpty()) {
-                fieldErrors.put("district", "Vui lòng chọn Quận/Huyện.");
-                hasErrors = true;
-            } else {
-                try {
-                    districtId = Integer.parseInt(districtIdStr);
-                    if (districtId <= 0) {
-                        fieldErrors.put("district", "Quận/Huyện không hợp lệ.");
-                        hasErrors = true;
-                    }
-                } catch (NumberFormatException e) {
-                    fieldErrors.put("district", "Quận/Huyện không hợp lệ.");
-                    hasErrors = true;
-                }
-            }
-
-            // Validate ward
-            int wardId = 0;
-            if (wardIdStr == null || wardIdStr.trim().isEmpty()) {
-                fieldErrors.put("ward", "Vui lòng chọn Phường/Xã.");
-                hasErrors = true;
-            } else {
-                try {
-                    wardId = Integer.parseInt(wardIdStr);
-                    if (wardId <= 0) {
-                        fieldErrors.put("ward", "Phường/Xã không hợp lệ.");
-                        hasErrors = true;
-                    }
-                } catch (NumberFormatException e) {
-                    fieldErrors.put("ward", "Phường/Xã không hợp lệ.");
-                    hasErrors = true;
-                }
-            }
-
-            // Validate street address
-            if (streetAddress == null || streetAddress.trim().isEmpty()) {
-                fieldErrors.put("streetAddress", "Vui lòng nhập địa chỉ cụ thể.");
-                hasErrors = true;
-            } else if (streetAddress.trim().length() < 5) {
-                fieldErrors.put("streetAddress", "Địa chỉ cụ thể phải có ít nhất 5 ký tự.");
-                hasErrors = true;
-            } else if (streetAddress.trim().length() > 255) {
-                fieldErrors.put("streetAddress", "Địa chỉ cụ thể không được vượt quá 255 ký tự.");
-                hasErrors = true;
-            }
-
-            // Validate status
-            int statusId = 0;
-            if (status == null || status.trim().isEmpty()) {
-                fieldErrors.put("status", "Vui lòng chọn trạng thái.");
-                hasErrors = true;
-            } else {
-                try {
-                    statusId = Integer.parseInt(status);
-                    if (statusId <= 0) {
-                        fieldErrors.put("status", "Trạng thái không hợp lệ.");
-                        hasErrors = true;
-                    }
-                } catch (NumberFormatException e) {
-                    fieldErrors.put("status", "Trạng thái không hợp lệ.");
-                    hasErrors = true;
-                }
-            }
-
-            // Validate assigned users
-            List<Integer> validUserIds = new ArrayList<>();
-            if (assignedUserIds != null && assignedUserIds.length > 0) {
-                for (String userIdStr : assignedUserIds) {
-                    if (userIdStr != null && !userIdStr.trim().isEmpty()) {
-                        try {
-                            int userId = Integer.parseInt(userIdStr.trim());
-                            if (userId <= 0) {
-                                fieldErrors.put("assignedUsers", "ID người được phân công không hợp lệ.");
-                                hasErrors = true;
-                                break;
-                            }
-                            if (validUserIds.contains(userId)) {
-                                fieldErrors.put("assignedUsers", "Không được phân công trùng lặp cho cùng một người.");
-                                hasErrors = true;
-                                break;
-                            }
-                            validUserIds.add(userId);
-                        } catch (NumberFormatException e) {
-                            fieldErrors.put("assignedUsers", "ID người được phân công không hợp lệ.");
-                            hasErrors = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (validUserIds.size() > 10) {
-                    fieldErrors.put("assignedUsers", "Không được phân công cho quá 10 người cùng lúc.");
-                    hasErrors = true;
-                }
-            }
-
-            // Validate notes
-            if (notes != null && notes.trim().length() > 1000) {
-                fieldErrors.put("notes", "Ghi chú không được vượt quá 1000 ký tự.");
-                hasErrors = true;
-            }
-
-            // Validate color
-            if (color != null && !color.trim().isEmpty() && !color.matches("^#[0-9A-Fa-f]{6}$")) {
-                fieldErrors.put("color", "Mã màu không hợp lệ.");
-                hasErrors = true;
-            }
-
-            // Validate technical request ID
-            if (technicalRequestIdStr != null && !technicalRequestIdStr.trim().isEmpty()) {
-                try {
-                    int techReqId = Integer.parseInt(technicalRequestIdStr);
-                    if (techReqId <= 0) {
-                        fieldErrors.put("technical_request_id", "Yêu cầu kỹ thuật không hợp lệ.");
-                        hasErrors = true;
-                    } else {
-                        TechnicalRequest existingRequest = technicalDAO.getTechnicalRequestById(techReqId);
-                        if (existingRequest == null) {
-                            fieldErrors.put("technical_request_id", "Yêu cầu kỹ thuật không tồn tại.");
-                            hasErrors = true;
-                        }
-                    }
-                } catch (NumberFormatException e) {
-                    fieldErrors.put("technical_request_id", "Yêu cầu kỹ thuật không hợp lệ.");
-                    hasErrors = true;
-                }
-            }
-
-            // Nếu có lỗi, forward lại form với errors
-            if (hasErrors) {
-                request.setAttribute("fieldErrors", fieldErrors);
-                forwardToForm(request, response, technicalDAO);
-                return;
-            }
-
-            // PROCEED WITH CREATION nếu không có lỗi
-            int addressId = addressDAO.findOrCreateAddress(streetAddress, wardId, districtId, provinceId);
-
-            MaintenanceSchedule schedule = new MaintenanceSchedule();
-            if (technicalRequestIdStr != null && !technicalRequestIdStr.isEmpty()) {
-                schedule.setTechnicalRequestId(Integer.parseInt(technicalRequestIdStr));
-            }
-            schedule.setTitle(title.trim());
-            schedule.setColor(color != null ? color.trim() : null);
-            schedule.setScheduledDate(scheduledDate);
-            schedule.setEndDate(endDate);
-            schedule.setStartTime(startTime);
-            schedule.setEndTime(endTime);
-            schedule.setAddressId(addressId);
-            schedule.setStatusId(statusId);
-
-            int scheduleId = scheduleDAO.addMaintenanceScheduleAndReturnId(schedule);
-            if (scheduleId <= 0) {
-                throw new Exception("Không thể tạo lịch bảo trì do lỗi cơ sở dữ liệu.");
-            }
-
-            if (!validUserIds.isEmpty()) {
-                scheduleDAO.addMaintenanceAssignments(scheduleId, validUserIds);
-            }
-
-            response.sendRedirect(request.getContextPath() + "/schedule?action=schedule");
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            request.setAttribute("error", "Đã xảy ra lỗi hệ thống. Vui lòng thử lại.");
-            forwardToForm(request, response, technicalDAO);
-        }
-    }
-
-    /* ====================================
-     * 4) FORWARD LẠI FORM KHI LỖI
-     * ==================================== */
-    private void forwardToForm(HttpServletRequest request, HttpServletResponse response, TechnicalRequestDAO technicalDAO)
+    private void forwardToForm(HttpServletRequest request, HttpServletResponse response, MaintenanceScheduleDAO scheduleDAO)
             throws ServletException, IOException {
 
         // giữ lại dữ liệu người dùng nhập
@@ -708,7 +364,7 @@ public class ScheduleController extends HttpServlet {
         // reload dropdowns
         try {
             AddressDAO addressDAO = new AddressDAO();
-            request.setAttribute("technicalRequests", technicalDAO.getAllTechnicalRequestsIdAndTitle());
+            request.setAttribute("technicalRequests", scheduleDAO.getAllTechnicalRequestsAndCampaignsIdAndTitle());
             request.setAttribute("provinces", addressDAO.getAllProvinces());
 
             String provinceParam = request.getParameter("province");
@@ -734,7 +390,6 @@ public class ScheduleController extends HttpServlet {
 
         // Use DAOs
         MaintenanceScheduleDAO scheduleDAO = new MaintenanceScheduleDAO();
-        TechnicalRequestDAO technicalDAO = new TechnicalRequestDAO();
         AddressDAO addressDAO = new AddressDAO();
         UserDAO userDAO = new UserDAO();
 
@@ -756,7 +411,7 @@ public class ScheduleController extends HttpServlet {
 
             // 3. Lấy dữ liệu cần thiết cho các dropdown
             List<User> assignments = userDAO.getAllTechnicalStaffIdAndFullName();
-            List<TechnicalRequest> technicalRequests = technicalDAO.getAllTechnicalRequestsIdAndTitle();
+            List<MaintenanceSchedule> ms = scheduleDAO.getAllTechnicalRequestsAndCampaignsIdAndTitle();
             List<Province> provinces = addressDAO.getAllProvinces();
             List<Integer> assignedUserIds = scheduleDAO.getAssignedUserIdsByScheduleId(id);
             List<Status> statusList = scheduleDAO.getAllStatuses();
@@ -770,7 +425,7 @@ public class ScheduleController extends HttpServlet {
             request.setAttribute("assignedUserMap", assignedUserMap);
             request.setAttribute("assignments", assignments);
             request.setAttribute("schedule", schedule);
-            request.setAttribute("technicalRequests", technicalRequests);
+            request.setAttribute("technicalRequests", ms);
             request.setAttribute("provinces", provinces);
 
             // 5. Tải sẵn danh sách Quận/Huyện và Phường/Xã nếu lịch trình đã có địa chỉ
@@ -797,6 +452,7 @@ public class ScheduleController extends HttpServlet {
         AddressDAO addressDAO = new AddressDAO();
         TechnicalRequestDAO technicalDAO = new TechnicalRequestDAO();
         TechnicalRequest tr = new TechnicalRequest();
+        CampaignDAO campaignDAO = new CampaignDAO();
         try {
             // === 1. LẤY DỮ LIỆU TỪ FORM ===
             int id = Integer.parseInt(request.getParameter("id"));
@@ -891,7 +547,19 @@ public class ScheduleController extends HttpServlet {
                 boolean ok = technicalDAO.updateTechnicalRequestTitleAndDesc(tr);
                 if (!ok) {
                     request.setAttribute("error", "Cập nhật yêu cầu kỹ thuật thất bại!");
-                    forwardToEditForm(request, response, technicalDAO);
+                    forwardToEditForm(request, response);
+                    return;
+                }
+            }
+            if (schedule.getCampaignId() != null) {
+                Campaign campaign = new Campaign();
+                campaign.setCampaignId(schedule.getCampaignId());
+                campaign.setName(title);       // cùng form title
+                campaign.setDescription(notes); // cùng form notes
+                boolean ok = campaignDAO.updateCampaignTitleAndDesc(campaign);
+                if (!ok) {
+                    request.setAttribute("error", "Cập nhật Campaign thất bại!");
+                    forwardToEditForm(request, response);
                     return;
                 }
             }
@@ -933,22 +601,22 @@ public class ScheduleController extends HttpServlet {
         } catch (IllegalArgumentException | DateTimeParseException e) {
             // Bắt lỗi validation hoặc lỗi parse
             request.setAttribute("error", e.getMessage());
-            forwardToEditForm(request, response, technicalDAO);
+            forwardToEditForm(request, response);
         } catch (Exception e) {
             // Bắt các lỗi chung khác
             e.printStackTrace();
             request.setAttribute("error", "Đã xảy ra lỗi hệ thống. Vui lòng thử lại.");
-            forwardToEditForm(request, response, technicalDAO);
+            forwardToEditForm(request, response);
         }
     }
 
-    private void forwardToEditForm(HttpServletRequest request, HttpServletResponse response, TechnicalRequestDAO technicalDAO)
+    private void forwardToEditForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
+        MaintenanceScheduleDAO scheduleDAO = new MaintenanceScheduleDAO();
         // Cố gắng lấy lại đối tượng schedule để điền form
         try {
             int id = Integer.parseInt(request.getParameter("id"));
-            MaintenanceScheduleDAO scheduleDAO = new MaintenanceScheduleDAO();
+
             MaintenanceSchedule schedule = scheduleDAO.getMaintenanceScheduleById(id);
             request.setAttribute("schedule", schedule); // Luôn gửi lại đối tượng gốc
         } catch (Exception e) {
@@ -958,7 +626,7 @@ public class ScheduleController extends HttpServlet {
         // Tải lại danh sách cho các dropdown
         try {
             AddressDAO addressDAO = new AddressDAO();
-            request.setAttribute("technicalRequests", technicalDAO.getAllTechnicalRequestsIdAndTitle());
+            request.setAttribute("technicalRequests", scheduleDAO.getAllTechnicalRequestsAndCampaignsIdAndTitle());
             request.setAttribute("provinces", addressDAO.getAllProvinces());
 
             // Tải lại quận/huyện và phường/xã nếu người dùng đã chọn

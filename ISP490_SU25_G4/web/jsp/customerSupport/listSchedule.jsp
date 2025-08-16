@@ -1393,9 +1393,6 @@
                                     <i class="bi bi-hash" aria-label="ID Icon"></i> ID: <span class="event-id"></span>
                                 </div>
                                 <div class="event-info">
-                                    <i class="bi bi-link" aria-label="Link Icon"></i> Technical Request ID: <span class="event-technical-request-id"></span>
-                                </div>
-                                <div class="event-info">
                                     <i class="bi bi-calendar" aria-label="Date Icon"></i> <span class="event-date"></span>
                                 </div>
                                 <div class="event-info">
@@ -1453,7 +1450,6 @@
             <c:forEach var="schedule" items="${schedules}" varStatus="status">
             {
             id: ${schedule.id},
-                    technicalRequestId: ${schedule.technicalRequestId},
                     title: "${schedule.title}",
                     scheduledDate: "${schedule.scheduledDate}",
                     endDate: "${schedule.endDate != null ? schedule.endDate : ''}",
@@ -2033,7 +2029,6 @@
                 if (schedule) {
                 // Cập nhật các thông tin chi tiết của lịch trình
                 detailsPanel.querySelector('.event-id').textContent = schedule.id;
-                detailsPanel.querySelector('.event-technical-request-id').textContent = schedule.technicalRequestId || '0';
                 detailsPanel.querySelector('.event-title').textContent = schedule.title;
                 detailsPanel.querySelector('.event-time-detail').textContent = schedule.startTime ? schedule.startTime : 'Cả ngày';
                 detailsPanel.querySelector('.event-date').textContent = schedule.scheduledDate + (schedule.endDate ? ' - ' + schedule.endDate : '');
@@ -2316,6 +2311,13 @@
                 });
                 item.style.width = 'calc(' + (days * 100) + '% + 8px)';
                 });
+                });
+                document.querySelectorAll('#month-view .month-day').forEach(day => {
+                day.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                if (isInteracting) updateScrollDirection(e);
+                });
+                day.addEventListener('drop', drop);
                 });
         </script>
         <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>

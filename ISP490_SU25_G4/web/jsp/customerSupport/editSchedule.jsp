@@ -38,7 +38,6 @@
                     <section class="main-content-body">
                         <div class="page-header">
                             <h1>Chỉnh sửa Lịch bảo trì #${schedule.id}</h1>
-
                         </div>
                    
                         <c:if test="${not empty error}">
@@ -48,6 +47,7 @@
                         <form action="${pageContext.request.contextPath}/schedule?action=updateSchedule" method="post" class="form-container">
                             <input type="hidden" name="id" value="${schedule.id}">
                             <input type="hidden" name="technicalRequestId" value="${schedule.technicalRequestId}">
+                            <input type="hidden" name="campaignId" value="${schedule.campaignId}">
           
                             <div class="form-grid">
 

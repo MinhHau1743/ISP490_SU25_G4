@@ -7,7 +7,7 @@ import vn.edu.fpt.model.Campaign;
 import vn.edu.fpt.model.CampaignType;
 import vn.edu.fpt.model.User;
 
-public class CampaignDAO extends DBContext{
+public class CampaignDAO extends DBContext {
 
     /* ===================== DANH SÁCH ===================== */
     public List<Campaign> getCampaigns(
@@ -355,6 +355,7 @@ public class CampaignDAO extends DBContext{
             ps.executeUpdate();
         }
     }
+
     public boolean softDeleteCampaignById(int campaignId) {
         // Câu lệnh SQL này cập nhật cờ is_deleted thành 1 (hoặc true)
         String sql = "UPDATE Campaigns SET is_deleted = 1, updated_at = CURRENT_TIMESTAMP WHERE campaign_id = ?";
@@ -375,6 +376,20 @@ public class CampaignDAO extends DBContext{
             return false; // Trả về false nếu có lỗi
         }
     }
+
+    public boolean updateCampaignTitleAndDesc(Campaign campaign) {
+        String sql = "UPDATE Campaigns SET name = ?, description = ? WHERE campaign_id = ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, campaign.getName());
+            ps.setString(2, campaign.getDescription());
+            ps.setInt(3, campaign.getCampaignId());
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     /**
      * Đếm số lượng chiến dịch đang hoạt động (chưa bị xóa) dựa trên TÊN của
      * trạng thái.
@@ -407,5 +422,5 @@ public class CampaignDAO extends DBContext{
 
         return 0; // Trả về 0 nếu có lỗi hoặc không tìm thấy
     }
-    
+
 }

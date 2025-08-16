@@ -500,7 +500,6 @@ public class UserDAO {
                     user.setAvatarUrl(rs.getString("avatar_url"));
                     user.setEmployeeCode(rs.getString("employee_code"));
                     user.setPhoneNumber(rs.getString("phone_number"));
-                    user.setStatus(rs.getString("status"));
 
                     // Gán các trường lấy từ bảng JOIN
                     user.setRoleName(rs.getString("role_name"));
@@ -625,46 +624,32 @@ public class UserDAO {
     }
 
     public static void main(String[] args) {
-        // Giả sử UserDAO chứa phương thức getUserById
-        UserDAO userDAO = new UserDAO();
+        UserDAO dao = new UserDAO(); // hoặc tên class DAO của bạn
+        String roleName = "Chăm sóc khách hàng"; // Hoặc "Admin", "Nhân viên", ... theo dữ liệu role trong DB
 
-        // ID người dùng để test, thay đổi thành ID thực tế trong DB của bạn
-        int testUserId = 8;  // Ví dụ: ID = 1
+        List<User> users = dao.getUsersByRoleName(roleName);
 
-        // Gọi phương thức getUserById
-        User singleUser = userDAO.getUserById(testUserId);
-
-        // In toàn bộ nhân viên kỹ thuật
-        List<User> techStaff = userDAO.getAllTechnicalStaffIdAndFullName();
-        for (User user : techStaff) {
-            System.out.println(user);
-        }
-
-        // Kiểm tra và in kết quả chi tiết user có id là testUserId
-        if (singleUser != null) {
-            System.out.println("User found:");
-            System.out.println("ID: " + singleUser.getId());
-            System.out.println("Email: " + singleUser.getEmail());
-            System.out.println("Full Name: " + singleUser.getLastName() + " " + singleUser.getMiddleName() + " " + singleUser.getFirstName());
-            System.out.println("Avatar URL: " + singleUser.getAvatarUrl());
-            System.out.println("Employee Code: " + singleUser.getEmployeeCode());
-            System.out.println("Phone Number: " + singleUser.getPhoneNumber());
-            System.out.println("Date of Birth: " + singleUser.getDateOfBirth());
-            System.out.println("Gender: " + singleUser.getGender());
-            System.out.println("Identity Card Number: " + singleUser.getIdentityCardNumber());
-            System.out.println("Notes: " + singleUser.getNotes());
-            System.out.println("Status: " + singleUser.getStatus());
-            System.out.println("Created At: " + singleUser.getCreatedAt());
-            System.out.println("Updated At: " + singleUser.getUpdatedAt());
-            System.out.println("Role Name: " + singleUser.getRoleName());
-            System.out.println("Position Name: " + singleUser.getPositionName());
-            System.out.println("Department Name: " + singleUser.getDepartmentName());
-            System.out.println("Street Address: " + singleUser.getStreetAddress());
-            System.out.println("Ward Name: " + singleUser.getWardName());
-            System.out.println("District Name: " + singleUser.getDistrictName());
-            System.out.println("Province Name: " + singleUser.getProvinceName());
+        if (users.isEmpty()) {
+            System.out.println("Không tìm thấy user nào với vai trò: " + roleName);
         } else {
-            System.out.println("No user found with ID: " + testUserId);
+            System.out.println("Danh sách user role = " + roleName + ":");
+            for (User u : users) {
+                System.out.println("----");
+                System.out.println("ID: " + u.getId());
+                System.out.println("Email: " + u.getEmail());
+                System.out.println("Họ tên: " + 
+                    (u.getLastName() != null ? u.getLastName() : "") + " " +
+                    (u.getMiddleName() != null ? u.getMiddleName() : "") + " " +
+                    (u.getFirstName() != null ? u.getFirstName() : "")
+                );
+                System.out.println("EmployeeCode: " + u.getEmployeeCode());
+                System.out.println("Phone: " + u.getPhoneNumber());
+                System.out.println("Avatar: " + u.getAvatarUrl());
+                System.out.println("Status: " + u.getStatus());
+                System.out.println("Role: " + u.getRoleName());
+                System.out.println("Position: " + u.getPositionName());
+                System.out.println("Department: " + u.getDepartmentName());
+            }
         }
     }
 
