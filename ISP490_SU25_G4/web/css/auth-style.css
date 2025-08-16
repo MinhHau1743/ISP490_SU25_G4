@@ -1,0 +1,403 @@
+/*
+    Tệp CSS duy nhất cho toàn bộ luồng xác thực
+    Tác giả: NGUYEN MINH, ducanh & Gemini
+    Ngày cập nhật: 16-08-2025
+*/
+
+/* === 1. THIẾT LẬP CHUNG & BIẾN MÀU === */
+:root {
+    --white: #ffffff;
+    --border-color: #e0e0e0;
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --primary-color: #15166F; /* Lấy màu xanh đậm làm màu chính */
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+}
+
+/* === 2. BỐ CỤC CHUNG CHO CÁC TRANG CÔNG KHAI (Login, Forgot, OTP...) === */
+.auth-body {
+    display: flex;
+    height: 100vh;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--white);
+    color: var(--text-primary);
+}
+
+.left-side {
+    width: 60%;
+    height: 100%;
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: contain; /* Dùng contain để ảnh không bị cắt */
+}
+
+.auth-container {
+    width: 40%;
+    height: 100%;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+}
+
+/* === 3. CÁC THÀNH PHẦN CHUNG (Logo, Button, Input...) === */
+.logo {
+    text-align: center;
+    margin-bottom: 10px;
+}
+.logo img {
+    width: 110px;
+}
+.company-name {
+    font-size: 18px;
+    color: #E01111;
+    font-weight: 700;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.auth-container h2 {
+    font-size: 26px;
+    color: #3C3838;
+    font-weight: 500;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.auth-container label {
+    display: block;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.auth-container input[type="email"],
+.auth-container input[type="password"],
+.auth-container input[type="text"] {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 6px;
+    border: 1px solid #CDCDCD;
+    font-size: 16px;
+    margin-bottom: 5px; /* Giảm margin để p lỗi nằm sát hơn */
+}
+
+.auth-container button {
+    width: 100%;
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 700;
+    font-size: 18px;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background-color 0.2s;
+}
+.auth-container button:hover {
+    background-color: #0d1b5d;
+}
+
+.footer {
+    font-size: 12px;
+    color: #777;
+    text-align: center;
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Thông báo lỗi & thành công (chung) */
+.message {
+    padding: 12px 15px;
+    margin-top: 15px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+}
+.error-message {
+    color: #a94442;
+    background-color: #f2dede;
+    border-color: #ebccd1;
+}
+.success-message {
+    color: #3c763d;
+    background-color: #dff0d8;
+    border-color: #d6e9c6;
+}
+
+/* === 4. STYLE RIÊNG CHO TỪNG TRANG CÔNG KHAI === */
+
+/* === 4. STYLE RIÊNG CHO TỪNG TRANG CÔNG KHAI === */
+
+/* --- Trang Login --- */
+.page-login .left-side {
+    background-image: url('../image/login.png'); /* SỬA LỖI: Thêm ../ */
+}
+.page-login .form-box {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #CDCDCD;
+    border-radius: 8px;
+    padding: 20px 40px;
+}
+.page-login .or-divider {
+    text-align: center;
+    margin: 20px 0;
+    position: relative;
+    color: #aaa;
+}
+.page-login .or-divider span {
+    background: #fff;
+    padding: 0 10px;
+    position: relative;
+    z-index: 1;
+}
+.page-login .or-divider::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 1px;
+    background: #ccc;
+    left: 0;
+    top: 50%;
+}
+.page-login .register-link {
+    text-align: center;
+    margin-top: 20px;
+}
+.page-login .register-link a {
+    color: var(--primary-color);
+    font-weight: bold;
+    text-decoration: none;
+}
+
+/* --- Trang Forgot Password --- */
+.page-forgot .left-side {
+    background-image: url('../image/login.png'); /* SỬA LỖI: Thêm ../ */
+}
+.page-forgot .back-login {
+    text-align: center;
+    margin-top: 20px;
+    font-weight: 700;
+    color: var(--primary-color);
+    text-decoration: none;
+    display: block;
+}
+
+/* --- Trang Verify OTP --- */
+.page-verify .left-side {
+    background-image: url('../image/OTP.png');
+}
+.page-verify .info-text {
+    font-size: 22px;
+    text-align: center;
+    margin-bottom: 25px;
+}
+.page-verify .expire-message {
+    margin-top: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 15px;
+}
+.page-verify .resend-link {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 0.9em;
+}
+
+/* --- Trang Reset Password --- */
+.page-reset .left-side {
+    background-image: url('../image/OTP.png');
+}
+.page-reset .password-requirements {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    color: #C49C00;
+    font-size: 14px;
+}
+.page-reset .warning-icon {
+    width: 24px;
+    height: 24px;
+    background: #FFF419;
+    border-radius: 4px;
+    position: relative;
+    flex-shrink: 0;
+}
+.page-reset .warning-icon::before {
+    content: "!";
+    color: #C49C00;
+    font-weight: 900;
+    font-size: 18px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* --- Trang Forgot Password --- */
+.page-forgot .left-side {
+    background-image: url('.../image/login.png');
+}
+.page-forgot .back-login {
+    text-align: center;
+    margin-top: 20px;
+    font-weight: 700;
+    color: var(--primary-color);
+    text-decoration: none;
+    display: block;
+}
+
+/* --- Trang Verify OTP --- */
+.page-verify .left-side {
+    background-image: url('../image/OTP.png');
+}
+.page-verify .info-text {
+    font-size: 22px;
+    text-align: center;
+    margin-bottom: 25px;
+}
+.page-verify .expire-message {
+    margin-top: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 15px;
+}
+.page-verify .resend-link {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 0.9em;
+}
+
+/* --- Trang Reset Password --- */
+.page-reset .left-side {
+    background-image: url('../image/OTP.png');
+}
+.page-reset .password-requirements {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    color: #C49C00;
+    font-size: 14px;
+}
+.page-reset .warning-icon {
+    width: 24px;
+    height: 24px;
+    background: #FFF419;
+    border-radius: 4px;
+    position: relative;
+    flex-shrink: 0;
+}
+.page-reset .warning-icon::before {
+    content: "!";
+    color: #C49C00;
+    font-weight: 900;
+    font-size: 18px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* === 5. STYLE RIÊNG CHO TRANG ĐỔI MẬT KHẨU (NỘI BỘ) === */
+.page-change-password-internal .change-password-form {
+    max-width: 725px;
+    margin: 20px auto;
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+}
+.page-change-password-internal .form-header {
+    text-align: center;
+    padding: 16px;
+    font-size: 24px;
+    font-weight: 600;
+}
+.page-change-password-internal .form-body {
+    padding: 24px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+.page-change-password-internal .form-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.page-change-password-internal .form-row label {
+    white-space: nowrap;
+    margin-right: 20px;
+    min-width: 180px;
+}
+.page-change-password-internal .form-row input {
+    flex-grow: 1;
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    padding: 10px 5px;
+}
+.page-change-password-internal .form-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 16px 25px;
+    border-top: 1px solid var(--border-color);
+}
+
+
+/* === 6. RESPONSIVE === */
+@media (max-width: 768px) {
+    /* --- Responsive cho các trang công khai --- */
+    .auth-body .left-side {
+        display: none; /* Ẩn ảnh nền bên trái */
+    }
+    .auth-body .auth-container {
+        width: 100%; /* Form chiếm toàn bộ chiều rộng */
+        padding: 20px;
+    }
+    .auth-body .footer {
+        position: static; /* Footer không bị đè lên nội dung */
+        transform: none;
+        margin-top: 40px;
+    }
+
+    /* --- Responsive cho trang đổi mật khẩu nội bộ --- */
+    .page-change-password-internal .form-body {
+        padding: 24px 30px;
+    }
+    .page-change-password-internal .form-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}
+
+/* Thêm vào auth-style.css */
+.error-message-client {
+    color: red;
+    font-size: 0.9em;
+    height: 15px;
+    text-align: left;
+}
+.input-error {
+    border: 1px solid red !important;
+}

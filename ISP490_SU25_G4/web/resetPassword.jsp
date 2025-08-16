@@ -1,90 +1,116 @@
 <%-- 
-    Document   : resetPassword
-    Created on : May 31, 2025, 12:47:31 PM
+    Document   : resetPassword.jsp (Trang TẠO MỚI hoặc ĐẶT LẠI mật khẩu)
+    Created on : Jun 7, 2025
     Author     : NGUYEN MINH
 --%>
-
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html>
     <head>
         <meta charset="UTF-8" />
-        <title>Đặt lại mật khẩu</title>
-        <link rel="stylesheet" type="text/css" href="css/resetPassword.css" />
-    </head>
-    <body>
+        <c:choose>
+            <c:when test="${not empty sessionScope.user}">
+                <title>Tạo Mật Khẩu Mới</title>
+            </c:when>
+            <c:otherwise>
+                <title>Đặt Lại Mật Khẩu</title>
+            </c:otherwise>
+        </c:choose>
 
+        <%-- SỬA 1: Liên kết đến file CSS duy nhất --%>
+        <link rel="stylesheet" type="text/css" href="css/auth-style.css" />
+    </head>
+
+    <%-- SỬA 2: Thêm class cho body --%>
+    <body class="auth-body page-reset">
         <div class="left-side"></div>
 
-        <div class="reset-container">
-            <div class="logo">
-                <img src="image/logo.png" alt="Logo" />
-            </div>
+        <%-- SỬA 3: Cập nhật class cho container --%>
+        <div class="auth-container">
+            <div class="logo"><img src="image/logo.png" alt="Logo" /></div>
             <div class="company-name">DONG PHAT JOINT STOCK COMPANY</div>
 
-            <h2>Đặt lại mật khẩu</h2>
+            <c:choose>
+                <c:when test="${not empty sessionScope.user}">
+                    <h2>Tạo Mật Khẩu Mới</h2>
+                </c:when>
+                <c:otherwise>
+                    <h2>Đặt Lại Mật Khẩu</h2>
+                </c:otherwise>
+            </c:choose>
 
-            <form action="ResetPasswordController" method="post">
-                <label for="newPassword">Mật khẩu mới</label>
-                <input type="password" id="newPassword" name="newPassword" placeholder="Nhập mật khẩu mới" required />
-
+            <form id="reset-form" action="auth" method="post">
+                <input type="hidden" name="action" value="resetPassword">
+                <label for="newPassword">Nhập mật khẩu mới</label>
+                <input id="newPassword" type="password" name="newPassword" placeholder="Nhập mật khẩu mới" required />
+                <p id="new-password-error" class="error-message-client"></p>
                 <label for="confirmPassword">Nhập lại mật khẩu</label>
-                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Nhập lại mật khẩu" required />
-                <input type="hidden" name="productController" value="${sessionScope.productController}" />
-                <%-- ===== PHẦN CẬP NHẬT ===== --%>
-                <%-- Hiển thị thông báo lỗi với lớp CSS mới --%>
-                <c:if test="${not empty error}">
-                    <p class="message error-message">${error}</p>
-                </c:if>
+                <input id="confirmPassword" type="password" name="confirmPassword" placeholder="Nhập lại mật khẩu" required />
+                <p id="confirm-password-error" class="error-message-client"></p>
+                <c:if test="${not empty error}"><p class="message error-message">${error}</p></c:if>
+                <c:if test="${not empty success}"><p class="message success-message">${success}</p></c:if>
+                    <button type="submit">Xác nhận</button>
+                </form>
 
-                <%-- Hiển thị thông báo thành công với lớp CSS mới --%>
-                <c:if test="${not empty success}">
-                    <%-- Thêm class 'message' để có định dạng chung --%>
-                    <p class="message success-message">${success}</p>
-                </c:if>
-                <%-- ========================== --%>
-
-                <button type="submit" >Tiếp tục</button>
-
-            </form>
-
-            <div class="password-requirements">
-                <div class="warning-icon"></div>
-                <div>
-                    - Tối thiểu 8 ký tự<br/>
-                    - Có chữ hoa, chữ thường và số
+                <div class="password-requirements">
+                    <div class="warning-icon"></div>
+                    <div>- Tối thiểu 8 ký tự<br/>- Có chữ hoa, chữ thường và số</div>
                 </div>
+                <div class="footer">© 2025 DPCRM from ISP490_SU25_GR4</div>
             </div>
 
-            <div class="footer">© 2025 DPCRM from ISP490_SU25_GR4</div>
-        </div>
+        <c:if test="${not empty success}">
+            <script>
+                console.log("Thao tác thành công. Tự động chuyển trang sau 3 giây.");
+                setTimeout(() => {
+                    window.location.href = 'login.jsp';
+                }, 3000);
+            </script>
+        </c:if>
 
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const form = document.getElementById('reset-form');
+                const newPass = document.getElementById('newPassword');
+                const confirmPass = document.getElementById('confirmPassword');
+                const newPassError = document.getElementById('new-password-error');
+                const confirmPassError = document.getElementById('confirm-password-error');
+
+                form.addEventListener('submit', function (event) {
+                    let isValid = true;
+                    newPassError.textContent = '';
+                    newPass.classList.remove('input-error');
+                    confirmPassError.textContent = '';
+                    confirmPass.classList.remove('input-error');
+                    const newPasswordValue = newPass.value;
+
+                    if (newPasswordValue === '') {
+                        newPassError.textContent = 'Vui lòng nhập mật khẩu mới.';
+                        isValid = false;
+                    } else {
+                        if (!(/[A-Z]/.test(newPasswordValue) && /[a-z]/.test(newPasswordValue) && /[0-9]/.test(newPasswordValue) && newPasswordValue.length >= 8)) {
+                            newPassError.textContent = 'Mật khẩu không đủ mạnh.';
+                            isValid = false;
+                        }
+                    }
+                    if (!isValid)
+                        newPass.classList.add('input-error');
+
+                    if (confirmPass.value === '') {
+                        confirmPassError.textContent = 'Vui lòng nhập lại mật khẩu.';
+                        isValid = false;
+                    } else if (newPass.classList.length === 0 && newPasswordValue !== confirmPass.value) {
+                        confirmPassError.textContent = 'Mật khẩu không khớp.';
+                        isValid = false;
+                    }
+                    if (confirmPassError.textContent)
+                        confirmPass.classList.add('input-error');
+
+                    if (!isValid)
+                        event.preventDefault();
+                });
+            });
+        </script>
     </body>
-    <%-- Chỉ chạy script này KHI có thông báo thành công --%>
-    <c:if test="${not empty success}">
-        <script>
-            // Hiển thị thông báo cho người dùng biết họ sẽ được chuyển trang
-            console.log("Cập nhật mật khẩu thành công. Tự động chuyển đến trang đăng nhập sau 3 giây.");
-
-            // Hàm thực hiện chuyển trang sau một khoảng thời gian
-            setTimeout(function () {
-                // Chuyển hướng người dùng đến trang login.jsp
-                window.location.href = 'login.jsp';
-            }, 3000); // 3000 mili giây = 3 giây
-        </script>
-    </c:if>
-   <c:if test="${not empty isProductController and not empty success}">
-        <script>
-            // Hiển thị thông báo cho người dùng biết họ sẽ được chuyển trang
-            console.log("Cập nhật mật khẩu thành công. Tự động chuyển đến trang đăng nhập sau 3 giây.");
-
-            // Hàm thực hiện chuyển trang sau một khoảng thời gian
-            setTimeout(function () {
-                // Chuyển hướng người dùng đến trang login.jsp
-                window.location.href = 'editProfile';
-            }, 3000); // 3000 mili giây = 3 giây
-        </script>
-    </c:if>
-        
 </html>

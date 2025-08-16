@@ -99,7 +99,7 @@
                     <div class="user-info">
                         <div class="user-name-large"><c:out value="${sessionScope.user.firstName} ${sessionScope.user.lastName}"/></div>
                         <div class="user-email"><c:out value="${sessionScope.user.email}"/></div>
-                        <a href="${pageContext.request.contextPath}/logout" class="sign-out-link">Đăng xuất</a>
+                        <a href="${pageContext.request.contextPath}/auth?action=logout" class="sign-out-link">Đăng xuất</a>
                     </div>
                 </div>
 
