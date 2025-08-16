@@ -1,14 +1,13 @@
 <%--
     Document    : viewContractDetail.jsp
-    Created on  : Jun 20, 2025
-    Author      : NGUYEN MINH (Fixed by Gemini)
-    Description : Updated to use statusName from the database.
+    Created on  : Aug 17, 2025
+    Author      : NGUYEN MINH (Updated)
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
-<%@ taglib uri="jakarta.tags.functions" prefix="fn" %> <%-- ADD THIS LIBRARY FOR STRING MANIPULATION --%>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 
 <c:set var="currentPage" value="listContract" />
 
@@ -22,12 +21,56 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
         <script src="https://unpkg.com/feather-icons"></script>
 
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/viewContractDetail.css">
+
+        <style>
+            .btn-teal {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 16px;
+                font-weight: 600;
+                font-size: 14px;
+                text-decoration: none;
+                color: #ffffff;
+                background-color: #0d9488;
+                border: 1px solid #0d9488;
+                border-radius: 8px;
+                cursor: pointer;
+                transition: background-color 0.2s ease;
+            }
+            .btn-teal:hover {
+                background-color: #0f766e;
+                border-color: #0f766e;
+            }
+            .btn-teal .feather {
+                width: 16px;
+                height: 16px;
+            }
+            .btn-disabled {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                background-color: #e5e7eb;
+                color: #6b7280;
+                padding: 8px 16px;
+                border-radius: 8px;
+                font-weight: 500;
+                cursor: not-allowed;
+                border: 1px solid #d1d5db;
+                height: 40px;
+                box-sizing: border-box;
+                text-decoration: none;
+            }
+            .btn-disabled .feather {
+                width: 16px;
+                height: 16px;
+            }
+        </style>
     </head>
     <body data-context-path="${pageContext.request.contextPath}">
         <div class="app-container">
@@ -40,12 +83,28 @@
                             <a href="${pageContext.request.contextPath}/contract?action=list" class="back-link"><i data-feather="arrow-left"></i><span>Quay lại danh sách</span></a>
 
                             <div class="action-buttons" style="display: flex; gap: 8px;">
-                                <a href="#" class="btn btn-secondary"><i data-feather="printer"></i>In hợp đồng</a>
-
-                                <c:if test="${contract.statusName == 'Đã hoàn thành' && (sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Kinh doanh')}">
-                                    <a href="${pageContext.request.contextPath}/jsp/customerSupport/createFeedback.jsp" class="btn btn-warning"><i data-feather="star"></i>Gửi đánh giá</a>
+                                <%-- Logic cho nút "Gửi đánh giá" --%>
+                                <c:if test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Kinh doanh'}">
+                                    <c:choose>
+                                        <c:when test="${hasFeedback}">
+                                            <div class="btn btn-disabled">
+                                                <i data-feather="check-circle"></i> Bạn đã gửi phản hồi.
+                                            </div>
+                                        </c:when>
+                                        <c:when test="${param.surveySent == 'true'}">
+                                            <div class="btn btn-disabled">
+                                                <i data-feather="send"></i> Đã gửi khảo sát
+                                            </div>
+                                        </c:when>
+                                        <c:when test="${contract.statusName == 'Đã hoàn thành'}">
+                                            <a href="${pageContext.request.contextPath}/contract?action=sendSurvey&id=${contract.id}" class="btn btn-teal">
+                                                <i data-feather="star"></i> Gửi Đánh Giá
+                                            </a>
+                                        </c:when>
+                                    </c:choose>
                                 </c:if>
 
+                                <%-- Logic cho nút "Sửa" và "Xóa" --%>
                                 <c:if test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Chánh văn phòng'}">
                                     <a href="${pageContext.request.contextPath}/contract?action=edit&id=${contract.id}" class="btn btn-primary"><i data-feather="edit-2"></i>Sửa</a>
                                     <button type="button" class="btn btn-danger delete-btn" 
@@ -113,18 +172,12 @@
                                 <div class="detail-card">
                                     <h3 class="card-title">Thời hạn & Giá trị</h3>
                                     <div class="card-body">
-
-                                        <%-- ======================================================= --%>
-                                        <%-- ## 1. UPDATE: STATUS DISPLAY                          --%>
-                                        <%-- ======================================================= --%>
                                         <div class="info-item">
                                             <span class="label">Trạng thái</span>
                                             <span class="value">
-                                                <%-- This now uses statusName directly from the database --%>
                                                 <span class="status-pill status-${fn:toLowerCase(fn:replace(contract.statusName, ' ', '-'))}">${contract.statusName}</span>
                                             </span>
                                         </div>
-
                                         <div class="info-item"><span class="label">Ngày ký</span><span class="value"><fmt:formatDate value="${contract.signedDate}" pattern="dd/MM/yyyy"/></span></div>
                                         <div class="info-item"><span class="label">Ngày hết hạn</span><span class="value"><fmt:formatDate value="${contract.endDate}" pattern="dd/MM/yyyy"/></span></div>
                                         <div class="info-item"><span class="label">Giá trị hợp đồng</span><span class="value" style="font-size: 18px; font-weight: 700;"><fmt:formatNumber value="${grandTotal}" type="currency" currencySymbol="₫"/></span></div>
@@ -164,5 +217,10 @@
 
         <script src="${pageContext.request.contextPath}/js/viewContractDetail.js"></script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                feather.replace();
+            });
+        </script>
     </body>
 </html>

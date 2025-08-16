@@ -227,7 +227,8 @@ public class CustomerController extends HttpServlet {
                 request.setAttribute("errorMessage", "Không tìm thấy khách hàng với ID cung cấp.");
             } else {
                 request.setAttribute("recentRequests", new TechnicalRequestDAO().getRecentRequestsByEnterprise(enterpriseId, 3));
-                request.setAttribute("recentContracts", new ContractDAO().getRecentContractsByEnterpriseId(enterpriseId, 5));
+                // Thêm số 5 để giới hạn số lượng hợp đồng lấy về
+                request.setAttribute("recentContracts", new ContractDAO().getRecentContractsByEnterpriseId(enterpriseId, 5));;
             }
             request.setAttribute("customer", customer);
         } catch (NumberFormatException e) {

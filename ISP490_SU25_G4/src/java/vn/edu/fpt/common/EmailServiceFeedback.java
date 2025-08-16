@@ -15,8 +15,8 @@ import javax.mail.internet.*;
 public class EmailServiceFeedback {
     // Các thông tin cấu hình được giữ nguyên ở đây
 
-    private static final String FROM_EMAIL = "anhndhe172050@fpt.edu.vn"; // Email của bạn
-    private static final String PASSWORD = "gmkw ouil irgq hktz";      // Mật khẩu ứng dụng của Gmail
+    private static final String FROM_EMAIL = "datnthe171279@fpt.edu.vn"; // Email của bạn
+    private static final String PASSWORD = "lzrf xfts bgzb aaxb";      // Mật khẩu ứng dụng của Gmail
 
     /**
      * Gửi email khảo sát tới khách hàng. Phương thức này là static, có thể gọi

@@ -26,6 +26,33 @@ public class FeedbackView {
     private String technicianName;
     private int relatedRequestId;
     private String requestCode;
+    private Integer contractId;
+    private String contractCode;
+    private String contractCreatorName;
+
+    public Integer getContractId() {
+        return contractId;
+    }
+
+    public void setContractId(Integer contractId) {
+        this.contractId = contractId;
+    }
+
+    public String getContractCode() {
+        return contractCode;
+    }
+
+    public void setContractCode(String contractCode) {
+        this.contractCode = contractCode;
+    }
+
+    public String getContractCreatorName() {
+        return contractCreatorName;
+    }
+
+    public void setContractCreatorName(String contractCreatorName) {
+        this.contractCreatorName = contractCreatorName;
+    }
 
     // Constructors, Getters và Setters
     public FeedbackView() {
@@ -136,6 +163,5 @@ public class FeedbackView {
     public void setRequestCode(String requestCode) {
         this.requestCode = requestCode;
     }
-    
-    
+
 }

@@ -22,6 +22,7 @@ public class Feedback {
     private boolean isDeleted;
     private Timestamp createdAt;
     private Timestamp updatedAt;
+ private Integer contractId;
 
     // Constructors, Getters và Setters
     public Feedback() {
@@ -107,4 +108,14 @@ public class Feedback {
     public void setUpdatedAt(Timestamp updatedAt) {
         this.updatedAt = updatedAt;
     }
+    
+    public Integer getContractId() {
+        return contractId;
+    }
+
+    public void setContractId(Integer contractId) {
+        this.contractId = contractId;
+    }
+    
+    
 }
