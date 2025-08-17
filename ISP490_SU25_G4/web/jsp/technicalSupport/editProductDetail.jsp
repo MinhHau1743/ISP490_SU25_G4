@@ -1,13 +1,13 @@
 <%-- 
     Document   : editProductDetail
-    Created on : Jun 17, 2025, 10:28:17 AM
-    Author     : NGUYEN MINH
+    Created on : Jun 17, 2025
+    Author     : NGUYEN MINH (Updated by Gemini)
+    Description: Restructured layout and added HTML5 validation.
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
-<%-- Thêm taglib 'fn' để xử lý chuỗi --%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 
 <c:set var="currentPage" value="listProduct" />
@@ -30,141 +30,126 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/editProductDetail.css">
+        <%-- Sử dụng lại CSS của trang create để đồng bộ layout --%>
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/createProduct.css">
     </head>
     <body>
         <div class="app-container">
-            <%-- Sửa: Dùng đường dẫn gốc để ổn định hơn --%>
             <jsp:include page="/mainMenu.jsp"/>
             <main class="main-content">
-                <div class="page-content">
-                    <div class="content-card">
+                <header class="main-top-bar">
+                    <div class="page-title">Chỉnh sửa sản phẩm</div>
+                    <button class="notification-btn">
+                        <i data-feather="bell"></i>
+                        <span class="notification-badge"></span>
+                    </button>
+                </header>
 
-                        <%-- Sửa: action trỏ đến controller hợp nhất với action tương ứng --%>
-                        <form action="product?action=processEdit" method="post" enctype="multipart/form-data">
+                <c:if test="${not empty editErrors}">
+                    <div class="alert alert-warning alert-dismissible" style="margin: 0 24px 20px;">
+                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                        <strong>Vui lòng sửa các lỗi sau:</strong>
+                        <ul>
+                            <c:forEach var="error" items="${editErrors}">
+                                <li>${error}</li>
+                                </c:forEach>
+                        </ul>
+                    </div>
+                </c:if>
 
-                            <%-- Bỏ: Input 'service' không còn cần thiết --%>
+                <section class="content-body">
+                    <div class="form-container">
+                        <form action="product?action=processEdit" method="POST" class="product-form" enctype="multipart/form-data">
                             <input type="hidden" name="id" value="${product.id}">
 
-                            <div class="edit-header">
-                                <h1 class="page-title">Chỉnh sửa Sản phẩm</h1>
-                                <div class="action-buttons">
-                                    <%-- Sửa: Nút Hủy trỏ về trang danh sách sản phẩm --%>
-                                    <a href="product?action=list" class="btn btn-secondary">Hủy</a>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i data-feather="save"></i> Lưu thay đổi
-                                    </button>
+                            <div class="form-main-layout">
+                                <div class="product-image-section">
+                                    <label for="productImageUpload" class="image-placeholder" id="imagePreviewContainer">
+                                        <i id="imageIcon" data-feather="image" style="width: 48px; height: 48px; display: none;"></i>
+                                        <img id="productImagePreview" 
+                                             src="${pageContext.request.contextPath}/image/${not empty product.image ? product.image : 'na.jpg'}" 
+                                             alt="Ảnh sản phẩm"
+                                             style="width: 100%; height: 100%; object-fit: contain;"
+                                             onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/image/na.jpg';" />
+                                    </label>
+                                    <input type="file" name="image" id="productImageUpload" class="visually-hidden" accept="image/*">
+                                    <label for="productImageUpload" class="btn-upload">Đổi ảnh</label>
                                 </div>
-                            </div>
-                            
-                            <c:if test="${not empty editErrors}">
-                                <div class="alert alert-warning alert-dismissible">
-                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                    <ul>
-                                        <c:forEach var="error" items="${editErrors}">
-                                            <li>${error}</li>
-                                        </c:forEach>
-                                    </ul>
-                                </div>
-                            </c:if>
 
-                            <c:if test="${not empty product}">
-                                <div class="form-column">
-                                    <div class="product-edit-container">
-                                        <div class="image-column">
-                                            <div class="form-section">
-                                                <h2 class="form-section-title">Hình ảnh sản phẩm</h2>
-                                                <div class="image-list" style="display: flex; gap: 24px; align-items: center; flex-wrap: wrap;">
-                                                    <img id="productImagePreview"
-                                                         src="${pageContext.request.contextPath}/image/${product.image}"
-                                                         alt="Ảnh sản phẩm"
-                                                         style="width: 260px; height: auto; border: 1px solid #ccc; border-radius: 8px;"
-                                                         onerror="this.src='${pageContext.request.contextPath}/image/na.jpg'" />
-
-                                                    <label for="imageUpload" class="upload-box" style="cursor: pointer; width: 160px; height: 160px; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 2px dashed #ccc; border-radius: 8px;">
-                                                        <i data-feather="upload-cloud" style="width: 32px; height: 32px;"></i>
-                                                        <p style="margin: 8px 0 0;">Tải lên ảnh mới</p>
-                                                    </label>
-                                                    <input type="file" id="imageUpload" name="image" accept="image/*" style="display: none;">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <%-- Sửa: Lấy tên ảnh từ đối tượng product --%>
-                                    <input type="hidden" name="oldImage" value="${product.image}">
-
-                                    <div class="form-section">
-                                        <h2 class="form-section-title">Thông tin chung</h2>
-                                        <div class="form-grid">
+                                <div class="product-details-section">
+                                    <fieldset class="form-fieldset">
+                                        <legend>Thông tin sản phẩm</legend>
+                                        <div class="details-grid">
                                             <div class="form-group">
-                                                <label class="form-label" for="productName">Tên sản phẩm</label>
-                                                <input type="text" id="productName" name="name" class="form-control" value="${product.name}" required>
-                                            </div> 
+                                                <label class="form-label" for="productName">Tên sản phẩm (*)</label>
+                                                <input type="text" id="productName" name="name" class="form-control" 
+                                                       value="${product.name}" required title="Vui lòng nhập tên sản phẩm.">
+                                            </div>
                                             <div class="form-group">
                                                 <label class="form-label" for="productCode">Mã sản phẩm</label>
-                                                <input type="text" id="productCode" class="form-control" value="${product.productCode}" readonly>
+                                                <input type="text" id="productCode" name="productCode" class="form-control" 
+                                                       value="${product.productCode}" readonly>
                                             </div>
-
                                             <div class="form-group">
-                                                <label class="form-label" for="price">Giá bán (VNĐ)</label>
+                                                <label class="form-label" for="price">Giá bán (VNĐ) (*)</label>
                                                 <input type="text" id="price" name="price" class="form-control"
-                                                       value="<fmt:formatNumber value='${product.price}' type='number' groupingUsed='false' />" 
-                                                       inputmode="numeric" maxlength="20" required>
+                                                       value="<fmt:formatNumber value='${product.price}' type='number' groupingUsed='false' />"
+                                                       inputmode="numeric" 
+                                                       pattern="[0-9,.]*"
+                                                       min="0"
+                                                       required
+                                                       title="Vui lòng chỉ nhập số không âm.">
                                             </div>
-
                                             <div class="form-group">
-                                                <label class="form-label" for="origin">Xuất xứ</label>
-                                                <input type="text" id="origin" name="origin" class="form-control" value="${product.origin}">
+                                                <label class="form-label" for="origin">Xuất xứ (*)</label>
+                                                <input type="text" id="origin" name="origin" class="form-control" 
+                                                       value="${product.origin}" required title="Vui lòng nhập xuất xứ.">
                                             </div>
-                                            
-                                            <div class="form-group">
-                                                <label class="form-label" for="createdAt">Ngày tạo</label>
-                                                <%-- Sửa: Dùng fn:replace để đổi định dạng ngày cho đúng với input datetime-local --%>
-                                                <input type="datetime-local" id="createdAt" name="createdAt" class="form-control"
-                                                       value="${fn:replace(product.createdAt, ' ', 'T')}" readonly>
-                                            </div>
-
-                                            <div class="form-group">
-                                                <label class="form-label" for="updatedAt">Ngày cập nhật</label>
-                                                <%-- Sửa: Dùng fn:replace để đổi định dạng ngày cho đúng với input datetime-local --%>
-                                                <input type="datetime-local" id="updatedAt" name="updatedAt" class="form-control"
-                                                       value="${fn:replace(product.updatedAt, ' ', 'T')}" readonly>
+                                            <div class="form-group full-width">
+                                                <label class="form-label" for="description">Mô tả</label>
+                                                <textarea id="description" name="description" class="form-control" rows="4" 
+                                                          placeholder="Nhập mô tả chi tiết cho sản phẩm...">${product.description}</textarea>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="form-group full-width">
-                                        <label class="form-label" for="description">Mô tả</label>
-                                        <textarea id="description" name="description" class="form-control" rows="3">${product.description}</textarea>
-                                    </div>
-                                    
-                                    <%-- Thêm input cho isDeleted để gửi về server --%>
-                                    <input type="hidden" name="isDeleted" value="${product.isDeleted}">
+                                    </fieldset>
                                 </div>
-                            </c:if>
-                        </form>                    
+                            </div>
+
+                            <div class="form-actions">
+                                <a href="product?action=list" class="btn-form"><i data-feather="x"></i><span>Hủy</span></a>
+                                <button type="submit" class="btn-form primary"><i data-feather="save"></i><span>Lưu thay đổi</span></button>
+                            </div>
+                        </form>
                     </div>
-
-                    <c:if test="${empty product}">
-                        <p>Không tìm thấy sản phẩm để chỉnh sửa.</p>
-                    </c:if>
-
-                </div>
+                </section>
             </main>
         </div>
 
         <script>
-            // Kích hoạt feather icons
             feather.replace();
 
             // Script để xem trước ảnh khi tải lên
-            document.getElementById('imageUpload').onchange = function (evt) {
-                var reader = new FileReader();
-                reader.onload = function (e) {
-                    document.getElementById('productImagePreview').src = e.target.result;
-                };
-                reader.readAsDataURL(this.files[0]);
+            const imageUpload = document.getElementById('productImageUpload');
+            const imagePreview = document.getElementById('productImagePreview');
+            const imageIcon = document.getElementById('imageIcon');
+
+            imageUpload.onchange = function (evt) {
+                const [file] = imageUpload.files;
+                if (file) {
+                    imagePreview.src = URL.createObjectURL(file);
+                    imagePreview.style.display = 'block';
+                    imageIcon.style.display = 'none';
+                }
             };
+
+            // Hiển thị ảnh hoặc icon lúc tải trang
+            if (imagePreview.getAttribute('src') && imagePreview.getAttribute('src') !== '${pageContext.request.contextPath}/image/na.jpg') {
+                imagePreview.style.display = 'block';
+                imageIcon.style.display = 'none';
+            } else {
+                imagePreview.style.display = 'none';
+                imageIcon.style.display = 'block';
+            }
         </script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>

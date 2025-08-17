@@ -118,6 +118,7 @@ public class AuthenticationController extends HttpServlet {
             HttpSession session = request.getSession(true);
             session.setAttribute("user", user);
             session.setAttribute("userRole", user.getRoleName());
+            session.setAttribute("userId", user.getId());
             if (user.isRequireChangePassword() == 1) {
                 session.setAttribute("email", email);
                 response.sendRedirect("resetPassword.jsp");

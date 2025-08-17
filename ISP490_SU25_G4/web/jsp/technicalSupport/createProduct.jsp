@@ -30,7 +30,6 @@
     </head>
     <body>
         <div class="app-container">
-            <%-- Sửa: Dùng đường dẫn gốc để ổn định hơn --%>
             <jsp:include page="/mainMenu.jsp"/>
             <main class="main-content">
                 <header class="main-top-bar">
@@ -41,7 +40,6 @@
                     </button>
                 </header>
 
-                <%-- Cải tiến: Hiển thị danh sách lỗi rõ ràng hơn --%>
                 <c:if test="${not empty errors}">
                     <div class="alert alert-warning alert-dismissible" style="margin: 0 24px 20px;">
                         <button type="button" class="close" data-dismiss="alert">&times;</button>
@@ -56,10 +54,7 @@
 
                 <section class="content-body">
                     <div class="form-container">
-                        <%-- Sửa: action trỏ đến controller hợp nhất với action tương ứng --%>
                         <form action="product?action=processCreate" method="POST" class="product-form" enctype="multipart/form-data">
-
-                            <%-- Bỏ: Input 'service' không còn cần thiết --%>
 
                             <div class="form-main-layout">
                                 <div class="product-image-section">
@@ -77,37 +72,36 @@
                                         <div class="details-grid">
 
                                             <div class="form-group">
-                                                <label class="form-label" for="productName">Tên sản phẩm</label>
-                                                <%-- Sửa: value="${name}" để giữ lại giá trị đã nhập khi có lỗi --%>
+                                                <label class="form-label" for="productName">Tên sản phẩm (*)</label>
                                                 <input type="text" id="productName" name="name" class="form-control"
-                                                       value="${name}" required>
+                                                       value="${name}" required title="Vui lòng nhập tên sản phẩm.">
                                             </div>
 
                                             <div class="form-group">
-                                                <label class="form-label" for="productCode">Mã sản phẩm</label>
-                                                <%-- Sửa: value="${productCode}" để giữ lại giá trị đã nhập khi có lỗi --%>
+                                                <label class="form-label" for="productCode">Mã sản phẩm (*)</label>
                                                 <input type="text" id="productCode" name="productCode" class="form-control"
-                                                       value="${productCode}" required>
+                                                       value="${productCode}" required title="Vui lòng nhập mã sản phẩm.">
                                             </div>
 
                                             <div class="form-group">
-                                                <label class="form-label" for="price">Giá bán (VNĐ)</label>
-                                                <%-- Sửa: value="${price}" để giữ lại giá trị đã nhập khi có lỗi --%>
+                                                <label class="form-label" for="price">Giá bán (VNĐ) (*)</label>
                                                 <input type="text" id="price" name="price" class="form-control"
                                                        value="${price}"
-                                                       inputmode="numeric" maxlength="15" required>
+                                                       inputmode="numeric" 
+                                                       pattern="[0-9,.]*"
+                                                       min="0"
+                                                       required
+                                                       title="Vui lòng chỉ nhập số không âm.">
                                             </div>
 
                                             <div class="form-group">
-                                                <label class="form-label" for="origin">Xuất xứ</label>
-                                                <%-- Sửa: value="${origin}" để giữ lại giá trị đã nhập khi có lỗi --%>
+                                                <label class="form-label" for="origin">Xuất xứ (*)</label>
                                                 <input type="text" id="origin" name="origin" class="form-control"
-                                                       value="${origin}" >
+                                                       value="${origin}" required title="Vui lòng nhập xuất xứ.">
                                             </div>
 
                                             <div class="form-group full-width">
                                                 <label class="form-label" for="description">Mô tả</label>
-                                                <%-- Sửa: Dùng thẻ c:out để hiển thị lại mô tả đã nhập khi có lỗi --%>
                                                 <textarea id="description" name="description" class="form-control" rows="4"
                                                           placeholder="Nhập mô tả chi tiết cho sản phẩm..."><c:out value="${description}"/></textarea>
                                             </div>
@@ -117,7 +111,6 @@
                             </div>
 
                             <div class="form-actions">
-                                <%-- Sửa: Nút Hủy trỏ về trang danh sách sản phẩm --%>
                                 <a href="product?action=list" class="btn-form"><i data-feather="x"></i><span>Hủy</span></a>
                                 <button type="submit" class="btn-form primary"><i data-feather="save"></i><span>Lưu sản phẩm</span></button>
                             </div>

@@ -39,7 +39,7 @@ import vn.edu.fpt.dao.UserDAO;
         maxFileSize = 1024 * 1024 * 10, // 10MB
         maxRequestSize = 1024 * 1024 * 50 // 50MB
 )
-public class CustomerController extends HttpServlet {
+public class EnterpriseController extends HttpServlet {
 
     private static final String UPLOAD_DIR = "uploads" + File.separator + "avatars";
     private static final int PAGE_SIZE = 10;
@@ -255,141 +255,131 @@ public class CustomerController extends HttpServlet {
         request.getRequestDispatcher("/jsp/sales/createCustomer.jsp").forward(request, response);
     }
 
+    // File: src/main/java/vn/edu/fpt/controller/CustomerController.java
     private void handleCreateCustomer(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         Connection conn = null;
         String customerName = request.getParameter("customerName");
 
         try {
-
             EnterpriseDAO enterpriseDAO = new EnterpriseDAO();
 
-            if (enterpriseDAO.isNameExists(customerName, null)) {
-                request.setAttribute("errorMessage", "Khách hàng với tên '" + customerName + "' đã tồn tại. Vui lòng chọn một tên khác.");
-                // Chuyển tiếp lại form tạo mới để hiển thị lỗi
+            //--- KHỐI VALIDATE DỮ LIỆU ĐẦU VÀO (ĐẦY ĐỦ) ---
+            // 1. Kiểm tra các trường văn bản (text) và sự tồn tại
+            if (customerName == null || customerName.trim().isEmpty()) {
+                request.setAttribute("errorMessage", "Tên doanh nghiệp không được để trống.");
                 showCreateForm(request, response);
-                return; // Dừng xử lý
+                return;
+            }
+            if (enterpriseDAO.isNameExists(customerName, null)) {
+                request.setAttribute("errorMessage", "Tên doanh nghiệp '" + customerName + "' đã tồn tại.");
+                showCreateForm(request, response);
+                return;
+            }
+            String hotline = request.getParameter("hotline");
+            if (hotline == null || hotline.trim().isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng nhập Hotline của doanh nghiệp.");
+                showCreateForm(request, response);
+                return;
+            }
+            if (request.getParameter("businessEmail") == null || request.getParameter("businessEmail").trim().isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng nhập Email của doanh nghiệp.");
+                showCreateForm(request, response);
+                return;
+            }
+            if (request.getParameter("streetAddress") == null || request.getParameter("streetAddress").trim().isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng nhập địa chỉ cụ thể (số nhà, tên đường).");
+                showCreateForm(request, response);
+                return;
             }
 
-            // === PHẦN 1: XỬ LÝ UPLOAD FILE ẢNH ===
-            String avatarDbPath = null; // Đường dẫn để lưu vào DB
-            Part filePart = request.getPart("avatar"); // Lấy file từ form
+            // 2. Kiểm tra các trường lựa chọn (select)
+            if (request.getParameter("province") == null || request.getParameter("province").isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng chọn Tỉnh/Thành phố.");
+                showCreateForm(request, response);
+                return;
+            }
+            if (request.getParameter("district") == null || request.getParameter("district").isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng chọn Quận/Huyện.");
+                showCreateForm(request, response);
+                return;
+            }
+            if (request.getParameter("ward") == null || request.getParameter("ward").isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng chọn Phường/Xã.");
+                showCreateForm(request, response);
+                return;
+            }
+            if (request.getParameter("employeeId") == null || request.getParameter("employeeId").isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng chọn nhân viên phụ trách.");
+                showCreateForm(request, response);
+                return;
+            }
+            if (request.getParameter("customerGroup") == null || request.getParameter("customerGroup").isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng chọn nhóm khách hàng.");
+                showCreateForm(request, response);
+                return;
+            }
 
-            // Kiểm tra xem người dùng có thực sự tải file lên không
+            // 3. Kiểm tra định dạng
+            if (!isFormatValidVietnamesePhoneNumber(hotline)) {
+                request.setAttribute("errorMessage", "Hotline không đúng định dạng của Việt Nam.");
+                showCreateForm(request, response);
+                return;
+            }
+            String taxCode = request.getParameter("taxCode");
+            if (taxCode != null && !taxCode.trim().isEmpty() && !isFormatValidVietnameseTaxCode(taxCode)) {
+                request.setAttribute("errorMessage", "Mã số thuế không đúng định dạng (10 hoặc 13 số).");
+                showCreateForm(request, response);
+                return;
+            }
+            String phone = request.getParameter("phone");
+            if (phone != null && !phone.trim().isEmpty() && !isFormatValidVietnamesePhoneNumber(phone)) {
+                request.setAttribute("errorMessage", "Số điện thoại người liên hệ không đúng định dạng.");
+                showCreateForm(request, response);
+                return;
+            }
+
+            //--- KẾT THÚC VALIDATE ---
+            //--- XỬ LÝ UPLOAD AVATAR ---
+            String avatarDbPath = null;
+            Part filePart = request.getPart("avatar");
             if (filePart != null && filePart.getSize() > 0 && filePart.getSubmittedFileName() != null && !filePart.getSubmittedFileName().isEmpty()) {
                 String originalFileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
-                // Tạo tên file duy nhất để tránh ghi đè
                 String uniqueFileName = UUID.randomUUID().toString() + "_" + originalFileName;
-
-                // Lấy đường dẫn tuyệt đối đến thư mục gốc của ứng dụng web
                 String applicationPath = request.getServletContext().getRealPath("");
-                // Tạo đường dẫn đầy đủ đến thư mục lưu trữ
                 String uploadFilePath = applicationPath + File.separator + UPLOAD_DIR;
-
-                // Tạo thư mục nếu nó chưa tồn tại
-                File fileSaveDir = new File(uploadFilePath);
-                if (!fileSaveDir.exists()) {
-                    fileSaveDir.mkdirs();
-                }
-
-                // Ghi file vào thư mục
+                new File(uploadFilePath).mkdirs();
                 filePart.write(uploadFilePath + File.separator + uniqueFileName);
-
-                // Tạo đường dẫn tương đối để lưu vào DB (dùng dấu / cho web path)
                 avatarDbPath = "uploads/avatars/" + uniqueFileName;
             }
 
-            // === PHẦN 2: LẤY VÀ VALIDATE CÁC THAM SỐ TỪ FORM ===
-            // Lấy các tham số mới bắt buộc
-            String hotline = request.getParameter("hotline");
+            //--- LẤY DỮ LIỆU VÀ LƯU VÀO DATABASE ---
             String businessEmail = request.getParameter("businessEmail");
-
-            if (hotline == null || hotline.trim().isEmpty()) {
-                // ĐÃ SỬA: Cập nhật thông báo lỗi
-                request.setAttribute("errorMessage", "Vui lòng nhập Hotline của doanh nghiệp.");
-                doGet(request, response);
-                return;
-            }
-            if (businessEmail == null || businessEmail.trim().isEmpty()) {
-                request.setAttribute("errorMessage", "Vui lòng nhập Email của doanh nghiệp.");
-                doGet(request, response);
-                return;
-            }
-
-            String provinceIdStr = request.getParameter("province");
-            if (provinceIdStr == null || provinceIdStr.isEmpty()) {
-                request.setAttribute("errorMessage", "Vui lòng chọn Tỉnh/Thành phố.");
-                doGet(request, response);
-                return;
-            }
-
-            String districtIdStr = request.getParameter("district");
-            if (districtIdStr == null || districtIdStr.isEmpty()) {
-                request.setAttribute("errorMessage", "Vui lòng chọn Quận/Huyện.");
-                doGet(request, response);
-                return;
-            }
-
-            String wardIdStr = request.getParameter("ward");
-            if (wardIdStr == null || wardIdStr.isEmpty()) {
-                request.setAttribute("errorMessage", "Vui lòng chọn Phường/Xã.");
-                doGet(request, response);
-                return;
-            }
-
             String streetAddress = request.getParameter("streetAddress");
-            if (streetAddress == null || streetAddress.trim().isEmpty()) {
-                request.setAttribute("errorMessage", "Vui lòng nhập địa chỉ cụ thể.");
-                doGet(request, response);
-                return;
-            }
-
             String fullName = request.getParameter("fullName");
             String position = request.getParameter("position");
-            String phone = request.getParameter("phone");
             String email = request.getParameter("email");
-            String taxCode = request.getParameter("taxCode");
             String bankNumber = request.getParameter("bankNumber");
-
             int provinceId = Integer.parseInt(request.getParameter("province"));
             int districtId = Integer.parseInt(request.getParameter("district"));
             int wardId = Integer.parseInt(request.getParameter("ward"));
+            int employeeId = Integer.parseInt(request.getParameter("employeeId"));
+            int customerGroupId = Integer.parseInt(request.getParameter("customerGroup"));
 
-            String employeeIdStr = request.getParameter("employeeId");
-
-            if (employeeIdStr == null || employeeIdStr.isEmpty()) {
-                request.setAttribute("errorMessage", "Vui lòng chọn nhân viên phụ trách.");
-                doGet(request, response);
-                return;
-            }
-            int employeeId = Integer.parseInt(employeeIdStr);
-
-            String customerGroupIdStr = request.getParameter("customerGroup");
-            if (customerGroupIdStr == null || customerGroupIdStr.isEmpty()) {
-                request.setAttribute("errorMessage", "Vui lòng chọn nhóm khách hàng.");
-                doGet(request, response);
-                return;
-            }
-            int customerGroupId = Integer.parseInt(customerGroupIdStr);
-
-            // Start a database transaction
             conn = new DBContext().getConnection();
             conn.setAutoCommit(false);
 
-            // 1. Insert address and get the new ID
             int newAddressId = enterpriseDAO.insertAddress(conn, streetAddress, wardId, districtId, provinceId);
-            // 2. Insert enterprise and get the new ID
             int newEnterpriseId = enterpriseDAO.insertEnterprise(conn, customerName, businessEmail, hotline, customerGroupId, newAddressId, taxCode, bankNumber, avatarDbPath);
-            // Chỉ thêm người liên hệ nếu có thông tin được nhập
             if (fullName != null && !fullName.trim().isEmpty()) {
                 enterpriseDAO.insertEnterpriseContact(conn, newEnterpriseId, fullName, position, phone, email);
             }
-            // 4. Assign the responsible employee
             enterpriseDAO.insertAssignment(conn, newEnterpriseId, employeeId, "account_manager");
 
             conn.commit();
             request.setAttribute("successMessage", "Đã thêm thành công khách hàng '" + customerName + "'!");
             request.setAttribute("redirectUrl", request.getContextPath() + "/customer/list");
             showCreateForm(request, response);
+
         } catch (Exception e) {
             e.printStackTrace();
             if (conn != null) try {
@@ -450,96 +440,59 @@ public class CustomerController extends HttpServlet {
         request.getRequestDispatcher("/jsp/sales/editCustomerDetail.jsp").forward(request, response);
     }
 
+    // File: src/main/java/vn/edu/fpt/controller/CustomerController.java
     private void handleEditCustomer(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Connection conn = null;
         int enterpriseId = Integer.parseInt(request.getParameter("enterpriseId"));
         String customerName = request.getParameter("customerName");
-        Connection conn = null;
 
         try {
             EnterpriseDAO enterpriseDAO = new EnterpriseDAO();
 
-            if (enterpriseDAO.isNameExists(customerName, enterpriseId)) {
-                request.setAttribute("errorMessage", "Tên khách hàng '" + customerName + "' đã được sử dụng bởi một khách hàng khác. Vui lòng chọn một tên khác.");
-                // Tải lại form chỉnh sửa với thông báo lỗi
-                showEditForm(request, response);
-                return; // Dừng xử lý
-            }
-
-            int addressId = Integer.parseInt(request.getParameter("addressId"));
+            //--- KHỐI VALIDATE DỮ LIỆU ĐẦU VÀO (ĐẦY ĐỦ) ---
+            // 1. Kiểm tra các trường văn bản và sự tồn tại
             if (customerName == null || customerName.trim().isEmpty()) {
                 request.setAttribute("errorMessage", "Tên doanh nghiệp không được để trống.");
                 showEditForm(request, response);
                 return;
             }
-
+            if (enterpriseDAO.isNameExists(customerName, enterpriseId)) {
+                request.setAttribute("errorMessage", "Tên doanh nghiệp '" + customerName + "' đã được sử dụng.");
+                showEditForm(request, response);
+                return;
+            }
             String hotline = request.getParameter("hotline");
             if (hotline == null || hotline.trim().isEmpty()) {
-                request.setAttribute("errorMessage", "Vui lòng nhập Hotline của doanh nghiệp.");
+                request.setAttribute("errorMessage", "Vui lòng không để trống Hotline.");
+                showEditForm(request, response);
+                return;
+            }
+            // ... Thêm các kiểm tra tương tự cho businessEmail, streetAddress ...
+
+            // 2. Kiểm tra định dạng
+            if (!isFormatValidVietnamesePhoneNumber(hotline)) {
+                request.setAttribute("errorMessage", "Hotline không đúng định dạng của Việt Nam.");
+                showEditForm(request, response);
+                return;
+            }
+            String taxCode = request.getParameter("taxCode");
+            if (taxCode != null && !taxCode.trim().isEmpty() && !taxCode.equalsIgnoreCase("N/A") && !isFormatValidVietnameseTaxCode(taxCode)) {
+                request.setAttribute("errorMessage", "Mã số thuế không đúng định dạng.");
+                showEditForm(request, response);
+                return;
+            }
+            String phone = request.getParameter("phone");
+            if (phone != null && !phone.trim().isEmpty() && !phone.equalsIgnoreCase("N/A") && !isFormatValidVietnamesePhoneNumber(phone)) {
+                request.setAttribute("errorMessage", "Số điện thoại người liên hệ không đúng định dạng.");
                 showEditForm(request, response);
                 return;
             }
 
-            String businessEmail = request.getParameter("businessEmail");
-            if (businessEmail == null || businessEmail.trim().isEmpty()) {
-                request.setAttribute("errorMessage", "Vui lòng nhập Email của doanh nghiệp.");
-                showEditForm(request, response);
-                return;
-            }
-
-            String employeeIdStr = request.getParameter("employeeId");
-            if (employeeIdStr == null || employeeIdStr.isEmpty()) {
-                request.setAttribute("errorMessage", "Vui lòng chọn nhân viên phụ trách.");
-                showEditForm(request, response);
-                return;
-            }
-
-            String customerGroupIdStr = request.getParameter("customerGroup");
-            if (customerGroupIdStr == null || customerGroupIdStr.isEmpty()) {
-                request.setAttribute("errorMessage", "Vui lòng chọn nhóm khách hàng.");
-                doGet(request, response);
-                return;
-            }
-
-            String provinceIdStr = request.getParameter("province");
-            if (provinceIdStr == null || provinceIdStr.isEmpty()) {
-                request.setAttribute("errorMessage", "Vui lòng chọn Tỉnh/Thành phố.");
-                doGet(request, response);
-                return;
-            }
-
-            String districtIdStr = request.getParameter("district");
-            if (districtIdStr == null || districtIdStr.isEmpty()) {
-                request.setAttribute("errorMessage", "Vui lòng chọn Quận/Huyện.");
-                doGet(request, response);
-                return;
-            }
-
-            String wardIdStr = request.getParameter("ward");
-            if (wardIdStr == null || wardIdStr.isEmpty()) {
-                request.setAttribute("errorMessage", "Vui lòng chọn Phường/Xã.");
-                doGet(request, response);
-                return;
-            }
-
-            String streetAddress = request.getParameter("streetAddress");
-            if (streetAddress == null || streetAddress.trim().isEmpty()) {
-                request.setAttribute("errorMessage", "Vui lòng nhập địa chỉ cụ thể.");
-                doGet(request, response);
-                return;
-            }
-
-            int employeeId = Integer.parseInt(employeeIdStr);
-            int provinceId = Integer.parseInt(provinceIdStr);
-            int districtId = Integer.parseInt(districtIdStr);
-            int wardId = Integer.parseInt(wardIdStr);
-
-            conn = new DBContext().getConnection();
-            conn.setAutoCommit(false);
-
+            //--- KẾT THÚC VALIDATE ---
+            //--- XỬ LÝ UPLOAD AVATAR MỚI (NẾU CÓ) ---
             String avatarDbPath = request.getParameter("existingAvatarUrl");
             Part filePart = request.getPart("avatar");
             if (filePart != null && filePart.getSize() > 0 && filePart.getSubmittedFileName() != null && !filePart.getSubmittedFileName().isEmpty()) {
-                // Logic upload file...
                 String originalFileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
                 String uniqueFileName = UUID.randomUUID().toString() + "_" + originalFileName;
                 String applicationPath = request.getServletContext().getRealPath("");
@@ -549,68 +502,48 @@ public class CustomerController extends HttpServlet {
                 avatarDbPath = "uploads/avatars/" + uniqueFileName;
             }
 
-            // *** THAY ĐỔI: Lấy các trường không bắt buộc và gán "N/A" nếu trống ***
-            String taxCode = request.getParameter("taxCode");
-            if (taxCode == null || taxCode.trim().isEmpty()) {
-                taxCode = "N/A";
-            }
-
-            String bankNumber = request.getParameter("bankNumber");
-            if (bankNumber == null || bankNumber.trim().isEmpty()) {
-                bankNumber = "N/A";
-            }
-
-            String fullName = request.getParameter("fullName");
-            if (fullName == null || fullName.trim().isEmpty()) {
-                fullName = "N/A";
-            }
-
-            String position = request.getParameter("position");
-            if (position == null || position.trim().isEmpty()) {
-                position = "N/A";
-            }
-
-            String phone = request.getParameter("phone");
-            if (phone == null || phone.trim().isEmpty()) {
-                phone = "N/A";
-            }
-
-            String email = request.getParameter("email");
-            if (email == null || email.trim().isEmpty()) {
-                email = "N/A";
-            }
+            //--- LẤY DỮ LIỆU VÀ CẬP NHẬT VÀO DATABASE ---
+            int addressId = Integer.parseInt(request.getParameter("addressId"));
+            int employeeId = Integer.parseInt(request.getParameter("employeeId"));
+            int provinceId = Integer.parseInt(request.getParameter("province"));
+            int districtId = Integer.parseInt(request.getParameter("district"));
+            int wardId = Integer.parseInt(request.getParameter("ward"));
+            String streetAddress = request.getParameter("streetAddress");
 
             Enterprise enterpriseToUpdate = new Enterprise();
             enterpriseToUpdate.setId(enterpriseId);
-            enterpriseToUpdate.setName(request.getParameter("customerName"));
+            enterpriseToUpdate.setName(customerName);
             enterpriseToUpdate.setBusinessEmail(request.getParameter("businessEmail"));
-            // ĐÃ SỬA: Gọi đúng phương thức setHotline() thay vì setFax()
-            enterpriseToUpdate.setHotline(request.getParameter("hotline"));
-            enterpriseToUpdate.setTaxCode(request.getParameter("taxCode"));
+            enterpriseToUpdate.setHotline(hotline);
+            enterpriseToUpdate.setTaxCode(taxCode);
             enterpriseToUpdate.setBankNumber(request.getParameter("bankNumber"));
             enterpriseToUpdate.setCustomerTypeId(Integer.parseInt(request.getParameter("customerGroup")));
             enterpriseToUpdate.setAvatarUrl(avatarDbPath);
 
-            // Dòng này được gọi ở dưới rồi, gọi 2 lần sẽ thừa
-            // new EnterpriseDAO().updateEnterprise(conn, enterpriseToUpdate);
+            String fullName = request.getParameter("fullName");
+            String position = request.getParameter("position");
+            String email = request.getParameter("email");
+
+            conn = new DBContext().getConnection();
+            conn.setAutoCommit(false);
+
+            enterpriseDAO.updateEnterprise(conn, enterpriseToUpdate);
+            enterpriseDAO.updateAddress(conn, addressId, streetAddress, wardId, districtId, provinceId);
             if (fullName != null && !fullName.trim().isEmpty()) {
-                if (new EnterpriseDAO().primaryContactExists(conn, enterpriseId)) {
-                    new EnterpriseDAO().updatePrimaryContact(conn, enterpriseId, fullName, position, phone, email);
+                if (enterpriseDAO.primaryContactExists(conn, enterpriseId)) {
+                    enterpriseDAO.updatePrimaryContact(conn, enterpriseId, fullName, position, phone, email);
                 } else {
-                    new EnterpriseDAO().insertEnterpriseContact(conn, enterpriseId, fullName, position, phone, email);
+                    enterpriseDAO.insertEnterpriseContact(conn, enterpriseId, fullName, position, phone, email);
                 }
             }
-
-            new EnterpriseDAO().updateEnterprise(conn, enterpriseToUpdate);
-            new EnterpriseDAO().updateAddress(conn, addressId, streetAddress, wardId, districtId, provinceId);
-            // Dòng này đã được xử lý trong logic if/else ở trên
-            // new EnterpriseDAO().updatePrimaryContact(conn, enterpriseId, fullName, position, phone, email); 
-            new EnterpriseDAO().updateMainAssignment(conn, enterpriseId, employeeId);
+            enterpriseDAO.updateMainAssignment(conn, enterpriseId, employeeId);
 
             conn.commit();
+
             HttpSession session = request.getSession();
             session.setAttribute("successMessage", "Đã cập nhật thông tin khách hàng '" + customerName + "' thành công!");
             response.sendRedirect(request.getContextPath() + "/customer/view?id=" + enterpriseId);
+
         } catch (Exception e) {
             e.printStackTrace();
             if (conn != null) try {
@@ -722,6 +655,47 @@ public class CustomerController extends HttpServlet {
         return action.equals("/getDistricts") || action.equals("/getWards") || action.equals("/searchSuggestions");
     }
 
+    // File: src/main/java/vn/edu/fpt/controller/CustomerController.java
+// ... (bên trong class CustomerController)
+    /**
+     * Kiểm tra định dạng Mã số thuế (MST) của Việt Nam. MST hợp lệ là một chuỗi
+     * 10 chữ số (cho doanh nghiệp) hoặc 13 chữ số theo định dạng XXXXXXXXXX-XXX
+     * (cho chi nhánh/đơn vị phụ thuộc).
+     *
+     * @param taxCode Chuỗi mã số thuế cần kiểm tra.
+     * @return {@code true} nếu taxCode có định dạng hợp lệ, ngược lại
+     * {@code false}.
+     */
+    private boolean isFormatValidVietnameseTaxCode(String taxCode) {
+        if (taxCode == null || taxCode.trim().isEmpty()) {
+            return false; // Không kiểm tra chuỗi rỗng ở đây
+        }
+        // Regex: 10 chữ số HOẶC (10 chữ số, dấu gạch ngang, 3 chữ số)
+        return taxCode.matches("^(\\d{10}|\\d{10}-\\d{3})$");
+    }
+
+    /**
+     * Kiểm tra định dạng số điện thoại/hotline của Việt Nam. Các định dạng hợp
+     * lệ bao gồm:
+     * <ul>
+     * <li>Số di động: 10 chữ số, bắt đầu bằng 03, 05, 07, 08, 09.</li>
+     * <li>Số máy bàn: 10 chữ số, bắt đầu bằng 02.</li>
+     * <li>Hotline tổng đài: Bắt đầu bằng 1800 hoặc 1900, theo sau là 4-6 chữ
+     * số.</li>
+     * </ul>
+     *
+     * @param phoneNumber Chuỗi số điện thoại cần kiểm tra.
+     * @return {@code true} nếu phoneNumber có định dạng hợp lệ, ngược lại
+     * {@code false}.
+     */
+    private boolean isFormatValidVietnamesePhoneNumber(String phoneNumber) {
+        if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
+            return false; // Không kiểm tra chuỗi rỗng ở đây
+        }
+        // Regex: (Số di động 10 số) HOẶC (Số máy bàn 10 số) HOẶC (Hotline 1800/1900)
+        return phoneNumber.matches("^(0(2\\d{8}|[35789]\\d{8})|(1800|1900)\\d{4,6})$");
+    }
+
     /**
      * Kiểm tra xem người dùng hiện tại có quyền Ghi (Thêm, Sửa, Xóa) hay không.
      *
@@ -737,14 +711,6 @@ public class CustomerController extends HttpServlet {
         }
         User user = (User) session.getAttribute("user");
         String roleName = user.getRoleName();
-
-        // IN RA ĐỂ KIỂM TRA GIÁ TRỊ THỰC TẾ
-        System.out.println("-------------------------------------------");
-        System.out.println("DEBUG PERMISSION: Kiem tra quyen...");
-        System.out.println("Role name lay tu session: '" + roleName + "'"); // Dùng '' để dễ thấy khoảng trắng
-        System.out.println("So sanh voi 'Admin': " + "Admin".equalsIgnoreCase(roleName));
-        System.out.println("So sanh voi 'Kinh doanh': " + "Kinh doanh".equalsIgnoreCase(roleName));
-        System.out.println("-------------------------------------------");
 
         // Thêm .trim() để code an toàn hơn, tự động xóa khoảng trắng thừa
         if (roleName != null) {

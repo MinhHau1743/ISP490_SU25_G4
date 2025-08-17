@@ -1,6 +1,6 @@
 <%--
-    Document   : listFeedback.jsp
-    Description: Trang danh sách phản hồi, đã được thêm header mới.
+    Document    : listFeedback.jsp
+    Description : Trang danh sách phản hồi, hiển thị cho cả Hợp đồng và Yêu cầu Kỹ thuật.
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
@@ -16,20 +16,18 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
+        <script src="https://unpkg.com/feather-icons"></script>
+        
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
-        <%-- **THÊM MỚI:** Link đến file CSS của header --%>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/listFeedback.css">
-
     </head>
     <body>
         <div class="app-container">
             <jsp:include page="/mainMenu.jsp"/>
             <main class="main-content">
 
-                <%-- **THAY ĐỔI:** Thêm header mới vào đây --%>
                 <jsp:include page="/header.jsp">
                     <jsp:param name="pageTitle" value="Phản hồi Khách hàng"/>
                 </jsp:include>
@@ -46,7 +44,7 @@
                             <input type="hidden" name="action" value="list">
                             <div class="search-box">
                                 <i data-feather="search" class="feather-search"></i>
-                                <input type="text" name="query" placeholder="Tìm theo khách hàng, mã yêu cầu..." value="${param.query}">
+                                <input type="text" name="query" placeholder="Tìm theo khách hàng, mã YC, mã HĐ..." value="${param.query}">
                             </div>
                             <div class="filter-group">
                                 <i data-feather="filter"></i>
@@ -60,7 +58,6 @@
                             <div class="toolbar-actions">
                                 <button type="submit" class="btn btn-primary"><i data-feather="search"></i> Lọc / Tìm</button>
                                 <a href="${pageContext.request.contextPath}/feedback?action=list" class="btn btn-secondary">
-
                                     <i data-feather="refresh-cw"></i> Reset
                                 </a>
                             </div>
@@ -71,12 +68,11 @@
                             </c:if>
                             <c:forEach var="fb" items="${feedbackList}">
                                 <div class="feedback-card 
-                                     <c:choose>
-                                         <c:when test='${fb.rating >= 4}'>card-good</c:when>
-                                         <c:when test='${fb.rating == 3}'>card-normal</c:when>
-                                         <c:otherwise>card-bad</c:otherwise>
-                                     </c:choose>
-                                     ">
+                                    <c:choose>
+                                        <c:when test='${fb.rating >= 4}'>card-good</c:when>
+                                        <c:when test='${fb.rating == 3}'>card-normal</c:when>
+                                        <c:otherwise>card-bad</c:otherwise>
+                                    </c:choose>">
                                     <div class="card-header">
                                         <a href="${pageContext.request.contextPath}/feedback?action=view&id=${fb.id}" class="customer-link">${fb.enterpriseName}</a>
                                         <c:choose>
@@ -86,12 +82,24 @@
                                         </c:choose>
                                     </div>
                                     <div class="card-body">
-                                        <div class="card-info-row">
-                                            <i data-feather="tag"></i>
-                                            <span>${fb.requestCode}</span>
-                                        </div>
+
+                                        <%-- HIỂN THỊ ĐỘNG MÃ YÊU CẦU HOẶC MÃ HỢP ĐỒNG --%>
+                                        <c:choose>
+                                            <c:when test="${not empty fb.requestCode}">
+                                                <div class="card-info-row">
+                                                    <i data-feather="tag"></i>
+                                                    <span>${fb.requestCode}</span>
+                                                </div>
+                                            </c:when>
+                                            <c:when test="${not empty fb.contractCode}">
+                                                <div class="card-info-row">
+                                                    <i data-feather="file-text"></i>
+                                                    <span>${fb.contractCode}</span>
+                                                </div>
+                                            </c:when>
+                                        </c:choose>
+
                                         <div class="card-info-row rating-cell">
-                                            <i data-feather="star"></i>
                                             <c:forEach begin="1" end="5" var="i">
                                                 <i data-feather="star" class="${i <= fb.rating ? 'star-filled' : 'star-empty'}"></i>
                                             </c:forEach>
@@ -99,7 +107,7 @@
                                         <c:if test="${not empty fb.comment}">
                                             <div class="card-info-row">
                                                 <i data-feather="message-circle"></i>
-                                                <span style="font-style: italic;">"${fb.comment}"</span>
+                                                <span style="font-style: italic;">"${fn:substring(fb.comment, 0, 100)}${fn:length(fb.comment) > 100 ? '...' : ''}"</span>
                                             </div>
                                         </c:if>
                                         <div class="card-info-row">
@@ -120,7 +128,6 @@
                 feather.replace({'stroke-width': 1.5});
             });
         </script>
-        <%-- **THÊM MỚI:** Script cho menu hoạt động --%>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>
