@@ -102,8 +102,9 @@
                                 <%-- Nếu chưa có, chỉ hiện nút khi ticket đã xong --%>
                                 <c:otherwise>
                                     <c:if test="${ticket.status == 'resolved' || ticket.status == 'closed'}">
-                                        <a href="${pageContext.request.contextPath}/feedback?action=create&technicalRequestId=${ticket.id}" class="btn btn-teal">
-                                            <i data-feather="star"></i>Gửi Phản Hồi
+                                        <%-- Nút này giờ sẽ gọi action gửi mail mời khảo sát --%>
+                                        <a href="${pageContext.request.contextPath}/ticket?action=sendSurvey&id=${ticket.id}" class="btn btn-teal">
+                                            <i data-feather="mail"></i>Gửi Khảo Sát
                                         </a>
                                     </c:if>
                                 </c:otherwise>

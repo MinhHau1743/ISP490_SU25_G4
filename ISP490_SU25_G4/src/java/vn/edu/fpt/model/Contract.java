@@ -38,7 +38,7 @@ public class Contract {
     // --- CÁC TRƯỜNG PHỤ, LẤY TỪ JOIN ---
     private String enterpriseName;
     private String createdByName;
-
+  private String enterpriseEmail;
     // --- CONSTRUCTORS ---
     public Contract() {
         // Constructor mặc định
@@ -188,5 +188,15 @@ public class Contract {
 
     public void setCreatedByName(String createdByName) {
         this.createdByName = createdByName;
+    }
+    
+    
+        // THÊM MỚI: Thêm cặp getter và setter cho trường mới
+    public String getEnterpriseEmail() {
+        return enterpriseEmail;
+    }
+
+    public void setEnterpriseEmail(String enterpriseEmail) {
+        this.enterpriseEmail = enterpriseEmail;
     }
 }

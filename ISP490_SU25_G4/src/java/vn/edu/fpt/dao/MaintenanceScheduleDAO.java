@@ -103,13 +103,23 @@ public class MaintenanceScheduleDAO extends DBContext {
     }
 
 // File: MaintenanceScheduleDAO.java
+    // Trong file MaintenanceScheduleDAO.java
     public boolean markAsCompleted(int scheduleId) {
-        // Giả định ID của trạng thái 'Hoàn thành' là 3
-        String sql = "UPDATE MaintenanceSchedules SET status_id = 3, updated_at = NOW() WHERE id = ?";
+        // Cách 1: Tốt nhất - Lấy ID động (yêu cầu có StatusDAO)
+        StatusDAO statusDAO = new StatusDAO();
+        Integer completedStatusId = statusDAO.getIdByName("Hoàn thành"); // Giả sử bạn có hàm này trong StatusDAO
+
+        if (completedStatusId == null) {
+            System.err.println("Không tìm thấy trạng thái 'Hoàn thành'");
+            return false;
+        }
+
+        String sql = "UPDATE MaintenanceSchedules SET status_id = ?, updated_at = NOW() WHERE id = ?";
 
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, scheduleId);
+            ps.setInt(1, completedStatusId); // Sử dụng ID động
+            ps.setInt(2, scheduleId);
 
             int rowsAffected = ps.executeUpdate();
             return rowsAffected > 0;
@@ -118,6 +128,22 @@ public class MaintenanceScheduleDAO extends DBContext {
             e.printStackTrace();
             return false;
         }
+    }
+
+// ---- File StatusDAO.java (Ví dụ hàm cần thêm) ----
+    public Integer getIdByName(String statusName) {
+        String sql = "SELECT id FROM Statuses WHERE status_name = ?";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, statusName);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("id");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null; // Trả về null nếu không tìm thấy
     }
 
     public boolean updateScheduleByDragDrop(int id, LocalDate scheduledDate, LocalDate endDate, LocalTime startTime, LocalTime endTime) {
@@ -166,14 +192,14 @@ public class MaintenanceScheduleDAO extends DBContext {
     }
 
     public boolean deleteMaintenanceSchedule(int scheduleId) {
-        String sql = "DELETE FROM MaintenanceSchedules WHERE technical_request_id = ?";
+        // Sửa lại điều kiện WHERE thành id
+        String sql = "DELETE FROM MaintenanceSchedules WHERE id = ?";
 
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, scheduleId);
             int rowsAffected = ps.executeUpdate();
-
-            return rowsAffected > 0; // Trả về true nếu xóa thành công
+            return rowsAffected > 0;
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -911,5 +937,62 @@ WHERE ms.id = ?
                 System.out.println("Updated At: " + sch.getUpdatedAt());
             }
         }
+    }
+
+    // Thêm phương thức này vào trong file MaintenanceScheduleDAO.java của bạn
+    public MaintenanceSchedule getScheduleByTechnicalRequestId(int technicalRequestId) {
+        // Câu lệnh SQL JOIN đầy đủ để lấy cả thông tin địa chỉ và trạng thái
+        String sql = "SELECT ms.*, a.*, s.status_name "
+                + "FROM MaintenanceSchedules ms "
+                + "LEFT JOIN Addresses a ON ms.address_id = a.id "
+                + "LEFT JOIN Statuses s ON ms.status_id = s.id "
+                + "WHERE ms.technical_request_id = ?";
+
+        MaintenanceSchedule schedule = null;
+
+        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, technicalRequestId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    schedule = new MaintenanceSchedule();
+
+                    // --- Lấy thông tin từ bảng MaintenanceSchedules ---
+                    schedule.setId(rs.getInt("id"));
+                    schedule.setTechnicalRequestId(rs.getInt("technical_request_id"));
+                    // Dùng getObject để xử lý an toàn giá trị NULL cho campaign_id
+                    schedule.setCampaignId(rs.getObject("campaign_id") != null ? rs.getInt("campaign_id") : null);
+                    schedule.setColor(rs.getString("color"));
+                    schedule.setScheduledDate(rs.getObject("scheduled_date", LocalDate.class));
+                    schedule.setEndDate(rs.getObject("end_date", LocalDate.class));
+                    schedule.setStartTime(rs.getObject("start_time", LocalTime.class));
+                    schedule.setEndTime(rs.getObject("end_time", LocalTime.class));
+                    schedule.setAddressId(rs.getInt("address_id"));
+                    schedule.setStatusId(rs.getInt("status_id"));
+
+                    // --- Lấy thông tin từ bảng Statuses (đã JOIN) ---
+                    schedule.setStatusName(rs.getString("status_name"));
+
+                    // --- Tạo đối tượng Address từ dữ liệu đã JOIN ---
+                    int addressId = rs.getInt("address_id");
+                    if (addressId > 0) {
+                        Address address = new Address();
+                        address.setId(addressId);
+                        address.setStreetAddress(rs.getString("street_address"));
+                        address.setWardId(rs.getInt("ward_id"));
+                        address.setDistrictId(rs.getInt("district_id"));
+                        address.setProvinceId(rs.getInt("province_id"));
+                        // Gán đối tượng Address hoàn chỉnh vào trong schedule
+                        schedule.setAddress(address);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // In lỗi ra để dễ dàng gỡ lỗi
+            e.printStackTrace();
+        }
+
+        // Trả về đối tượng schedule (hoặc null nếu không tìm thấy)
+        return schedule;
     }
 }

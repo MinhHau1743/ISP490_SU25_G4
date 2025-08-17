@@ -15,104 +15,104 @@ import vn.edu.fpt.model.InternalNote;
 
 public class FeedbackDAO {
 
-    // Phương thức để thêm một phản hồi mới
+    // Trong file: FeedbackDAO.java
     public boolean addFeedback(Feedback feedback) {
-        String sql = "INSERT INTO Feedbacks (enterprise_id, rating, comment, appointment_id, technical_request_id, status) VALUES (?, ?, ?, ?, ?, 'moi')";
+        // SỬA ĐỔI 1: Thêm cột "contract_id" vào câu lệnh SQL
+        String sql = "INSERT INTO Feedbacks (enterprise_id, rating, comment, appointment_id, technical_request_id, contract_id, status) VALUES (?, ?, ?, ?, ?, ?, 'moi')";
+
         try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, feedback.getEnterpriseId());
             ps.setInt(2, feedback.getRating());
             ps.setString(3, feedback.getComment());
 
-            if (feedback.getAppointmentId() != null) {
-                ps.setInt(4, feedback.getAppointmentId());
-            } else {
-                ps.setNull(4, Types.INTEGER);
-            }
-            if (feedback.getTechnicalRequestId() != null) {
-                ps.setInt(5, feedback.getTechnicalRequestId());
-            } else {
-                ps.setNull(5, Types.INTEGER);
-            }
+            // Dùng setObject để tự động xử lý giá trị NULL cho các ID không bắt buộc
+            ps.setObject(4, feedback.getAppointmentId());
+            ps.setObject(5, feedback.getTechnicalRequestId());
 
+            // SỬA ĐỔI 2: Gán giá trị cho tham số thứ 6, tương ứng với cột "contract_id"
+            ps.setObject(6, feedback.getContractId());
+
+            // Thực thi câu lệnh
             return ps.executeUpdate() > 0;
+
         } catch (Exception ex) {
-            ex.printStackTrace(); // Nên sử dụng logging trong dự án thực tế
+            System.err.println("LỖI KHI LƯU FEEDBACK VÀO DATABASE:");
+            ex.printStackTrace();
             return false;
         }
     }
 
     // Phương thức để lấy danh sách phản hồi hiển thị ra listFeedback.jsp
     public List<FeedbackView> getFilteredFeedback(String query, String ratingFilter) {
-    List<FeedbackView> list = new ArrayList<>();
-    List<Object> params = new ArrayList<>(); // Danh sách để chứa các tham số cho PreparedStatement
-    
-    // Xây dựng câu lệnh SQL cơ bản
-    StringBuilder sql = new StringBuilder(
-        "SELECT f.id, f.rating, f.comment, f.status, f.created_at, "
-      + "e.name AS enterpriseName, tr.title AS serviceName, tr.request_code "
-      + "FROM Feedbacks f "
-      + "JOIN Enterprises e ON f.enterprise_id = e.id "
-      + "LEFT JOIN TechnicalRequests tr ON f.technical_request_id = tr.id "
-      + "WHERE f.is_deleted = 0"
-    );
+        List<FeedbackView> list = new ArrayList<>();
+        List<Object> params = new ArrayList<>(); // Danh sách để chứa các tham số cho PreparedStatement
 
-    // 1. Thêm điều kiện tìm kiếm (query)
-    if (query != null && !query.trim().isEmpty()) {
-        sql.append(" AND (e.name LIKE ? OR tr.request_code LIKE ?)");
-        params.add("%" + query.trim() + "%");
-        params.add("%" + query.trim() + "%");
-    }
+        // Xây dựng câu lệnh SQL cơ bản
+        StringBuilder sql = new StringBuilder(
+                "SELECT f.id, f.rating, f.comment, f.status, f.created_at, "
+                + "e.name AS enterpriseName, tr.title AS serviceName, tr.request_code "
+                + "FROM Feedbacks f "
+                + "JOIN Enterprises e ON f.enterprise_id = e.id "
+                + "LEFT JOIN TechnicalRequests tr ON f.technical_request_id = tr.id "
+                + "WHERE f.is_deleted = 0"
+        );
 
-    // 2. Thêm điều kiện lọc theo rating (ratingFilter)
-    if (ratingFilter != null && !ratingFilter.equals("all")) {
-        switch (ratingFilter) {
-            case "good":
-                sql.append(" AND f.rating >= ?");
-                params.add(4);
-                break;
-            case "normal":
-                sql.append(" AND f.rating = ?");
-                params.add(3);
-                break;
-            case "bad":
-                sql.append(" AND f.rating <= ?");
-                params.add(2);
-                break;
-        }
-    }
-
-    // Luôn sắp xếp kết quả
-    sql.append(" ORDER BY f.created_at DESC");
-
-    // Thực thi câu lệnh
-    try (Connection conn = new DBContext().getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-
-        // Gán các tham số vào PreparedStatement
-        for (int i = 0; i < params.size(); i++) {
-            ps.setObject(i + 1, params.get(i));
+        // 1. Thêm điều kiện tìm kiếm (query)
+        if (query != null && !query.trim().isEmpty()) {
+            sql.append(" AND (e.name LIKE ? OR tr.request_code LIKE ?)");
+            params.add("%" + query.trim() + "%");
+            params.add("%" + query.trim() + "%");
         }
 
-        try (ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                FeedbackView fb = new FeedbackView();
-                fb.setId(rs.getInt("id"));
-                fb.setRating(rs.getInt("rating"));
-                fb.setComment(rs.getString("comment"));
-                fb.setStatus(rs.getString("status"));
-                fb.setCreatedAt(rs.getTimestamp("created_at"));
-                fb.setEnterpriseName(rs.getString("enterpriseName"));
-                fb.setServiceName(rs.getString("serviceName"));
-                fb.setRequestCode(rs.getString("request_code"));
-                list.add(fb);
+        // 2. Thêm điều kiện lọc theo rating (ratingFilter)
+        if (ratingFilter != null && !ratingFilter.equals("all")) {
+            switch (ratingFilter) {
+                case "good":
+                    sql.append(" AND f.rating >= ?");
+                    params.add(4);
+                    break;
+                case "normal":
+                    sql.append(" AND f.rating = ?");
+                    params.add(3);
+                    break;
+                case "bad":
+                    sql.append(" AND f.rating <= ?");
+                    params.add(2);
+                    break;
             }
         }
-    } catch (Exception ex) {
-        ex.printStackTrace();
+
+        // Luôn sắp xếp kết quả
+        sql.append(" ORDER BY f.created_at DESC");
+
+        // Thực thi câu lệnh
+        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            // Gán các tham số vào PreparedStatement
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    FeedbackView fb = new FeedbackView();
+                    fb.setId(rs.getInt("id"));
+                    fb.setRating(rs.getInt("rating"));
+                    fb.setComment(rs.getString("comment"));
+                    fb.setStatus(rs.getString("status"));
+                    fb.setCreatedAt(rs.getTimestamp("created_at"));
+                    fb.setEnterpriseName(rs.getString("enterpriseName"));
+                    fb.setServiceName(rs.getString("serviceName"));
+                    fb.setRequestCode(rs.getString("request_code"));
+                    list.add(fb);
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return list;
     }
-    return list;
-}
 
     public List<Enterprise> getAllEnterprises() {
         List<Enterprise> list = new ArrayList<>();
@@ -193,53 +193,65 @@ public class FeedbackDAO {
     }
 
     public FeedbackView getFeedbackById(int feedbackId) {
-    FeedbackView feedback = null;
-    
-    // Đã xóa "e.phone" khỏi câu lệnh SQL
-    String sql = "SELECT f.*, "
-            + "e.name AS enterpriseName, e.business_email AS enterpriseEmail, "
-            // 1. LẤY TÊN DỊCH VỤ TỪ BẢNG SERVICES (s.name) THAY VÌ tr.title
-            + "s.name AS serviceName, "
-            + "tr.request_code, "
-            + "CONCAT_WS(' ', u.first_name, u.middle_name, u.last_name) AS technicianName "
-            + "FROM Feedbacks f "
-            + "JOIN Enterprises e ON f.enterprise_id = e.id "
-            + "LEFT JOIN TechnicalRequests tr ON f.technical_request_id = tr.id "
-            // 2. JOIN THÊM BẢNG SERVICES VÀO ĐÂY
-            + "LEFT JOIN Services s ON tr.service_id = s.id "
-            + "LEFT JOIN Users u ON tr.assigned_to_id = u.id "
-            + "WHERE f.id = ?";
+        FeedbackView feedback = null;
 
-    try (Connection conn = new DBContext().getConnection(); 
-         PreparedStatement ps = conn.prepareStatement(sql)) {
+        // SỬA ĐỔI: Cập nhật câu lệnh SQL để lấy thêm thông tin từ Hợp đồng
+        String sql = "SELECT f.*, "
+                + "e.name AS enterpriseName, e.business_email AS enterpriseEmail, "
+                // Thông tin từ Yêu cầu Kỹ thuật (Technical Request)
+                + "s.name AS serviceName, "
+                + "tr.request_code, "
+                + "CONCAT_WS(' ', u_tech.first_name, u_tech.middle_name, u_tech.last_name) AS technicianName, "
+                // Thông tin từ Hợp đồng (Contract)
+                + "c.id AS contractId, "
+                + "c.contract_code AS contractCode, "
+                + "CONCAT_WS(' ', u_contract.first_name, u_contract.middle_name, u_contract.last_name) AS contractCreatorName "
+                + "FROM Feedbacks f "
+                + "JOIN Enterprises e ON f.enterprise_id = e.id "
+                // JOIN để lấy thông tin Yêu cầu Kỹ thuật
+                + "LEFT JOIN TechnicalRequests tr ON f.technical_request_id = tr.id "
+                + "LEFT JOIN Services s ON tr.service_id = s.id "
+                + "LEFT JOIN Users u_tech ON tr.assigned_to_id = u_tech.id " // User được gán cho Yêu cầu KT
 
-        ps.setInt(1, feedbackId);
+                // JOIN để lấy thông tin Hợp đồng
+                + "LEFT JOIN contracts c ON f.contract_id = c.id "
+                + "LEFT JOIN Users u_contract ON c.created_by_id = u_contract.id " // User tạo Hợp đồng
 
-        try (ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                feedback = new FeedbackView();
-                feedback.setId(rs.getInt("id"));
-                feedback.setRating(rs.getInt("rating"));
-                feedback.setComment(rs.getString("comment"));
-                feedback.setStatus(rs.getString("status"));
-                feedback.setCreatedAt(rs.getTimestamp("created_at"));
-                feedback.setEnterpriseName(rs.getString("enterpriseName"));
-                feedback.setEnterpriseEmail(rs.getString("enterpriseEmail"));
-                
-                // Phần gán giá trị serviceName không cần thay đổi vì chúng ta đã dùng alias
-                feedback.setServiceName(rs.getString("serviceName")); 
-                
-                feedback.setTechnicianName(rs.getString("technicianName"));
-                feedback.setRelatedRequestId(rs.getInt("technical_request_id"));
-                feedback.setRequestCode(rs.getString("request_code"));
+                + "WHERE f.id = ?";
+
+        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, feedbackId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    feedback = new FeedbackView();
+                    feedback.setId(rs.getInt("id"));
+                    feedback.setRating(rs.getInt("rating"));
+                    feedback.setComment(rs.getString("comment"));
+                    feedback.setStatus(rs.getString("status"));
+                    feedback.setCreatedAt(rs.getTimestamp("created_at"));
+                    feedback.setEnterpriseName(rs.getString("enterpriseName"));
+                    feedback.setEnterpriseEmail(rs.getString("enterpriseEmail"));
+
+                    // Gán thông tin từ Yêu cầu Kỹ thuật (có thể là null)
+                    feedback.setServiceName(rs.getString("serviceName"));
+                    feedback.setTechnicianName(rs.getString("technicianName"));
+                    feedback.setRelatedRequestId(rs.getInt("technical_request_id"));
+                    feedback.setRequestCode(rs.getString("request_code"));
+
+                    // SỬA ĐỔI: Gán thêm thông tin từ Hợp đồng (có thể là null)
+                    feedback.setContractId(rs.getObject("contractId", Integer.class));
+                    feedback.setContractCode(rs.getString("contractCode"));
+                    feedback.setContractCreatorName(rs.getString("contractCreatorName"));
+                }
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
-    } catch (Exception ex) {
-        ex.printStackTrace(); 
-    }
 
-    return feedback;
-}
+        return feedback;
+    }
 
     /**
      * Lấy danh sách các ghi chú nội bộ cho một feedback cụ thể.
@@ -291,38 +303,68 @@ public class FeedbackDAO {
             return false;
         }
     }
-    
-public boolean updateInternalNote(int noteId, String newNoteText) {
-    String sql = "UPDATE internal_notes SET note_text = ? WHERE id = ?";
-    try (Connection conn = new DBContext().getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql)) {
 
-        ps.setString(1, newNoteText);
-        ps.setInt(2, noteId);
-        return ps.executeUpdate() > 0;
-    } catch (Exception e) {
-        e.printStackTrace();
+    public boolean updateInternalNote(int noteId, String newNoteText) {
+        String sql = "UPDATE internal_notes SET note_text = ? WHERE id = ?";
+        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, newNoteText);
+            ps.setInt(2, noteId);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Xóa mềm một ghi chú nội bộ (đánh dấu is_deleted = 1).
+     *
+     * @param noteId ID của ghi chú cần xóa.
+     * @return true nếu xóa thành công, false nếu thất bại.
+     */
+    public boolean softDeleteInternalNote(int noteId) {
+        // Giả định bạn có cột is_deleted trong bảng internal_notes
+        String sql = "UPDATE internal_notes SET is_deleted = 1 WHERE id = ?";
+        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, noteId);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+// Thêm phương thức này vào bất kỳ đâu bên trong class FeedbackDAO
+    /**
+     * Kiểm tra xem một hợp đồng đã có phản hồi hay chưa.
+     *
+     * @param contractId ID của hợp đồng cần kiểm tra.
+     * @return true nếu đã có phản hồi, false nếu chưa có.
+     */
+    public boolean feedbackExistsForContract(long contractId) {
+        // Câu lệnh SQL đếm số lượng bản ghi có contract_id tương ứng
+        String sql = "SELECT COUNT(*) FROM Feedbacks WHERE contract_id = ?";
+
+        try (Connection conn = new DBContext().getConnection(); // Thay bằng cách lấy connection của bạn
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            // Gán tham số kiểu long
+            ps.setLong(1, contractId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    // Nếu số lượng > 0, tức là đã tồn tại, trả về true
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // Mặc định trả về false nếu có lỗi hoặc không tìm thấy
         return false;
     }
-}
-
-/**
- * Xóa mềm một ghi chú nội bộ (đánh dấu is_deleted = 1).
- * @param noteId ID của ghi chú cần xóa.
- * @return true nếu xóa thành công, false nếu thất bại.
- */
-public boolean softDeleteInternalNote(int noteId) {
-    // Giả định bạn có cột is_deleted trong bảng internal_notes
-    String sql = "UPDATE internal_notes SET is_deleted = 1 WHERE id = ?";
-    try (Connection conn = new DBContext().getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql)) {
-
-        ps.setInt(1, noteId);
-        return ps.executeUpdate() > 0;
-    } catch (Exception e) {
-        e.printStackTrace();
-        return false;
-    }
-}
 
 }

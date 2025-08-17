@@ -1,9 +1,3 @@
-<%-- 
-    Document   : createFeedback
-    Created on : Jul 22, 2025, 11:06:18 AM
-    Author     : NGUYEN MINH
---%>
-
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
@@ -27,10 +21,12 @@
                 justify-content: center;
                 align-items: flex-start;
                 padding-top: 48px;
+                box-sizing: border-box;
             }
             .feedback-wrapper {
                 max-width: 600px;
                 width: 100%;
+                padding: 0 16px;
             }
             .feedback-container {
                 background-color: white;
@@ -133,8 +129,6 @@
             .btn-submit:hover {
                 background-color: #2563eb;
             }
-
-            /* Style cho trường chỉ đọc */
             .form-control-static {
                 padding: 12px 16px;
                 background-color: #f9fafb;
@@ -147,34 +141,49 @@
     <body>
         <div class="feedback-wrapper">
             <div class="feedback-container">
-
-                <%-- ✔️ SỬA 1: TIÊU ĐỀ ĐỘNG DỰA TRÊN DỮ LIỆU TỪ CONTROLLER --%>
                 <div class="feedback-header">
                     <div class="icon">
                         <i data-feather="star" style="width: 28px; height: 28px;"></i>
                     </div>
                     <h1>Đánh giá chất lượng dịch vụ</h1>
                     <p>
-                        Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi. Vui lòng cho biết cảm nhận của bạn về yêu cầu 
-                        <strong>"${technicalRequest.title}"</strong> của doanh nghiệp <strong>${technicalRequest.enterpriseName}</strong>.
+                        Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi. Vui lòng cho biết cảm nhận của bạn về
+                        <%-- HIỂN THỊ ĐỘNG TÙY THEO LOẠI PHẢN HỒI --%>
+                        <c:if test="${not empty technicalRequest}">
+                            yêu cầu <strong>"${technicalRequest.title}"</strong> của doanh nghiệp <strong>${technicalRequest.enterpriseName}</strong>.
+                        </c:if>
+                        <c:if test="${not empty contract}">
+                            hợp đồng <strong>"${contract.contractCode}"</strong> của doanh nghiệp <strong>${contract.enterpriseName}</strong>.
+                        </c:if>
                     </p>
                 </div>
 
                 <form action="${pageContext.request.contextPath}/feedback?action=create" method="POST" class="feedback-form">
-
-
-                    <%-- Các input ẩn để gửi dữ liệu cần thiết đi --%>
+                    <%-- CÁC INPUT ẨN QUAN TRỌNG ĐỂ GỬI ĐÚNG DỮ LIỆU --%>
                     <input type="hidden" id="rating-value" name="rating" value="0">
-                    <input type="hidden" name="technicalRequestId" value="${technicalRequest.id}">
-                    <input type="hidden" name="enterpriseId" value="${technicalRequest.enterpriseId}">
 
-                    <%-- ✔️ SỬA 2: BỎ DROPDOWN, HIỂN THỊ TÊN DOANH NGHIỆP TRỰC TIẾP --%>
+                    <%-- Khối input ẩn cho Yêu cầu Kỹ thuật --%>
+                    <c:if test="${not empty technicalRequest}">
+                        <input type="hidden" name="technicalRequestId" value="${technicalRequest.id}">
+                        <input type="hidden" name="enterpriseId" value="${technicalRequest.enterpriseId}">
+                    </c:if>
+
+                    <%-- Khối input ẩn cho Hợp đồng --%>
+                    <c:if test="${not empty contract}">
+                        <input type="hidden" name="contractId" value="${contract.id}">
+                        <input type="hidden" name="enterpriseId" value="${contract.enterpriseId}">
+                    </c:if>
+
                     <div class="form-group">
                         <label>Doanh nghiệp</label>
-                        <div class="form-control-static">${technicalRequest.enterpriseName}</div>
+                        <c:if test="${not empty technicalRequest}">
+                            <div class="form-control-static">${technicalRequest.enterpriseName}</div>
+                        </c:if>
+                        <c:if test="${not empty contract}">
+                            <div class="form-control-static">${contract.enterpriseName}</div>
+                        </c:if>
                     </div>
 
-                    <%-- Phần đánh giá sao giữ nguyên --%>
                     <div class="form-group star-rating-group">
                         <label>Mức độ hài lòng của bạn?</label>
                         <div class="star-rating" id="star-container">
@@ -187,13 +196,9 @@
                         <p id="rating-caption">Chọn một đánh giá</p>
                     </div>
 
-                    <%-- Phần bình luận giữ nguyên --%>
                     <div class="form-group">
                         <label for="comments">Bạn có muốn chia sẻ thêm điều gì không?</label>
-                        <textarea
-                            id="comments" name="comment" rows="5"
-                            placeholder="Hãy cho chúng tôi biết điều gì đã làm bạn hài lòng hoặc chúng tôi có thể cải thiện ở điểm nào..."
-                            ></textarea>
+                        <textarea id="comments" name="comment" rows="5" placeholder="Hãy cho chúng tôi biết điều gì đã làm bạn hài lòng hoặc chúng tôi có thể cải thiện ở điểm nào..."></textarea>
                     </div>
 
                     <div class="form-group">
@@ -203,7 +208,6 @@
             </div>
         </div>
 
-        <%-- JavaScript giữ nguyên, không cần thay đổi --%>
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 feather.replace({
@@ -235,9 +239,11 @@
                             s.style.fill = s.dataset.value <= rating ? '#fde047' : 'none';
                         });
                     });
+
                     star.addEventListener('mouseout', () => {
                         updateStars(currentRating);
                     });
+
                     star.addEventListener('click', () => {
                         currentRating = star.dataset.value;
                         if (ratingValueInput) {
@@ -246,8 +252,6 @@
                         updateStars(currentRating);
                     });
                 });
-
-                
             });
         </script>
     </body>
