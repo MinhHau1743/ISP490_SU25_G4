@@ -1,7 +1,7 @@
 <%--
-    Document   : editCustomer
-    Author     : anhndhe172050
-    Description: Form for editing a customer, with a layout that matches the createCustomer page.
+    Document    : editCustomer
+    Author      : anhndhe172050
+    Description: Form for editing a customer, now with browser-native validation and placeholders.
 --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
@@ -23,7 +23,6 @@
         <link rel="stylesheet" href="${BASE_URL}/css/viewCustomerDetail.css">
         <script src="https://unpkg.com/feather-icons"></script>
         <style>
-            /* Ensures avatar image fits the container */
             .avatar-section #avatarPreview {
                 width: 120px;
                 height: 120px;
@@ -44,18 +43,11 @@
                     <div class="detail-header">
                         <a href="${BASE_URL}/customer/view?id=${customer.id}" class="back-link"><i data-feather="arrow-left"></i><span>Hủy</span></a>
                         <div class="action-buttons">
-                            <c:choose>
-                                <c:when test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Kinh doanh'}">
-                                    <button type="submit" class="btn btn-primary"><i data-feather="save"></i>Lưu thay đổi</button>
-                                </c:when>
-                                <c:otherwise>
-                                    <button type="button" class="btn btn-primary disabled-action" data-error="Bạn không có quyền sửa khách hàng."><i data-feather="save"></i>Lưu thay đổi</button>
-                                </c:otherwise>
-                            </c:choose>
+                            <button type="submit" class="btn btn-primary"><i data-feather="save"></i>Lưu thay đổi</button>
                         </div>
                     </div>
 
-                    
+
                     <c:if test="${not empty errorMessage}">
                         <div class="error-message" style="background-color: #ffebee; color: #c62828; padding: 16px; margin: 0 24px 16px; border-radius: 8px; border: 1px solid #c62828;">
                             <strong>Lỗi:</strong> ${errorMessage}
@@ -63,19 +55,15 @@
                     </c:if>
 
                     <div class="detail-layout">
-
-
                         <div class="main-column">
                             <div class="profile-header-card detail-card">
                                 <div class="card-body">
                                     <div class="avatar-section">
-                                        <%-- Sửa lỗi hiển thị ảnh: Sử dụng BASE_URL và kiểm tra customer.avatarUrl --%>
                                         <c:choose>
                                             <c:when test="${not empty customer.avatarUrl}">
                                                 <img src="${BASE_URL}/${customer.avatarUrl}" alt="Ảnh đại diện" id="avatarPreview">
                                             </c:when>
                                             <c:otherwise>
-                                                <%-- Placeholder với chữ cái đầu của tên --%>
                                                 <img src="https://placehold.co/120x120/E0F7FA/00796B?text=${customer.name.substring(0,1)}" alt="Ảnh đại diện" id="avatarPreview">
                                             </c:otherwise>
                                         </c:choose>
@@ -86,8 +74,7 @@
                                     <div class="customer-main-info" style="width: 100%;">
                                         <div class="form-group" style="margin-bottom: 16px;">
                                             <label for="customerName">Tên doanh nghiệp (*)</label>
-                                            <%-- Đổi name từ "name" thành "customerName" để đồng bộ --%>
-                                            <input type="text" id="customerName" name="customerName" class="form-control" value="<c:out value='${customer.name}'/>" required>
+                                            <input type="text" id="customerName" name="customerName" class="form-control" placeholder="Nhập tên công ty hoặc cá nhân" value="<c:out value='${customer.name}'/>" required>
                                         </div>
                                     </div>
                                 </div>
@@ -98,11 +85,27 @@
                                 <h3 class="card-title">Thông tin doanh nghiệp</h3>
                                 <div class="card-body">
                                     <div class="info-grid">
-                                        <%-- ĐÃ SỬA: Cập nhật nhãn và giá trị từ 'fax' sang 'hotline' --%>
-                                        <div class="form-group"><label for="hotline">Hotline (*)</label><input type="tel" id="hotline" name="hotline" class="form-control" value="<c:out value='${customer.hotline}'/>" required></div>
-                                        <div class="form-group"><label for="businessEmail">Email doanh nghiệp (*)</label><input type="email" id="businessEmail" name="businessEmail" class="form-control" value="<c:out value='${customer.businessEmail}'/>" required></div>
-                                        <div class="form-group"><label for="taxCode">Mã số thuế</label><input type="text" id="taxCode" name="taxCode" class="form-control" value="<c:out value='${customer.taxCode}'/>"></div>
-                                        <div class="form-group"><label for="bankNumber">Số tài khoản ngân hàng</label><input type="text" id="bankNumber" name="bankNumber" class="form-control" value="<c:out value='${customer.bankNumber}'/>"></div>
+                                        <div class="form-group">
+                                            <label for="hotline">Hotline (*)</label>
+                                            <input type="tel" id="hotline" name="hotline" class="form-control" placeholder="VD: 0912345678" value="<c:out value='${customer.hotline}'/>" 
+                                                   required 
+                                                   pattern="^(0(2\d{8}|[35789]\d{8})|(1800|1900)\d{4,6})$"
+                                                   title="Vui lòng nhập số điện thoại hợp lệ của Việt Nam (VD: 0912345678, 02412345678, 19001234).">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="businessEmail">Email doanh nghiệp (*)</label>
+                                            <input type="email" id="businessEmail" name="businessEmail" class="form-control" placeholder="VD: contact@company.com" value="<c:out value='${customer.businessEmail}'/>" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="taxCode">Mã số thuế</label>
+                                            <input type="text" id="taxCode" name="taxCode" class="form-control" placeholder="VD: 0102030405" value="<c:out value='${customer.taxCode}'/>"
+                                                   pattern="^(\d{10}|\d{10}-\d{3})$"
+                                                   title="Mã số thuế phải là 10 chữ số, hoặc 13 chữ số theo định dạng XXXXXXXXXX-XXX.">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="bankNumber">Số tài khoản ngân hàng</label>
+                                            <input type="text" id="bankNumber" name="bankNumber" class="form-control" placeholder="Tên ngân hàng - Số tài khoản" value="<c:out value='${customer.bankNumber}'/>">
+                                        </div>
                                     </div>
                                     <hr style="margin: 1.5rem 0;">
                                     <div class="info-grid" style="margin-top: 1rem; grid-template-columns: repeat(3, 1fr);">
@@ -127,7 +130,7 @@
                                         </div>
                                         <div class="form-group" style="margin-top: 1rem;">
                                             <label for="streetAddress">Địa chỉ cụ thể (*)</label>
-                                            <input type="text" id="streetAddress" name="streetAddress" class="form-control" value="<c:out value='${customer.streetAddress}'/>" required>
+                                            <input type="text" id="streetAddress" name="streetAddress" class="form-control" placeholder="Nhập số nhà, tên đường, ngõ/hẻm..." value="<c:out value='${customer.streetAddress}'/>" required>
                                     </div>
                                 </div>
                             </div>
@@ -138,10 +141,24 @@
                                 <div class="card-body">
                                     <c:set var="primaryContact" value="${customer.contacts[0]}"/>
                                     <div class="info-grid">
-                                        <div class="form-group"><label for="fullName">Họ và tên</label><input type="text" id="fullName" name="fullName" class="form-control" value="<c:out value='${primaryContact.fullName}'/>" ></div>
-                                        <div class="form-group"><label for="position">Chức vụ</label><input type="text" id="position" name="position" class="form-control" value="<c:out value='${primaryContact.position}'/>" ></div>
-                                        <div class="form-group"><label for="phone">Số điện thoại</label><input type="tel" id="phone" name="phone" class="form-control" value="<c:out value='${primaryContact.phoneNumber}'/>" ></div>
-                                        <div class="form-group"><label for="email">Email</label><input type="email" id="email" name="email" class="form-control" value="<c:out value='${primaryContact.email}'/>"></div>
+                                        <div class="form-group">
+                                            <label for="fullName">Họ và tên</label>
+                                            <input type="text" id="fullName" name="fullName" class="form-control" placeholder="VD: Nguyễn Văn An" value="<c:out value='${primaryContact.fullName}'/>" >
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="position">Chức vụ</label>
+                                            <input type="text" id="position" name="position" class="form-control" placeholder="VD: Giám đốc, Kế toán" value="<c:out value='${primaryContact.position}'/>" >
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="phone">Số điện thoại</label>
+                                            <input type="tel" id="phone" name="phone" class="form-control" placeholder="VD: 0987654321" value="<c:out value='${primaryContact.phoneNumber}'/>" 
+                                                   pattern="^(0(2\d{8}|[35789]\d{8})|(1800|1900)\d{4,6})$"
+                                                   title="Vui lòng nhập số điện thoại hợp lệ của Việt Nam (nếu có).">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="email">Email</label>
+                                            <input type="email" id="email" name="email" class="form-control" placeholder="VD: an.nguyen@email.com" value="<c:out value='${primaryContact.email}'/>">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -153,14 +170,13 @@
                                 <div class="card-body">
                                     <div class="form-group"><label for="customerCode">Mã khách hàng</label><input type="text" id="customerCode" name="customerCode" class="form-control" value="<c:out value='${customer.enterpriseCode}'/>" readonly></div>
                                     <div class="form-group">
-                                        <label for="customerGroup">Nhóm khách hàng</label>
-                                        <%-- Đổi name từ customerTypeId thành customerGroup để đồng bộ --%>
-                                        <select id="customerGroup" name="customerGroup" class="form-control">
+                                        <label for="customerGroup">Nhóm khách hàng (*)</label>
+                                        <select id="customerGroup" name="customerGroup" class="form-control" required>
                                             <c:forEach var="type" items="${allCustomerTypes}"><option value="${type.id}" ${customer.customerTypeId == type.id ? 'selected' : ''}><c:out value="${type.name}"/></option></c:forEach>
                                             </select>
                                         </div>
                                         <div class="form-group">
-                                            <label for="employeeId">Nhân viên phụ trách</label>
+                                            <label for="employeeId">Nhân viên phụ trách (*)</label>
                                         <c:set var="assignedUserId" value="${not empty customer.assignedUsers ? customer.assignedUsers[0].id : -1}"/>
                                         <select id="employeeId" name="employeeId" class="form-control" required>
                                             <c:forEach var="emp" items="${allEmployees}"><option value="${emp.id}" ${assignedUserId == emp.id ? 'selected' : ''}><c:out value="${emp.fullNameCombined}"/></option></c:forEach>
@@ -168,8 +184,8 @@
                                         </div>
                                         <div class="form-group">
                                             <label for="joinDate">Ngày tham gia</label>
-                                        <%-- Hiển thị ngày tham gia, không cho sửa --%>
-                                        <span class="value"><fmt:formatDate value="${customer.createdAt}" pattern="dd/MM/yyyy"/></span>
+                                        <%-- Dùng thẻ span thay cho input để không cho sửa và hiển thị đẹp hơn --%>
+                                        <div style="padding-top: 8px; font-weight: 500;"><fmt:formatDate value="${customer.createdAt}" pattern="dd/MM/yyyy"/></div>
                                     </div>
                                 </div>
                             </div>
@@ -229,19 +245,6 @@
                                     });
                                     wardSelect.disabled = false;
                                 });
-                    }
-                });
-            });
-        </script>
-        <script>
-            // Script này chỉ cần thêm một lần vào trang layout chính hoặc vào từng trang cần thiết
-            document.addEventListener('DOMContentLoaded', function () {
-                document.body.addEventListener('click', function (event) {
-                    const disabledLink = event.target.closest('.disabled-action');
-                    if (disabledLink) {
-                        event.preventDefault();
-                        const errorMessage = disabledLink.getAttribute('data-error') || 'Bạn không có quyền thực hiện chức năng này.';
-                        alert(errorMessage);
                     }
                 });
             });
