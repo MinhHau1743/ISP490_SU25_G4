@@ -1359,7 +1359,7 @@
                                     </div>
                                 </div>
 
-                                <div id="list-view" class="calendar-view active">
+                                <div id="list-view" class="calendar-view <c:if test="${viewMode == 'list-view'}">active</c:if>">    
                                     <div class="list-grid">
                                         <h2 class="view-title">Tất cả lịch bảo trì</h2>
                                         <p class="schedule-count">Có tổng <strong>${schedules.size()}</strong> lịch</p>

@@ -75,13 +75,22 @@
             }
             /* Thêm vào thẻ <style> trong report.jsp */
             .status-badge {
-                padding: 3px 8px;
+                display: inline-block;
+                padding: 3px 10px;
                 border-radius: 12px;
                 font-size: 12px;
                 font-weight: 500;
-                color: #fff;
                 text-transform: capitalize;
+                background: #e0e7ef;      /* màu nền nhẹ mặc định, sẽ override bằng màu class phụ */
+                color: #222;              /* màu chữ mặc định */
+                margin-right: 4px;
+                margin-bottom: 2px;
+                vertical-align: middle;
+                border: none;
+                box-shadow: 0 1px 2px 0 rgba(30,34,40,0.05);
+                transition: background 0.2s, color 0.2s;
             }
+
             .status-active, .status-resolved, .status-closed {
                 background-color: #28a745;
             } /* Xanh lá */
@@ -300,12 +309,40 @@
                                         </div>
                                     </div>
                                     <div class="report-card">
-                                        <div class="report-card-header"><i data-feather="archive" class="icon"></i><h3>Thống kê nhanh</h3></div>
+                                        <div class="report-card-header">
+                                            <i data-feather="archive" class="icon"></i>
+                                            <h3>Thống kê nhanh</h3>
+                                        </div>
                                         <div class="report-card-body">
                                             <ul class="kpi-list">
-                                                <li class="kpi-item"><span class="label">Đang hiệu lực</span><span class="value success"><fmt:formatNumber value="${contractStatus.active}"/></span></li>
-                                                <li class="kpi-item"><span class="label">Sắp hết hạn</span><span class="value warning"><fmt:formatNumber value="${contractStatus.expiring}"/></span></li>
-                                                <li class="kpi-item"><span class="label">Đã hết hạn</span><span class="value danger"><fmt:formatNumber value="${contractStatus.expired}"/></span></li>
+                                                <li class="kpi-item">
+                                                    <span class="label">Đang đàm phán</span>
+                                                    <span class="value info"><fmt:formatNumber value="${contractStatus.negotiating}"/></span>
+                                                </li>
+                                                <li class="kpi-item">
+                                                    <span class="label">Đã ký</span>
+                                                    <span class="value success"><fmt:formatNumber value="${contractStatus.signed}"/></span>
+                                                </li>
+                                                <li class="kpi-item">
+                                                    <span class="label">Đang triển khai</span>
+                                                    <span class="value primary"><fmt:formatNumber value="${contractStatus.inProgress}"/></span>
+                                                </li>
+                                                <li class="kpi-item">
+                                                    <span class="label">Tạm dừng</span>
+                                                    <span class="value warning"><fmt:formatNumber value="${contractStatus.paused}"/></span>
+                                                </li>
+                                                <li class="kpi-item">
+                                                    <span class="label">Đã hoàn thành</span>
+                                                    <span class="value success"><fmt:formatNumber value="${contractStatus.completed}"/></span>
+                                                </li>
+                                                <li class="kpi-item">
+                                                    <span class="label">Quá thời hạn</span>
+                                                    <span class="value danger"><fmt:formatNumber value="${contractStatus.overdue}"/></span>
+                                                </li>
+                                                <li class="kpi-item">
+                                                    <span class="label">Hủy</span>
+                                                    <span class="value danger"><fmt:formatNumber value="${contractStatus.cancelled}"/></span>
+                                                </li>
                                             </ul>
                                         </div>
                                     </div>
@@ -324,11 +361,7 @@
                                                         <td><c:out value="${contract.enterprise_name}"/></td>
                                                         <td><fmt:formatDate value="${contract.start_date}" pattern="dd/MM/yyyy"/></td>
                                                         <td><fmt:formatDate value="${contract.end_date}" pattern="dd/MM/yyyy"/></td>
-                                                        <td>
-                                                            <span class="status-badge status-${fn:toLowerCase(contract.status)}">
-                                                                <c:out value="${contract.status}"/>
-                                                            </span>
-                                                        </td>
+                                                        <td><c:out value="${contract.status}"/></td>
                                                     </tr>
                                                 </c:forEach>
                                                 <c:if test="${empty contractsList}">
@@ -354,15 +387,36 @@
                                         </div>
                                     </div>
                                     <div class="report-card">
-                                        <div class="report-card-header"><i data-feather="archive" class="icon"></i><h3>Thống kê nhanh</h3></div>
+                                        <div class="report-card-header">
+                                            <i data-feather="archive" class="icon"></i>
+                                            <h3>Thống kê nhanh</h3>
+                                        </div>
                                         <div class="report-card-body">
                                             <ul class="kpi-list">
-                                                <li class="kpi-item"><span class="label">Đã hoàn thành</span><span class="value success"><fmt:formatNumber value="${requestStatus.completed}"/></span></li>
-                                                <li class="kpi-item"><span class="label">Đang tiến hành</span><span class="value warning"><fmt:formatNumber value="${requestStatus.in_progress}"/></span></li>
-                                                <li class="kpi-item"><span class="label">Chờ xử lý</span><span class="value"><fmt:formatNumber value="${requestStatus.pending}"/></span></li>
+                                                <li class="kpi-item">
+                                                    <span class="label">Hoàn thành</span>
+                                                    <span class="value success"><fmt:formatNumber value="${requestStatus.completed}"/></span>
+                                                </li>
+                                                <li class="kpi-item">
+                                                    <span class="label">Đang thực hiện</span>
+                                                    <span class="value warning"><fmt:formatNumber value="${requestStatus.in_progress}"/></span>
+                                                </li>
+                                                <li class="kpi-item">
+                                                    <span class="label">Sắp tới</span>
+                                                    <span class="value info"><fmt:formatNumber value="${requestStatus.upcoming}"/></span>
+                                                </li>
+                                                <li class="kpi-item">
+                                                    <span class="label">Quá hạn</span>
+                                                    <span class="value danger"><fmt:formatNumber value="${requestStatus.overdue}"/></span>
+                                                </li>
+                                                <li class="kpi-item">
+                                                    <span class="label">Đã huỷ</span>
+                                                    <span class="value danger"><fmt:formatNumber value="${requestStatus.cancelled}"/></span>
+                                                </li>
                                             </ul>
                                         </div>
                                     </div>
+
                                 </div>
 
                                 <%-- Cột phải: Bảng chi tiết --%>
@@ -391,10 +445,17 @@
                                                         </td>
                                                         <td>
                                                             <c:choose>
-                                                                <c:when test="${not empty req.assigned_to}"><c:out value="${req.assigned_to}"/></c:when>
-                                                                <c:otherwise><i style="color: #888;">Chưa phân công</i></c:otherwise>
+                                                                <c:when test="${not empty req.assigned_staff}">
+                                                                    <c:forEach var="staff" items="${req.assigned_staff}">
+                                                                        <span class="badge-user"><c:out value="${staff.user_name}" /></span>
+                                                                    </c:forEach>
+                                                                </c:when>
+                                                                <c:otherwise>
+                                                                    <i style="color: #888;">Chưa phân công</i>
+                                                                </c:otherwise>
                                                             </c:choose>
                                                         </td>
+
                                                         <td><fmt:formatDate value="${req.created_at}" pattern="dd/MM/yyyy"/></td>
                                                         <td>
                                                             <span class="status-badge status-${fn:replace(req.status, '_', '')}">
@@ -453,22 +514,66 @@
                                     <div class="report-card-header"><i data-feather="briefcase" class="icon"></i><h3>Tình trạng Hợp đồng</h3></div>
                                     <div class="report-card-body">
                                         <ul class="kpi-list">
-                                            <li class="kpi-item"><span class="label">Đang hiệu lực</span><span class="value success"><fmt:formatNumber value="${contractStatus.active}"/></span></li>
-                                            <li class="kpi-item"><span class="label">Sắp hết hạn</span><span class="value warning"><fmt:formatNumber value="${contractStatus.expiring}"/></span></li>
-                                            <li class="kpi-item"><span class="label">Đã hết hạn</span><span class="value danger"><fmt:formatNumber value="${contractStatus.expired}"/></span></li>
+                                            <li class="kpi-item">
+                                                <span class="label">Đang đàm phán</span>
+                                                <span class="value info"><fmt:formatNumber value="${contractStatus.negotiating != null ? contractStatus.negotiating : 0}"/></span>
+                                            </li>
+                                            <li class="kpi-item">
+                                                <span class="label">Đã ký</span>
+                                                <span class="value success"><fmt:formatNumber value="${contractStatus.signed != null ? contractStatus.signed : 0}"/></span>
+                                            </li>
+                                            <li class="kpi-item">
+                                                <span class="label">Đang triển khai</span>
+                                                <span class="value primary"><fmt:formatNumber value="${contractStatus.inProgress != null ? contractStatus.inProgress : 0}"/></span>
+                                            </li>
+                                            <li class="kpi-item">
+                                                <span class="label">Tạm dừng</span>
+                                                <span class="value warning"><fmt:formatNumber value="${contractStatus.paused != null ? contractStatus.paused : 0}"/></span>
+                                            </li>
+                                            <li class="kpi-item">
+                                                <span class="label">Đã hoàn thành</span>
+                                                <span class="value success"><fmt:formatNumber value="${contractStatus.completed != null ? contractStatus.completed : 0}"/></span>
+                                            </li>
+                                            <li class="kpi-item">
+                                                <span class="label">Quá thời hạn</span>
+                                                <span class="value danger"><fmt:formatNumber value="${contractStatus.overdue != null ? contractStatus.overdue : 0}"/></span>
+                                            </li>
+                                            <li class="kpi-item">
+                                                <span class="label">Hủy</span>
+                                                <span class="value danger"><fmt:formatNumber value="${contractStatus.cancelled != null ? contractStatus.cancelled : 0}"/></span>
+                                            </li>
                                         </ul>
+
                                     </div>
                                 </div>
                                 <div class="report-card">
                                     <div class="report-card-header"><i data-feather="tool" class="icon"></i><h3>Tình trạng Sửa chữa</h3></div>
                                     <div class="report-card-body">
                                         <ul class="kpi-list">
-                                            <li class="kpi-item"><span class="label">Đã hoàn thành</span><span class="value success"><fmt:formatNumber value="${requestStatus.completed}"/></span></li>
-                                            <li class="kpi-item"><span class="label">Đang tiến hành</span><span class="value warning"><fmt:formatNumber value="${requestStatus.in_progress}"/></span></li>
-                                            <li class="kpi-item"><span class="label">Chờ xử lý</span><span class="value"><fmt:formatNumber value="${requestStatus.pending}"/></span></li>
+                                            <li class="kpi-item">
+                                                <span class="label">Hoàn thành</span>
+                                                <span class="value success"><fmt:formatNumber value="${requestStatus.completed}"/></span>
+                                            </li>
+                                            <li class="kpi-item">
+                                                <span class="label">Đang thực hiện</span>
+                                                <span class="value warning"><fmt:formatNumber value="${requestStatus.in_progress}"/></span>
+                                            </li>
+                                            <li class="kpi-item">
+                                                <span class="label">Sắp tới</span>
+                                                <span class="value info"><fmt:formatNumber value="${requestStatus.upcoming}"/></span>
+                                            </li>
+                                            <li class="kpi-item">
+                                                <span class="label">Quá hạn</span>
+                                                <span class="value danger"><fmt:formatNumber value="${requestStatus.overdue}"/></span>
+                                            </li>
+                                            <li class="kpi-item">
+                                                <span class="label">Đã huỷ</span>
+                                                <span class="value danger"><fmt:formatNumber value="${requestStatus.cancelled}"/></span>
+                                            </li>
                                         </ul>
                                     </div>
                                 </div>
+
                                 <div class="report-card">
                                     <div class="report-card-header"><i data-feather="package" class="icon"></i><h3>Sản phẩm nổi bật</h3></div>
                                     <div class="report-card-body">
@@ -621,56 +726,104 @@
         // ===================================================================
         // HÀM VẼ BIỂU ĐỒ HỢP ĐỒNG (PIE CHART)
         // ===================================================================
-        else if (reportType === 'hopdong') {
-        const contractData = {
-        active: ${contractStatus.active ne null ? contractStatus.active : 0},
-                expiring: ${contractStatus.expiring ne null ? contractStatus.expiring : 0},
-                expired: ${contractStatus.expired ne null ? contractStatus.expired : 0}
+        if (reportType === 'hopdong') {
+        const contractDataDetail = {
+        negotiating: ${contractStatus.negotiating ne null ? contractStatus.negotiating : 0},
+                signed: ${contractStatus.signed ne null ? contractStatus.signed : 0},
+                inProgress: ${contractStatus.inProgress ne null ? contractStatus.inProgress : 0},
+                paused: ${contractStatus.paused ne null ? contractStatus.paused : 0},
+                completed: ${contractStatus.completed ne null ? contractStatus.completed : 0},
+                overdue: ${contractStatus.overdue ne null ? contractStatus.overdue : 0},
+                cancelled: ${contractStatus.cancelled ne null ? contractStatus.cancelled : 0}
         };
-        const total = contractData.active + contractData.expiring + contractData.expired;
-        if (total > 0) {
+        const totalDetail = Object.values(contractDataDetail).reduce((a, b) => a + b, 0);
+        if (totalDetail > 0) {
         const pieCtx = document.getElementById('contractStatusChart').getContext('2d');
         new Chart(pieCtx, {
         type: 'pie',
                 data: {
-                labels: ['Đang hiệu lực', 'Sắp hết hạn', 'Đã hết hạn'],
+                labels: [
+                        'Đang đàm phán',
+                        'Đã ký',
+                        'Đang triển khai',
+                        'Tạm dừng',
+                        'Đã hoàn thành',
+                        'Quá thời hạn',
+                        'Hủy'
+                ],
                         datasets: [{
-                        data: [contractData.active, contractData.expiring, contractData.expired],
-                                backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
+                        data: [
+                                contractDataDetail.negotiating,
+                                contractDataDetail.signed,
+                                contractDataDetail.inProgress,
+                                contractDataDetail.paused,
+                                contractDataDetail.completed,
+                                contractDataDetail.overdue,
+                                contractDataDetail.cancelled
+                        ],
+                                backgroundColor: [
+                                        '#0099ff',
+                                        '#4CAF50',
+                                        '#3F51B5',
+                                        '#FFC107',
+                                        '#00b894',
+                                        '#e74c3c',
+                                        '#888888'
+                                ],
                                 hoverOffset: 4
                         }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+                options: {
+                responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'right' } }
+                }
         });
         }
         }
+
 
         // ===================================================================
         // HÀM VẼ BIỂU ĐỒ SỬA CHỮA (PIE CHART)
         // ===================================================================
         else if (reportType === 'suachua') {
         const requestData = {
-        completed: ${requestStatus.completed ne null ? requestStatus.completed : 0},
-                in_progress: ${requestStatus.in_progress ne null ? requestStatus.in_progress : 0},
-                pending: ${requestStatus.pending ne null ? requestStatus.pending : 0}
+        completed: ${requestStatus.completed != null ? requestStatus.completed : 0},
+                in_progress: ${requestStatus.in_progress != null ? requestStatus.in_progress : 0},
+                upcoming: ${requestStatus.upcoming != null ? requestStatus.upcoming : 0},
+                overdue: ${requestStatus.overdue != null ? requestStatus.overdue : 0},
+                cancelled: ${requestStatus.cancelled != null ? requestStatus.cancelled : 0}
         };
-        const total = requestData.completed + requestData.in_progress + requestData.pending;
+        const total = requestData.completed + requestData.in_progress + requestData.upcoming + requestData.overdue + requestData.cancelled;
         if (total > 0) {
         const pieCtx = document.getElementById('requestStatusChart').getContext('2d');
         new Chart(pieCtx, {
         type: 'pie',
                 data: {
-                labels: ['Đã hoàn thành', 'Đang tiến hành', 'Chờ xử lý'],
+                labels: ['Hoàn thành', 'Đang thực hiện', 'Sắp tới', 'Quá hạn', 'Đã huỷ'],
                         datasets: [{
-                        data: [requestData.completed, requestData.in_progress, requestData.pending],
-                                backgroundColor: ['#28a745', '#ffc107', '#6c757d'],
+                        data: [
+                                requestData.completed,
+                                requestData.in_progress,
+                                requestData.upcoming,
+                                requestData.overdue,
+                                requestData.cancelled
+                        ],
+                                backgroundColor: ['#28a745', '#ffc107', '#3498db', '#e74c3c', '#6c757d'],
                                 hoverOffset: 4
                         }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+                options: {
+                responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                        legend: { position: 'top' }
+                        }
+                }
         });
         }
         }
+
         // Thêm khối này vào trong script chính
         else if (reportType === 'khachhang') {
         const newCustomers = ${newCustomers ne null ? newCustomers : 0};

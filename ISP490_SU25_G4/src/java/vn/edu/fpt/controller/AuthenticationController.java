@@ -43,6 +43,9 @@ public class AuthenticationController extends HttpServlet {
             default:
                 response.sendRedirect("login.jsp");
                 break;
+            case "changePassword":
+                handleShowChangePassword(request, response);
+                break;
         }
     }
 
@@ -80,6 +83,26 @@ public class AuthenticationController extends HttpServlet {
     // =========================================================================
     // CÁC PHƯƠNG THỨC XỬ LÝ (HANDLER METHODS)
     // =========================================================================
+    private void handleShowChangePassword(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        String email = null;
+        if (session != null) {
+            User user = (User) session.getAttribute("user");
+            if (user != null) {
+                email = user.getEmail();
+            }
+        }
+        if (session == null || email == null) {
+            // Chưa đăng nhập hoặc session hết hạn
+            response.sendRedirect(request.getContextPath() + "/login.jsp");
+            return;
+        }
+        // Nếu cần truyền email sang trang đổi mật khẩu
+        request.setAttribute("email", email);
+        request.getRequestDispatcher("changePassword.jsp").forward(request, response);
+    }
+
     private void handleLogin(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String email = request.getParameter("email");
         String password = request.getParameter("password");

@@ -112,7 +112,7 @@
                     <span>Thông tin cá nhân</span>
                 </a>
 
-                <a href="${pageContext.request.contextPath}/changePassword" class="dropdown-item">
+                <a href="${pageContext.request.contextPath}/auth?action=changePassword" class="dropdown-item">
                     <i data-feather="lock"></i>
                     <span>Đổi mật khẩu</span>
                 </a>

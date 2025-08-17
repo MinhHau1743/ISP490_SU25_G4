@@ -57,6 +57,10 @@ public class ReportDAO extends DBContext {
     }
 
     public double getTotalRevenue(String startDate, String endDate) {
+        // Nếu endDate chỉ có dạng yyyy-MM-dd, bổ sung 23:59:59 cho chắc chắn bao trùm cả ngày cuối
+        if (endDate != null && endDate.length() == 10) {
+            endDate += " 23:59:59";
+        }
         String query = "SELECT SUM(cp.quantity * cp.unit_price) "
                 + "FROM ContractProducts cp "
                 + "JOIN contracts c ON cp.contract_id = c.id "
@@ -121,22 +125,62 @@ public class ReportDAO extends DBContext {
 
     public Map<String, Integer> getContractStatusCounts(String startDate, String endDate) {
         Map<String, Integer> counts = new HashMap<>();
-        String query = "SELECT cs.name, COUNT(c.id) as count "
+
+        // Nếu endDate chỉ có định dạng yyyy-MM-dd thì cộng thêm 23:59:59
+        if (endDate != null && endDate.length() == 10) {
+            endDate += " 23:59:59";
+        }
+
+        // Câu SQL lấy số lượng hợp đồng theo trạng thái
+        String query = "SELECT cs.id, cs.name, COUNT(c.id) as count "
                 + "FROM contracts c "
                 + "JOIN contract_statuses cs ON c.status_id = cs.id "
                 + "WHERE c.created_at BETWEEN ? AND ? AND c.is_deleted = 0 "
-                + "GROUP BY cs.name";
+                + "GROUP BY cs.id, cs.name";
+
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
+
         try {
             conn = getConnection();
             ps = conn.prepareStatement(query);
             ps.setString(1, startDate);
             ps.setString(2, endDate);
             rs = ps.executeQuery();
+
             while (rs.next()) {
-                counts.put(rs.getString("name"), rs.getInt("count"));
+                int id = rs.getInt("id");
+                int count = rs.getInt("count");
+
+                // Gán key rõ ràng (dùng trong JSP), value là số lượng lấy được từ DB
+                switch (id) {
+                    case 1:
+                        counts.put("negotiating", count);
+                        break;
+                    case 2:
+                        counts.put("inProgress", count);
+                        break;
+                    case 3:
+                        counts.put("completed", count);
+                        break;
+                    case 4:
+                        counts.put("overdue", count);
+                        break;
+                    case 5:
+                        counts.put("signed", count);
+                        break;      // CHỈ CÓ "signed" chứ KHÔNG được "Đã ký"
+                    case 6:
+                        counts.put("paused", count);
+                        break;
+                    case 7:
+                        counts.put("done", count);
+                        break;        // nếu k dùng có thể bỏ
+                    case 8:
+                        counts.put("cancelled", count);
+                        break;
+                }
+
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -148,14 +192,19 @@ public class ReportDAO extends DBContext {
 
     public Map<String, Integer> getTechnicalRequestStatusCounts(String startDate, String endDate) {
         Map<String, Integer> counts = new HashMap<>();
-        counts.put("Đã giải quyết", 0);
-        counts.put("Đang xử lý", 0);
-        counts.put("Chờ xử lý", 0);
+        counts.put("upcoming", 0);        // Sắp tới
+        counts.put("in_progress", 0);     // Đang thực hiện
+        counts.put("completed", 0);       // Hoàn thành
+        counts.put("overdue", 0);         // Quá hạn
+        counts.put("cancelled", 0);       // Đã huỷ
 
-        String query = "SELECT status, COUNT(id) as count "
-                + "FROM TechnicalRequests "
-                + "WHERE created_at BETWEEN ? AND ? AND is_deleted = 0 "
-                + "GROUP BY status";
+        String query = "SELECT s.status_name, COUNT(DISTINCT tr.id) as count "
+                + "FROM TechnicalRequests tr "
+                + "LEFT JOIN MaintenanceSchedules ms ON tr.id = ms.technical_request_id "
+                + "LEFT JOIN Statuses s ON ms.status_id = s.id "
+                + "WHERE tr.created_at BETWEEN ? AND ? AND tr.is_deleted = 0 "
+                + "GROUP BY s.status_name";
+
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -166,19 +215,30 @@ public class ReportDAO extends DBContext {
             ps.setString(2, endDate);
             rs = ps.executeQuery();
             while (rs.next()) {
-                String status = rs.getString("status");
+                String statusName = rs.getString("status_name");
                 int count = rs.getInt("count");
-                switch (status) {
-                    case "resolved":
-                    case "closed":
-                        counts.put("Đã giải quyết", counts.get("Đã giải quyết") + count);
+                if (statusName == null) {
+                    continue;
+                }
+                switch (statusName.trim()) {
+                    case "Sắp tới":
+                        counts.put("upcoming", counts.get("upcoming") + count);
                         break;
-                    case "assigned":
-                    case "in_progress":
-                        counts.put("Đang xử lý", counts.get("Đang xử lý") + count);
+                    case "Đang thực hiện":
+                        counts.put("in_progress", counts.get("in_progress") + count);
                         break;
-                    case "new":
-                        counts.put("Chờ xử lý", counts.get("Chờ xử lý") + count);
+                    case "Hoàn thành":
+                        counts.put("completed", counts.get("completed") + count);
+                        break;
+                    case "Quá hạn":
+                        counts.put("overdue", counts.get("overdue") + count);
+                        break;
+                    case "Đã huỷ":
+                    case "Đã hủy":
+                        counts.put("cancelled", counts.get("cancelled") + count);
+                        break;
+                    default:
+                        // Nếu muốn gom trạng thái khác vào nhóm nào thì thêm ở đây
                         break;
                 }
             }
@@ -322,12 +382,16 @@ public class ReportDAO extends DBContext {
     // ## FIX: Thay thế `c.enterprise_id` bằng `c.customer_id` (hoặc tên cột đúng trong DB của bạn) ##
     public List<Map<String, Object>> getContractsList(String startDate, String endDate) {
         List<Map<String, Object>> contracts = new ArrayList<>();
+        if (endDate != null && endDate.length() == 10) {
+            endDate += " 23:59:59";
+        }
         String query = "SELECT c.contract_code, e.name as enterprise_name, c.start_date, c.end_date, cs.name as status "
                 + "FROM contracts c "
-                + "JOIN Enterprises e ON c.customer_id = e.id "
+                + "JOIN Enterprises e ON c.enterprise_id = e.id "
                 + "LEFT JOIN contract_statuses cs ON c.status_id = cs.id "
                 + "WHERE c.created_at BETWEEN ? AND ? "
                 + "ORDER BY c.created_at DESC";
+
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -356,29 +420,30 @@ public class ReportDAO extends DBContext {
 
     public List<Map<String, Object>> getTechnicalRequestsWithDevices(String startDate, String endDate) {
         Map<Integer, Map<String, Object>> requestMap = new HashMap<>();
-        String requestsQuery = "SELECT tr.id, tr.request_code, tr.title, e.name as enterprise_name, "
-                + "CONCAT_WS(' ', u.last_name, u.middle_name, u.first_name) as assigned_to_name, "
-                + "tr.created_at, tr.status "
+
+        // 1. Lấy TechnicalRequests với status (status là trạng thái maintenance gắn vào request)
+        String requestsQuery
+                = "SELECT tr.id, tr.request_code, tr.title, e.name AS enterprise_name, "
+                + "CONCAT_WS(' ', u.last_name, u.middle_name, u.first_name) AS assigned_to_name, "
+                + "tr.created_at, "
+                + "s.status_name AS status "
                 + "FROM TechnicalRequests tr "
                 + "JOIN Enterprises e ON tr.enterprise_id = e.id "
                 + "LEFT JOIN users u ON tr.assigned_to_id = u.id "
+                + "LEFT JOIN MaintenanceSchedules ms ON tr.id = ms.technical_request_id "
+                + "LEFT JOIN Statuses s ON ms.status_id = s.id "
                 + "WHERE tr.is_deleted = 0 AND tr.created_at BETWEEN ? AND ? "
                 + "ORDER BY tr.created_at DESC";
 
         Connection conn = null;
-        PreparedStatement psRequests = null;
-        ResultSet rsRequests = null;
-        PreparedStatement psDevices = null;
-        ResultSet rsDevices = null;
-
+        PreparedStatement psRequests = null, psDevices = null, psSchedules = null, psAssignments = null;
+        ResultSet rsRequests = null, rsDevices = null, rsSchedules = null, rsAssignments = null;
         try {
             conn = getConnection();
-
             psRequests = conn.prepareStatement(requestsQuery);
             psRequests.setString(1, startDate);
             psRequests.setString(2, endDate);
             rsRequests = psRequests.executeQuery();
-
             List<Integer> requestIds = new ArrayList<>();
             while (rsRequests.next()) {
                 int requestId = rsRequests.getInt("id");
@@ -391,22 +456,21 @@ public class ReportDAO extends DBContext {
                 request.put("created_at", rsRequests.getTimestamp("created_at"));
                 request.put("status", rsRequests.getString("status"));
                 request.put("devices", new ArrayList<Map<String, Object>>());
-
+                request.put("assigned_staff", new ArrayList<Map<String, Object>>());
                 requestMap.put(requestId, request);
                 requestIds.add(requestId);
             }
 
+            // 2. Lấy danh sách thiết bị cho từng request
             if (!requestIds.isEmpty()) {
                 String placeholders = requestIds.stream().map(id -> "?").collect(Collectors.joining(","));
                 String devicesQuery = "SELECT technical_request_id, device_name, serial_number, problem_description "
                         + "FROM TechnicalRequestDevices WHERE technical_request_id IN (" + placeholders + ")";
-
                 psDevices = conn.prepareStatement(devicesQuery);
                 for (int i = 0; i < requestIds.size(); i++) {
                     psDevices.setInt(i + 1, requestIds.get(i));
                 }
                 rsDevices = psDevices.executeQuery();
-
                 while (rsDevices.next()) {
                     int technicalRequestId = rsDevices.getInt("technical_request_id");
                     if (requestMap.containsKey(technicalRequestId)) {
@@ -414,10 +478,59 @@ public class ReportDAO extends DBContext {
                         device.put("device_name", rsDevices.getString("device_name"));
                         device.put("serial_number", rsDevices.getString("serial_number"));
                         device.put("problem_description", rsDevices.getString("problem_description"));
-
                         @SuppressWarnings("unchecked")
                         List<Map<String, Object>> devicesList = (List<Map<String, Object>>) requestMap.get(technicalRequestId).get("devices");
                         devicesList.add(device);
+                    }
+                }
+            }
+
+            // 3. Lấy danh sách schedules cho từng request (để gom assigned_staff)
+            if (!requestIds.isEmpty()) {
+                String placeholders = requestIds.stream().map(id -> "?").collect(Collectors.joining(","));
+                String scheduleQuery = "SELECT id, technical_request_id FROM MaintenanceSchedules "
+                        + "WHERE technical_request_id IN (" + placeholders + ")";
+                psSchedules = conn.prepareStatement(scheduleQuery);
+                for (int i = 0; i < requestIds.size(); i++) {
+                    psSchedules.setInt(i + 1, requestIds.get(i));
+                }
+                rsSchedules = psSchedules.executeQuery();
+                // Map scheduleId -> requestId
+                Map<Integer, Integer> scheduleRequestMap = new HashMap<>();
+                List<Integer> scheduleIds = new ArrayList<>();
+                while (rsSchedules.next()) {
+                    int scheduleId = rsSchedules.getInt("id");
+                    int reqId = rsSchedules.getInt("technical_request_id");
+                    scheduleRequestMap.put(scheduleId, reqId);
+                    scheduleIds.add(scheduleId);
+                }
+
+                // 4. Lấy list nhân viên phân công theo schedules
+                if (!scheduleIds.isEmpty()) {
+                    String schPlaceholders = scheduleIds.stream().map(id -> "?").collect(Collectors.joining(","));
+                    String assignmentsQuery
+                            = "SELECT ma.maintenance_schedule_id, u.id as user_id, "
+                            + "CONCAT_WS(' ', u.last_name, u.middle_name, u.first_name) as user_name "
+                            + "FROM MaintenanceAssignments ma "
+                            + "JOIN Users u ON ma.user_id = u.id "
+                            + "WHERE ma.maintenance_schedule_id IN (" + schPlaceholders + ")";
+                    psAssignments = conn.prepareStatement(assignmentsQuery);
+                    for (int i = 0; i < scheduleIds.size(); i++) {
+                        psAssignments.setInt(i + 1, scheduleIds.get(i));
+                    }
+                    rsAssignments = psAssignments.executeQuery();
+                    while (rsAssignments.next()) {
+                        int scheduleId = rsAssignments.getInt("maintenance_schedule_id");
+                        Integer reqId = scheduleRequestMap.get(scheduleId);
+                        if (reqId != null && requestMap.get(reqId) != null) {
+                            Map<String, Object> assignment = new HashMap<>();
+                            assignment.put("user_id", rsAssignments.getInt("user_id"));
+                            assignment.put("user_name", rsAssignments.getString("user_name"));
+
+                            @SuppressWarnings("unchecked")
+                            List<Map<String, Object>> staffList = (List<Map<String, Object>>) requestMap.get(reqId).get("assigned_staff");
+                            staffList.add(assignment);
+                        }
                     }
                 }
             }
@@ -425,9 +538,10 @@ public class ReportDAO extends DBContext {
             e.printStackTrace();
         } finally {
             closeResources(null, psDevices, rsDevices);
+            closeResources(null, psSchedules, rsSchedules);
+            closeResources(null, psAssignments, rsAssignments);
             closeResources(conn, psRequests, rsRequests);
         }
-
         return new ArrayList<>(requestMap.values());
     }
 
@@ -459,5 +573,35 @@ public class ReportDAO extends DBContext {
             closeResources(conn, ps, rs);
         }
         return trendData;
+    }
+
+    public static void main(String[] args) {
+        ReportDAO dao = new ReportDAO();
+        String startDate = "2025-08-01";
+        String endDate = "2025-08-18";
+
+        List<Map<String, Object>> contracts = dao.getContractsList(startDate, endDate);
+
+        System.out.println("Danh sách hợp đồng từ " + startDate + " đến " + endDate + ":");
+        System.out.println("----------------------------------------------------");
+        System.out.printf("%-12s %-25s %-12s %-12s %-18s\n", "Mã HĐ", "Khách hàng", "Ngày BĐ", "Ngày KT", "Trạng thái");
+
+        for (Map<String, Object> contract : contracts) {
+            String code = (String) contract.get("code");
+            String enterpriseName = (String) contract.get("enterprise_name");
+            java.sql.Date start = (java.sql.Date) contract.get("start_date");
+            java.sql.Date end = (java.sql.Date) contract.get("end_date");
+            String status = (String) contract.get("status");
+
+            // Định dạng ngày cho dễ đọc
+            String startDateStr = start != null ? new java.text.SimpleDateFormat("dd/MM/yyyy").format(start) : "";
+            String endDateStr = end != null ? new java.text.SimpleDateFormat("dd/MM/yyyy").format(end) : "";
+
+            System.out.printf("%-12s %-25s %-12s %-12s %-18s\n", code, enterpriseName, startDateStr, endDateStr, status);
+        }
+
+        if (contracts.isEmpty()) {
+            System.out.println("Không có hợp đồng nào trong khoảng thời gian này!");
+        }
     }
 }
