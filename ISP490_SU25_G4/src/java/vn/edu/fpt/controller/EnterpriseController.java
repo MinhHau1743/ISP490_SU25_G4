@@ -39,7 +39,7 @@ import vn.edu.fpt.dao.UserDAO;
         maxFileSize = 1024 * 1024 * 10, // 10MB
         maxRequestSize = 1024 * 1024 * 50 // 50MB
 )
-public class CustomerController extends HttpServlet {
+public class EnterpriseController extends HttpServlet {
 
     private static final String UPLOAD_DIR = "uploads" + File.separator + "avatars";
     private static final int PAGE_SIZE = 10;
