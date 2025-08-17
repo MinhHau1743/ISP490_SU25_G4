@@ -136,6 +136,17 @@
                 border-radius: 8px;
                 color: #374151;
             }
+            /* CSS cho thông báo lỗi */
+            .error-message {
+                background-color: #ffebee;
+                color: #c62828;
+                padding: 12px;
+                margin-bottom: 20px;
+                border-radius: 8px;
+                border: 1px solid #ffcdd2;
+                text-align: center;
+                font-size: 14px;
+            }
         </style>
     </head>
     <body>
@@ -148,7 +159,6 @@
                     <h1>Đánh giá chất lượng dịch vụ</h1>
                     <p>
                         Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi. Vui lòng cho biết cảm nhận của bạn về
-                        <%-- HIỂN THỊ ĐỘNG TÙY THEO LOẠI PHẢN HỒI --%>
                         <c:if test="${not empty technicalRequest}">
                             yêu cầu <strong>"${technicalRequest.title}"</strong> của doanh nghiệp <strong>${technicalRequest.enterpriseName}</strong>.
                         </c:if>
@@ -158,17 +168,18 @@
                     </p>
                 </div>
 
-                <form action="${pageContext.request.contextPath}/feedback?action=create" method="POST" class="feedback-form">
-                    <%-- CÁC INPUT ẨN QUAN TRỌNG ĐỂ GỬI ĐÚNG DỮ LIỆU --%>
+                <c:if test="${not empty errorMessage}">
+                    <div class="error-message">${errorMessage}</div>
+                </c:if>
+
+                <form action="${pageContext.request.contextPath}/feedback?action=create" method="POST" class="feedback-form" id="feedbackForm">
                     <input type="hidden" id="rating-value" name="rating" value="0">
 
-                    <%-- Khối input ẩn cho Yêu cầu Kỹ thuật --%>
                     <c:if test="${not empty technicalRequest}">
                         <input type="hidden" name="technicalRequestId" value="${technicalRequest.id}">
                         <input type="hidden" name="enterpriseId" value="${technicalRequest.enterpriseId}">
                     </c:if>
 
-                    <%-- Khối input ẩn cho Hợp đồng --%>
                     <c:if test="${not empty contract}">
                         <input type="hidden" name="contractId" value="${contract.id}">
                         <input type="hidden" name="enterpriseId" value="${contract.enterpriseId}">
@@ -185,7 +196,7 @@
                     </div>
 
                     <div class="form-group star-rating-group">
-                        <label>Mức độ hài lòng của bạn?</label>
+                        <label>Mức độ hài lòng của bạn? (*)</label>
                         <div class="star-rating" id="star-container">
                             <i class="star" data-value="1" data-feather="star"></i>
                             <i class="star" data-value="2" data-feather="star"></i>
@@ -217,6 +228,7 @@
                 const stars = document.querySelectorAll('.star-rating .star');
                 const ratingValueInput = document.getElementById('rating-value');
                 const ratingCaption = document.getElementById('rating-caption');
+                const form = document.getElementById('feedbackForm');
                 let currentRating = 0;
 
                 const ratingCaptions = {
@@ -251,6 +263,18 @@
                         }
                         updateStars(currentRating);
                     });
+                });
+
+                // =======================================================
+                // ## VALIDATION ĐƯỢC THÊM VÀO TẠI ĐÂY ##
+                // =======================================================
+                form.addEventListener('submit', function (event) {
+                    if (ratingValueInput.value === '0') {
+                        // Ngăn form gửi đi
+                        event.preventDefault();
+                        // Hiển thị thông báo lỗi
+                        alert('Vui lòng chọn một mức độ hài lòng (ít nhất 1 sao).');
+                    }
                 });
             });
         </script>

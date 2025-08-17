@@ -30,6 +30,20 @@ public class FeedbackView {
     private String contractCode;
     private String contractCreatorName;
 
+    // =======================================================
+    // ## THUỘC TÍNH MỚI ĐƯỢC THÊM VÀO ĐỂ SỬA LỖI ##
+    // =======================================================
+    private Date contractSignedDate;
+
+    public Date getContractSignedDate() {
+        return contractSignedDate;
+    }
+
+    public void setContractSignedDate(Date contractSignedDate) {
+        this.contractSignedDate = contractSignedDate;
+    }
+    // =======================================================
+
     public Integer getContractId() {
         return contractId;
     }
