@@ -1196,13 +1196,6 @@
                                 <button class="btn-nav" id="nextDayBtn"><i data-feather="chevron-right"></i></button>
                             </div>
                             <div class="toolbar-spacer"></div>
-                            <form action="schedule" method="get">
-                                <input type="hidden" name="action" value="createSchedule">
-                                <button class="btn-primary" id="add-schedule-btn" style="background-color: #e0f2f1; color: #000; border: none;">
-                                    <i data-feather="plus"></i>
-                                    Lên lịch bảo trì
-                                </button>
-                            </form>
                         </div>
                         <div class="calendar-content">
                             <div class="calendar-left">
@@ -2333,7 +2326,6 @@
                 console.log('task#' + index, {
                 start, end, days, id: item.id, title: item.getAttribute('data-item-name')
                 });
-                item.style.width = 'calc(' + (days * 100) + '% + 8px)';
                 });
                 });
                 document.querySelectorAll('#month-view .month-day').forEach(day => {
