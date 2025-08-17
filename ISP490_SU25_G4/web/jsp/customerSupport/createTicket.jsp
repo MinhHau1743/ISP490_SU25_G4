@@ -166,11 +166,13 @@
                                 <div class="sidebar-form-row">
                                     <label for="employeeId">Nhân viên phụ trách</label>
                                     <div class="input-with-icon">
-                                        <select id="employeeId2" name="employeesId" class="form-control" multiple required>
-                                            <%-- Không cần option mặc định trong giao diện chọn nhiều --%>
+                                        <select id="employeeId2" name="employeeId" class="form-control" required>
+                                            <option value="">-- Chọn nhân viên --</option>
                                             <c:forEach var="employee" items="${employeeList}">
-                                                <option value="${employee.id}">${employee.lastName} ${employee.middleName} ${employee.firstName}</option>
-                                            </c:forEach>
+                                                <option value="${employee.id}" <c:if test="${employee.id == assignedUserId}">selected</c:if>>
+                                                    ${employee.lastName} ${employee.middleName} ${employee.firstName}
+                                                </option>
+                                            </c:forEach> 
                                         </select>
                                     </div>
                                 </div>
@@ -253,15 +255,6 @@
         <!-- Ở cuối file JSP, trước các script khác -->
         <script>
             window.contextPath = '<%= request.getContextPath()%>';
-        </script>
-        <script>
-            $(document).ready(function () {
-                // Gọi Select2 cho thẻ select có id là 'employeeId'
-                $('#employeeId2').select2({
-                    placeholder: "Chọn nhân viên phụ trách",
-                    allowClear: true
-                });
-            });
         </script>
         <!-- nạp file js nghiệp vụ sau khi đã có APP_CONFIG -->
         <script src="${pageContext.request.contextPath}/js/createTicket.js" defer></script>

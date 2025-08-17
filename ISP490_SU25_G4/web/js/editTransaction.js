@@ -187,11 +187,4 @@ document.addEventListener('DOMContentLoaded', function () {
         if (initialColor) setActiveColor(initialColor);
     }
 
-    // SELECT2 EMPLOYEE
-    if ($('#employeeId2').length) {
-        $('#employeeId2').select2({
-            placeholder: "Chọn nhân viên phụ trách",
-            allowClear: true
-        });
-    }
 });

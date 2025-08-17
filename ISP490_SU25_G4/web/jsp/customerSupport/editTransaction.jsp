@@ -18,8 +18,6 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/createTicket.css?v=<%= System.currentTimeMillis()%>">
-        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
         <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -145,16 +143,16 @@
                                 <div class="sidebar-form-row">
                                     <label for="employeeId">Nhân viên phụ trách</label>
                                     <div class="input-with-icon">
-                                        <select id="employeeId2" name="employeesId" class="form-control" multiple required>
-                                            <%-- Không cần option mặc định trong giao diện chọn nhiều --%>
+                                        <select id="employeeId2" name="employeeId" class="form-control" required>
+                                            <option value="">-- Chọn nhân viên --</option>
                                             <c:forEach var="employee" items="${employeeList}">
-                                                <option value="${employee.id}" <c:if test="${assignedUserIds.contains(employee.id)}">selected</c:if>>${employee.lastName} ${employee.middleName} ${employee.firstName}</option>
+                                                <option value="${employee.id}" <c:if test="${employee.id == assignedUserId}">selected</c:if>>
+                                                    ${employee.lastName} ${employee.middleName} ${employee.firstName}
+                                                </option>
                                             </c:forEach> 
                                         </select>
                                     </div>
                                 </div>
-
-
                                 <div class="sidebar-form-row">
                                     <label>Ngày tạo</label>
                                     <div class="input-with-icon">
