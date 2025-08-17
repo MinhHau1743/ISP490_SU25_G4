@@ -37,7 +37,7 @@ import vn.edu.fpt.model.Service;
 import vn.edu.fpt.model.Ward;
 
 @WebServlet(name = "TicketController", urlPatterns = {"/ticket"})
-public class TicketController extends HttpServlet {
+public class TechnicalRequestController extends HttpServlet {
 
     private TechnicalRequestDAO dao;
     private final Gson gson = new Gson();
@@ -91,7 +91,7 @@ public class TicketController extends HttpServlet {
             e.printStackTrace(); // In lỗi ra log server để debug
             throw new ServletException("Database access error.", e);
         } catch (Exception ex) {
-            Logger.getLogger(TicketController.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(TechnicalRequestController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
