@@ -52,11 +52,13 @@ public class CampaignDAO extends DBContext {
         sql.append("AND (c.is_deleted IS NULL OR c.is_deleted = 0) ");
 
         if (searchTerm != null && !searchTerm.trim().isEmpty()) {
-            sql.append("AND (c.name LIKE ? OR e.name LIKE ?) ");
+            sql.append("AND (c.campaign_code LIKE ? OR c.name LIKE ? OR e.name LIKE ?) ");
             String like = "%" + searchTerm.trim() + "%";
             params.add(like);
             params.add(like);
+            params.add(like);
         }
+
         if (typeIdFilter > 0) {
             sql.append("AND c.type_id = ? ");
             params.add(typeIdFilter);
@@ -156,13 +158,14 @@ public class CampaignDAO extends DBContext {
 
         // Ẩn campaign đã xoá mềm (nếu DB đã có cột này)
         sql.append("AND (c.is_deleted IS NULL OR c.is_deleted = 0) ");
-
         if (searchTerm != null && !searchTerm.trim().isEmpty()) {
-            sql.append("AND (c.name LIKE ? OR e.name LIKE ?) ");
+            sql.append("AND (c.campaign_code LIKE ? OR c.name LIKE ? OR e.name LIKE ?) ");
             String like = "%" + searchTerm.trim() + "%";
             params.add(like);
             params.add(like);
+            params.add(like);
         }
+
         if (typeIdFilter > 0) {
             sql.append("AND c.type_id = ? ");
             params.add(typeIdFilter);
