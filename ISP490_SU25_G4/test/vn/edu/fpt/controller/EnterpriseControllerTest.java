@@ -1,69 +1,76 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/UnitTests/JUnit4TestClass.java to edit this template
- */
 package vn.edu.fpt.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.junit.After;
-import org.junit.AfterClass;
+import jakarta.servlet.http.HttpSession;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.MockitoJUnitRunner;
+import vn.edu.fpt.dao.DBContext;
+import vn.edu.fpt.dao.EnterpriseDAO;
+import vn.edu.fpt.dao.UserDAO;
 
-/**
- *
- * @author PC
- */
+import java.sql.Connection;
+
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+@RunWith(MockitoJUnitRunner.class)
 public class EnterpriseControllerTest {
-    
-    public EnterpriseControllerTest() {
-    }
-    
-    @BeforeClass
-    public static void setUpClass() {
-    }
-    
-    @AfterClass
-    public static void tearDownClass() {
-    }
-    
+
+    @Mock private HttpServletRequest request;
+    @Mock private HttpServletResponse response;
+    @Mock private HttpSession session;
+    @Mock private DBContext dbContext;
+    @Mock private Connection conn;
+    @Mock private EnterpriseDAO enterpriseDAO;
+    @Mock private UserDAO userDAO;
+
+    // Bỏ việc khai báo controller ở đây
+    // private EnterpriseController controller;
+
     @Before
     public void setUp() {
-    }
-    
-    @After
-    public void tearDown() {
+        // Chỉ khởi tạo mock, không làm gì khác
+        MockitoAnnotations.openMocks(this);
     }
 
-    /**
-     * Test of doGet method, of class EnterpriseController.
-     */
     @Test
-    public void testDoGet() throws Exception {
-        System.out.println("doGet");
-        HttpServletRequest request = null;
-        HttpServletResponse response = null;
-        EnterpriseController instance = new EnterpriseController();
-        instance.doGet(request, response);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
+    public void testDoPost_WhenCreatingEnterprise_ShouldSucceed() throws Exception {
+        // === BƯỚC QUAN TRỌNG: KHỞI TẠO CONTROLLER Ở ĐÂY ===
+        // Khởi tạo controller ngay bên trong test case
+        EnterpriseController controller = new EnterpriseController(enterpriseDAO, userDAO, null, null, dbContext);
 
-    /**
-     * Test of doPost method, of class EnterpriseController.
-     */
-    @Test
-    public void testDoPost() throws Exception {
-        System.out.println("doPost");
-        HttpServletRequest request = null;
-        HttpServletResponse response = null;
-        EnterpriseController instance = new EnterpriseController();
-        instance.doPost(request, response);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+        // 1. Dàn dựng (Arrange)
+        // Thiết lập các mock cơ bản
+        when(request.getSession()).thenReturn(session);
+        when(session.getAttribute("user")).thenReturn(new Object());
+        when(dbContext.getConnection()).thenReturn(conn);
+        
+        // Thiết lập các mock cho luồng create
+        when(request.getPathInfo()).thenReturn("/create");
+        when(request.getContextPath()).thenReturn("/project-name");
+        when(request.getParameter("customerName")).thenReturn("Final Corp");
+        when(request.getParameter("fullName")).thenReturn("Final User");
+        when(request.getParameter("province")).thenReturn("1");
+        when(request.getParameter("district")).thenReturn("2");
+        when(request.getParameter("ward")).thenReturn("3");
+        when(request.getParameter("customerGroup")).thenReturn("5");
+
+        // Thiết lập kịch bản cho DAO
+        doReturn(false).when(enterpriseDAO).isNameExists(anyString(), any());
+        doReturn(100).when(enterpriseDAO).insertAddress(any(), any(), anyInt(), anyInt(), anyInt());
+        doReturn(200).when(enterpriseDAO).insertEnterprise(any(), any(), any(), any(), anyInt(), anyInt(), any(), any(), any());
+        doNothing().when(enterpriseDAO).insertEnterpriseContact(any(), anyInt(), any(), any(), any(), any());
+
+        // 2. Hành động (Act)
+        controller.doPost(request, response);
+
+        // 3. Xác thực (Assert)
+        verify(response).sendRedirect("/project-name/customer/list");
+        verify(conn).commit();
     }
-    
 }

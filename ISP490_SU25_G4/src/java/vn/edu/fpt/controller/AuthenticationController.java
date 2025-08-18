@@ -22,6 +22,24 @@ import vn.edu.fpt.model.User;
 @WebServlet(name = "AuthenticationController", urlPatterns = {"/auth"})
 public class AuthenticationController extends HttpServlet {
 
+    private final UserDAO userDao;
+
+    /**
+     * Constructor mặc định, được server (Tomcat) sử dụng khi chạy ứng dụng thật.
+     * Nó tự khởi tạo một UserDAO thật để kết nối vào CSDL.
+     */
+    public AuthenticationController() {
+        this.userDao = new UserDAO();
+    }
+
+    /**
+     * Constructor dùng cho Unit Test.
+     * Nó cho phép chúng ta "tiêm" (inject) một UserDAO giả (mock) từ bên ngoài.
+     */
+    public AuthenticationController(UserDAO userDao) {
+        this.userDao = userDao;
+    }
+
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
             "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$");
 
@@ -40,11 +58,11 @@ public class AuthenticationController extends HttpServlet {
             case "resendOTP":
                 handleResendOTP(request, response);
                 break;
-            default:
-                response.sendRedirect("login.jsp");
-                break;
             case "changePassword":
                 handleShowChangePassword(request, response);
+                break;
+            default:
+                response.sendRedirect("login.jsp");
                 break;
         }
     }
@@ -70,7 +88,6 @@ public class AuthenticationController extends HttpServlet {
             case "resetPassword":
                 handleResetPassword(request, response);
                 break;
-            // BỔ SUNG THÊM CASE CHO CHỨC NĂNG ĐỔI MẬT KHẨU KHI ĐÃ ĐĂNG NHẬP
             case "changePassword":
                 handleChangePassword(request, response);
                 break;
@@ -83,6 +100,7 @@ public class AuthenticationController extends HttpServlet {
     // =========================================================================
     // CÁC PHƯƠNG THỨC XỬ LÝ (HANDLER METHODS)
     // =========================================================================
+    
     private void handleShowChangePassword(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
@@ -112,8 +130,9 @@ public class AuthenticationController extends HttpServlet {
             request.getRequestDispatcher("login.jsp").forward(request, response);
             return;
         }
-        UserDAO dao = new UserDAO();
-        User user = dao.login(email, password);
+        
+        User user = this.userDao.login(email, password);
+        
         if (user != null) {
             HttpSession session = request.getSession(true);
             session.setAttribute("user", user);
@@ -146,12 +165,13 @@ public class AuthenticationController extends HttpServlet {
             request.getRequestDispatcher("forgotPassword.jsp").forward(request, response);
             return;
         }
-        UserDAO dao = new UserDAO();
-        if (!dao.emailExists(email)) {
+        
+        if (!this.userDao.emailExists(email)) {
             request.setAttribute("error", "Email không tồn tại trong hệ thống.");
             request.getRequestDispatcher("forgotPassword.jsp").forward(request, response);
             return;
         }
+        
         String otp = String.valueOf(new Random().nextInt(900000) + 100000);
         HttpSession session = request.getSession();
         session.setAttribute("email", email);
@@ -229,18 +249,17 @@ public class AuthenticationController extends HttpServlet {
             request.getRequestDispatcher("resetPassword.jsp").forward(request, response);
             return;
         }
-        UserDAO dao = new UserDAO();
-        boolean updated = dao.updatePassword(email, newPassword);
+        
+        boolean updated = this.userDao.updatePassword(email, newPassword);
+        
         if (updated) {
             User loggedInUser = (User) session.getAttribute("user");
             if (loggedInUser != null) {
-                dao.setRequireChangePasswordFlag(email, 0);
+                this.userDao.setRequireChangePasswordFlag(email, 0);
                 session.removeAttribute("email");
                 response.sendRedirect("dashboard.jsp");
             } else {
-                session.removeAttribute("otp");
-                session.removeAttribute("otpExpiresAt");
-                session.removeAttribute("email");
+                session.invalidate();
                 request.setAttribute("success", "Cập nhật mật khẩu thành công! Vui lòng đăng nhập lại.");
                 request.getRequestDispatcher("login.jsp").forward(request, response);
             }
@@ -250,9 +269,6 @@ public class AuthenticationController extends HttpServlet {
         }
     }
 
-    /**
-     * BỔ SUNG: Xử lý chức năng đổi mật khẩu khi người dùng đã đăng nhập.
-     */
     private void handleChangePassword(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
@@ -265,9 +281,7 @@ public class AuthenticationController extends HttpServlet {
         String newPassword = request.getParameter("newPassword");
         String confirmPassword = request.getParameter("confirmNewPassword");
 
-        UserDAO dao = new UserDAO();
-
-        if (!dao.checkPassword(email, currentPassword)) {
+        if (!this.userDao.checkPassword(email, currentPassword)) {
             request.setAttribute("errorMessage", "Mật khẩu hiện tại không đúng!");
             request.getRequestDispatcher("changePassword.jsp").forward(request, response);
             return;
@@ -283,7 +297,7 @@ public class AuthenticationController extends HttpServlet {
             return;
         }
 
-        boolean updated = dao.updatePassword(email, newPassword);
+        boolean updated = this.userDao.updatePassword(email, newPassword);
         if (updated) {
             request.setAttribute("sucessfullyMessage", "Đổi mật khẩu thành công!");
         } else {

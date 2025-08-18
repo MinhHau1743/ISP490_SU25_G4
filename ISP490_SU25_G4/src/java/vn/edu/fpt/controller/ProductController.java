@@ -190,8 +190,16 @@ public class ProductController extends HttpServlet {
         try {
             HttpSession session = request.getSession();
             Integer userId = (Integer) session.getAttribute("userId");
+            String userRole = (String) session.getAttribute("userRole");
             if (userId == null) {
                 response.sendRedirect(request.getContextPath() + "/login.jsp");
+                return;
+            }
+
+            // Dòng kiểm tra quyền mới
+            if (!isAuthorized(userRole)) {
+                // Gửi lỗi 403 Forbidden nếu không có quyền
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền thực hiện hành động này.");
                 return;
             }
 
@@ -277,8 +285,16 @@ public class ProductController extends HttpServlet {
         try {
             HttpSession session = request.getSession();
             Integer userId = (Integer) session.getAttribute("userId");
+            String userRole = (String) session.getAttribute("userRole");
             if (userId == null) {
                 response.sendRedirect(request.getContextPath() + "/login.jsp");
+                return;
+            }
+
+            // Dòng kiểm tra quyền mới
+            if (!isAuthorized(userRole)) {
+                // Gửi lỗi 403 Forbidden nếu không có quyền
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền thực hiện hành động này.");
                 return;
             }
 
@@ -298,6 +314,7 @@ public class ProductController extends HttpServlet {
             List<String> errors = validateProductInput(name, oldProduct.getProductCode(), origin, priceRaw, this.productDao, false);
 
             if (!errors.isEmpty()) {
+             
                 request.setAttribute("editErrors", errors);
                 oldProduct.setName(name);
                 oldProduct.setOrigin(origin);
@@ -351,7 +368,7 @@ public class ProductController extends HttpServlet {
         Integer userId = (Integer) session.getAttribute("userId");
         String userRole = (String) session.getAttribute("userRole");
 
-        if (userId == null || !"Admin".equals(userRole)) {
+        if (userId == null || !isAuthorized(userRole)) { // Sử dụng phương thức mới
             response.sendRedirect(request.getContextPath() + "/product?action=list");
             return;
         }
@@ -367,7 +384,8 @@ public class ProductController extends HttpServlet {
             e.printStackTrace();
         }
 
-        response.sendRedirect("product?action=list");
+        // ...
+        response.sendRedirect(request.getContextPath() + "/product?action=list");
     }
 
     private void deleteImageByPattern(int productId) {
@@ -380,6 +398,11 @@ public class ProductController extends HttpServlet {
                 }
             }
         }
+    }
+
+    private boolean isAuthorized(String userRole) {
+        // Trả về true nếu vai trò là "Admin" hoặc "Kỹ thuật"
+        return "Admin".equals(userRole) || "Kỹ thuật".equals(userRole);
     }
 
     @Override
