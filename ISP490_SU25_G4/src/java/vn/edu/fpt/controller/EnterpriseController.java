@@ -74,14 +74,12 @@ public class EnterpriseController extends HttpServlet {
         String action = request.getPathInfo();
         if (action == null) action = "/list";
 
-        // Chỉ bắt buộc đăng nhập/quyền với các GET cần ghi (create/edit)
         boolean isWritePage = "/create".equals(action) || "/edit".equals(action);
         if (isWritePage && !hasWritePermission(request)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập trang này.");
             return;
         }
 
-        // KHÔNG ép đăng nhập cho /list, /view, và các endpoint ajax
         try {
             switch (action) {
                 case "/list":
@@ -122,21 +120,18 @@ public class EnterpriseController extends HttpServlet {
 
         String action = request.getPathInfo();
 
-        // Kiểm tra quyền ghi cho các hành động sửa/xóa (giữ như cũ).
         boolean needsWrite = "/edit".equals(action) || "/delete".equals(action);
         if (needsWrite && !hasWritePermission(request)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền thực hiện hành động này.");
             return;
         }
 
-        // Với /create: theo test không bắt buộc đăng nhập. Các hành động khác giữ nguyên.
         try {
             switch (action) {
                 case "/create":
                     handleCreateCustomer(request, response);
                     break;
                 case "/edit":
-                    // Bắt buộc đăng nhập cho edit
                     if (!isLoggedIn(request)) {
                         response.sendRedirect(safeJoin(request.getContextPath(), "/login.jsp"));
                         return;
@@ -144,7 +139,6 @@ public class EnterpriseController extends HttpServlet {
                     handleEditCustomer(request, response);
                     break;
                 case "/delete":
-                    // Bắt buộc đăng nhập cho delete
                     if (!isLoggedIn(request)) {
                         response.sendRedirect(safeJoin(request.getContextPath(), "/login.jsp"));
                         return;
@@ -214,10 +208,8 @@ public class EnterpriseController extends HttpServlet {
             request.setAttribute("errorMessage", "Không thể tải danh sách khách hàng: " + e.getMessage());
         }
 
-        // Forward luôn tới listCustomer.jsp (để khớp test)
         RequestDispatcher rd = request.getRequestDispatcher("/jsp/sales/listCustomer.jsp");
         if (rd == null) {
-            // Trong môi trường test nếu quên stub dispatcher, tránh NPE để dễ đọc lỗi
             throw new ServletException("RequestDispatcher cho /jsp/sales/listCustomer.jsp là null (cần stub trong test).");
         }
         rd.forward(request, response);
@@ -323,6 +315,10 @@ public class EnterpriseController extends HttpServlet {
         Connection conn = null;
         String customerName = request.getParameter("customerName");
         try {
+            String taxCode = request.getParameter("taxCode");
+            String hotline = request.getParameter("hotline");
+            String phone = request.getParameter("phone");
+
             if (customerName == null || customerName.trim().isEmpty()) {
                 request.setAttribute("errorMessage", "Tên doanh nghiệp không được để trống.");
                 showCreateForm(request, response);
@@ -333,8 +329,22 @@ public class EnterpriseController extends HttpServlet {
                 showCreateForm(request, response);
                 return;
             }
+            if (taxCode != null && !taxCode.trim().isEmpty() && !isFormatValidVietnameseTaxCode(taxCode)) {
+                request.setAttribute("errorMessage", "Định dạng mã số thuế không hợp lệ. Phải là 10 số hoặc 10 số-3 số.");
+                showCreateForm(request, response);
+                return;
+            }
+            if (hotline != null && !hotline.trim().isEmpty() && !isFormatValidVietnamesePhoneNumber(hotline)) {
+                request.setAttribute("errorMessage", "Định dạng số hotline không hợp lệ.");
+                showCreateForm(request, response);
+                return;
+            }
+             if (phone != null && !phone.trim().isEmpty() && !isFormatValidVietnamesePhoneNumber(phone)) {
+                request.setAttribute("errorMessage", "Định dạng số điện thoại người liên hệ không hợp lệ.");
+                showCreateForm(request, response);
+                return;
+            }
 
-            // Upload avatar (nếu có)
             String avatarDbPath = null;
             Part filePart = request.getPart("avatar");
             if (filePart != null && filePart.getSize() > 0
@@ -349,16 +359,12 @@ public class EnterpriseController extends HttpServlet {
                 avatarDbPath = "uploads/avatars/" + uniqueFileName;
             }
 
-            // Lấy dữ liệu
             String businessEmail = request.getParameter("businessEmail");
-            String hotline = request.getParameter("hotline");
             String streetAddress = request.getParameter("streetAddress");
             String fullName = request.getParameter("fullName");
             String position = request.getParameter("position");
             String email = request.getParameter("email");
-            String phone = request.getParameter("phone");
             String bankNumber = request.getParameter("bankNumber");
-            String taxCode = request.getParameter("taxCode");
             int provinceId = Integer.parseInt(request.getParameter("province"));
             int districtId = Integer.parseInt(request.getParameter("district"));
             int wardId = Integer.parseInt(request.getParameter("ward"));
@@ -378,13 +384,11 @@ public class EnterpriseController extends HttpServlet {
 
             conn.commit();
 
-            // KHÔNG tạo NPE khi test không mock session
             HttpSession session = request.getSession(false);
             if (session != null) {
                 session.setAttribute("successMessage", "Đã thêm thành công khách hàng '" + customerName + "'!");
             }
 
-            // PRG theo test
             response.sendRedirect(safeJoin(request.getContextPath(), "/customer/list"));
 
         } catch (Exception e) {
@@ -408,6 +412,10 @@ public class EnterpriseController extends HttpServlet {
         int enterpriseId = Integer.parseInt(request.getParameter("enterpriseId"));
         String customerName = request.getParameter("customerName");
         try {
+            String taxCode = request.getParameter("taxCode");
+            String hotline = request.getParameter("hotline");
+            String phone = request.getParameter("phone");
+
             if (customerName == null || customerName.trim().isEmpty()) {
                 request.setAttribute("errorMessage", "Tên doanh nghiệp không được để trống.");
                 showEditForm(request, response);
@@ -415,6 +423,21 @@ public class EnterpriseController extends HttpServlet {
             }
             if (this.enterpriseDAO.isNameExists(customerName, enterpriseId)) {
                 request.setAttribute("errorMessage", "Tên doanh nghiệp '" + customerName + "' đã được sử dụng.");
+                showEditForm(request, response);
+                return;
+            }
+            if (taxCode != null && !taxCode.trim().isEmpty() && !isFormatValidVietnameseTaxCode(taxCode)) {
+                request.setAttribute("errorMessage", "Định dạng mã số thuế không hợp lệ. Phải là 10 số hoặc 10 số-3 số.");
+                showEditForm(request, response);
+                return;
+            }
+            if (hotline != null && !hotline.trim().isEmpty() && !isFormatValidVietnamesePhoneNumber(hotline)) {
+                request.setAttribute("errorMessage", "Định dạng số hotline không hợp lệ.");
+                showEditForm(request, response);
+                return;
+            }
+             if (phone != null && !phone.trim().isEmpty() && !isFormatValidVietnamesePhoneNumber(phone)) {
+                request.setAttribute("errorMessage", "Định dạng số điện thoại người liên hệ không hợp lệ.");
                 showEditForm(request, response);
                 return;
             }
@@ -439,9 +462,6 @@ public class EnterpriseController extends HttpServlet {
             int districtId = Integer.parseInt(request.getParameter("district"));
             int wardId = Integer.parseInt(request.getParameter("ward"));
             String streetAddress = request.getParameter("streetAddress");
-            String hotline = request.getParameter("hotline");
-            String taxCode = request.getParameter("taxCode");
-            String phone = request.getParameter("phone");
             String fullName = request.getParameter("fullName");
             String position = request.getParameter("position");
             String email = request.getParameter("email");
