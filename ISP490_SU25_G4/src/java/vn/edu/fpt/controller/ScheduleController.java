@@ -41,6 +41,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import vn.edu.fpt.dao.CampaignDAO;
 import vn.edu.fpt.dao.EnterpriseDAO;
+import vn.edu.fpt.model.Address;
 import vn.edu.fpt.model.Campaign;
 import vn.edu.fpt.model.District;
 import vn.edu.fpt.model.Status;
@@ -65,6 +66,9 @@ public class ScheduleController extends HttpServlet {
             return;
         } else if ("updateScheduleTime".equals(action)) {
             updateScheduleTime(request, response);
+            return;
+        } else if ("viewScheduleDetail".equals(action)) {
+            viewScheduleDetail(request, response);
             return;
         } else if ("getDistricts".equals(action)) {
             getDistricts(request, response);
@@ -408,7 +412,7 @@ public class ScheduleController extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Schedule not found");
                 return;
             }
-
+            updateSingleScheduleStatus(schedule);
             // 3. Lấy dữ liệu cần thiết cho các dropdown
             List<User> assignments = userDAO.getAllTechnicalStaffIdAndFullName();
             List<MaintenanceSchedule> ms = scheduleDAO.getAllTechnicalRequestsAndCampaignsIdAndTitle();
@@ -441,6 +445,53 @@ public class ScheduleController extends HttpServlet {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid schedule ID format");
         } catch (Exception e) {
             e.printStackTrace();
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "An error occurred: " + e.getMessage());
+        }
+    }
+    // Add this new method to your ScheduleController.java
+
+    private void viewScheduleDetail(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        // Instantiate necessary DAOs
+        MaintenanceScheduleDAO scheduleDAO = new MaintenanceScheduleDAO();
+        UserDAO userDAO = new UserDAO(); // To get user names for display
+        AddressDAO addressDAO = new AddressDAO();
+        try {
+            // 1. Get and validate the ID from the URL
+            String idStr = request.getParameter("id");
+            if (idStr == null || idStr.trim().isEmpty()) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing schedule ID");
+                return;
+            }
+            int id = Integer.parseInt(idStr);
+
+            // 2. Fetch the main schedule data
+            MaintenanceSchedule schedule = scheduleDAO.getMaintenanceScheduleById(id);
+            if (schedule == null) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Schedule not found");
+                return;
+            }
+            updateSingleScheduleStatus(schedule);
+            // 3. Fetch related data for display purposes
+            // Get the list of assigned user IDs
+            List<Integer> assignedUserIds = scheduleDAO.getAssignedUserIdsByScheduleId(id);
+            List<Province> provinces = addressDAO.getAllProvinces();
+            // Get the full details of the assigned users (e.g., their names)
+            List<User> assignedUsers = userDAO.getAllTechnicalStaffIdAndFullName(); // You may need to create this helper method in UserDAO
+            // 4. Set attributes for the JSP
+            request.setAttribute("assignedUserIds", assignedUserIds);
+            request.setAttribute("schedule", schedule);
+            request.setAttribute("employeeList", assignedUsers);
+            request.setAttribute("provinces", provinces);
+            // Note: You don't need to load all provinces/districts/wards for a view page,
+            // as the full address is already inside the schedule.getAddress() object.
+            // 5. Forward to the view JSP page
+            request.getRequestDispatcher("jsp/customerSupport/viewSchedule.jsp").forward(request, response);
+
+        } catch (NumberFormatException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid schedule ID format");
+        } catch (Exception e) {
+            e.printStackTrace(); // Log the full error
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "An error occurred: " + e.getMessage());
         }
     }
@@ -938,5 +989,42 @@ public class ScheduleController extends HttpServlet {
             response.getWriter().write("{\"message\":\"Lỗi server: " + e.getClass().getSimpleName() + msg + "\"}");
         }
     }
+// Thêm hàm private này vào trong class ScheduleController.java của bạn
 
+    private void updateSingleScheduleStatus(MaintenanceSchedule schedule) {
+        // Nếu không có lịch trình thì không làm gì cả
+        if (schedule == null) {
+            return;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        // --- ƯU TIÊN SỐ 1: Không thay đổi các trạng thái cuối cùng (Hoàn thành, Đã hủy) ---
+        Integer currentStatusId = schedule.getStatusId();
+        if (currentStatusId != null && (currentStatusId == 3 || currentStatusId == 5)) { // Giả sử 3=Hoàn thành, 5=Đã hủy
+            return; // Bỏ qua, không cập nhật
+        }
+
+        // Lấy thông tin ngày giờ của lịch trình
+        LocalDate scheduledDate = schedule.getScheduledDate();
+        LocalDate endDate = schedule.getEndDate() != null ? schedule.getEndDate() : scheduledDate;
+        LocalTime startTime = schedule.getStartTime();
+        LocalTime endTime = schedule.getEndTime();
+
+        // Xác định thời điểm bắt đầu và kết thúc chính xác
+        LocalDateTime scheduleStartDateTime = (startTime != null) ? scheduledDate.atTime(startTime) : scheduledDate.atStartOfDay();
+        LocalDateTime scheduleEndDateTime = (endTime != null) ? endDate.atTime(endTime) : endDate.atTime(LocalTime.MAX);
+
+        // --- ÁP DỤNG CÁC QUY TẮC ĐỂ XÁC ĐỊNH TRẠNG THÁI ---
+        if (scheduleEndDateTime.isBefore(now)) {
+            schedule.setStatusName("Quá hạn");
+            schedule.setStatusId(4); // ID của "Quá hạn"
+        } else if (!now.isBefore(scheduleStartDateTime) && !now.isAfter(scheduleEndDateTime)) {
+            schedule.setStatusName("Đang thực hiện");
+            schedule.setStatusId(2); // ID của "Đang thực hiện"
+        } else {
+            schedule.setStatusName("Sắp tới");
+            schedule.setStatusId(1); // ID của "Sắp tới"
+        }
+    }
 }

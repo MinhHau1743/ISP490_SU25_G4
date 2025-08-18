@@ -1,0 +1,227 @@
+/*
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
+*/
+/* 
+    Created on : Jul 31, 2025, 10:29:38 AM
+    Author     : PHAM HAI HUY
+*/
+html, body {
+    height: 100%;
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    background-color: #f9fafb;
+}
+.content-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    overflow: hidden;
+}
+.main-content-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 24px 32px;
+}
+
+.page-header {
+    margin-bottom: 24px;
+}
+.page-header h1 {
+    font-size: 24px;
+    margin: 0;
+    color: #111827;
+}
+
+.form-container {
+    background-color: white;
+    padding: 32px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px 32px;
+}
+.form-group {
+    margin-bottom: 20px;
+}
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #374151;
+    font-size: 14px;
+}
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #00897b;
+    border-radius: 8px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+.form-control:focus {
+    border-color: #00897b;
+    box-shadow: 0 0 0 2px rgba(139, 69, 19, 0.2);
+    outline: none;
+}
+textarea.form-control {
+    min-height: 120px;
+    resize: vertical;
+}
+.color-picker {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.form-actions {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+.form-actions .btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+}
+.btn-secondary {
+    background-color: #e5e7eb;
+    color: #374151;
+}
+.btn-primary {
+    background-color: #008080;
+    color: white;
+}
+.content-wrapper {
+    flex-grow: 1; /* Cho phép content-wrapper lấp đầy không gian còn lại */
+    padding: 20px; /* Thêm padding cho đẹp hơn */
+
+    /* === PHẦN SỬA LỖI QUAN TRỌNG === */
+    /* Giả sử menu của bạn rộng 250px. 
+       Hãy điều chỉnh con số này cho khớp với chiều rộng thực tế của mainMenu. */
+    margin-left: 250px;
+}
+
+/* 3. (Tùy chọn) Đảm bảo menu có chiều rộng cố định */
+/* Nếu menu của bạn chưa có style, bạn có thể thêm đoạn này vào mainMenu.css */
+/* File: /css/mainMenu.css */
+.main-menu { /* Hoặc selector đúng cho menu của bạn */
+    position: fixed; /* Cố định menu khi cuộn trang */
+    top: 0;
+    left: 0;
+    height: 100vh; /* Cao bằng chiều cao màn hình */
+    width: 250px; /* Chiều rộng cố định */
+    z-index: 1001; /* Đảm bảo menu luôn ở trên */
+    background-color: #ffffff; /* Thêm màu nền cho menu */
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1); /* Thêm bóng đổ cho đẹp */
+}
+
+/* Content wrapper with full-width white background */
+.content-wrapper {
+    background: #fff;
+    width: 100%;
+    box-sizing: border-box;
+}
+/* Vùng chứa các ô màu */
+.color-palette {
+    display: flex;
+    gap: 10px; /* Khoảng cách giữa các ô màu */
+    flex-wrap: wrap;
+    margin-top: 5px;
+}
+
+/* Kiểu dáng cho mỗi ô màu */
+.color-swatch {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%; /* Bo tròn thành hình tròn */
+    cursor: pointer;
+    border: 3px solid #fff; /* Viền trắng mặc định */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    transition: all 0.2s ease-in-out;
+    position: relative;
+}
+
+/* Kiểu dáng khi một ô màu được chọn */
+.color-swatch.selected {
+    border-color: #333; /* Viền đen để làm nổi bật */
+    transform: scale(1.1);
+}
+
+/* Thêm icon dấu tick vào ô được chọn */
+.color-swatch.selected::after {
+    content: '✔';
+    color: white;
+    font-size: 16px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-shadow: 0 0 3px rgba(0,0,0,0.5);
+}
+.address-grid {
+  display: grid;
+  /* Creates 3 columns of equal width */
+  grid-template-columns: repeat(3, 1fr); 
+  /* Adds a 1rem (16px) gap between the columns */
+  gap: 1rem; 
+}
+.form-grid .form-group-full-width {
+  /* This tells the grid item to start at the first column line (1) 
+     and end at the very last column line (-1) */
+  grid-column: 1 / -1;
+}
+.selected-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.tag {
+    display: flex;
+    align-items: center;
+    background: #f1f2f6;
+    border-radius: 18px;
+    padding: 3px 10px 3px 3px;
+    font-size: 14px;
+    margin: 2px;
+}
+.tag-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    margin-right: 6px;
+    flex-shrink: 0;
+}
+.tag-close {
+    margin-left: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #888;
+}
+.tag-close:hover {
+    color: #f5222d;
+}
+.color-swatch.selected {
+    outline: 2px solid #1976d2;
+    box-shadow: 0 0 4px 1px #1976d277;
+}

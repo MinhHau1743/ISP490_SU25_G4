@@ -17,11 +17,12 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <script src="https://unpkg.com/feather-icons"></script>
-        
-        <link rel="stylesheet" href="../../css/style.css">
-        <link rel="stylesheet" href="../../css/header.css">
-        <link rel="stylesheet" href="../../css/mainMenu.css">
-        
+
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/viewScheduleDetail.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
+
         <style>
             html, body {
                 height: 100%;
@@ -87,13 +88,17 @@
                 background-color: #3b82f6;
                 color: white;
             }
-            .btn-edit:hover { background-color: #2563eb; }
+            .btn-edit:hover {
+                background-color: #2563eb;
+            }
 
             .btn-delete {
                 background-color: #ef4444;
                 color: white;
             }
-            .btn-delete:hover { background-color: #dc2626; }
+            .btn-delete:hover {
+                background-color: #dc2626;
+            }
 
             /* --- Details Container --- */
             .details-container {
@@ -163,10 +168,22 @@
                 display: inline-block;
             }
 
-            .status-upcoming { background-color: #fef3c7; color: #92400e; }
-            .status-inprogress { background-color: #dbeafe; color: #1e40af; }
-            .status-completed { background-color: #dcfce7; color: #15803d; }
-
+            .status-upcoming {
+                background-color: #fef3c7;
+                color: #92400e;
+            }
+            .status-inprogress {
+                background-color: #dbeafe;
+                color: #1e40af;
+            }
+            .status-completed {
+                background-color: #dcfce7;
+                color: #15803d;
+            }
+            .status-overdue {
+                background-color: #fee2e2;
+                color: #b91c1c;
+            }
             /* --- Description Section --- */
             .description-section {
                 padding-top: 32px;
@@ -184,49 +201,127 @@
         <div class="app-container">
             <jsp:include page="../../mainMenu.jsp"/>
             <div class="content-wrapper">
-                
+                <jsp:include page="/header.jsp">
+                    <jsp:param name="pageTitle" value="Chỉnh sửa lịch bảo trì"/>
+                </jsp:include>
                 <section class="main-content-body">
                     <div class="page-header">
                         <h1>Chi tiết: Bảo trì hệ thống điều hòa</h1>
                         <div class="actions">
-                            <a href="editSchedule.jsp?id=102" class="btn btn-edit"><i data-feather="edit-2" style="width:18px; height:18px;"></i> Sửa</a>
-                            <a href="#" class="btn btn-delete"><i data-feather="trash-2" style="width:18px; height:18px;"></i> Xóa</a>
+                            <a href="${pageContext.request.contextPath}/schedule?action=updateSchedule&id=${schedule.id}" class="btn btn-edit"><i data-feather="edit-2" style="width:18px; height:18px;"></i> Sửa</a>
                         </div>
                     </div>
 
                     <div class="details-container">
                         <div class="details-grid">
                             <div class="detail-item">
-                                <p class="detail-label">Khách hàng</p>
-                                <p class="detail-value">Công ty An Phát</p>
+                                <p class="detail-label">Tiêu đề</p>
+                                <p class="detail-value">${schedule.title}</p>
                             </div>
                             <div class="detail-item">
                                 <p class="detail-label">Trạng thái</p>
-                                <p class="detail-value"><span class="status status-upcoming">Sắp tới</span></p>
+                                <p class="detail-value">
+                                    <c:choose>
+                                        <%-- Giả sử ID 1 là "Sắp tới" --%>
+                                        <c:when test="${schedule.statusId == 1}">
+                                            <span class="status status-upcoming">Sắp tới</span>
+                                        </c:when>
+
+                                        <%-- Giả sử ID 2 là "Đang thực hiện" --%>
+                                        <c:when test="${schedule.statusId == 2}">
+                                            <span class="status status-inprogress">Đang thực hiện</span>
+                                        </c:when>
+
+                                        <%-- Giả sử ID 3 là "Hoàn thành" --%>
+                                        <c:when test="${schedule.statusId == 3}">
+                                            <span class="status status-completed">Hoàn thành</span>
+                                        </c:when>
+
+                                        <%-- Giả sử ID 4 là "Quá hạn" --%>
+                                        <c:when test="${schedule.statusId == 4}">
+                                            <span class="status status-overdue">Quá hạn</span>
+                                        </c:when>
+                                    </c:choose>
+                                </p>
                             </div>
-                             <div class="detail-item">
+                            <div class="detail-item">
                                 <p class="detail-label">Ngày bắt đầu</p>
-                                <p class="detail-value">17/06/2025</p>
+                                <p class="detail-value">${schedule.scheduledDate}</p>
                             </div>
-                             <div class="detail-item">
+                            <div class="detail-item">
                                 <p class="detail-label">Ngày kết thúc</p>
-                                <p class="detail-value">18/06/2025</p>
+                                <p class="detail-value">${schedule.endDate}</p>
                             </div>
-                            
-                             <div class="detail-item" style="grid-column: 1 / -1;">
+                            <div class="detail-item">
+                                <p class="detail-label">Giờ bắt đầu</p>
+                                <p class="detail-value">${schedule.startTime}</p>
+                            </div>
+                            <div class="detail-item">
+                                <p class="detail-label">Giờ kết thúc</p>
+                                <p class="detail-value">${schedule.endTime}</p>
+                            </div>
+
+                            <%-- Đặt khối code này vào nơi bạn muốn hiển thị thông tin địa chỉ --%>
+
+                            <div class="info-item">
+                                <span class="detail-label">Khu vực</span>
+                                <span class="value">
+                                    <c:choose>
+                                        <c:when test="${not empty schedule.address}">
+                                            <%-- Nối tên Phường, Quận, Tỉnh lại với nhau --%>
+                                            ${schedule.address.ward.name}, ${schedule.address.district.name}, ${schedule.address.province.name}
+                                        </c:when>
+                                        <c:otherwise>
+                                            Chưa xác định
+                                        </c:otherwise>
+                                    </c:choose>
+                                </span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="detail-label">Địa chỉ cụ thể</span>
+                                <span class="value">
+                                    <c:choose>
+                                        <c:when test="${not empty schedule.address.streetAddress}">
+                                            ${schedule.address.streetAddress}
+                                        </c:when>
+                                        <c:otherwise>
+                                            Không có
+                                        </c:otherwise>
+                                    </c:choose>
+                                </span>
+                            </div>                 
+                            <div class="detail-item" style="grid-column: 1 / -1;">
                                 <p class="detail-label">Nhân viên phụ trách</p>
                                 <div class="detail-value">
                                     <ul>
-                                        <li><i data-feather="user" style="width:16px; height:16px;"></i> Nguyễn Văn An</li>
-                                        <li><i data-feather="user" style="width:16px; height:16px;"></i> Trần Bình</li>
+                                        <%-- Kiểm tra nếu danh sách ID rỗng thì hiển thị thông báo --%>
+                                        <c:if test="${empty assignedUserIds}">
+                                            <li>Chưa có ai được phân công</li>
+                                            </c:if>
+
+                                        <%-- 
+                                          Vòng lặp 1: Lặp qua từng ID trong danh sách đã được phân công (assignedUserIds).
+                                          Mỗi lần lặp, 'assignedId' sẽ là một số (ví dụ: 1, 5, 10).
+                                        --%>
+                                        <c:forEach var="assignedId" items="${assignedUserIds}">
+                                            <c:forEach var="employee" items="${employeeList}">
+                                                <c:if test="${employee.id == assignedId}">
+                                                    <li>
+                                                        <i data-feather="user" style="width:16px; height:16px;"></i>
+                                                        <span>${employee.fullName}</span>
+                                                    </li>
+                                                </c:if>
+                                            </c:forEach>
+                                        </c:forEach>
                                     </ul>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="description-section">
                             <p class="detail-label">Mô tả / Ghi chú</p>
-                            <p class="detail-value">Kiểm tra và vệ sinh toàn bộ hệ thống điều hòa trung tâm tại tầng 5. Mang theo thang và các dụng cụ cần thiết.</p>
+                            <p class="detail-value">${schedule.notes}</p>
                         </div>
                     </div>
                 </section>
@@ -235,5 +330,6 @@
         <script>
             document.addEventListener('DOMContentLoaded', () => feather.replace());
         </script>
+        <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>

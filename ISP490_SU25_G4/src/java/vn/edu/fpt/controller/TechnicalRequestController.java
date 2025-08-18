@@ -392,6 +392,9 @@ public class TechnicalRequestController extends HttpServlet {
                 newRequest.setEnterpriseId(Integer.parseInt(enterpriseIdStr));
             }
 
+            String reporterIdStr = request.getParameter("reporterId");
+            int reporterId = Integer.parseInt(reporterIdStr);
+            newRequest.setReporterId(reporterId);
             String serviceIdStr = request.getParameter("serviceId");
             if (serviceIdStr != null && !serviceIdStr.isEmpty()) {
                 newRequest.setServiceId(Integer.parseInt(serviceIdStr));

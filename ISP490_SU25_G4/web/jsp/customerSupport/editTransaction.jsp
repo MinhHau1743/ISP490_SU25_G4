@@ -161,6 +161,12 @@
                                                value="<fmt:formatDate value='${ticket.createdAt}' pattern='yyyy-MM-dd' />">
                                     </div>
                                 </div>
+                                <div class="sidebar-form-row">
+                                    <label>Người tạo</label>
+                                    <div class="input-with-icon">
+                                        <input type="text" value="${ticket.reporterName}" class="form-control" readonly >
+                                    </div>
+                                </div>
 
                                 <div class="sidebar-form-row row-2col">
                                     <label>Khoảng ngày</label>

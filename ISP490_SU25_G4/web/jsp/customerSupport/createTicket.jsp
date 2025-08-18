@@ -163,6 +163,7 @@
                                         </select>
                                     </div>
                                 </div>
+
                                 <div class="sidebar-form-row">
                                     <label for="employeeId">Nhân viên phụ trách</label>
                                     <div class="input-with-icon">
@@ -184,7 +185,17 @@
                                         <input type="date" id="createdDate" name="createdDate" class="form-control" readonly>
                                     </div>
                                 </div>
-
+                                <div class="sidebar-form-row">
+                                    <label>Người tạo</label>
+                                    <div class="input-with-icon">
+                                        <%-- Kết hợp các thuộc tính tên để tạo thành họ tên đầy đủ --%>
+                                        <input type="text" 
+                                               value="${user.lastName} ${user.middleName} ${user.firstName}" 
+                                               class="form-control" 
+                                               readonly>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="reporterId" value="${user.id}">
                                 <div class="sidebar-form-row row-2col">
                                     <label>Khoảng ngày</label>
                                     <div class="control">

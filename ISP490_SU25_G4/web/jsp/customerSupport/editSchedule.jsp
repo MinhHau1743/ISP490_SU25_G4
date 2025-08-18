@@ -204,7 +204,6 @@
             });
             </c:forEach>
         </script>
-
         <script src="${pageContext.request.contextPath}/js/addressHandler.js"></script>
         <script src="${pageContext.request.contextPath}/js/editSchedule.js"></script> <%-- Can reuse create script --%>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
