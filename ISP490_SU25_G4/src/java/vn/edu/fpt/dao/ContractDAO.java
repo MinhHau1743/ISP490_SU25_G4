@@ -11,6 +11,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import vn.edu.fpt.model.Enterprise;
+import vn.edu.fpt.model.Product;
 
 /**
  * Lớp DAO duy nhất quản lý các truy vấn liên quan đến Hợp đồng. Phiên bản này
@@ -391,6 +393,59 @@ public class ContractDAO extends DBContext {
             e.printStackTrace();
         }
         return contracts;
+    }
+
+    // HÃY ĐẢM BẢO PHƯƠNG THỨC NÀY TỒN TẠI VÀ VIẾT ĐÚNG NHƯ DƯỚI ĐÂY
+    public Contract getContractWithCustomerById(int contractId) throws SQLException {
+        Contract contract = null;
+        // Câu lệnh SQL cần JOIN với bảng Enterprises để lấy tên khách hàng
+        String sql = "SELECT c.id, c.contract_code, e.id as enterprise_id, e.name as enterprise_name "
+                + "FROM Contracts c JOIN Enterprises e ON c.enterprise_id = e.id "
+                + "WHERE c.id = ?";
+
+        try (Connection conn = DBContext.getConnection(); // Giả sử bạn có class DBContext
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, contractId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    contract = new Contract();
+                    contract.setId(rs.getInt("id"));
+                    contract.setContractCode(rs.getString("contract_code"));
+
+                    Enterprise enterprise = new Enterprise();
+                    enterprise.setId(rs.getInt("enterprise_id"));
+                    enterprise.setName(rs.getString("enterprise_name"));
+
+                    // Giả sử bạn có phương thức setEnterprise trong model Contract
+                    // Nếu chưa có, bạn cần thêm vào: public void setEnterprise(Enterprise enterprise) { ... }
+                    contract.setEnterprise(enterprise);
+                }
+            }
+        }
+        return contract;
+    }
+
+    // Trong ContractDAO.java
+    public List<Product> getProductsByContractId(int contractId) throws SQLException {
+        List<Product> products = new ArrayList<>();
+        // JOIN để lấy đúng các sản phẩm có trong hợp đồng đó
+        String sql = "SELECT p.id, p.name FROM Products p "
+                + "JOIN ContractProducts cp ON p.id = cp.product_id "
+                + "WHERE cp.contract_id = ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, contractId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Product p = new Product();
+                    p.setId(rs.getInt("id"));
+                    p.setName(rs.getString("name"));
+                    products.add(p);
+                }
+            }
+        }
+        return products;
     }
 
 }

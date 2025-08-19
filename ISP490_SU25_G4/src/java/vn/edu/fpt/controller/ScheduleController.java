@@ -9,7 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 
 import vn.edu.fpt.dao.AddressDAO;
-import vn.edu.fpt.dao.MaintenanceScheduleDAO;
+import vn.edu.fpt.dao.ScheduleDAO;
 import vn.edu.fpt.dao.TechnicalRequestDAO;
 import vn.edu.fpt.dao.UserDAO;
 
@@ -103,7 +103,7 @@ public class ScheduleController extends HttpServlet {
      * ========================= */
     private void viewSchedule(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        MaintenanceScheduleDAO dao = new MaintenanceScheduleDAO();
+        ScheduleDAO dao = new ScheduleDAO();
         UserDAO userDAO = new UserDAO();
 
         // 1. Lấy ngày hiện tại hoặc từ frontend
@@ -347,7 +347,7 @@ public class ScheduleController extends HttpServlet {
         request.getRequestDispatcher("/jsp/customerSupport/listSchedule.jsp").forward(request, response);
     }
 
-    private void forwardToForm(HttpServletRequest request, HttpServletResponse response, MaintenanceScheduleDAO scheduleDAO)
+    private void forwardToForm(HttpServletRequest request, HttpServletResponse response, ScheduleDAO scheduleDAO)
             throws ServletException, IOException {
 
         // giữ lại dữ liệu người dùng nhập
@@ -393,7 +393,7 @@ public class ScheduleController extends HttpServlet {
             throws ServletException, IOException {
 
         // Use DAOs
-        MaintenanceScheduleDAO scheduleDAO = new MaintenanceScheduleDAO();
+        ScheduleDAO scheduleDAO = new ScheduleDAO();
         AddressDAO addressDAO = new AddressDAO();
         UserDAO userDAO = new UserDAO();
 
@@ -453,7 +453,7 @@ public class ScheduleController extends HttpServlet {
     private void viewScheduleDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         // Instantiate necessary DAOs
-        MaintenanceScheduleDAO scheduleDAO = new MaintenanceScheduleDAO();
+        ScheduleDAO scheduleDAO = new ScheduleDAO();
         UserDAO userDAO = new UserDAO(); // To get user names for display
         AddressDAO addressDAO = new AddressDAO();
         try {
@@ -499,7 +499,7 @@ public class ScheduleController extends HttpServlet {
     private void handleEditSubmit(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        MaintenanceScheduleDAO scheduleDAO = new MaintenanceScheduleDAO();
+        ScheduleDAO scheduleDAO = new ScheduleDAO();
         AddressDAO addressDAO = new AddressDAO();
         TechnicalRequestDAO technicalDAO = new TechnicalRequestDAO();
         TechnicalRequest tr = new TechnicalRequest();
@@ -663,7 +663,7 @@ public class ScheduleController extends HttpServlet {
 
     private void forwardToEditForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        MaintenanceScheduleDAO scheduleDAO = new MaintenanceScheduleDAO();
+        ScheduleDAO scheduleDAO = new ScheduleDAO();
         // Cố gắng lấy lại đối tượng schedule để điền form
         try {
             int id = Integer.parseInt(request.getParameter("id"));
@@ -747,7 +747,7 @@ public class ScheduleController extends HttpServlet {
             }
 
             // --- Gọi DAO để cập nhật vào CSDL ---
-            MaintenanceScheduleDAO dao = new MaintenanceScheduleDAO();
+            ScheduleDAO dao = new ScheduleDAO();
             boolean success = dao.updateScheduleByDragDrop(id, scheduledDate, endDate, startTime, endTime);
 
             if (success) {
@@ -974,7 +974,7 @@ public class ScheduleController extends HttpServlet {
                 return;
             }
 
-            boolean ok = new MaintenanceScheduleDAO().markAsCompleted(scheduleId);
+            boolean ok = new ScheduleDAO().markAsCompleted(scheduleId);
             if (ok) {
                 response.setStatus(HttpServletResponse.SC_OK);
                 response.getWriter().write("{\"message\":\"Cập nhật trạng thái thành công!\",\"id\":" + scheduleId + "}");

@@ -39,6 +39,8 @@ public class Contract {
     private String enterpriseName;
     private String createdByName;
   private String enterpriseEmail;
+  
+  private Enterprise enterprise;
     // --- CONSTRUCTORS ---
     public Contract() {
         // Constructor mặc định
@@ -198,5 +200,13 @@ public class Contract {
 
     public void setEnterpriseEmail(String enterpriseEmail) {
         this.enterpriseEmail = enterpriseEmail;
+    }
+    
+      public Enterprise getEnterprise() {
+        return enterprise;
+    }
+
+    public void setEnterprise(Enterprise enterprise) {
+        this.enterprise = enterprise;
     }
 }

@@ -48,7 +48,7 @@ public class CampaignController extends HttpServlet {
 
     private CampaignDAO campaignDAO;
     private CampaignTypeDAO campaignTypeDAO;
-    private MaintenanceScheduleDAO scheduleDAO;
+    private ScheduleDAO scheduleDAO;
     private MaintenanceAssignmentDAO assignmentDAO;
     private EnterpriseDAO enterpriseDAO;
     private StatusDAO statusDAO;
@@ -60,7 +60,7 @@ public class CampaignController extends HttpServlet {
     public void init() throws ServletException {
         campaignDAO = new CampaignDAO();
         campaignTypeDAO = new CampaignTypeDAO();
-        scheduleDAO = new MaintenanceScheduleDAO();
+        scheduleDAO = new ScheduleDAO();
         assignmentDAO = new MaintenanceAssignmentDAO();
         enterpriseDAO = new EnterpriseDAO();
         statusDAO = new StatusDAO();

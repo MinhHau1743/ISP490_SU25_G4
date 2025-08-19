@@ -1,6 +1,7 @@
 package vn.edu.fpt.controller;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -16,6 +17,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -26,21 +28,29 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import vn.edu.fpt.common.EmailServiceFeedback;
+import vn.edu.fpt.common.LocalDateAdapter;
+import vn.edu.fpt.common.LocalDateTimeAdapter;
+import vn.edu.fpt.dao.ContractDAO;
 import vn.edu.fpt.dao.EnterpriseDAO;
 import vn.edu.fpt.dao.FeedbackDAO;
-import vn.edu.fpt.dao.MaintenanceScheduleDAO;
+import vn.edu.fpt.dao.ScheduleDAO;
+import vn.edu.fpt.dao.StatusDAO;
 import vn.edu.fpt.model.Address;
 import vn.edu.fpt.model.District;
 import vn.edu.fpt.model.MaintenanceSchedule;
 import vn.edu.fpt.model.Province;
 import vn.edu.fpt.model.Service;
 import vn.edu.fpt.model.Ward;
+import java.time.format.DateTimeFormatter;
 
 @WebServlet(name = "TicketController", urlPatterns = {"/ticket"})
 public class TechnicalRequestController extends HttpServlet {
 
     private TechnicalRequestDAO dao;
-    private final Gson gson = new Gson();
+    private final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
+            .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+            .create();
     private final ExecutorService emailExecutor = Executors.newSingleThreadExecutor();
 
     @Override
@@ -80,6 +90,13 @@ public class TechnicalRequestController extends HttpServlet {
                     break;
                 case "sendSurvey":
                     handleSendSurvey(request, response);
+                    break;
+                // --- THÊM CÁC CASE MỚI ---
+                case "getContractDetails":
+                    getContractDetails(request, response);
+                    break;
+                case "getProductsByContract":
+                    getProductsByContract(request, response);
                     break;
 
                 case "list":
@@ -164,7 +181,7 @@ public class TechnicalRequestController extends HttpServlet {
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException, Exception {
         AddressDAO addressDAO = new AddressDAO();
         List<Province> provinces = addressDAO.getAllProvinces();
-
+        StatusDAO statusDAO = new StatusDAO();
         // 6. Gửi tất cả dữ liệu sang JSP
         request.setAttribute("customerList", dao.getAllEnterprises());
         request.setAttribute("employeeList", dao.getAllTechnicians());
@@ -172,16 +189,17 @@ public class TechnicalRequestController extends HttpServlet {
         request.setAttribute("contractList", dao.getAllActiveContracts()); // <--- THÊM DÒNG NÀY
         request.setAttribute("provinces", provinces);
         request.setAttribute("activeMenu", "createTicket");
+        request.setAttribute("statusList", statusDAO.getAllStatuses());
         request.getRequestDispatcher("/jsp/customerSupport/createTicket.jsp").forward(request, response);
     }
 
-    private void viewTicket(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, Exception {
+    private void viewTicket(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             int id = Integer.parseInt(request.getParameter("id"));
 
-            // 1. Khởi tạo tất cả các DAO cần thiết ở đầu phương thức
-            TechnicalRequestDAO ticketDAO = new TechnicalRequestDAO(); // Sử dụng ticketDAO để rõ ràng hơn
-            MaintenanceScheduleDAO scheduleDAO = new MaintenanceScheduleDAO();
+            // 1. Khởi tạo tất cả các DAO cần thiết
+            TechnicalRequestDAO ticketDAO = new TechnicalRequestDAO();
+            ScheduleDAO scheduleDAO = new ScheduleDAO();
             AddressDAO addressDAO = new AddressDAO();
             EnterpriseDAO enterpriseDAO = new EnterpriseDAO();
             FeedbackDAO feedbackDAO = new FeedbackDAO();
@@ -192,33 +210,41 @@ public class TechnicalRequestController extends HttpServlet {
             if (ticket != null) {
                 // 3. Lấy dữ liệu liên quan
                 MaintenanceSchedule schedule = scheduleDAO.getScheduleByTechnicalRequestId(id);
-                List<Integer> assignedUserIds = (schedule != null)
-                        ? scheduleDAO.getAssignedUserIdsByScheduleId(schedule.getId())
-                        : java.util.Collections.emptyList();
-
-                // Luôn kiểm tra xem ticket có feedback hay chưa
                 boolean hasFeedback = feedbackDAO.feedbackExistsForTechnicalRequest(id);
 
-                // 4. Đặt tất cả dữ liệu làm thuộc tính cho request
+                // 4. ĐỊNH DẠNG NGÀY THÁNG TỪ LOCALDATE SANG STRING
+                // Tạo một formatter để định dạng ngày theo kiểu "dd/MM/yyyy"
+                DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+                String scheduledDateFormatted = "";
+                String endDateFormatted = "";
+
+                if (schedule != null) {
+                    if (schedule.getScheduledDate() != null) {
+                        scheduledDateFormatted = schedule.getScheduledDate().format(dateFormatter);
+                    }
+                    if (schedule.getEndDate() != null) {
+                        endDateFormatted = schedule.getEndDate().format(dateFormatter);
+                    }
+                }
+
+                // 5. Đặt tất cả dữ liệu làm thuộc tính cho request
                 request.setAttribute("ticket", ticket);
-                request.setAttribute("schedule", schedule); // Sẽ là null nếu không có lịch trình
-                request.setAttribute("employeeList", ticketDAO.getAllTechnicians());
-                request.setAttribute("assignedUserIds", assignedUserIds);
-                request.setAttribute("hasFeedback", hasFeedback); // Gửi trạng thái feedback sang JSP
+                request.setAttribute("schedule", schedule); // Vẫn gửi schedule gốc để lấy startTime, endTime...
+                request.setAttribute("hasFeedback", hasFeedback);
 
-                // 5. Xử lý logic địa chỉ để hiển thị
-                // Luôn lấy danh sách Tỉnh/Thành
+                // Gửi các chuỗi đã định dạng sang JSP
+                request.setAttribute("scheduledDateFormatted", scheduledDateFormatted);
+                request.setAttribute("endDateFormatted", endDateFormatted);
+
+                // Xử lý logic địa chỉ và các danh sách khác
                 request.setAttribute("provinces", addressDAO.getAllProvinces());
-
-                // Nếu có lịch trình và địa chỉ, lấy danh sách Quận/Huyện và Phường/Xã tương ứng
-                if (schedule != null && schedule.getAddress() != null && schedule.getAddress().getId() > 0) {
+                if (schedule != null && schedule.getAddress() != null && schedule.getAddress().getProvinceId() > 0) {
                     Address scheduleAddress = schedule.getAddress();
                     request.setAttribute("districts", enterpriseDAO.getDistrictsByProvinceId(scheduleAddress.getProvinceId()));
-                    request.setAttribute("wards", enterpriseDAO.getWardsByDistrictId(scheduleAddress.getDistrictId()));
-                } else {
-                    // Nếu không có địa chỉ, cung cấp danh sách trống để tránh lỗi trên JSP
-                    request.setAttribute("districts", java.util.Collections.emptyList());
-                    request.setAttribute("wards", java.util.Collections.emptyList());
+                    if (scheduleAddress.getDistrictId() > 0) {
+                        request.setAttribute("wards", enterpriseDAO.getWardsByDistrictId(scheduleAddress.getDistrictId()));
+                    }
                 }
 
                 // 6. Chuyển tiếp đến trang view
@@ -229,145 +255,169 @@ public class TechnicalRequestController extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/ticket?action=list&error=notFound");
             }
         } catch (NumberFormatException e) {
-            // Nếu ID không hợp lệ
             response.sendRedirect(request.getContextPath() + "/ticket?action=list&error=invalidId");
         } catch (Exception e) {
-            // Xử lý các lỗi khác
-            e.printStackTrace(); // In lỗi ra log để debug
-            response.sendRedirect(request.getContextPath() + "/ticket?action=list&error=viewFailed");
+            e.printStackTrace();
+            throw new ServletException("Lỗi khi xem chi tiết phiếu.", e);
         }
     }
 
+    // Trong file: vn/edu/fpt/controller/TechnicalRequestController.java
     private void showEditForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             int id = Integer.parseInt(request.getParameter("id"));
 
-            // 1. Instantiate all necessary DAOs
-            TechnicalRequestDAO ticketDAO = new TechnicalRequestDAO(); // Assuming 'dao' is an instance of this
-            MaintenanceScheduleDAO scheduleDAO = new MaintenanceScheduleDAO();
+            // 1. Khởi tạo tất cả các DAO cần thiết
+            TechnicalRequestDAO ticketDAO = new TechnicalRequestDAO();
+            ScheduleDAO scheduleDAO = new ScheduleDAO();
             AddressDAO addressDAO = new AddressDAO();
             EnterpriseDAO enterpriseDAO = new EnterpriseDAO();
-            Gson gson = new Gson(); // Assuming gson is an instance variable or created here
+            StatusDAO statusDAO = new StatusDAO();
+            ContractDAO contractDAO = new ContractDAO();
 
-            // 2. Fetch the main TechnicalRequest object
+            // 2. Lấy đối tượng TechnicalRequest chính
             TechnicalRequest existingTicket = ticketDAO.getTechnicalRequestById(id);
 
             if (existingTicket != null) {
-                // 3. Fetch related data for the form
-                String allProductsJson = gson.toJson(ticketDAO.getAllProducts());
-                String existingDevicesJson = gson.toJson(existingTicket.getDevices());
+                // 3. Lấy dữ liệu liên quan cho form
 
+                // Lấy danh sách thiết bị đã có của phiếu
+                List<TechnicalRequestDevice> existingDevices = existingTicket.getDevices();
+                String existingDevicesJson = (existingDevices != null) ? gson.toJson(existingDevices) : "[]";
+
+                // LẤY DANH SÁCH SẢN PHẨM TỪ HỢP ĐỒNG CỦA PHIẾU
+                List<Product> contractProducts = new ArrayList<>();
+                if (existingTicket.getContractId() != null) {
+                    contractProducts = contractDAO.getProductsByContractId(existingTicket.getContractId());
+                }
+                String contractProductsJson = (contractProducts != null) ? gson.toJson(contractProducts) : "[]";
+
+                // 4. Đặt tất cả dữ liệu làm thuộc tính cho request
                 request.setAttribute("ticket", existingTicket);
                 request.setAttribute("contractList", ticketDAO.getAllActiveContracts());
-                request.setAttribute("customerList", ticketDAO.getAllEnterprises());
                 request.setAttribute("employeeList", ticketDAO.getAllTechnicians());
                 request.setAttribute("serviceList", ticketDAO.getAllServices());
-                request.setAttribute("allProductsJson", allProductsJson);
+                request.setAttribute("statusList", statusDAO.getAllStatuses());
                 request.setAttribute("existingDevicesJson", existingDevicesJson);
+                request.setAttribute("contractProductsJson", contractProductsJson);
 
-                // 4. Fetch the associated MaintenanceSchedule
-                MaintenanceSchedule schedule = dao.getScheduleByTechnicalRequestId(id);
+                // 5. Lấy dữ liệu lịch trình và địa chỉ
+                MaintenanceSchedule schedule = scheduleDAO.getScheduleByTechnicalRequestId(id);
                 request.setAttribute("schedule", schedule);
 
-                // 5. Always load the full list of provinces for the dropdown
                 request.setAttribute("provinces", addressDAO.getAllProvinces());
 
-                // 6. Conditionally load dependent data (address, users) ONLY if a schedule exists
-                if (schedule != null) {
-                    // Fetch assigned user IDs for the schedule
-                    List<Integer> assignedUserIds = scheduleDAO.getAssignedUserIdsByScheduleId(schedule.getId());
-                    request.setAttribute("assignedUserIds", assignedUserIds);
-
-                    // Check for the encapsulated Address object
+                if (schedule != null && schedule.getAddress() != null && schedule.getAddress().getProvinceId() > 0) {
                     Address scheduleAddress = schedule.getAddress();
-                    if (scheduleAddress != null && scheduleAddress.getProvinceId() > 0) {
-                        // Pre-load the district and ward lists using IDs from the Address object
-                        request.setAttribute("districts", enterpriseDAO.getDistrictsByProvinceId(scheduleAddress.getProvinceId()));
-                        if (scheduleAddress.getDistrictId() > 0) {
-                            request.setAttribute("wards", enterpriseDAO.getWardsByDistrictId(scheduleAddress.getDistrictId()));
-                        }
+                    request.setAttribute("districts", enterpriseDAO.getDistrictsByProvinceId(scheduleAddress.getProvinceId()));
+                    if (scheduleAddress.getDistrictId() > 0) {
+                        request.setAttribute("wards", enterpriseDAO.getWardsByDistrictId(scheduleAddress.getDistrictId()));
                     }
                 }
 
-                // Forward to the edit page
+                // 6. Chuyển tiếp đến trang edit
                 request.getRequestDispatcher("/jsp/customerSupport/editTransaction.jsp").forward(request, response);
 
             } else {
                 response.sendRedirect(request.getContextPath() + "/ticket?action=list&error=notFound");
             }
-        } catch (NumberFormatException e) {
-            response.sendRedirect(request.getContextPath() + "/ticket?action=list&error=invalidId");
         } catch (Exception e) {
-            e.printStackTrace(); // Log the error for debugging
+            e.printStackTrace();
             response.sendRedirect(request.getContextPath() + "/ticket?action=list&error=editFailed");
         }
     }
 
 // 2. Thêm phương thức mới để xử lý việc cập nhật (POST)
+    // Trong file: vn/edu/fpt/controller/TechnicalRequestController.java
     private void updateTicket(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
-            String ticketIdStr = request.getParameter("id");
-            if (ticketIdStr == null || ticketIdStr.isEmpty()) {
-                response.sendRedirect(request.getContextPath() + "/ticket?action=list&error=missingId");
-                return;
-            }
-            int ticketId = Integer.parseInt(ticketIdStr);
+            // --- 1. Khởi tạo các DAO cần thiết ---
+            StatusDAO statusDAO = new StatusDAO();
+            AddressDAO addressDAO = new AddressDAO();
 
-            // 1. Lấy tất cả thông tin từ form
+            // --- 2. Lấy dữ liệu và tạo các đối tượng ---
             TechnicalRequest updatedRequest = new TechnicalRequest();
+            MaintenanceSchedule schedule = new MaintenanceSchedule();
+
+            // Lấy ID của các bản ghi cần cập nhật
+            int ticketId = Integer.parseInt(request.getParameter("id"));
             updatedRequest.setId(ticketId);
+            // Giả sử schedule ID được lấy từ một trường ẩn trên form edit
+            String scheduleIdStr = request.getParameter("scheduleId");
+            if (scheduleIdStr != null && !scheduleIdStr.isEmpty()) {
+                schedule.setId(Integer.parseInt(scheduleIdStr));
+            }
+
+            // --- 3. Thu thập dữ liệu từ form cho TechnicalRequest ---
             updatedRequest.setEnterpriseId(Integer.parseInt(request.getParameter("enterpriseId")));
+            updatedRequest.setContractId(Integer.parseInt(request.getParameter("contractId")));
             updatedRequest.setServiceId(Integer.parseInt(request.getParameter("serviceId")));
+            updatedRequest.setTitle(request.getParameter("title"));
+            updatedRequest.setDescription(request.getParameter("description"));
+            updatedRequest.setPriority(request.getParameter("priority"));
 
             String employeeIdStr = request.getParameter("employeesId");
-            if (employeeIdStr == null || employeeIdStr.isEmpty()) {
-                response.sendRedirect(request.getContextPath() + "/ticket?action=edit&id=" + ticketId + "&error=missingEmployee");
-                return;
+            if (employeeIdStr != null && !employeeIdStr.isEmpty()) {
+                updatedRequest.setAssignedToId(Integer.parseInt(employeeIdStr));
             }
-            int employeeId = Integer.parseInt(employeeIdStr);
 
-            updatedRequest.setAssignedToId(employeeId);
-            updatedRequest.setAssignedUserIds(Collections.singletonList(employeeId));
-            updatedRequest.setPriority(request.getParameter("priority"));
-            updatedRequest.setStatus(request.getParameter("status"));
-
-            String description = request.getParameter("description");
-            updatedRequest.setDescription(description);
-            updatedRequest.setTitle(description.length() > 100 ? description.substring(0, 100) + "..." : description);
-
-            boolean isBillable = Boolean.parseBoolean(request.getParameter("isBillable"));
+            boolean isBillable = "true".equals(request.getParameter("isBillable"));
             updatedRequest.setIsBillable(isBillable);
             if (isBillable) {
-                String amountStr = request.getParameter("amount");
-                updatedRequest.setEstimatedCost(amountStr == null || amountStr.isEmpty() ? 0 : Double.parseDouble(amountStr));
+                updatedRequest.setEstimatedCost(Double.parseDouble(request.getParameter("amount")));
             } else {
                 updatedRequest.setEstimatedCost(0);
             }
 
-            // 2. Xử lý danh sách thiết bị
-            List<TechnicalRequestDevice> devices = new ArrayList<>();
-            for (int i = 1; i < 100; i++) {
-                String deviceName = request.getParameter("deviceName_" + i);
-                if (deviceName == null) {
-                    break;
-                }
-                if (!deviceName.trim().isEmpty()) {
-                    String serial = request.getParameter("deviceSerial_" + i);
-                    String note = request.getParameter("deviceNote_" + i);
-                    TechnicalRequestDevice device = new TechnicalRequestDevice();
-                    device.setDeviceName(deviceName);
-                    device.setSerialNumber(serial);
-                    device.setProblemDescription(note);
-                    devices.add(device);
-                }
+            // --- 4. Thu thập dữ liệu từ form cho MaintenanceSchedule ---
+            String statusName = request.getParameter("status");
+            Integer statusId = statusDAO.getIdByName(statusName);
+            schedule.setStatusId(statusId);
+
+            schedule.setScheduledDate(LocalDate.parse(request.getParameter("scheduled_date")));
+            String endDateStr = request.getParameter("end_date");
+            if (endDateStr != null && !endDateStr.isEmpty()) {
+                schedule.setEndDate(LocalDate.parse(endDateStr));
             }
 
-            // 3. Gọi hàm update trong DAO
-            boolean success = dao.updateTechnicalRequest(updatedRequest, devices);
+            String startTimeStr = request.getParameter("start_time");
+            if (startTimeStr != null && !startTimeStr.isEmpty()) {
+                schedule.setStartTime(LocalTime.parse(startTimeStr));
+            }
 
-            // 4. Chuyển hướng về trang xem chi tiết (không còn logic gửi mail)
-            response.sendRedirect(request.getContextPath() + "/ticket?action=view&id=" + ticketId
-                    + "&update=" + (success ? "success" : "failed"));
+            String endTimeStr = request.getParameter("end_time");
+            if (endTimeStr != null && !endTimeStr.isEmpty()) {
+                schedule.setEndTime(LocalTime.parse(endTimeStr));
+            }
+
+            int provinceId = Integer.parseInt(request.getParameter("province"));
+            int districtId = Integer.parseInt(request.getParameter("district"));
+            int wardId = Integer.parseInt(request.getParameter("ward"));
+            String streetAddress = request.getParameter("streetAddress");
+            int addressId = addressDAO.findOrCreateAddress(streetAddress, wardId, districtId, provinceId);
+            schedule.setAddressId(addressId);
+            schedule.setColor(request.getParameter("color"));
+
+            // --- 5. Thu thập dữ liệu thiết bị ---
+            List<TechnicalRequestDevice> devices = new ArrayList<>();
+            int i = 1;
+            String deviceName;
+            while ((deviceName = request.getParameter("deviceName_" + i)) != null) {
+                if (!deviceName.trim().isEmpty()) {
+                    TechnicalRequestDevice device = new TechnicalRequestDevice();
+                    device.setDeviceName(deviceName);
+                    device.setSerialNumber(request.getParameter("deviceSerial_" + i));
+                    device.setProblemDescription(request.getParameter("deviceNote_" + i));
+                    devices.add(device);
+                }
+                i++;
+            }
+
+            // --- 6. Gọi DAO để cập nhật tất cả trong 1 transaction ---
+            boolean success = dao.updateTechnicalRequestAndSchedule(updatedRequest, schedule, devices);
+
+            // --- 7. Chuyển hướng ---
+            response.sendRedirect(request.getContextPath() + "/ticket?action=view&id=" + ticketId + "&update=" + (success ? "success" : "failed"));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -376,202 +426,121 @@ public class TechnicalRequestController extends HttpServlet {
         }
     }
 
+// **Lưu ý:** Bạn cần thêm một trường input ẩn vào file `editTransaction.jsp` để lấy `scheduleId`
+// <input type="hidden" name="scheduleId" value="${schedule.id}">
+    // Trong file: vn/edu/fpt/controller/TechnicalRequestController.java
     private void createTicket(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
+            // Khởi tạo các đối tượng cần thiết
             MaintenanceSchedule schedule = new MaintenanceSchedule();
-            MaintenanceScheduleDAO scheduleDAO = new MaintenanceScheduleDAO();
+            ScheduleDAO scheduleDAO = new ScheduleDAO();
             TechnicalRequest newRequest = new TechnicalRequest();
             AddressDAO addressDAO = new AddressDAO();
-            newRequest.setReporterId(1); // Giả sử ID người báo cáo là 1
+            StatusDAO statusDAO = new StatusDAO();
 
-            // --- Sửa lỗi NumberFormatException ---
-            // Kiểm tra trước khi parse để tránh lỗi
+            // Lấy thông tin từ form
             String enterpriseIdStr = request.getParameter("enterpriseId");
+            String reporterIdStr = request.getParameter("reporterId");
+            String serviceIdStr = request.getParameter("serviceId");
+            String contractIdStr = request.getParameter("contractId");
             String title = request.getParameter("title");
+            String description = request.getParameter("description");
+            String priority = request.getParameter("priority");
+            boolean isBillable = Boolean.parseBoolean(request.getParameter("isBillable"));
+            String amountStr = request.getParameter("amount");
+            String statusName = request.getParameter("status");
+
+            // Lấy ID nhân viên từ form (dạng chuỗi)
+            String employeeIdStr = request.getParameter("employeesId");
+
+            // --- Gán dữ liệu cho đối tượng TechnicalRequest ---
+            newRequest.setReporterId(Integer.parseInt(reporterIdStr));
             if (enterpriseIdStr != null && !enterpriseIdStr.isEmpty()) {
                 newRequest.setEnterpriseId(Integer.parseInt(enterpriseIdStr));
             }
-
-            String reporterIdStr = request.getParameter("reporterId");
-            int reporterId = Integer.parseInt(reporterIdStr);
-            newRequest.setReporterId(reporterId);
-            String serviceIdStr = request.getParameter("serviceId");
             if (serviceIdStr != null && !serviceIdStr.isEmpty()) {
                 newRequest.setServiceId(Integer.parseInt(serviceIdStr));
             }
-
-            String[] employeeIdArr = request.getParameterValues("employeesId");
-            if (employeeIdArr != null && employeeIdArr.length > 0) {
-                List<Integer> employeeIds = new ArrayList<>();
-                for (String s : employeeIdArr) {
-                    if (s != null && !s.isEmpty()) {
-                        employeeIds.add(Integer.parseInt(s));
-                    }
-                }
-                newRequest.setAssignedUserIds(employeeIds);
-                schedule.setAssignedUserIds(employeeIds); // Sửa lại hàm này (List<Integer>), không phải setAssignedUserId(int)
-            }
-            String contractIdStr = request.getParameter("contractId");
             if (contractIdStr != null && !contractIdStr.isEmpty()) {
                 newRequest.setContractId(Integer.valueOf(contractIdStr));
             }
-            String status = request.getParameter("status");
-            newRequest.setStatus(status);
-            String provinceIdStr = request.getParameter("province");
-            String districtIdStr = request.getParameter("district");
-            String wardIdStr = request.getParameter("ward");
-            String streetAddress = request.getParameter("streetAddress");
 
-            if (provinceIdStr == null || provinceIdStr.isBlank()
-                    || districtIdStr == null || districtIdStr.isBlank()
-                    || wardIdStr == null || wardIdStr.isBlank()) {
-                throw new IllegalArgumentException("Vui lòng chọn đầy đủ Tỉnh/Thành, Quận/Huyện, và Phường/Xã.");
+            // === DÒNG CODE MỚI QUAN TRỌNG ĐƯỢC BỔ SUNG ===
+            // Gán nhân viên phụ trách cho chính phiếu yêu cầu
+            if (employeeIdStr != null && !employeeIdStr.isEmpty()) {
+                newRequest.setAssignedToId(Integer.parseInt(employeeIdStr));
             }
-            // --- Xử lý địa chỉ (tách ra khỏi block end_time) ---
-            try {
-                // --- Xử lý ngày giờ ---
-                String scheduledDateStr = request.getParameter("scheduled_date");
-                if (scheduledDateStr != null && !scheduledDateStr.isEmpty()) {
-                    LocalDate scheduledDate = LocalDate.parse(scheduledDateStr);
-                    schedule.setScheduledDate(scheduledDate);
-                }
+            // ===============================================
 
-                String endDateStr = request.getParameter("end_date");
-                if (endDateStr != null && !endDateStr.isEmpty()) {
-                    LocalDate endDate = LocalDate.parse(endDateStr);
-                    schedule.setEndDate(endDate);
-                }
-
-                String startTimeStr = request.getParameter("start_time");
-                if (startTimeStr != null && !startTimeStr.isEmpty()) {
-                    LocalTime startTime = LocalTime.parse(startTimeStr);
-                    schedule.setStartTime(startTime);
-                }
-
-                String endTimeStr = request.getParameter("end_time");
-                if (endTimeStr != null && !endTimeStr.isEmpty()) {
-                    LocalTime endTime = LocalTime.parse(endTimeStr);
-                    schedule.setEndTime(endTime);
-                }
-
-                if (provinceIdStr != null && !provinceIdStr.isEmpty()
-                        && districtIdStr != null && !districtIdStr.isEmpty()
-                        && wardIdStr != null && !wardIdStr.isEmpty()) {
-
-                    int provinceId = Integer.parseInt(provinceIdStr);
-                    int districtId = Integer.parseInt(districtIdStr);
-                    int wardId = Integer.parseInt(wardIdStr);
-
-                    // Tạo hoặc tìm địa chỉ trong database
-                    int addressId = addressDAO.findOrCreateAddress(streetAddress, wardId, districtId, provinceId);
-
-                    // Gán addressId vào object schedule
-                    schedule.setAddressId(addressId);
-
-                    // Hoặc nếu bạn muốn gán vào newRequest:
-                    // newRequest.setAddressId(addressId);
-                    System.out.println("Address ID đã được gán: " + addressId);
-                } else {
-                    System.out.println("Thông tin địa chỉ không đầy đủ");
-                }
-
-            } catch (DateTimeParseException e) {
-                System.err.println("Lỗi parse ngày/giờ: " + e.getMessage());
-                // Xử lý lỗi ngày giờ
-            } catch (NumberFormatException e) {
-                System.err.println("Lỗi parse số: " + e.getMessage());
-                // Xử lý lỗi parse số
-            } catch (Exception e) {
-                System.err.println("Lỗi khi xử lý dữ liệu: " + e.getMessage());
-                e.printStackTrace();
-            }
-
-            // --- Giữ nguyên logic lấy mô tả ---
-            String description = request.getParameter("description");
-            newRequest.setDescription(description.length() > 100 ? description.substring(0, 100) + "..." : description);
             newRequest.setTitle(title);
-
-            // --- Sửa lỗi logic Mức độ ưu tiên ---
-            // So sánh với value tiếng Anh thay vì text tiếng Việt
-            String priorityValue = request.getParameter("priority");
-            if ("high".equals(priorityValue)) {
-                newRequest.setPriority("high");
-            } else if ("urgent".equals(priorityValue)) { // Giả sử value là 'urgent'
-                newRequest.setPriority("critical");
-            } else if ("low".equals(priorityValue)) { // Giả sử value là 'low'
-                newRequest.setPriority("low");
-            } else {
-                newRequest.setPriority("medium"); // Mặc định
-            }
-            // --- Giữ nguyên logic các phần còn lại ---
-            boolean isBillable = Boolean.parseBoolean(request.getParameter("isBillable"));
+            newRequest.setDescription(description);
+            newRequest.setPriority(priority);
             newRequest.setIsBillable(isBillable);
             if (isBillable) {
-                String amountStr = request.getParameter("amount");
                 newRequest.setEstimatedCost(amountStr == null || amountStr.isEmpty() ? 0 : Double.parseDouble(amountStr));
             } else {
                 newRequest.setEstimatedCost(0);
             }
 
+            // Lấy danh sách thiết bị từ form
             List<TechnicalRequestDevice> devices = new ArrayList<>();
             int i = 1;
             String deviceName;
             while ((deviceName = request.getParameter("deviceName_" + i)) != null) {
                 if (!deviceName.trim().isEmpty()) {
-                    String serial = request.getParameter("deviceSerial_" + i);
-                    String note = request.getParameter("deviceNote_" + i);
-
-                    // Sửa lại bằng cách dùng setter để đảm bảo gán đúng giá trị
                     TechnicalRequestDevice device = new TechnicalRequestDevice();
                     device.setDeviceName(deviceName);
-                    device.setSerialNumber(serial);
-                    device.setProblemDescription(note); // Gán mô tả sự cố vào đúng trường
-
+                    device.setSerialNumber(request.getParameter("deviceSerial_" + i));
+                    device.setProblemDescription(request.getParameter("deviceNote_" + i));
                     devices.add(device);
                 }
                 i++;
             }
-            // Lấy một MẢNG các ID của nhân viên được chọn
-            String[] selectedEmployeeIds = request.getParameterValues("employeesId");
+
+            // Tạo Technical Request trước để lấy ID
             Integer newRequestId = dao.createTechnicalRequest(newRequest, devices);
-            String color = request.getParameter("color");
+
             if (newRequestId != null) {
-                // Tạo schedule: gán technicalRequestId từ newRequestId cho schedule
+                // --- Gán dữ liệu cho đối tượng MaintenanceSchedule ---
                 schedule.setTechnicalRequestId(newRequestId);
-                schedule.setColor(color);
-                schedule.setStatusId(2);
-                Integer firstUserId = null;
 
-                if (selectedEmployeeIds != null && selectedEmployeeIds.length > 0) {
-                    String raw = selectedEmployeeIds[0];
-                    if (raw != null && !raw.isBlank()) {
-                        try {
-                            firstUserId = Integer.valueOf(raw.trim());   // có thể ném NumberFormatException
-                        } catch (NumberFormatException ex) {
-                            System.err.println("ID nhân viên không hợp lệ: " + raw);
-                        }
-                    }
+                Integer statusId = statusDAO.getIdByName(statusName);
+                schedule.setStatusId(statusId != null ? statusId : 2); // ID mặc định là 2 nếu không tìm thấy
+
+                // Gán thông tin thời gian và địa chỉ...
+                schedule.setScheduledDate(LocalDate.parse(request.getParameter("scheduled_date")));
+                String endDateStr = request.getParameter("end_date");
+                if (endDateStr != null && !endDateStr.isEmpty()) {
+                    schedule.setEndDate(LocalDate.parse(endDateStr));
                 }
 
-                /* -------- 2. Insert MaintenanceSchedule và gán nhân viên -------- */
-                int scheduleId = scheduleDAO.addMaintenanceScheduleAndReturnId(schedule);
-
-                if (scheduleId > 0 && firstUserId != null) {
-                    // Phương thức DAO đã có: addMaintenanceAssignments(int scheduleId, List<Integer> userIds)
-                    scheduleDAO.addMaintenanceAssignments(
-                            scheduleId,
-                            java.util.Collections.singletonList(firstUserId));
-                    System.out.println("Đã gán nhân viên ID " + firstUserId + " cho lịch ID " + scheduleId);
-                } else {
-                    System.out.println("Không gán nhân viên nào cho lịch (scheduleId=" + scheduleId + ", firstUserId=" + firstUserId + ")");
+                String startTimeStr = request.getParameter("start_time");
+                if (startTimeStr != null && !startTimeStr.isEmpty()) {
+                    schedule.setStartTime(LocalTime.parse(startTimeStr));
                 }
 
-                // Lệnh chuyển hướng: thành công nếu cả hai ID đều có kết quả
-                if (scheduleId > 0) {
-                    response.sendRedirect("ticket?action=list&create=success");
-                } else {
-                    response.sendRedirect("ticket?action=list&create=failed");
+                String endTimeStr = request.getParameter("end_time");
+                if (endTimeStr != null && !endTimeStr.isEmpty()) {
+                    schedule.setEndTime(LocalTime.parse(endTimeStr));
                 }
+
+                int provinceId = Integer.parseInt(request.getParameter("province"));
+                int districtId = Integer.parseInt(request.getParameter("district"));
+                int wardId = Integer.parseInt(request.getParameter("ward"));
+                String streetAddress = request.getParameter("streetAddress");
+                int addressId = addressDAO.findOrCreateAddress(streetAddress, wardId, districtId, provinceId);
+                schedule.setAddressId(addressId);
+                schedule.setColor(request.getParameter("color"));
+
+                // Gán nhân viên cho schedule (bảng MaintenanceAssignments)
+                List<Integer> employeeIds = new ArrayList<>();
+                if (employeeIdStr != null && !employeeIdStr.isEmpty()) {
+                    employeeIds.add(Integer.parseInt(employeeIdStr));
+                }
+
+                scheduleDAO.addScheduleWithAssignments(schedule, employeeIds);
+                response.sendRedirect("ticket?action=list&create=success");
+
             } else {
                 response.sendRedirect("ticket?action=list&create=failed");
             }
@@ -615,7 +584,7 @@ public class TechnicalRequestController extends HttpServlet {
             boolean success = dao.deleteTechnicalRequest(id);
             // Chuyển hướng về trang danh sách với tham số báo kết quả
 
-            MaintenanceScheduleDAO dao = new MaintenanceScheduleDAO();
+            ScheduleDAO dao = new ScheduleDAO();
             boolean deleteSuccess = dao.deleteMaintenanceSchedule(id);
             response.sendRedirect(request.getContextPath() + "/ticket?action=list&delete=" + (success ? "success" : "failed"));
         } catch (Exception e) {
@@ -713,5 +682,24 @@ public class TechnicalRequestController extends HttpServlet {
             e.printStackTrace();
             response.sendRedirect(request.getContextPath() + "/ticket?action=list&error=unknown");
         }
+    }
+
+    // --- THÊM CÁC PHƯƠNG THỨC MỚI ---
+    private void getContractDetails(HttpServletRequest request, HttpServletResponse response) throws IOException, SQLException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        int contractId = Integer.parseInt(request.getParameter("contractId"));
+        ContractDAO contractDAO = new ContractDAO();
+        Contract contract = contractDAO.getContractWithCustomerById(contractId);
+        response.getWriter().write(gson.toJson(contract));
+    }
+
+    private void getProductsByContract(HttpServletRequest request, HttpServletResponse response) throws IOException, SQLException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        int contractId = Integer.parseInt(request.getParameter("contractId"));
+        ContractDAO contractDAO = new ContractDAO();
+        List<Product> products = contractDAO.getProductsByContractId(contractId);
+        response.getWriter().write(gson.toJson(products));
     }
 }

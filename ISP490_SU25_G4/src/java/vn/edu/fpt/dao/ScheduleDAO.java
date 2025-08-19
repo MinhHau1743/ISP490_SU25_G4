@@ -21,7 +21,7 @@ import vn.edu.fpt.model.TechnicalRequest;
 import vn.edu.fpt.model.User;
 import vn.edu.fpt.model.Ward;
 
-public class MaintenanceScheduleDAO extends DBContext {
+public class ScheduleDAO extends DBContext {
 
     public List<MaintenanceSchedule> getAllMaintenanceSchedules() {
         List<MaintenanceSchedule> schedules = new ArrayList<>();
@@ -102,8 +102,8 @@ public class MaintenanceScheduleDAO extends DBContext {
         return schedules;
     }
 
-// File: MaintenanceScheduleDAO.java
-    // Trong file MaintenanceScheduleDAO.java
+// File: ScheduleDAO.java
+    // Trong file ScheduleDAO.java
     public boolean markAsCompleted(int scheduleId) {
         // Cách 1: Tốt nhất - Lấy ID động (yêu cầu có StatusDAO)
         StatusDAO statusDAO = new StatusDAO();
@@ -474,7 +474,7 @@ WHERE ms.id = ?
         return -1; // Thất bại
     }
 
-    // Thêm hàm private này vào trong class MaintenanceScheduleDAO
+    // Thêm hàm private này vào trong class ScheduleDAO
     private MaintenanceSchedule mapResultSetToSchedule(ResultSet rs) throws SQLException {
         MaintenanceSchedule schedule = new MaintenanceSchedule();
         schedule.setId(rs.getInt("id"));
@@ -713,8 +713,8 @@ WHERE ms.id = ?
 
     // Lấy 1 lịch trình theo campaignId, kèm statusName và thông tin địa chỉ (JOIN Statuses + Addresses + Wards + Districts + Provinces)
 // Nếu có nhiều lịch trình cùng campaign, lấy bản mới nhất theo scheduled_date (bạn có thể đổi tiêu chí ORDER BY nếu muốn).
-    // TRONG FILE: MaintenanceScheduleDAO.java
-    // TRONG FILE: MaintenanceScheduleDAO.java
+    // TRONG FILE: ScheduleDAO.java
+    // TRONG FILE: ScheduleDAO.java
     public MaintenanceSchedule getMaintenanceScheduleWithStatusByCampaignId(int campaignId) {
         // 1. Câu lệnh SQL chỉ để lấy thông tin Schedule, không JOIN với Assignments nữa
         final String sql = "SELECT "
@@ -906,7 +906,7 @@ WHERE ms.id = ?
 
     public static void main(String[] args) {
         // Tạo instance DAO
-        MaintenanceScheduleDAO dao = new MaintenanceScheduleDAO();
+        ScheduleDAO dao = new ScheduleDAO();
         // Lấy danh sách lịch trình
         List<MaintenanceSchedule> schedules = dao.getAllMaintenanceSchedules();
 
@@ -939,28 +939,31 @@ WHERE ms.id = ?
         }
     }
 
-    // Thêm phương thức này vào trong file MaintenanceScheduleDAO.java của bạn
+    // Thêm phương thức này vào trong file ScheduleDAO.java của bạn
     public MaintenanceSchedule getScheduleByTechnicalRequestId(int technicalRequestId) {
-        // Câu lệnh SQL JOIN đầy đủ để lấy cả thông tin địa chỉ và trạng thái
-        String sql = "SELECT ms.*, a.*, s.status_name "
+        MaintenanceSchedule schedule = null;
+
+        // SỬA LẠI SQL: Bổ sung JOIN tới Provinces, Districts, Wards và lấy các trường name
+        String sql = "SELECT ms.*, a.*, s.status_name, "
+                + "p.name AS province_name, d.name AS district_name, w.name AS ward_name "
                 + "FROM MaintenanceSchedules ms "
                 + "LEFT JOIN Addresses a ON ms.address_id = a.id "
                 + "LEFT JOIN Statuses s ON ms.status_id = s.id "
+                + "LEFT JOIN Provinces p ON a.province_id = p.id " // <-- JOIN BỔ SUNG
+                + "LEFT JOIN Districts d ON a.district_id = d.id " // <-- JOIN BỔ SUNG
+                + "LEFT JOIN Wards w ON a.ward_id = w.id " // <-- JOIN BỔ SUNG
                 + "WHERE ms.technical_request_id = ?";
 
-        MaintenanceSchedule schedule = null;
-
-        try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, technicalRequestId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     schedule = new MaintenanceSchedule();
 
-                    // --- Lấy thông tin từ bảng MaintenanceSchedules ---
+                    // Lấy thông tin từ bảng MaintenanceSchedules và Statuses (giữ nguyên)
                     schedule.setId(rs.getInt("id"));
                     schedule.setTechnicalRequestId(rs.getInt("technical_request_id"));
-                    // Dùng getObject để xử lý an toàn giá trị NULL cho campaign_id
                     schedule.setCampaignId(rs.getObject("campaign_id") != null ? rs.getInt("campaign_id") : null);
                     schedule.setColor(rs.getString("color"));
                     schedule.setScheduledDate(rs.getObject("scheduled_date", LocalDate.class));
@@ -969,11 +972,9 @@ WHERE ms.id = ?
                     schedule.setEndTime(rs.getObject("end_time", LocalTime.class));
                     schedule.setAddressId(rs.getInt("address_id"));
                     schedule.setStatusId(rs.getInt("status_id"));
-
-                    // --- Lấy thông tin từ bảng Statuses (đã JOIN) ---
                     schedule.setStatusName(rs.getString("status_name"));
 
-                    // --- Tạo đối tượng Address từ dữ liệu đã JOIN ---
+                    // SỬA LẠI PHẦN MAPPING: Thêm code để tạo đối tượng Province, District, Ward
                     int addressId = rs.getInt("address_id");
                     if (addressId > 0) {
                         Address address = new Address();
@@ -982,17 +983,79 @@ WHERE ms.id = ?
                         address.setWardId(rs.getInt("ward_id"));
                         address.setDistrictId(rs.getInt("district_id"));
                         address.setProvinceId(rs.getInt("province_id"));
-                        // Gán đối tượng Address hoàn chỉnh vào trong schedule
+
+                        // Tạo và gán các đối tượng con chứa tên
+                        address.setWard(new Ward(rs.getInt("ward_id"), rs.getString("ward_name")));
+                        address.setDistrict(new District(rs.getInt("district_id"), rs.getString("district_name")));
+                        address.setProvince(new Province(rs.getInt("province_id"), rs.getString("province_name")));
+
                         schedule.setAddress(address);
                     }
                 }
             }
         } catch (Exception e) {
-            // In lỗi ra để dễ dàng gỡ lỗi
             e.printStackTrace();
         }
-
-        // Trả về đối tượng schedule (hoặc null nếu không tìm thấy)
         return schedule;
+    }
+
+    // Trả về đối tượng schedule (hoặc null nếu không tìm thấy)
+    // ... (các phương thức khác của bạn như getScheduleByTechnicalRequestId, addMaintenanceSchedule...)
+    /**
+     * Cập nhật danh sách nhân viên được phân công cho một lịch trình. Hoạt động
+     * bằng cách xóa tất cả các phân công cũ và thêm lại danh sách mới.
+     *
+     * @param scheduleId ID của lịch trình cần cập nhật.
+     * @param employeeIds Danh sách ID của các nhân viên mới.
+     * @throws SQLException
+     */
+    public void updateMaintenanceAssignments(int scheduleId, List<Integer> employeeIds) throws SQLException {
+        String deleteSql = "DELETE FROM MaintenanceAssignments WHERE schedule_id = ?";
+        String insertSql = "INSERT INTO MaintenanceAssignments (schedule_id, user_id) VALUES (?, ?)";
+
+        Connection conn = null;
+        PreparedStatement deleteStmt = null;
+        PreparedStatement insertStmt = null;
+
+        try {
+            conn = DBContext.getConnection(); // Lấy kết nối từ DBContext của bạn
+            conn.setAutoCommit(false); // Bắt đầu một transaction
+
+            // Bước 1: Xóa tất cả các phân công cũ
+            deleteStmt = conn.prepareStatement(deleteSql);
+            deleteStmt.setInt(1, scheduleId);
+            deleteStmt.executeUpdate();
+
+            // Bước 2: Nếu có danh sách nhân viên mới thì thêm vào
+            if (employeeIds != null && !employeeIds.isEmpty()) {
+                insertStmt = conn.prepareStatement(insertSql);
+                for (Integer employeeId : employeeIds) {
+                    insertStmt.setInt(1, scheduleId);
+                    insertStmt.setInt(2, employeeId);
+                    insertStmt.addBatch(); // Thêm vào batch để thực thi hàng loạt
+                }
+                insertStmt.executeBatch();
+            }
+
+            conn.commit(); // Hoàn tất transaction
+
+        } catch (Exception e) {
+            if (conn != null) {
+                conn.rollback(); // Hoàn tác nếu có lỗi
+            }
+            e.printStackTrace(); // In lỗi ra console để debug
+            throw new SQLException("Lỗi khi cập nhật phân công nhân viên.", e);
+        } finally {
+            if (deleteStmt != null) {
+                deleteStmt.close();
+            }
+            if (insertStmt != null) {
+                insertStmt.close();
+            }
+            if (conn != null) {
+                conn.setAutoCommit(true); // Trả lại trạng thái auto-commit
+                conn.close();
+            }
+        }
     }
 }

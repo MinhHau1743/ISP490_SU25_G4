@@ -1,215 +1,223 @@
-<%--
-    Document    : editContractDetail.jsp
-    Created on  : Jul 09, 2025
-    Author      : NGUYEN MINH (Final Version by Gemini)
-    Description : Final version with targeted font-fix, restored modal, and inline validation.
---%>
-
+<%-- File: /jsp/customerSupport/editTransaction.jsp --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
-<%@ taglib uri="jakarta.tags.core" prefix="c" %>
-<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
-
-<c:set var="currentPage" value="listContract" />
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
 <!DOCTYPE html>
 <html lang="vi">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Chỉnh sửa Hợp đồng - ${contract.contractCode}</title>
-
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-        <%-- Tải 2 font: "Inter" cho toàn trang và "Be Vietnam Pro" để sửa lỗi hiển thị --%>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@700&display=swap" rel="stylesheet">
-        
-        <script src="https://unpkg.com/feather-icons"></script>
+        <title>Chỉnh sửa Phiếu - ${ticket.requestCode}</title>
 
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/editContractDetail.css">
-
+        <%-- Tái sử dụng CSS từ trang create, vì layout tương tự --%>
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/createTicket.css?v=<%= System.currentTimeMillis()%>">
+        
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://unpkg.com/feather-icons"></script>
+        
+        <%-- CSS cho Modal và các tùy chỉnh khác --%>
         <style>
-            /* CSS cho validation lỗi inline */
-            .error-text {
-                color: #d9534f;
-                font-size: 13px;
-                display: none;
-                margin-top: 5px;
-            }
-            .form-control.is-invalid, .btn-add-item.is-invalid {
-                border-color: #d9534f !important;
-            }
-            /* CSS để áp dụng font sửa lỗi có mục tiêu */
-            .font-fix-vietnamese {
-                font-family: 'Be Vietnam Pro', sans-serif;
-            }
+            .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+            .modal-content { background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 60%; border-radius: 8px; box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); }
+            .modal-header { padding-bottom: 10px; border-bottom: 1px solid #e5e5e5; display: flex; justify-content: space-between; align-items: center; }
+            .modal-body { padding-top: 15px; max-height: 400px; overflow-y: auto;}
+            .close-modal { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+            .contract-table { width: 100%; border-collapse: collapse; }
+            .contract-table th, .contract-table td { border: 1px solid #ddd; padding: 8px; text-align: left;}
+            .product-search-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
+            .product-search-item:hover { background-color: #f5f5f5; }
         </style>
     </head>
-    <body data-context-path="${pageContext.request.contextPath}">
+    <body>
         <div class="app-container">
             <jsp:include page="/mainMenu.jsp"/>
-
             <main class="main-content">
-                <div class="page-content">
-                    <form class="page-content" id="editContractForm" action="contract" method="post">
-                        <input type="hidden" name="action" value="update">
-                        <input type="hidden" name="id" value="${contract.id}">
+                <form id="editTicketForm" class="page-content" action="${pageContext.request.contextPath}/ticket" method="post">
+                    <input type="hidden" name="action" value="update">
+                    <input type="hidden" name="id" value="${ticket.id}">
+                    <input type="hidden" id="contractId" name="contractId" value="${ticket.contractId}">
+                    <input type="hidden" name="reporterId" value="${ticket.reporterId}">
+                    <input type="hidden" name="scheduleId" value="${schedule.id}">
 
-                        <div class="detail-header">
-                            <a href="${pageContext.request.contextPath}/contract?action=view&id=${contract.id}" class="back-link"><i data-feather="arrow-left"></i><span>Hủy</span></a>
-                            <div class="action-buttons"><button type="submit" class="btn btn-primary"><i data-feather="save"></i>Lưu thay đổi</button></div>
+                    <div class="detail-header">
+                        <a href="${pageContext.request.contextPath}/ticket?action=view&id=${ticket.id}" class="back-link"><i data-feather="arrow-left"></i><span>Hủy bỏ</span></a>
+                        <button type="submit" class="btn btn-primary"><i data-feather="save"></i>Lưu thay đổi</button>
+                    </div>
+
+                    <div class="detail-layout">
+                        <%-- Main Column --%>
+                        <div class="main-column">
+                            <div class="detail-card">
+                                <h2 class="card-title">Chỉnh sửa thông tin phiếu</h2>
+                                <div class="form-grid">
+                                    <div class="form-group full-width">
+                                        <label for="title">Tiêu đề (*)</label>
+                                        <input type="text" id="title" name="title" class="form-control" value="${ticket.title}" required>
+                                    </div>
+                                    <div class="form-group"><label>Mã Phiếu</label><input type="text" class="form-control" value="${ticket.requestCode}" readonly></div>
+                                    <div class="form-group">
+                                        <label for="contractSelection">Hợp đồng (*)</label>
+                                        <div class="input-group">
+                                            <input type="text" id="contractCodeDisplay" class="form-control" value="${ticket.contractCode}" readonly required>
+                                            <button type="button" id="btnChooseContract" class="btn btn-secondary">Chọn</button>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="enterpriseNameDisplay">Khách hàng (*)</label>
+                                        <input type="hidden" id="enterpriseId" name="enterpriseId" value="${ticket.enterpriseId}" required>
+                                        <input type="text" id="enterpriseNameDisplay" class="form-control" value="${ticket.enterpriseName}" readonly>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="serviceId">Loại phiếu (*)</label>
+                                        <select id="serviceId" name="serviceId" class="form-control" required>
+                                            <c:forEach var="service" items="${serviceList}"><option value="${service.id}" ${service.id == ticket.serviceId ? 'selected' : ''}>${service.name}</option></c:forEach>
+                                        </select>
+                                    </div>
+                                    <div class="form-group full-width">
+                                        <div class="address-section">
+                                            <h3>Địa chỉ thực hiện công việc</h3>
+                                            <div class="address-grid">
+                                                <div class="form-group">
+                                                    <label for="province">Tỉnh/Thành phố (*)</label>
+                                                    <select id="province" name="province" class="form-control" required>
+                                                        <c:forEach var="p" items="${provinces}"><option value="${p.id}" ${p.id == schedule.address.provinceId ? 'selected' : ''}>${p.name}</option></c:forEach>
+                                                    </select>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="district">Quận/Huyện (*)</label>
+                                                    <select id="district" name="district" class="form-control" required>
+                                                        <c:forEach var="d" items="${districts}"><option value="${d.id}" ${d.id == schedule.address.districtId ? 'selected' : ''}>${d.name}</option></c:forEach>
+                                                    </select>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="ward">Phường/Xã (*)</label>
+                                                    <select id="ward" name="ward" class="form-control" required>
+                                                        <c:forEach var="w" items="${wards}"><option value="${w.id}" ${w.id == schedule.address.wardId ? 'selected' : ''}>${w.name}</option></c:forEach>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="streetAddress">Địa chỉ cụ thể (*)</label>
+                                                <input type="text" id="streetAddress" name="streetAddress" value="${schedule.address.streetAddress}" class="form-control" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group full-width"><label for="description">Mô tả chung (*)</label><textarea id="description" name="description" class="form-control" rows="4" required>${ticket.description}</textarea></div>
+                                </div>
+                            </div>
+                            <div class="detail-card">
+                                <h2 class="card-title">Các thiết bị liên quan</h2>
+                                <table class="device-table">
+                                    <thead><tr><th>Tên thiết bị</th><th>Serial Number</th><th>Mô tả sự cố</th><th class="action-col"></th></tr></thead>
+                                    <tbody id="device-tbody"></tbody>
+                                </table>
+                                <div class="device-table-actions"><button type="button" id="addProductBtn" class="btn btn-secondary"><i data-feather="plus"></i>Thêm sản phẩm</button></div>
+                            </div>
                         </div>
-
-                        <c:if test="${not empty errorMessages}">
-                            <div class="server-error-container">
-                                <strong>Vui lòng sửa các lỗi sau:</strong>
-                                <ul><c:forEach var="error" items="${errorMessages}"><li>${error}</li></c:forEach></ul>
-                            </div>
-                        </c:if>
-
-                        <div class="detail-layout">
-                            <div class="main-column">
-                                <div class="detail-card">
-                                    <h3 class="card-title">Thông tin Hợp đồng</h3>
-                                    <div class="card-body">
-                                        <div class="info-grid">
-                                            <div class="form-group"><label class="form-label" for="contractCode">Mã hợp đồng (*)</label><input type="text" id="contractCode" name="contractCode" class="form-control" value="${contract.contractCode}" required title="Vui lòng nhập mã hợp đồng."></div>
-                                            <div class="form-group"><label class="form-label" for="contractName">Tên hợp đồng (*)</label><input type="text" id="contractName" name="contractName" class="form-control" value="${contract.contractName}" required title="Vui lòng nhập tên hợp đồng."></div>
-                                            <div class="form-group"><label class="form-label" for="enterpriseId">Khách hàng (*)</label><select id="enterpriseId" name="enterpriseId" class="form-control" required title="Vui lòng chọn khách hàng."><c:forEach var="e" items="${enterpriseList}"><option value="${e.id}" <c:if test="${contract.enterpriseId == e.id}">selected</c:if>>${e.name}</option></c:forEach></select></div>
-                                        </div>
-                                        <div class="form-group" style="margin-top: 16px;"><label class="form-label" for="notes">Mô tả / Điều khoản</label><textarea id="notes" name="notes" class="form-control" rows="5">${contract.notes}</textarea></div>
-                                    </div>
+                        <%-- Sidebar Column --%>
+                        <div class="sidebar-column">
+                            <div class="detail-card sidebar-form">
+                                <h2 class="card-title">Chi tiết Giao việc</h2>
+                                <div class="sidebar-form-row">
+                                    <label for="status">Trạng thái</label>
+                                    <select id="status" name="status" class="form-control">
+                                        <c:forEach var="st" items="${statusList}"><option value="${st.statusName}" ${st.statusName == ticket.status ? 'selected' : ''}>${st.statusName}</option></c:forEach>
+                                    </select>
                                 </div>
-                                <div class="detail-card">
-                                    <h3 class="card-title">Chi tiết Hàng hóa / Dịch vụ</h3>
-                                    <div class="card-body">
-                                        <table class="item-list-table-edit">
-                                            <thead><tr><th>Sản phẩm</th><th style="width: 15%;">Số lượng</th><th style="width: 20%; text-align: right;">Đơn giá</th><th style="width: 20%; text-align: right;">Thành tiền</th><th style="width: 5%;"></th></tr></thead>
-                                            <tbody id="contract-item-list"><c:forEach var="item" items="${contractItems}"><tr class="product-row"><td>${item.name}<input type="hidden" name="productId" value="${item.productId}"></td><td><input type="number" name="quantity" class="form-control quantity-input" value="${item.quantity}" min="1"></td><td class="money-cell unit-price" data-price="${item.unitPrice}"><fmt:formatNumber value="${item.unitPrice}" pattern="###,###"/></td><td class="money-cell line-total"><fmt:formatNumber value="${item.unitPrice * item.quantity}" pattern="###,###"/></td><td><button type="button" class="btn-delete-item"><i data-feather="trash-2"></i></button></td></tr></c:forEach></tbody>
-                                        </table>
-                                        <div class="summary-wrapper" style="margin-top: 24px;">
-                                            <div class="summary-row"><span class="summary-label">Tổng phụ</span><span class="summary-value" id="subTotal">0</span></div>
-                                            <div class="summary-row"><span class="summary-label">VAT (10%)</span><span class="summary-value" id="vatAmount">0</span></div>
-                                            <div class="summary-row grand-total-row"><span class="summary-label font-fix-vietnamese">Tổng cộng</span><span class="summary-value" id="grandTotal">0</span></div>
-                                        </div>
-                                        <input type="hidden" id="contractValue" name="totalValue" value="${contract.totalValue}">
-                                        <button type="button" class="btn-add-item" id="addProductBtn"><i data-feather="plus"></i> Thêm sản phẩm</button>
-                                        <span class="error-text"></span>
-                                    </div>
+                                <div class="sidebar-form-row">
+                                    <label for="priority">Mức độ ưu tiên</label>
+                                    <select id="priority" name="priority" class="form-control">
+                                        <option value="critical" ${ticket.priority == 'critical' ? 'selected' : ''}>Khẩn cấp</option>
+                                        <option value="high" ${ticket.priority == 'high' ? 'selected' : ''}>Cao</option>
+                                        <option value="medium" ${ticket.priority == 'medium' ? 'selected' : ''}>Thông thường</option>
+                                        <option value="low" ${ticket.priority == 'low' ? 'selected' : ''}>Thấp</option>
+                                    </select>
                                 </div>
-                            </div>
-                            <div class="sidebar-column">
-                                <div class="detail-card">
-                                    <h3 class="card-title">Thời hạn</h3>
-                                    <div class="card-body">
-                                        <div class="date-grid">
-                                            <div class="form-group"><label class="form-label" for="signedDate">Ngày ký (*)</label><input type="date" id="signedDate" name="signedDate" class="form-control" value="<fmt:formatDate value='${contract.signedDate}' pattern='yyyy-MM-dd' />" required title="Vui lòng chọn ngày ký."><span class="error-text"></span></div>
-                                            <div class="form-group"><label class="form-label" for="startDate">Ngày hiệu lực (*)</label><input type="date" id="startDate" name="startDate" class="form-control" value="<fmt:formatDate value='${contract.startDate}' pattern='yyyy-MM-dd' />" required title="Vui lòng chọn ngày hiệu lực."><span class="error-text"></span></div>
-                                            <div class="form-group"><label class="form-label" for="endDate">Ngày hết hạn (*)</label><input type="date" id="endDate" name="endDate" class="form-control" value="<fmt:formatDate value='${contract.endDate}' pattern='yyyy-MM-dd' />" required title="Vui lòng chọn ngày hết hạn."><span class="error-text"></span></div>
-                                        </div>
-                                    </div>
+                                <div class="sidebar-form-row">
+                                    <label for="employeesId">Nhân viên phụ trách</label>
+                                    <select id="employeesId" name="employeesId" class="form-control" required>
+                                        <c:forEach var="employee" items="${employeeList}"><option value="${employee.id}" ${employee.id == ticket.assignedToId ? 'selected' : ''}>${employee.lastName} ${employee.middleName} ${employee.firstName}</option></c:forEach>
+                                    </select>
                                 </div>
-                                <div class="detail-card">
-                                    <h3 class="card-title">Quản lý</h3>
-                                    <div class="card-body">
-                                        <div class="form-group"><label class="form-label" for="statusId">Trạng thái (*)</label><select id="statusId" name="statusId" class="form-control status-select" required title="Vui lòng chọn trạng thái."><c:forEach var="status" items="${statusList}"><option value="${status.id}" <c:if test="${contract.statusId == status.id}">selected</c:if>>${status.name}</option></c:forEach></select></div>
-                                        <div class="form-group"><label class="form-label" for="createdById">Nhân viên phụ trách (*)</label><select id="createdById" name="createdById" class="form-control" required title="Vui lòng chọn nhân viên phụ trách."><c:forEach var="e" items="${employeeList}"><option value="${e.id}" <c:if test="${contract.createdById == e.id}">selected</c:if>>${e.fullNameCombined}</option></c:forEach></select></div>
-                                    </div>
+                                <div class="sidebar-form-row"><label>Ngày tạo</label><input type="text" class="form-control" value="<fmt:formatDate value='${ticket.createdAt}' pattern='dd/MM/yyyy HH:mm' />" readonly></div>
+                                <div class="sidebar-form-row"><label>Người tạo</label><input type="text" value="${ticket.reporterName}" class="form-control" readonly ></div>
+                                <div class="sidebar-form-row row-2col">
+                                    <label>Khoảng ngày</label>
+                                    <div class="control"><input type="date" name="scheduled_date" value="${schedule.scheduledDate}" class="form-control"><div class="field-hint">Bắt đầu</div></div>
+                                    <div class="control"><input type="date" name="end_date" value="${schedule.endDate}" class="form-control"><div class="field-hint">Kết thúc</div></div>
                                 </div>
+                                <div class="sidebar-form-row row-2col">
+                                    <label>Khung giờ</label>
+                                    <div class="control"><input type="time" name="start_time" value="${schedule.startTime}" class="form-control"><div class="field-hint">Từ</div></div>
+                                    <div class="control"><input type="time" name="end_time" value="${schedule.endTime}" class="form-control"><div class="field-hint">Đến</div></div>
+                                </div>
+                                <div class="sidebar-form-row">
+                                    <label>Màu sắc</label>
+                                    <div class="color-palette">
+                                        <span class="color-swatch" data-color="#007bff" style="background-color: #007bff;"></span>
+                                        <span class="color-swatch" data-color="#dc3545" style="background-color: #dc3545;"></span>
+                                        <span class="color-swatch" data-color="#28a745" style="background-color: #28a745;"></span>
+                                        <span class="color-swatch" data-color="#ffc107" style="background-color: #ffc107;"></span>
+                                    </div>
+                                    <input type="hidden" id="color" name="color" value="${not empty schedule.color ? schedule.color : '#007bff'}">
+                                </div>
+                                <div class="sidebar-form-row"><label>Chi phí dự kiến</label><div class="radio-group"><label><input type="radio" name="isBillable" value="true" ${ticket.isBillable ? 'checked' : ''}> Có</label><label><input type="radio" name="isBillable" value="false" ${!ticket.isBillable ? 'checked' : ''}> Không</label></div></div>
+                                <div id="amount-group" class="sidebar-form-row" style="display: ${ticket.isBillable ? 'flex' : 'none'};"><label for="amount">Số tiền (VND)</label><input type="number" id="amount" name="amount" class="form-control" value="${ticket.estimatedCost}"></div>
                             </div>
                         </div>
-                    </form>
-                </div>
+                    </div>
+                </form>
             </main>
         </div>
-
-        <%-- Modal for product selection --%>
-        <div id="productSearchModal" class="modal-overlay" style="display: none;">
+        
+        <div id="contractModal" class="modal">
+             <div class="modal-content">
+                <div class="modal-header"><h2>Chọn Hợp đồng</h2><span class="close-modal">&times;</span></div>
+                <div class="modal-body">
+                    <table id="contract-table" class="contract-table">
+                        <thead><tr><th>Mã Hợp đồng</th><th>Tên Khách hàng</th><th></th></tr></thead>
+                        <tbody>
+                            <c:forEach var="contract" items="${contractList}"><tr data-contract-id="${contract.id}" data-contract-code="${contract.contractCode}"><td>${contract.contractCode}</td><td>${contract.enterprise.name}</td><td><button type="button" class="btn btn-sm btn-primary btn-select-contract">Chọn</button></td></tr></c:forEach>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div id="alertModal" class="modal">
+            <div class="modal-content" style="width: 350px;">
+                <div class="modal-header"><h2 id="alertModalTitle">Thông báo</h2><span class="close-alert-modal">&times;</span></div>
+                <div class="modal-body" style="text-align: center;"><p id="alertModalMessage" style="font-size: 16px;"></p><div style="margin-top: 20px;"><button type="button" class="btn btn-primary close-alert-modal">OK</button></div></div>
+            </div>
+        </div>
+        <div id="productSearchModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
                     <h3 class="modal-title">Chọn sản phẩm</h3>
-                    <button type="button" class="close-modal-btn" id="closeProductModalBtn"><i data-feather="x"></i></button>
+                    <button type="button" class="close-modal" id="closeProductModalBtn"><i data-feather="x"></i></button>
                 </div>
                 <div class="modal-body">
-                    <div class="search-bar-container">
-                        <input type="text" id="productSearchInput" class="form-control" placeholder="Tìm kiếm sản phẩm theo tên...">
-                    </div>
-                    <div id="productList" class="product-list-container">
-                        <c:if test="${empty productList}">
-                            <p style="text-align: center; color: #6b7280;">Không có sản phẩm nào.</p>
-                        </c:if>
-                        <c:forEach var="product" items="${productList}">
-                            <div class="product-search-item" data-id="${product.id}" data-name="${product.name}" data-price="${product.price}">
-                                <div class="product-search-info">
-                                    <div class="name">${product.name}</div>
-                                    <div class="code">${product.productCode}</div>
-                                </div>
-                                <div class="product-search-price">
-                                    <fmt:formatNumber value="${product.price}" pattern="###,###"/> ₫
-                                </div>
-                            </div>
-                        </c:forEach>
-                    </div>
+                    <div class="search-bar-container"><input type="text" id="productSearchInput" class="form-control" placeholder="Tìm kiếm sản phẩm..."></div>
+                    <div id="productList" class="product-list-container"></div>
                 </div>
             </div>
         </div>
 
-        <script src="${pageContext.request.contextPath}/js/editContractDetail.js"></script>
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                const form = document.getElementById('editContractForm');
-
-                const showError = (input, message) => {
-                    const parent = input.parentElement;
-                    const error = parent.querySelector('.error-text');
-                    input.classList.add('is-invalid');
-                    if (error) {
-                        error.textContent = message;
-                        error.style.display = 'block';
-                    }
-                };
-                const clearErrors = () => {
-                    document.querySelectorAll('.is-invalid').forEach(input => input.classList.remove('is-invalid'));
-                    document.querySelectorAll('.error-text').forEach(error => {
-                        error.textContent = '';
-                        error.style.display = 'none';
-                    });
-                };
-                form.addEventListener('submit', function (event) {
-                    event.preventDefault();
-                    clearErrors();
-                    let isCustomValid = true;
-                    if (!form.checkValidity()) {
-                        form.reportValidity();
-                        return;
-                    }
-                    const signedDateInput = document.getElementById('signedDate');
-                    const startDateInput = document.getElementById('startDate');
-                    const endDateInput = document.getElementById('endDate');
-                    const itemList = document.getElementById('contract-item-list');
-                    const addProductBtn = document.getElementById('addProductBtn');
-                    if (startDateInput.value && signedDateInput.value && startDateInput.value < signedDateInput.value) {
-                        isCustomValid = false;
-                        showError(startDateInput, 'Ngày hiệu lực không được trước ngày ký.');
-                    }
-                    if (endDateInput.value && startDateInput.value && endDateInput.value < startDateInput.value) {
-                        isCustomValid = false;
-                        showError(endDateInput, 'Ngày hết hạn không được trước ngày hiệu lực.');
-                    }
-                    if (itemList.children.length === 0) {
-                        isCustomValid = false;
-                        showError(addProductBtn, 'Hợp đồng phải có ít nhất một sản phẩm.');
-                    }
-                    if (isCustomValid) {
-                        form.submit();
-                    }
-                });
-            });
+            window.contextPath = '<%= request.getContextPath()%>';
+            window.EXISTING_DEVICES = JSON.parse('${existingDevicesJson}');
+            window.CONTRACT_PRODUCTS = JSON.parse('${contractProductsJson}');
+            window.PRESELECTED_ADDRESS = {
+                provinceId: '${schedule.address.provinceId}',
+                districtId: '${schedule.address.districtId}',
+                wardId: '${schedule.address.wardId}'
+            };
         </script>
-        <script>feather.replace();</script>
+        
+        <script src="${pageContext.request.contextPath}/js/editTicket.js?v=<%= System.currentTimeMillis()%>"></script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>
 </html>
