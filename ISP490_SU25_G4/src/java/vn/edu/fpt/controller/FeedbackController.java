@@ -302,34 +302,64 @@ public class FeedbackController extends HttpServlet {
     }
 
     private void doEditNote(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            int noteId = Integer.parseInt(request.getParameter("noteId"));
-            int feedbackId = Integer.parseInt(request.getParameter("feedbackId"));
-            String noteText = request.getParameter("noteText");
+        throws ServletException, IOException {
 
-            HttpSession session = request.getSession(false);
-            if (session == null || session.getAttribute("user") == null) {
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Bạn cần đăng nhập để sửa ghi chú.");
-                return;
-            }
-            // User loggedInUser = (User) session.getAttribute("user");
-            // TODO: Thêm logic kiểm tra quyền của người dùng (chỉ người tạo hoặc admin được sửa)
+    String noteIdRaw = request.getParameter("noteId");
+    String feedbackIdRaw = request.getParameter("feedbackId");
+    String noteText = request.getParameter("noteText");
 
-            if (noteText == null || noteText.trim().isEmpty()) {
-                response.sendRedirect("feedback?action=view&id=" + feedbackId + "&noteError=empty");
-                return;
-            }
-
-            FeedbackDAO feedbackDAO = new FeedbackDAO();
-            feedbackDAO.updateInternalNote(noteId, noteText);
-
-            response.sendRedirect("feedback?action=view&id=" + feedbackId + "&noteUpdate=success");
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Không thể cập nhật ghi chú.");
-        }
+    // 1) Validate feedbackId (cần cho các redirect sau)
+    int feedbackId;
+    if (feedbackIdRaw == null || feedbackIdRaw.trim().isEmpty()) {
+        response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Thiếu feedbackId.");
+        return;
     }
+    try {
+        feedbackId = Integer.parseInt(feedbackIdRaw);
+    } catch (NumberFormatException ex) {
+        response.sendError(HttpServletResponse.SC_BAD_REQUEST, "feedbackId không hợp lệ.");
+        return;
+    }
+
+    // 2) Validate noteId (nếu lỗi -> redirect về trang view kèm thông báo)
+    int noteId;
+    if (noteIdRaw == null || noteIdRaw.trim().isEmpty()) {
+        response.sendRedirect("feedback?action=view&id=" + feedbackId + "&noteError=invalidNote");
+        return;
+    }
+    try {
+        noteId = Integer.parseInt(noteIdRaw);
+    } catch (NumberFormatException ex) {
+        response.sendRedirect("feedback?action=view&id=" + feedbackId + "&noteError=invalidNote");
+        return;
+    }
+
+    // 3) Kiểm tra đăng nhập
+    HttpSession session = request.getSession(false);
+    if (session == null || session.getAttribute("user") == null) {
+        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Bạn cần đăng nhập để sửa ghi chú.");
+        return;
+    }
+    // TODO: Kiểm tra quyền sở hữu hoặc admin nếu cần
+
+    // 4) Validate nội dung note
+    if (noteText == null || noteText.trim().isEmpty()) {
+        response.sendRedirect("feedback?action=view&id=" + feedbackId + "&noteError=empty");
+        return;
+    }
+
+    // 5) Thực hiện cập nhật
+    try {
+        FeedbackDAO feedbackDAO = new FeedbackDAO();
+        feedbackDAO.updateInternalNote(noteId, noteText);
+
+        response.sendRedirect("feedback?action=view&id=" + feedbackId + "&noteUpdate=success");
+    } catch (Exception e) {
+        e.printStackTrace();
+        response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Không thể cập nhật ghi chú.");
+    }
+}
+
 
     private void doDeleteNote(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
