@@ -41,7 +41,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import vn.edu.fpt.dao.CampaignDAO;
 import vn.edu.fpt.dao.EnterpriseDAO;
-import vn.edu.fpt.model.Address;
 import vn.edu.fpt.model.Campaign;
 import vn.edu.fpt.model.District;
 import vn.edu.fpt.model.Status;

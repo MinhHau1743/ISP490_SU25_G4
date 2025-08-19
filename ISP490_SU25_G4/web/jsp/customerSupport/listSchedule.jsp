@@ -108,7 +108,15 @@
                                                                 ondragstart="drag(event)"
                                                                 onclick="showDetails(this)"
                                                                 style="background-color:${schedule.color};">
-                                                               <div class="event-title">${schedule.title}</div>
+                                                               <div class="event-title">
+                                                                   <c:if test="${schedule.technicalRequestId != null}">
+                                                                       <i class="bi bi-tools" style="color:#FFFFFF;" title="Yêu cầu kỹ thuật"></i>
+                                                                   </c:if>
+                                                                   <c:if test="${schedule.campaignId != null}">
+                                                                       <i class="bi bi-flag-fill" style="color:#FFFFFF;" title="Lịch chiến dịch"></i>
+                                                                   </c:if>
+                                                                   ${schedule.title}
+                                                               </div>
                                                                <span class="event-time">${schedule.startTime != null ? schHHmm : 'Cả ngày'}</span>
                                                            </div>
                                                      </c:if>
@@ -184,7 +192,13 @@
                                                                    onclick="showDetails(this)"
                                                                    style="background-color: ${schedule.color};">
                                                                   <span class="event-time">${hour.substring(0,5)}</span>
-                                                                  <br>${schedule.title}
+                                                                  <br>
+                                                                  <c:if test="${schedule.technicalRequestId != null}">
+                                                                      <i class="bi bi-tools" style="color:#FFFFFF;" title="Yêu cầu kỹ thuật"></i>
+                                                                  </c:if>
+                                                                  <c:if test="${schedule.campaignId != null}">
+                                                                      <i class="bi bi-flag-fill" style="color:#FFFFFF;" title="Lịch chiến dịch"></i>
+                                                                  </c:if>${schedule.title}
                                                               </div>
                                                         </c:if>
                                                     </c:forEach>
@@ -215,6 +229,12 @@
                                                                  draggable="true"
                                                                  ondragstart="drag(event)"
                                                                  style="background-color: ${schedule.color}; color: white;">
+                                                                <c:if test="${schedule.technicalRequestId != null}">
+                                                                    <i class="bi bi-tools" style="color:#FFFFFF;" title="Yêu cầu kỹ thuật"></i>
+                                                                </c:if>
+                                                                <c:if test="${schedule.campaignId != null}">
+                                                                    <i class="bi bi-flag-fill" style="color:#FFFFFF;" title="Lịch chiến dịch"></i>
+                                                                </c:if>
                                                                 ${fn:substring(schedule.title, 0, 10)}...
                                                             </div>
                                                         </c:if>
