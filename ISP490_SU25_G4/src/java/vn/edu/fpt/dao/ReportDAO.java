@@ -98,19 +98,26 @@ public class ReportDAO extends DBContext {
 
     // ## FIX: Thay thế `c.enterprise_id` bằng `c.customer_id` (hoặc tên cột đúng trong DB của bạn) ##
     public int getReturningCustomerCount(String startDate, String endDate) {
-        String query = "SELECT COUNT(DISTINCT c.customer_id) FROM contracts c "
-                + "JOIN Enterprises e ON c.customer_id = e.id "
-                + "WHERE c.created_at BETWEEN ? AND ? AND e.created_at < ?";
+        // SỬA LẠI: Đổi "customer_id" thành "enterprise_id" và cập nhật logic cho chính xác.
+        // Logic: Đếm các doanh nghiệp có hợp đồng TRONG khoảng thời gian VÀ đã có hợp đồng TRƯỚC đó.
+        String query = "SELECT COUNT(DISTINCT enterprise_id) "
+                + "FROM contracts "
+                + "WHERE created_at BETWEEN ? AND ? "
+                + "AND enterprise_id IN ( "
+                + "    SELECT enterprise_id FROM contracts WHERE created_at < ? "
+                + ")";
+
         int count = 0;
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
+            // Giả sử lớp ReportDAO của bạn có phương thức getConnection() (kế thừa từ DBContext)
             conn = getConnection();
             ps = conn.prepareStatement(query);
             ps.setString(1, startDate);
             ps.setString(2, endDate);
-            ps.setString(3, startDate);
+            ps.setString(3, startDate); // Dùng startDate để tìm các hợp đồng cũ hơn
             rs = ps.executeQuery();
             if (rs.next()) {
                 count = rs.getInt(1);
@@ -118,6 +125,7 @@ public class ReportDAO extends DBContext {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
+            // Giữ nguyên cách bạn đóng tài nguyên
             closeResources(conn, ps, rs);
         }
         return count;

@@ -233,10 +233,7 @@
                                                 <c:forEach var="customer" items="${newCustomersList}">
                                                     <tr>
                                                         <td><c:out value="${customer.code}"/></td>
-                                                        <td>
-                                                            <img src="${not empty customer.avatar_url ? customer.avatar_url : 'images/default-avatar.png'}" class="customer-avatar" alt="Avatar">
-                                                            <c:out value="${customer.name}"/>
-                                                        </td>
+                                                        <td><c:out value="${customer.name}"/></td>
                                                         <td><fmt:formatDate value="${customer.created_at}" pattern="dd/MM/yyyy"/></td>
                                                     </tr>
                                                 </c:forEach>
@@ -314,34 +311,26 @@
                                             <h3>Thống kê nhanh</h3>
                                         </div>
                                         <div class="report-card-body">
+                                            <%-- File: web/report.jsp --%>
+                                            <%-- Thay thế thẻ <ul> trong phần BÁO CÁO TỔNG QUAN, mục Tình trạng Hợp đồng --%>
+
                                             <ul class="kpi-list">
+                                                <%-- Chỉ giữ lại các trạng thái có trong CSDL --%>
                                                 <li class="kpi-item">
                                                     <span class="label">Đang đàm phán</span>
-                                                    <span class="value info"><fmt:formatNumber value="${contractStatus.negotiating}"/></span>
-                                                </li>
-                                                <li class="kpi-item">
-                                                    <span class="label">Đã ký</span>
-                                                    <span class="value success"><fmt:formatNumber value="${contractStatus.signed}"/></span>
+                                                    <span class="value info"><fmt:formatNumber value="${contractStatus['Đang đàm phán'] != null ? contractStatus['Đang đàm phán'] : 0}"/></span>
                                                 </li>
                                                 <li class="kpi-item">
                                                     <span class="label">Đang triển khai</span>
-                                                    <span class="value primary"><fmt:formatNumber value="${contractStatus.inProgress}"/></span>
-                                                </li>
-                                                <li class="kpi-item">
-                                                    <span class="label">Tạm dừng</span>
-                                                    <span class="value warning"><fmt:formatNumber value="${contractStatus.paused}"/></span>
+                                                    <span class="value primary"><fmt:formatNumber value="${contractStatus['Đang triển khai'] != null ? contractStatus['Đang triển khai'] : 0}"/></span>
                                                 </li>
                                                 <li class="kpi-item">
                                                     <span class="label">Đã hoàn thành</span>
-                                                    <span class="value success"><fmt:formatNumber value="${contractStatus.completed}"/></span>
+                                                    <span class="value success"><fmt:formatNumber value="${contractStatus['Đã hoàn thành'] != null ? contractStatus['Đã hoàn thành'] : 0}"/></span>
                                                 </li>
                                                 <li class="kpi-item">
                                                     <span class="label">Quá thời hạn</span>
-                                                    <span class="value danger"><fmt:formatNumber value="${contractStatus.overdue}"/></span>
-                                                </li>
-                                                <li class="kpi-item">
-                                                    <span class="label">Hủy</span>
-                                                    <span class="value danger"><fmt:formatNumber value="${contractStatus.cancelled}"/></span>
+                                                    <span class="value danger"><fmt:formatNumber value="${contractStatus['Quá thời hạn'] != null ? contractStatus['Quá thời hạn'] : 0}"/></span>
                                                 </li>
                                             </ul>
                                         </div>
@@ -513,34 +502,26 @@
                                 <div class="report-card">
                                     <div class="report-card-header"><i data-feather="briefcase" class="icon"></i><h3>Tình trạng Hợp đồng</h3></div>
                                     <div class="report-card-body">
+                                        <%-- File: web/report.jsp --%>
+                                        <%-- Thay thế thẻ <ul> trong phần BÁO CÁO TỔNG QUAN, mục Tình trạng Hợp đồng --%>
+
                                         <ul class="kpi-list">
+                                            <%-- Chỉ giữ lại các trạng thái có trong CSDL cho hợp đồng --%>
                                             <li class="kpi-item">
                                                 <span class="label">Đang đàm phán</span>
-                                                <span class="value info"><fmt:formatNumber value="${contractStatus.negotiating != null ? contractStatus.negotiating : 0}"/></span>
-                                            </li>
-                                            <li class="kpi-item">
-                                                <span class="label">Đã ký</span>
-                                                <span class="value success"><fmt:formatNumber value="${contractStatus.signed != null ? contractStatus.signed : 0}"/></span>
+                                                <span class="value info"><fmt:formatNumber value="${contractStatus['Đang đàm phán'] != null ? contractStatus['Đang đàm phán'] : 0}"/></span>
                                             </li>
                                             <li class="kpi-item">
                                                 <span class="label">Đang triển khai</span>
-                                                <span class="value primary"><fmt:formatNumber value="${contractStatus.inProgress != null ? contractStatus.inProgress : 0}"/></span>
-                                            </li>
-                                            <li class="kpi-item">
-                                                <span class="label">Tạm dừng</span>
-                                                <span class="value warning"><fmt:formatNumber value="${contractStatus.paused != null ? contractStatus.paused : 0}"/></span>
+                                                <span class="value primary"><fmt:formatNumber value="${contractStatus['Đang triển khai'] != null ? contractStatus['Đang triển khai'] : 0}"/></span>
                                             </li>
                                             <li class="kpi-item">
                                                 <span class="label">Đã hoàn thành</span>
-                                                <span class="value success"><fmt:formatNumber value="${contractStatus.completed != null ? contractStatus.completed : 0}"/></span>
+                                                <span class="value success"><fmt:formatNumber value="${contractStatus['Đã hoàn thành'] != null ? contractStatus['Đã hoàn thành'] : 0}"/></span>
                                             </li>
                                             <li class="kpi-item">
                                                 <span class="label">Quá thời hạn</span>
-                                                <span class="value danger"><fmt:formatNumber value="${contractStatus.overdue != null ? contractStatus.overdue : 0}"/></span>
-                                            </li>
-                                            <li class="kpi-item">
-                                                <span class="label">Hủy</span>
-                                                <span class="value danger"><fmt:formatNumber value="${contractStatus.cancelled != null ? contractStatus.cancelled : 0}"/></span>
+                                                <span class="value danger"><fmt:formatNumber value="${contractStatus['Quá thời hạn'] != null ? contractStatus['Quá thời hạn'] : 0}"/></span>
                                             </li>
                                         </ul>
 
