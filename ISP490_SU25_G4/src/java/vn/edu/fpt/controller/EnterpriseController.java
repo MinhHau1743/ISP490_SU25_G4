@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
+import vn.edu.fpt.common.NotificationService; // Import đã được thêm
 import vn.edu.fpt.model.*;
 
 import java.io.File;
@@ -314,6 +315,7 @@ public class EnterpriseController extends HttpServlet {
             throws ServletException, IOException {
         Connection conn = null;
         String customerName = request.getParameter("customerName");
+        int newEnterpriseId = -1; // Biến để lưu ID của doanh nghiệp mới
         try {
             String taxCode = request.getParameter("taxCode");
             String hotline = request.getParameter("hotline");
@@ -339,7 +341,7 @@ public class EnterpriseController extends HttpServlet {
                 showCreateForm(request, response);
                 return;
             }
-             if (phone != null && !phone.trim().isEmpty() && !isFormatValidVietnamesePhoneNumber(phone)) {
+            if (phone != null && !phone.trim().isEmpty() && !isFormatValidVietnamesePhoneNumber(phone)) {
                 request.setAttribute("errorMessage", "Định dạng số điện thoại người liên hệ không hợp lệ.");
                 showCreateForm(request, response);
                 return;
@@ -375,7 +377,7 @@ public class EnterpriseController extends HttpServlet {
             conn.setAutoCommit(false);
 
             int newAddressId = this.enterpriseDAO.insertAddress(conn, streetAddress, wardId, districtId, provinceId);
-            int newEnterpriseId = this.enterpriseDAO.insertEnterprise(conn, customerName, businessEmail, hotline,
+            newEnterpriseId = this.enterpriseDAO.insertEnterprise(conn, customerName, businessEmail, hotline,
                     customerGroupId, newAddressId, taxCode, bankNumber, avatarDbPath);
             if (fullName != null && !fullName.trim().isEmpty()) {
                 this.enterpriseDAO.insertEnterpriseContact(conn, newEnterpriseId, fullName, position, phone, email);
@@ -384,16 +386,30 @@ public class EnterpriseController extends HttpServlet {
 
             conn.commit();
 
+            // === BẮT ĐẦU PHẦN TẠO THÔNG BÁO ===
             HttpSession session = request.getSession(false);
             if (session != null) {
+                User currentUser = (User) session.getAttribute("user");
+                if (currentUser != null && newEnterpriseId != -1) {
+                    // Lấy lại thông tin enterprise vừa tạo để có đầy đủ dữ liệu
+                    Enterprise createdEnterprise = enterpriseDAO.getEnterpriseById(newEnterpriseId);
+                    if (createdEnterprise != null) {
+                        NotificationService.notifyNewEnterprise(currentUser, createdEnterprise);
+                    }
+                }
                 session.setAttribute("successMessage", "Đã thêm thành công khách hàng '" + customerName + "'!");
             }
+            // === KẾT THÚC PHẦN TẠO THÔNG BÁO ===
 
             response.sendRedirect(safeJoin(request.getContextPath(), "/customer/list"));
 
         } catch (Exception e) {
             e.printStackTrace();
-            if (conn != null) try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            if (conn != null) try {
+                conn.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
             request.setAttribute("errorMessage", "Tạo khách hàng thất bại: " + e.getMessage());
             showCreateForm(request, response);
         } finally {
@@ -411,6 +427,7 @@ public class EnterpriseController extends HttpServlet {
         Connection conn = null;
         int enterpriseId = Integer.parseInt(request.getParameter("enterpriseId"));
         String customerName = request.getParameter("customerName");
+        Enterprise enterpriseToUpdate = null; // Biến để lưu đối tượng enterprise
         try {
             String taxCode = request.getParameter("taxCode");
             String hotline = request.getParameter("hotline");
@@ -436,7 +453,7 @@ public class EnterpriseController extends HttpServlet {
                 showEditForm(request, response);
                 return;
             }
-             if (phone != null && !phone.trim().isEmpty() && !isFormatValidVietnamesePhoneNumber(phone)) {
+            if (phone != null && !phone.trim().isEmpty() && !isFormatValidVietnamesePhoneNumber(phone)) {
                 request.setAttribute("errorMessage", "Định dạng số điện thoại người liên hệ không hợp lệ.");
                 showEditForm(request, response);
                 return;
@@ -466,7 +483,7 @@ public class EnterpriseController extends HttpServlet {
             String position = request.getParameter("position");
             String email = request.getParameter("email");
 
-            Enterprise enterpriseToUpdate = new Enterprise();
+            enterpriseToUpdate = new Enterprise();
             enterpriseToUpdate.setId(enterpriseId);
             enterpriseToUpdate.setName(customerName);
             enterpriseToUpdate.setBusinessEmail(request.getParameter("businessEmail"));
@@ -475,6 +492,13 @@ public class EnterpriseController extends HttpServlet {
             enterpriseToUpdate.setBankNumber(request.getParameter("bankNumber"));
             enterpriseToUpdate.setCustomerTypeId(Integer.parseInt(request.getParameter("customerGroup")));
             enterpriseToUpdate.setAvatarUrl(avatarDbPath);
+            // Gán thêm các thuộc tính địa chỉ để dùng cho thông báo
+            enterpriseToUpdate.setAddressId(addressId);
+            enterpriseToUpdate.setStreetAddress(streetAddress);
+            enterpriseToUpdate.setWardId(wardId);
+            enterpriseToUpdate.setDistrictId(districtId);
+            enterpriseToUpdate.setProvinceId(provinceId);
+
 
             conn = this.dbContext.getConnection();
             conn.setAutoCommit(false);
@@ -492,15 +516,26 @@ public class EnterpriseController extends HttpServlet {
 
             conn.commit();
 
+            // === BẮT ĐẦU PHẦN TẠO THÔNG BÁO ===
             HttpSession session = request.getSession(false);
             if (session != null) {
+                User currentUser = (User) session.getAttribute("user");
+                if (currentUser != null && enterpriseToUpdate != null) {
+                    NotificationService.notifyUpdateEnterprise(currentUser, enterpriseToUpdate);
+                }
                 session.setAttribute("successMessage", "Đã cập nhật thông tin khách hàng '" + customerName + "' thành công!");
             }
+            // === KẾT THÚC PHẦN TẠO THÔNG BÁO ===
+
             response.sendRedirect(safeJoin(request.getContextPath(), "/customer/view?id=" + enterpriseId));
 
         } catch (Exception e) {
             e.printStackTrace();
-            if (conn != null) try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            if (conn != null) try {
+                conn.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
             request.setAttribute("errorMessage", "Lưu thay đổi thất bại: " + e.getMessage());
             showEditForm(request, response);
         } finally {
@@ -597,13 +632,14 @@ public class EnterpriseController extends HttpServlet {
 
     private boolean isLoggedIn(HttpServletRequest request) {
         HttpSession s = request.getSession(false);
+        // Thay đổi 'user' thành 'account' để khớp với AuthenticationController
         return s != null && s.getAttribute("user") != null;
     }
 
     private boolean hasWritePermission(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("user") == null) return false;
-        User user = (User) session.getAttribute("user");
+        User user = (User) session.getAttribute("user"); // Thay đổi 'user' thành 'account'
         String roleName = user.getRoleName();
         if (roleName != null) roleName = roleName.trim();
         return "Admin".equalsIgnoreCase(roleName) || "Kinh doanh".equalsIgnoreCase(roleName);

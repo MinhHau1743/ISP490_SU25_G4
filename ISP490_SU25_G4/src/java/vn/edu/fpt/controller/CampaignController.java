@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import vn.edu.fpt.common.NotificationService; // Import đã được thêm
 import vn.edu.fpt.dao.*;
 import vn.edu.fpt.model.*;
 
@@ -26,22 +27,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Front Controller duy nhất cho tất cả các chức năng liên quan đến Campaign.
- * Gộp logic từ các servlet: List, Add, Edit, View, Delete.
- */
 @WebServlet(name = "CampaignController", urlPatterns = {
-    "/list-campaign", // Hiển thị danh sách
-    "/add-campaign", // Hiển thị form thêm mới (GET)
-    "/create-campaign", // Xử lý thêm mới (POST)
-    "/edit-campaign", // Hiển thị form sửa (GET)
-    "/update-campaign", // Xử lý cập nhật (POST)
-    "/delete-campaign", // Xử lý xóa
-    "/view-campaign" // Xem chi tiết
+    "/list-campaign", 
+    "/add-campaign", 
+    "/create-campaign", 
+    "/edit-campaign", 
+    "/update-campaign", 
+    "/delete-campaign", 
+    "/view-campaign" 
 })
 public class CampaignController extends HttpServlet {
 
-    // ====================== KHAI BÁO CHUNG ======================
     private static final int DEFAULT_PAGE_SIZE = 5;
     private static final ZoneId VN_TZ = ZoneId.of("Asia/Bangkok");
     private static final DateTimeFormatter DMY = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -68,7 +64,6 @@ public class CampaignController extends HttpServlet {
         addressDAO = new AddressDAO();
     }
 
-    // ====================== BỘ ĐIỀU PHỐI (DISPATCHER) ======================
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -126,9 +121,6 @@ public class CampaignController extends HttpServlet {
         }
     }
 
-    // =====================================================================
-    // ===== LOGIC TỪ CampaignListServlet =====
-    // =====================================================================
     private void handleListCampaign(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
@@ -225,9 +217,6 @@ public class CampaignController extends HttpServlet {
         }
     }
 
-    // =====================================================================
-    // ===== LOGIC TỪ AddCampaignServlet =====
-    // =====================================================================
     private void showCreateCampaignPage(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
@@ -241,9 +230,9 @@ public class CampaignController extends HttpServlet {
     private void handleCreateCampaign(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
-        User currentUser = (User) session.getAttribute("user");
+        User currentUser = (User) session.getAttribute("user"); // Sửa lại tên session
         if (currentUser == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
+            response.sendRedirect(request.getContextPath() + "/login"); // Đổi thành /login
             return;
         }
 
@@ -254,23 +243,19 @@ public class CampaignController extends HttpServlet {
         }
 
         Connection conn = null;
+        Campaign newCampaign = null;
         try {
             conn = DBContext.getConnection();
             conn.setAutoCommit(false);
 
-            // Trong handleCreateCampaign của CampaignController.java
-// ...
             int provinceId = Integer.parseInt(request.getParameter("province"));
             int districtId = Integer.parseInt(request.getParameter("district"));
             int wardId = Integer.parseInt(request.getParameter("ward"));
             String streetAddress = request.getParameter("streetAddress").trim();
 
-// MỚI: Gọi các hàm vừa thêm ở Bước 1 để lấy tên
             String wardName = addressDAO.getWardNameById(wardId, conn);
             String districtName = addressDAO.getDistrictNameById(districtId, conn);
             String provinceName = addressDAO.getProvinceNameById(provinceId, conn);
-
-// MỚI: Ghép chuỗi địa chỉ đầy đủ theo đúng thứ tự
             String fullAddress = streetAddress + ", " + wardName + ", " + districtName + ", " + provinceName;
 
             Address address = new Address();
@@ -278,10 +263,9 @@ public class CampaignController extends HttpServlet {
             address.setDistrictId(districtId);
             address.setWardId(wardId);
             address.setStreetAddress(streetAddress);
-            address.setFullAddress(fullAddress); // MỚI: Gán chuỗi địa chỉ đầy đủ vào đối tượng
+            address.setFullAddress(fullAddress); 
 
             int finalAddressId = addressDAO.findOrCreateAddress(address, conn);
-// ...
 
             Campaign campaign = new Campaign();
             campaign.setCampaignCode("CAMP-" + System.currentTimeMillis());
@@ -291,6 +275,8 @@ public class CampaignController extends HttpServlet {
             campaign.setDescription(request.getParameter("description"));
             campaign.setCreatedBy(currentUser.getId());
             int newCampaignId = campaignDAO.addCampaignAndReturnId(campaign, conn);
+            campaign.setCampaignId(newCampaignId); // Gán lại ID cho đối tượng
+            newCampaign = campaign; // Lưu lại để dùng cho thông báo
 
             MaintenanceSchedule schedule = new MaintenanceSchedule();
             schedule.setCampaignId(newCampaignId);
@@ -320,6 +306,13 @@ public class CampaignController extends HttpServlet {
             assignmentDAO.addAssignment(newScheduleId, assignedUserId, conn);
 
             conn.commit();
+            
+            // === TẠO THÔNG BÁO HỆ THỐNG ===
+            if (newCampaign != null) {
+                NotificationService.notifyNewCampaign(currentUser, newCampaign);
+            }
+            // === KẾT THÚC TẠO THÔNG BÁO ===
+            
             response.sendRedirect(request.getContextPath() + "/list-campaign?create_status=success");
         } catch (Exception e) {
             handleFormError(request, response, conn, "Đã xảy ra lỗi hệ thống: " + e.getMessage(), null);
@@ -328,9 +321,6 @@ public class CampaignController extends HttpServlet {
         }
     }
 
-    // =====================================================================
-    // ===== LOGIC TỪ EditCampaignServlet =====
-    // =====================================================================
     private void showEditCampaignPage(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
@@ -372,17 +362,18 @@ public class CampaignController extends HttpServlet {
         Integer campaignId = safeInt(request.getParameter("campaignId"));
 
         if (!errors.isEmpty()) {
-            // Nạp lại dữ liệu cũ để hiển thị form lỗi
             request.setAttribute("campaign", campaignDAO.getCampaignById(campaignId));
             request.setAttribute("maintenanceSchedule", scheduleDAO.getMaintenanceScheduleWithStatusByCampaignId(campaignId));
             handleFormError(request, response, null, "Vui lòng kiểm tra lại các thông tin đã nhập.", errors);
             return;
         }
 
-        User currentUser = (User) request.getSession().getAttribute("user");
+        HttpSession session = request.getSession(false);
+        User currentUser = (session != null) ? (User) session.getAttribute("user") : null; // Sửa lại tên session
         Integer updatedBy = (currentUser != null) ? currentUser.getId() : null;
 
         Connection conn = null;
+        Campaign updatedCampaign = null;
         try {
             conn = DBContext.getConnection();
             conn.setAutoCommit(false);
@@ -402,6 +393,7 @@ public class CampaignController extends HttpServlet {
             c.setDescription(request.getParameter("description"));
             c.setUpdatedBy(updatedBy);
             campaignDAO.updateCampaignCore(c, conn);
+            updatedCampaign = c; // Lưu lại để dùng cho thông báo
 
             MaintenanceSchedule rep = scheduleDAO.getMaintenanceScheduleWithStatusByCampaignId(campaignId);
             if (rep == null) {
@@ -436,19 +428,23 @@ public class CampaignController extends HttpServlet {
             assignmentDAO.upsertAssignment(rep.getId(), assignedUserId, conn);
 
             conn.commit();
+            
+            // === TẠO THÔNG BÁO HỆ THỐNG ===
+            if (updatedCampaign != null && currentUser != null) {
+                NotificationService.notifyUpdateCampaign(currentUser, updatedCampaign);
+            }
+            // === KẾT THÚC TẠO THÔNG BÁO ===
+            
             response.sendRedirect(request.getContextPath() + "/view-campaign?id=" + campaignId + "&success=" + URLEncoder.encode("Cập nhật thành công", StandardCharsets.UTF_8.name()));
         } catch (Exception e) {
             String errRedirect = request.getContextPath() + "/edit-campaign?id=" + campaignId + "&error=" + URLEncoder.encode("Lỗi hệ thống: " + e.getMessage(), StandardCharsets.UTF_8.name());
-            handleFormError(request, response, conn, null, null); // Chỉ để rollback và đóng connection
+            handleFormError(request, response, conn, null, null);
             response.sendRedirect(errRedirect);
         } finally {
             closeConnection(conn);
         }
     }
 
-    // =====================================================================
-    // ===== LOGIC TỪ DeleteCampaignServlet =====
-    // =====================================================================
     private void handleDeleteCampaign(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         String redirectUrl = request.getContextPath() + "/list-campaign";
@@ -466,10 +462,7 @@ public class CampaignController extends HttpServlet {
         }
         response.sendRedirect(redirectUrl);
     }
-
-    // =====================================================================
-    // ===== LOGIC TỪ ViewCampaignDetailServlet =====
-    // =====================================================================
+    
     private void handleViewCampaign(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
@@ -512,10 +505,8 @@ public class CampaignController extends HttpServlet {
             handleException(request, response, e, "xem chi tiết chiến dịch");
         }
     }
-
-    // =====================================================================
-    // ===== CÁC PHƯƠNG THỨC HELPER CHUNG =====
-    // =====================================================================
+    
+    // Các phương thức Helper
     private void loadFormDropdowns(HttpServletRequest request) throws Exception {
         request.setAttribute("campaignTypes", campaignTypeDAO.getAllCampaignTypes());
         request.setAttribute("enterpriseList", enterpriseDAO.getAllEnterprises());
@@ -578,7 +569,8 @@ public class CampaignController extends HttpServlet {
 
         String requestPath = request.getServletPath();
         if ("/create-campaign".equals(requestPath)) {
-            request.getRequestDispatcher("/jsp/customerSupport/addNewCampaign.jsp").forward(request, response);
+            // Sửa lại đường dẫn tới file jsp chính xác
+            request.getRequestDispatcher("/jsp/customerSupport/createCampaign.jsp").forward(request, response);
         } else {
             request.getRequestDispatcher("/jsp/customerSupport/editCampaign.jsp").forward(request, response);
         }
@@ -650,7 +642,7 @@ public class CampaignController extends HttpServlet {
         }
         return errors;
     }
-
+    
     private void validateId(String idStr, String fieldName, String message, Map<String, String> errors) {
         if (idStr == null || idStr.isBlank()) {
             errors.put(fieldName, message);
@@ -696,10 +688,5 @@ public class CampaignController extends HttpServlet {
         e.printStackTrace();
         request.setAttribute("errorMessage", "Lỗi khi " + action + ": " + e.getMessage());
         request.getRequestDispatcher("/error.jsp").forward(request, response);
-    }
-
-    @Override
-    public String getServletInfo() {
-        return "Front Controller for all Campaign-related actions.";
     }
 }

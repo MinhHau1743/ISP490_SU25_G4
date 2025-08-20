@@ -278,4 +278,45 @@ public class FeedbackDAO extends DBContext {
             return false;
         }
     }
+
+    /**
+     * Lấy phản hồi gần đây nhất của một doanh nghiệp, dùng để lấy ID ngay sau
+     * khi tạo.
+     *
+     * @param enterpriseId ID của doanh nghiệp
+     * @return Đối tượng Feedback nếu tìm thấy, ngược lại trả về null.
+     */
+    public Feedback getLastFeedbackByEnterpriseId(int enterpriseId) {
+        // Sắp xếp theo ID giảm dần để lấy bản ghi mới nhất
+        String sql = "SELECT * FROM Feedbacks WHERE enterprise_id = ? ORDER BY id DESC LIMIT 1";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, enterpriseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Feedback feedback = new Feedback();
+                    feedback.setId(rs.getInt("id"));
+                    feedback.setEnterpriseId(rs.getInt("enterprise_id"));
+                    feedback.setRating(rs.getInt("rating"));
+                    feedback.setComment(rs.getString("comment"));
+
+                    // Lấy các ID có thể là NULL
+                    int techId = rs.getInt("technical_request_id");
+                    if (!rs.wasNull()) {
+                        feedback.setTechnicalRequestId(techId);
+                    }
+                    int contractId = rs.getInt("contract_id");
+                    if (!rs.wasNull()) {
+                        feedback.setContractId(contractId);
+                    }
+
+                    feedback.setStatus(rs.getString("status"));
+                    feedback.setCreatedAt(rs.getTimestamp("created_at"));
+                    return feedback;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

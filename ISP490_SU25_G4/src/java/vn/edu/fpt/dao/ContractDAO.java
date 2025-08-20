@@ -447,5 +447,50 @@ public class ContractDAO extends DBContext {
         }
         return products;
     }
+    
+    /**
+     * Lấy thông tin chi tiết của một hợp đồng dựa vào MÃ HỢP ĐỒNG.
+     *
+     * @param contractCode Mã hợp đồng cần tìm.
+     * @return Đối tượng Contract nếu tìm thấy, ngược lại trả về null.
+     */
+    public Contract getContractByCode(String contractCode) {
+        String sql = "SELECT c.*, e.name as enterprise_name, u.first_name, u.last_name, cs.name as status_name "
+                + "FROM contracts c "
+                + "JOIN Enterprises e ON c.enterprise_id = e.id "
+                + "LEFT JOIN Users u ON c.created_by_id = u.id "
+                + "LEFT JOIN contract_statuses cs ON c.status_id = cs.id "
+                + "WHERE c.contract_code = ? AND c.is_deleted = 0";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, contractCode);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Contract contract = new Contract();
+                    contract.setId(rs.getLong("id"));
+                    contract.setContractCode(rs.getString("contract_code"));
+                    contract.setContractName(rs.getString("contract_name"));
+                    contract.setEnterpriseId(rs.getLong("enterprise_id"));
+                    contract.setCreatedById(rs.getLong("created_by_id"));
+                    contract.setStartDate(rs.getDate("start_date"));
+                    contract.setEndDate(rs.getDate("end_date"));
+                    contract.setSignedDate(rs.getDate("signed_date"));
+                    contract.setStatusId(rs.getInt("status_id"));
+                    contract.setTotalValue(rs.getBigDecimal("total_value"));
+                    contract.setNotes(rs.getString("notes"));
+                    contract.setFileUrl(rs.getString("file_url"));
+                    // Các trường lấy từ JOIN
+                    contract.setEnterpriseName(rs.getString("enterprise_name"));
+                    String creatorFirstName = rs.getString("first_name");
+                    String creatorLastName = rs.getString("last_name");
+                    contract.setCreatorName(creatorLastName + " " + creatorFirstName);
+                    contract.setStatusName(rs.getString("status_name"));
+                    return contract;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
 }

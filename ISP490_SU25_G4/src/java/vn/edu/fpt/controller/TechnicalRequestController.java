@@ -7,6 +7,8 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession; // Import đã được thêm
+import vn.edu.fpt.common.NotificationService; // Import đã được thêm
 import vn.edu.fpt.dao.TechnicalRequestDAO;
 import vn.edu.fpt.model.Contract;
 import vn.edu.fpt.model.TechnicalRequest;
@@ -37,9 +39,11 @@ import vn.edu.fpt.dao.ScheduleDAO;
 import vn.edu.fpt.dao.StatusDAO;
 import vn.edu.fpt.model.Address;
 import vn.edu.fpt.model.District;
+import vn.edu.fpt.model.Enterprise; // Import đã được thêm
 import vn.edu.fpt.model.MaintenanceSchedule;
 import vn.edu.fpt.model.Province;
 import vn.edu.fpt.model.Service;
+import vn.edu.fpt.model.User; // Import đã được thêm
 import vn.edu.fpt.model.Ward;
 import java.time.format.DateTimeFormatter;
 
@@ -262,7 +266,6 @@ public class TechnicalRequestController extends HttpServlet {
         }
     }
 
-    // Trong file: vn/edu/fpt/controller/TechnicalRequestController.java
     private void showEditForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             int id = Integer.parseInt(request.getParameter("id"));
@@ -327,10 +330,17 @@ public class TechnicalRequestController extends HttpServlet {
         }
     }
 
-// 2. Thêm phương thức mới để xử lý việc cập nhật (POST)
-    // Trong file: vn/edu/fpt/controller/TechnicalRequestController.java
     private void updateTicket(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
+            // === BẮT ĐẦU PHẦN CẬP NHẬT: LẤY USER TỪ SESSION ===
+            HttpSession session = request.getSession(false);
+            if (session == null || session.getAttribute("user") == null) {
+                response.sendRedirect(request.getContextPath() + "/login.jsp");
+                return;
+            }
+            User currentUser = (User) session.getAttribute("user");
+            // === KẾT THÚC PHẦN CẬP NHẬT ===
+
             // --- 1. Khởi tạo các DAO cần thiết ---
             StatusDAO statusDAO = new StatusDAO();
             AddressDAO addressDAO = new AddressDAO();
@@ -416,7 +426,17 @@ public class TechnicalRequestController extends HttpServlet {
             // --- 6. Gọi DAO để cập nhật tất cả trong 1 transaction ---
             boolean success = dao.updateTechnicalRequestAndSchedule(updatedRequest, schedule, devices);
 
-            // --- 7. Chuyển hướng ---
+            // --- 7. TẠO THÔNG BÁO HỆ THỐNG ---
+            if (success) {
+                EnterpriseDAO enterpriseDAO = new EnterpriseDAO();
+                Enterprise enterprise = enterpriseDAO.getEnterpriseById(updatedRequest.getEnterpriseId());
+                if (enterprise != null) {
+                    NotificationService.notifyUpdateTechnicalRequest(currentUser, updatedRequest, enterprise.getName());
+                }
+            }
+            // --- KẾT THÚC TẠO THÔNG BÁO ---
+
+            // --- 8. Chuyển hướng ---
             response.sendRedirect(request.getContextPath() + "/ticket?action=view&id=" + ticketId + "&update=" + (success ? "success" : "failed"));
 
         } catch (Exception e) {
@@ -426,11 +446,17 @@ public class TechnicalRequestController extends HttpServlet {
         }
     }
 
-// **Lưu ý:** Bạn cần thêm một trường input ẩn vào file `editTransaction.jsp` để lấy `scheduleId`
-// <input type="hidden" name="scheduleId" value="${schedule.id}">
-    // Trong file: vn/edu/fpt/controller/TechnicalRequestController.java
     private void createTicket(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
+            // === BẮT ĐẦU PHẦN CẬP NHẬT: LẤY USER TỪ SESSION ===
+            HttpSession session = request.getSession(false);
+            if (session == null || session.getAttribute("user") == null) {
+                response.sendRedirect(request.getContextPath() + "/login.jsp");
+                return;
+            }
+            User currentUser = (User) session.getAttribute("user");
+            // === KẾT THÚC PHẦN CẬP NHẬT ===
+
             // Khởi tạo các đối tượng cần thiết
             MaintenanceSchedule schedule = new MaintenanceSchedule();
             ScheduleDAO scheduleDAO = new ScheduleDAO();
@@ -440,7 +466,7 @@ public class TechnicalRequestController extends HttpServlet {
 
             // Lấy thông tin từ form
             String enterpriseIdStr = request.getParameter("enterpriseId");
-            String reporterIdStr = request.getParameter("reporterId");
+            // String reporterIdStr = request.getParameter("reporterId"); // Dòng này không còn an toàn, sẽ thay bằng user session
             String serviceIdStr = request.getParameter("serviceId");
             String contractIdStr = request.getParameter("contractId");
             String title = request.getParameter("title");
@@ -449,12 +475,10 @@ public class TechnicalRequestController extends HttpServlet {
             boolean isBillable = Boolean.parseBoolean(request.getParameter("isBillable"));
             String amountStr = request.getParameter("amount");
             String statusName = request.getParameter("status");
-
-            // Lấy ID nhân viên từ form (dạng chuỗi)
             String employeeIdStr = request.getParameter("employeesId");
 
             // --- Gán dữ liệu cho đối tượng TechnicalRequest ---
-            newRequest.setReporterId(Integer.parseInt(reporterIdStr));
+            newRequest.setReporterId(currentUser.getId()); // An toàn hơn khi lấy ID từ user đang đăng nhập
             if (enterpriseIdStr != null && !enterpriseIdStr.isEmpty()) {
                 newRequest.setEnterpriseId(Integer.parseInt(enterpriseIdStr));
             }
@@ -465,12 +489,9 @@ public class TechnicalRequestController extends HttpServlet {
                 newRequest.setContractId(Integer.valueOf(contractIdStr));
             }
 
-            // === DÒNG CODE MỚI QUAN TRỌNG ĐƯỢC BỔ SUNG ===
-            // Gán nhân viên phụ trách cho chính phiếu yêu cầu
             if (employeeIdStr != null && !employeeIdStr.isEmpty()) {
                 newRequest.setAssignedToId(Integer.parseInt(employeeIdStr));
             }
-            // ===============================================
 
             newRequest.setTitle(title);
             newRequest.setDescription(description);
@@ -482,7 +503,6 @@ public class TechnicalRequestController extends HttpServlet {
                 newRequest.setEstimatedCost(0);
             }
 
-            // Lấy danh sách thiết bị từ form
             List<TechnicalRequestDevice> devices = new ArrayList<>();
             int i = 1;
             String deviceName;
@@ -497,33 +517,26 @@ public class TechnicalRequestController extends HttpServlet {
                 i++;
             }
 
-            // Tạo Technical Request trước để lấy ID
             Integer newRequestId = dao.createTechnicalRequest(newRequest, devices);
 
             if (newRequestId != null) {
                 // --- Gán dữ liệu cho đối tượng MaintenanceSchedule ---
                 schedule.setTechnicalRequestId(newRequestId);
-
                 Integer statusId = statusDAO.getIdByName(statusName);
-                schedule.setStatusId(statusId != null ? statusId : 2); // ID mặc định là 2 nếu không tìm thấy
-
-                // Gán thông tin thời gian và địa chỉ...
+                schedule.setStatusId(statusId != null ? statusId : 2);
                 schedule.setScheduledDate(LocalDate.parse(request.getParameter("scheduled_date")));
                 String endDateStr = request.getParameter("end_date");
                 if (endDateStr != null && !endDateStr.isEmpty()) {
                     schedule.setEndDate(LocalDate.parse(endDateStr));
                 }
-
                 String startTimeStr = request.getParameter("start_time");
                 if (startTimeStr != null && !startTimeStr.isEmpty()) {
                     schedule.setStartTime(LocalTime.parse(startTimeStr));
                 }
-
                 String endTimeStr = request.getParameter("end_time");
                 if (endTimeStr != null && !endTimeStr.isEmpty()) {
                     schedule.setEndTime(LocalTime.parse(endTimeStr));
                 }
-
                 int provinceId = Integer.parseInt(request.getParameter("province"));
                 int districtId = Integer.parseInt(request.getParameter("district"));
                 int wardId = Integer.parseInt(request.getParameter("ward"));
@@ -532,13 +545,24 @@ public class TechnicalRequestController extends HttpServlet {
                 schedule.setAddressId(addressId);
                 schedule.setColor(request.getParameter("color"));
 
-                // Gán nhân viên cho schedule (bảng MaintenanceAssignments)
                 List<Integer> employeeIds = new ArrayList<>();
                 if (employeeIdStr != null && !employeeIdStr.isEmpty()) {
                     employeeIds.add(Integer.parseInt(employeeIdStr));
                 }
 
                 scheduleDAO.addScheduleWithAssignments(schedule, employeeIds);
+
+                // === TẠO THÔNG BÁO HỆ THỐNG ===
+                EnterpriseDAO enterpriseDAO = new EnterpriseDAO();
+                Enterprise enterprise = enterpriseDAO.getEnterpriseById(newRequest.getEnterpriseId());
+                if (enterprise != null) {
+                    TechnicalRequest createdRequest = dao.getTechnicalRequestById(newRequestId); // Lấy lại để có đủ thông tin
+                    if (createdRequest != null) {
+                        NotificationService.notifyNewTechnicalRequest(currentUser, createdRequest, enterprise.getName());
+                    }
+                }
+                // === KẾT THÚC TẠO THÔNG BÁO ===
+
                 response.sendRedirect("ticket?action=list&create=success");
 
             } else {
@@ -548,20 +572,6 @@ public class TechnicalRequestController extends HttpServlet {
         } catch (Exception e) {
             e.printStackTrace();
             response.sendRedirect("ticket?action=create&error=" + e.getClass().getSimpleName());
-        }
-    }
-
-    private void getContracts(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        try {
-            // YÊU CẦU CỦA BẠN: Lấy tất cả hợp đồng, không lọc theo khách hàng.
-            List<Contract> contracts = dao.getAllActiveContracts();
-            response.getWriter().write(gson.toJson(contracts));
-        } catch (SQLException e) {
-            e.printStackTrace();
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write("{\"error\":\"Lỗi khi truy vấn cơ sở dữ liệu.\"}");
         }
     }
 
@@ -582,14 +592,11 @@ public class TechnicalRequestController extends HttpServlet {
         try {
             int id = Integer.parseInt(request.getParameter("id"));
             boolean success = dao.deleteTechnicalRequest(id);
-            // Chuyển hướng về trang danh sách với tham số báo kết quả
-
-            ScheduleDAO dao = new ScheduleDAO();
-            boolean deleteSuccess = dao.deleteMaintenanceSchedule(id);
+            ScheduleDAO scheduleDAO = new ScheduleDAO();
+            boolean deleteSuccess = scheduleDAO.deleteMaintenanceSchedule(id);
             response.sendRedirect(request.getContextPath() + "/ticket?action=list&delete=" + (success ? "success" : "failed"));
         } catch (Exception e) {
             e.printStackTrace();
-            // Nếu có lỗi, cũng chuyển hướng về trang danh sách với thông báo lỗi
             response.sendRedirect(request.getContextPath() + "/ticket?action=list&error=deleteFailed");
         }
     }
@@ -632,7 +639,6 @@ public class TechnicalRequestController extends HttpServlet {
         }
     }
 
-    // Thêm toàn bộ phương thức này vào cuối file TicketController.java
     private void handleSendSurvey(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             int ticketId = Integer.parseInt(request.getParameter("id"));
@@ -644,12 +650,10 @@ public class TechnicalRequestController extends HttpServlet {
                 String requestCode = ticket.getRequestCode();
 
                 if (recipientEmail != null && !recipientEmail.trim().isEmpty()) {
-                    // Gửi email trong luồng riêng để không làm chậm
                     emailExecutor.submit(() -> {
                         try {
                             String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
                             String surveyLink = baseUrl + "/feedback?action=create&technicalRequestId=" + ticketId;
-
                             String subject = "Mời bạn đánh giá chất lượng dịch vụ cho yêu cầu #" + requestCode;
                             String body = "<html>"
                                     + "<body style='font-family: Arial, sans-serif; line-height: 1.6;'>"
@@ -662,17 +666,14 @@ public class TechnicalRequestController extends HttpServlet {
                                     + "<p>Trân trọng cảm ơn,<br><strong>Đội ngũ DPCRM</strong>.</p>"
                                     + "</body>"
                                     + "</html>";
-
                             EmailServiceFeedback.sendMail(recipientEmail, subject, body);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
                     });
-                    // Chuyển hướng ngay lập tức với thông báo thành công
                     response.sendRedirect(request.getContextPath() + "/ticket?action=view&id=" + ticketId + "&surveySent=true");
 
                 } else {
-                    // Nếu không có email, chuyển hướng với thông báo lỗi
                     response.sendRedirect(request.getContextPath() + "/ticket?action=view&id=" + ticketId + "&surveySent=false");
                 }
             } else {
@@ -684,7 +685,6 @@ public class TechnicalRequestController extends HttpServlet {
         }
     }
 
-    // --- THÊM CÁC PHƯƠNG THỨC MỚI ---
     private void getContractDetails(HttpServletRequest request, HttpServletResponse response) throws IOException, SQLException {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");

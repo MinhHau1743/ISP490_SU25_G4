@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import vn.edu.fpt.common.EmailServiceFeedback;
+import vn.edu.fpt.common.NotificationService; // Import đã được thêm
 import vn.edu.fpt.dao.ContractDAO;
 import vn.edu.fpt.dao.EnterpriseDAO;
 import vn.edu.fpt.dao.FeedbackDAO;
@@ -15,7 +16,9 @@ import vn.edu.fpt.dao.UserDAO;
 import vn.edu.fpt.model.Contract;
 import vn.edu.fpt.model.ContractProduct;
 import vn.edu.fpt.model.ContractStatus;
+import vn.edu.fpt.model.Enterprise;
 import vn.edu.fpt.model.Product;
+import vn.edu.fpt.model.User; // Import đã được thêm
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -32,14 +35,13 @@ public class ContractController extends HttpServlet {
     private static final int PAGE_SIZE = 10;
     private final ExecutorService emailExecutor = Executors.newSingleThreadExecutor();
 
-    // THAY ĐỔI 1: KHAI BÁO CÁC DAO THÀNH THUỘC TÍNH CỦA LỚP
+    // KHAI BÁO CÁC DAO THÀNH THUỘC TÍNH CỦA LỚP
     private final ContractDAO contractDAO;
     private final FeedbackDAO feedbackDAO;
     private final EnterpriseDAO enterpriseDAO;
     private final ProductDAO productDAO;
     private final UserDAO userDAO;
 
-    // THAY ĐỔI 2: THÊM 2 CONSTRUCTOR ĐỂ CHUẨN BỊ CHO TEST
     /**
      * Constructor mặc định dùng cho Server (Tomcat) khi ứng dụng chạy thật.
      */
@@ -121,8 +123,12 @@ public class ContractController extends HttpServlet {
         }
     }
 
-    // THAY ĐỔI 3: TẠO HÀM KIỂM TRA QUYỀN
-    private boolean isAuthorizedToManage(String userRole) {
+    // HÀM KIỂM TRA QUYỀN
+    private boolean isAuthorizedToManage(User user) {
+        if (user == null || user.getRoleName() == null) {
+            return false;
+        }
+        String userRole = user.getRoleName();
         return "Admin".equals(userRole) || "Chánh văn phòng".equals(userRole);
     }
     
@@ -187,8 +193,8 @@ public class ContractController extends HttpServlet {
 
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response) throws Exception {
         HttpSession session = request.getSession(false);
-        String userRole = (session != null) ? (String) session.getAttribute("userRole") : null;
-        if (!isAuthorizedToManage(userRole)) {
+        User currentUser = (session != null) ? (User) session.getAttribute("user") : null;
+        if (!isAuthorizedToManage(currentUser)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập chức năng này.");
             return;
         }
@@ -198,8 +204,8 @@ public class ContractController extends HttpServlet {
 
     private void showEditForm(HttpServletRequest request, HttpServletResponse response) throws Exception {
         HttpSession session = request.getSession(false);
-        String userRole = (session != null) ? (String) session.getAttribute("userRole") : null;
-        if (!isAuthorizedToManage(userRole)) {
+        User currentUser = (session != null) ? (User) session.getAttribute("user") : null;
+        if (!isAuthorizedToManage(currentUser)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập chức năng này.");
             return;
         }
@@ -220,8 +226,8 @@ public class ContractController extends HttpServlet {
 
     private void saveContract(HttpServletRequest request, HttpServletResponse response) throws Exception {
         HttpSession session = request.getSession(false);
-        String userRole = (session != null) ? (String) session.getAttribute("userRole") : null;
-        if (!isAuthorizedToManage(userRole)) {
+        User currentUser = (session != null) ? (User) session.getAttribute("user") : null;
+        if (!isAuthorizedToManage(currentUser)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền thực hiện hành động này.");
             return;
         }
@@ -245,6 +251,18 @@ public class ContractController extends HttpServlet {
             boolean isSuccess = this.contractDAO.createContractWithItems(contract, contractItems);
 
             if (isSuccess) {
+                // === BẮT ĐẦU PHẦN TẠO THÔNG BÁO ===
+                if (currentUser != null) {
+                    Enterprise enterprise = enterpriseDAO.getEnterpriseById((int) contract.getEnterpriseId());
+                    if (enterprise != null) {
+                        // Lấy lại contract vừa tạo để có ID chính xác
+                        Contract createdContract = contractDAO.getContractByCode(contract.getContractCode());
+                        if (createdContract != null) {
+                             NotificationService.notifyNewContract(currentUser, createdContract, enterprise.getName());
+                        }
+                    }
+                }
+                // === KẾT THÚC PHẦN TẠO THÔNG BÁO ===
                 request.getSession().setAttribute("successMessage", "Tạo hợp đồng [" + contract.getContractCode() + "] thành công!");
                 response.sendRedirect("contract?action=list");
             } else {
@@ -262,8 +280,8 @@ public class ContractController extends HttpServlet {
 
     private void updateContract(HttpServletRequest request, HttpServletResponse response) throws Exception {
         HttpSession session = request.getSession(false);
-        String userRole = (session != null) ? (String) session.getAttribute("userRole") : null;
-        if (!isAuthorizedToManage(userRole)) {
+        User currentUser = (session != null) ? (User) session.getAttribute("user") : null;
+        if (!isAuthorizedToManage(currentUser)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền thực hiện hành động này.");
             return;
         }
@@ -288,6 +306,14 @@ public class ContractController extends HttpServlet {
 
             boolean success = this.contractDAO.updateContractWithItems(contract, newItems);
             if (success) {
+                // === BẮT ĐẦU PHẦN TẠO THÔNG BÁO ===
+                if (currentUser != null) {
+                    Enterprise enterprise = enterpriseDAO.getEnterpriseById((int) contract.getEnterpriseId());
+                    if (enterprise != null) {
+                        NotificationService.notifyUpdateContract(currentUser, contract, enterprise.getName());
+                    }
+                }
+                // === KẾT THÚC PHẦN TẠO THÔNG BÁO ===
                 request.getSession().setAttribute("successMessage", "Cập nhật hợp đồng [" + contract.getContractCode() + "] thành công!");
             } else {
                 request.getSession().setAttribute("errorMessage", "Cập nhật hợp đồng thất bại.");
@@ -302,8 +328,8 @@ public class ContractController extends HttpServlet {
 
     private void deleteContract(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         HttpSession session = request.getSession(false);
-        String userRole = (session != null) ? (String) session.getAttribute("userRole") : null;
-        if (!isAuthorizedToManage(userRole)) {
+        User currentUser = (session != null) ? (User) session.getAttribute("user") : null;
+        if (!isAuthorizedToManage(currentUser)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền thực hiện hành động này.");
             return;
         }
@@ -388,7 +414,16 @@ public class ContractController extends HttpServlet {
         contract.setContractCode(request.getParameter("contractCode"));
         contract.setContractName(request.getParameter("contractName"));
         contract.setEnterpriseId(Long.parseLong(request.getParameter("enterpriseId")));
-        contract.setCreatedById(Long.parseLong(request.getParameter("createdById")));
+        // Lấy thông tin user từ session để đảm bảo đúng người tạo/sửa
+        HttpSession session = request.getSession(false);
+        User currentUser = (session != null) ? (User) session.getAttribute("user") : null;
+        if (currentUser != null) {
+            contract.setCreatedById((long) currentUser.getId());
+        } else {
+            // Xử lý trường hợp không có user trong session, có thể gán mặc định hoặc ném lỗi
+             contract.setCreatedById(Long.parseLong(request.getParameter("createdById"))); // Giữ lại như cũ nếu không có session
+        }
+        
         contract.setSignedDate(Date.valueOf(request.getParameter("signedDate")));
         contract.setStartDate(Date.valueOf(request.getParameter("startDate")));
         contract.setEndDate(Date.valueOf(request.getParameter("endDate")));

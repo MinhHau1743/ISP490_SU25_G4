@@ -5,9 +5,9 @@ import java.sql.Date;
 import java.sql.Timestamp; // Nên dùng Timestamp để lấy đủ ngày giờ
 
 /**
- * Lớp này ánh xạ đến bảng 'Contracts'.
- * Đã được chỉnh sửa để loại bỏ các trường không còn tồn tại trong CSDL
- * và thay thế 'status' bằng 'statusId' và 'statusName'.
+ * Lớp này ánh xạ đến bảng 'Contracts'. Đã được chỉnh sửa để loại bỏ các trường
+ * không còn tồn tại trong CSDL và thay thế 'status' bằng 'statusId' và
+ * 'statusName'.
  *
  * @author datnt (updated by AI)
  */
@@ -38,16 +38,16 @@ public class Contract {
     // --- CÁC TRƯỜNG PHỤ, LẤY TỪ JOIN ---
     private String enterpriseName;
     private String createdByName;
-  private String enterpriseEmail;
-  
-  private Enterprise enterprise;
+    private String enterpriseEmail;
+    private String creatorName;
+    private Enterprise enterprise;
+
     // --- CONSTRUCTORS ---
     public Contract() {
         // Constructor mặc định
     }
 
     // --- GETTERS AND SETTERS ---
-
     public long getId() {
         return id;
     }
@@ -191,9 +191,8 @@ public class Contract {
     public void setCreatedByName(String createdByName) {
         this.createdByName = createdByName;
     }
-    
-    
-        // THÊM MỚI: Thêm cặp getter và setter cho trường mới
+
+    // THÊM MỚI: Thêm cặp getter và setter cho trường mới
     public String getEnterpriseEmail() {
         return enterpriseEmail;
     }
@@ -201,12 +200,21 @@ public class Contract {
     public void setEnterpriseEmail(String enterpriseEmail) {
         this.enterpriseEmail = enterpriseEmail;
     }
-    
-      public Enterprise getEnterprise() {
+
+    public Enterprise getEnterprise() {
         return enterprise;
     }
 
     public void setEnterprise(Enterprise enterprise) {
         this.enterprise = enterprise;
+    }
+
+    // === CẶP GETTER/SETTER MỚI ĐÃ ĐƯỢC THÊM VÀO ĐÂY ===
+    public String getCreatorName() {
+        return creatorName;
+    }
+
+    public void setCreatorName(String creatorName) {
+        this.creatorName = creatorName;
     }
 }

@@ -10,72 +10,77 @@
         <div class="notification-wrapper">
             <button class="notification-btn" type="button" aria-label="Notifications">
                 <i data-feather="bell"></i>
-                <%-- Bạn có thể thay số 4 này bằng một biến động, ví dụ ${unreadCount} --%>
-                <span class="notification-badge">4</span>
+                <c:if test="${not empty notificationCount && notificationCount > 0}">
+                    <span class="notification-badge">${notificationCount}</span>
+                </c:if>
             </button>
 
             <%-- Dropdown Thông báo --%>
             <div class="notification-dropdown">
-                <%-- ===== BẮT ĐẦU NỘI DUNG THÔNG BÁO MẪU ===== --%>
                 <div class="dropdown-header">
                     <h4>Thông báo</h4>
-                    <a href="#" class="mark-as-read">Đánh dấu đã đọc</a>
+                    <%-- <a href="#" class="mark-as-read">Đánh dấu đã đọc</a> --%>
                 </div>
                 <div class="notification-list">
 
-                    <%-- Thông báo 1: Hợp đồng mới --%>
-                    <a href="#" class="notification-item unread">
-                        <div class="notification-icon" style="background-color: #e0f7fa; color: #00796b;">
-                            <i data-feather="file-text"></i>
-                        </div>
-                        <div class="notification-content">
-                            <p class="notification-title">Hợp đồng mới được ký kết</p>
-                            <p class="notification-details">Hợp đồng HD-9543 với FPT Software đã được phê duyệt.</p>
-                            <p class="notification-time">5 phút trước</p>
-                        </div>
-                    </a>
+                    <%-- Vòng lặp để hiển thị thông báo --%>
+                    <c:forEach var="noti" items="${latestNotifications}">
+                        <a href="${pageContext.request.contextPath}/${noti.linkUrl}" class="notification-item">
 
-                    <%-- Thông báo 2: Yêu cầu kỹ thuật --%>
-                    <a href="#" class="notification-item unread">
-                        <div class="notification-icon" style="background-color: #fff3e0; color: #ff9800;">
-                            <i data-feather="tool"></i>
-                        </div>
-                        <div class="notification-content">
-                            <p class="notification-title">Yêu cầu hỗ trợ mới</p>
-                            <p class="notification-details">Khách hàng Vingroup báo cáo sự cố máy phát điện.</p>
-                            <p class="notification-time">2 giờ trước</p>
-                        </div>
-                    </a>
+                            <%-- Chọn icon và màu sắc dựa trên loại thông báo --%>
+                            <c:set var="iconBg" value="#e3f2fd"/>
+                            <c:set var="iconColor" value="#2196f3"/>
+                            <c:set var="iconName" value="info"/>
 
-                    <%-- Thông báo 3: Lịch hẹn --%>
-                    <a href="#" class="notification-item">
-                        <div class="notification-icon" style="background-color: #e8eaf6; color: #3f51b5;">
-                            <i data-feather="calendar"></i>
-                        </div>
-                        <div class="notification-content">
-                            <p class="notification-title">Nhắc nhở: Lịch bảo trì</p>
-                            <p class="notification-details">Bạn có lịch kiểm tra định kỳ tại Viettel vào ngày mai.</p>
-                            <p class="notification-time">Hôm qua, lúc 15:30</p>
-                        </div>
-                    </a>
+                            <c:if test="${noti.notificationType == 'ENTERPRISE'}">
+                                <c:set var="iconBg" value="#e8eaf6"/>
+                                <c:set var="iconColor" value="#3f51b5"/>
+                                <c:set var="iconName" value="briefcase"/>
+                            </c:if>
+                            <c:if test="${noti.notificationType == 'CONTRACT'}">
+                                <c:set var="iconBg" value="#e0f7fa"/>
+                                <c:set var="iconColor" value="#00796b"/>
+                                <c:set var="iconName" value="file-text"/>
+                            </c:if>
+                            <c:if test="${noti.notificationType == 'TECH_REQUEST'}">
+                                <c:set var="iconBg" value="#fff3e0"/>
+                                <c:set var="iconColor" value="#ff9800"/>
+                                <c:set var="iconName" value="tool"/>
+                            </c:if>
+                            <c:if test="${noti.notificationType == 'CAMPAIGN'}">
+                                <c:set var="iconBg" value="#ede7f6"/>
+                                <c:set var="iconColor" value="#5e35b1"/>
+                                <c:set var="iconName" value="volume-2"/>
+                            </c:if>
+                            <c:if test="${noti.notificationType == 'FEEDBACK'}">
+                                <c:set var="iconBg" value="#e8f5e9"/>
+                                <c:set var="iconColor" value="#4caf50"/>
+                                <c:set var="iconName" value="message-square"/>
+                            </c:if>
 
-                    <%-- Thông báo 4: Cập nhật hệ thống --%>
-                    <a href="#" class="notification-item">
-                        <div class="notification-icon" style="background-color: #e3f2fd; color: #2196f3;">
-                            <i data-feather="info"></i>
+                            <div class="notification-icon" style="background-color: ${iconBg}; color: ${iconColor};">
+                                <i data-feather="${iconName}"></i>
+                            </div>
+                            <div class="notification-content">
+                                <p class="notification-title">${noti.title}</p>
+                                <p class="notification-details">${noti.message}</p>
+                                <p class="notification-time">${noti.relativeTime}</p>
+                            </div>
+                        </a>
+                    </c:forEach>
+
+                    <c:if test="${empty latestNotifications}">
+                        <div class="notification-empty">
+                            <i data-feather="check-circle"></i>
+                            <p>Không có thông báo mới</p>
                         </div>
-                        <div class="notification-content">
-                            <p class="notification-title">Hệ thống sẽ bảo trì</p>
-                            <p class="notification-details">Hệ thống sẽ tạm dừng để nâng cấp vào 23:00 tối nay.</p>
-                            <p class="notification-time">2 ngày trước</p>
-                        </div>
-                    </a>
+                    </c:if>
 
                 </div>
+                <%-- Sửa link ở footer của dropdown thông báo --%>
                 <div class="dropdown-footer">
-                    <a href="#">Xem tất cả thông báo</a>
+                    <a href="${pageContext.request.contextPath}/notifications">Xem tất cả thông báo</a>
                 </div>
-                <%-- ===== KẾT THÚC NỘI DUNG THÔNG BÁO MẪU ===== --%>
             </div>
         </div>
 
@@ -103,10 +108,8 @@
                     </div>
                 </div>
 
-                <%-- ===== NHÓM THÔNG TIN CÁ NHÂN VÀ MẬT KHẨU ===== --%>
                 <div class="dropdown-divider"></div>
 
-                <%-- ## FIX: Sửa đường dẫn trỏ đến Controller /profile ## --%>
                 <a href="${pageContext.request.contextPath}/profile" class="dropdown-item">
                     <i data-feather="user"></i>
                     <span>Thông tin cá nhân</span>
@@ -117,8 +120,7 @@
                     <span>Đổi mật khẩu</span>
                 </a>
 
-                <%-- ===== NHÓM QUẢN TRỊ (CHỈ ADMIN THẤY) ===== --%>
-                <c:if test="${sessionScope.user.roleName == 'Admin'}"> <%-- Sửa lại điều kiện cho an toàn hơn --%>
+                <c:if test="${sessionScope.user.roleName == 'Admin'}">
                     <div class="dropdown-divider"></div>
                     <div class="dropdown-section-title">Quản trị</div>
                     <a href="${pageContext.request.contextPath}/employee" class="dropdown-item">
@@ -126,7 +128,6 @@
                         <span>Nhân viên</span>
                     </a>
                 </c:if>
-
             </div>
         </div>
     </div>
