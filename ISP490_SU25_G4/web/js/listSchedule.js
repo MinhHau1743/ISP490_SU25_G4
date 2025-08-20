@@ -168,7 +168,7 @@ async function markScheduleAsComplete(scheduleId) {
 
             show(message, type, title, duration) {
             type = (type == null) ? 'info' : type;
-            duration = (typeof duration === 'number') ? duration : 3000;  // Mặc định 5000ms (5 giây)
+            duration = (typeof duration === 'number') ? duration : 3000;  // Mặc định 3000ms (3 giây)
             const toast = this.createToast(message, type, title, duration);
             this.container.appendChild(toast);
             this.toasts.push(toast);
