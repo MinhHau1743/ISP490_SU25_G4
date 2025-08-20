@@ -7,21 +7,21 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession; // Import đã được thêm
-import vn.edu.fpt.common.NotificationService; // Import đã được thêm
-import vn.edu.fpt.dao.TechnicalRequestDAO;
-import vn.edu.fpt.model.Contract;
-import vn.edu.fpt.model.TechnicalRequest;
-import vn.edu.fpt.model.TechnicalRequestDevice;
-import vn.edu.fpt.model.Product;
-import vn.edu.fpt.dao.AddressDAO;
+import jakarta.servlet.http.HttpSession;
+import vn.edu.fpt.common.EmailServiceFeedback;
+import vn.edu.fpt.common.LocalDateAdapter;
+import vn.edu.fpt.common.LocalDateTimeAdapter;
+import vn.edu.fpt.common.NotificationService;
+import vn.edu.fpt.dao.*;
+import vn.edu.fpt.model.*;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeParseException;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,37 +29,51 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import vn.edu.fpt.common.EmailServiceFeedback;
-import vn.edu.fpt.common.LocalDateAdapter;
-import vn.edu.fpt.common.LocalDateTimeAdapter;
-import vn.edu.fpt.dao.ContractDAO;
-import vn.edu.fpt.dao.EnterpriseDAO;
-import vn.edu.fpt.dao.FeedbackDAO;
-import vn.edu.fpt.dao.ScheduleDAO;
-import vn.edu.fpt.dao.StatusDAO;
-import vn.edu.fpt.model.Address;
-import vn.edu.fpt.model.District;
-import vn.edu.fpt.model.Enterprise; // Import đã được thêm
-import vn.edu.fpt.model.MaintenanceSchedule;
-import vn.edu.fpt.model.Province;
-import vn.edu.fpt.model.Service;
-import vn.edu.fpt.model.User; // Import đã được thêm
-import vn.edu.fpt.model.Ward;
-import java.time.format.DateTimeFormatter;
 
 @WebServlet(name = "TicketController", urlPatterns = {"/ticket"})
 public class TechnicalRequestController extends HttpServlet {
 
-    private TechnicalRequestDAO dao;
+    // --- CÁC DAO ĐÃ ĐƯỢC CHUYỂN THÀNH FIELD ---
+    private final TechnicalRequestDAO technicalRequestDAO;
+    private final ScheduleDAO scheduleDAO;
+    private final AddressDAO addressDAO;
+    private final EnterpriseDAO enterpriseDAO;
+    private final FeedbackDAO feedbackDAO;
+    private final StatusDAO statusDAO;
+    private final ContractDAO contractDAO;
+
     private final Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
             .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
             .create();
     private final ExecutorService emailExecutor = Executors.newSingleThreadExecutor();
 
-    @Override
-    public void init() {
-        dao = new TechnicalRequestDAO();
+    /**
+     * Constructor mặc định: Được sử dụng bởi Tomcat khi ứng dụng chạy thật. Nó
+     * tự khởi tạo các DAO thật.
+     */
+    public TechnicalRequestController() {
+        this.technicalRequestDAO = new TechnicalRequestDAO();
+        this.scheduleDAO = new ScheduleDAO();
+        this.addressDAO = new AddressDAO();
+        this.enterpriseDAO = new EnterpriseDAO();
+        this.feedbackDAO = new FeedbackDAO();
+        this.statusDAO = new StatusDAO();
+        this.contractDAO = new ContractDAO();
+    }
+
+    /**
+     * Constructor cho Unit Test: Cho phép "tiêm" các DAO giả (mock) từ bên
+     * ngoài.
+     */
+    public TechnicalRequestController(TechnicalRequestDAO technicalRequestDAO, ScheduleDAO scheduleDAO, AddressDAO addressDAO, EnterpriseDAO enterpriseDAO, FeedbackDAO feedbackDAO, StatusDAO statusDAO, ContractDAO contractDAO) {
+        this.technicalRequestDAO = technicalRequestDAO;
+        this.scheduleDAO = scheduleDAO;
+        this.addressDAO = addressDAO;
+        this.enterpriseDAO = enterpriseDAO;
+        this.feedbackDAO = feedbackDAO;
+        this.statusDAO = statusDAO;
+        this.contractDAO = contractDAO;
     }
 
     @Override
@@ -68,7 +82,6 @@ public class TechnicalRequestController extends HttpServlet {
         if (action == null) {
             action = "list";
         }
-
         try {
             switch (action) {
                 case "create":
@@ -95,24 +108,20 @@ public class TechnicalRequestController extends HttpServlet {
                 case "sendSurvey":
                     handleSendSurvey(request, response);
                     break;
-                // --- THÊM CÁC CASE MỚI ---
                 case "getContractDetails":
                     getContractDetails(request, response);
                     break;
                 case "getProductsByContract":
                     getProductsByContract(request, response);
                     break;
-
                 case "list":
                 default:
                     listTickets(request, response);
                     break;
             }
-        } catch (SQLException e) {
-            e.printStackTrace(); // In lỗi ra log server để debug
-            throw new ServletException("Database access error.", e);
-        } catch (Exception ex) {
-            Logger.getLogger(TechnicalRequestController.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new ServletException("Lỗi xử lý yêu cầu GET trong TicketController", e);
         }
     }
 
@@ -120,7 +129,6 @@ public class TechnicalRequestController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
-
         if ("create".equals(action)) {
             createTicket(request, response);
         } else if ("update".equals(action)) {
@@ -128,8 +136,7 @@ public class TechnicalRequestController extends HttpServlet {
         }
     }
 
-    private void listTickets(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException, Exception {
-        // 1. Lấy tất cả tham số lọc và phân trang
+    private void listTickets(HttpServletRequest request, HttpServletResponse response) throws Exception {
         String query = request.getParameter("query");
         String status = request.getParameter("status");
         String serviceIdStr = request.getParameter("serviceId");
@@ -140,9 +147,8 @@ public class TechnicalRequestController extends HttpServlet {
             } catch (NumberFormatException e) {
                 /* Bỏ qua */ }
         }
-
         int page = 1;
-        final int LIMIT = 9; // Hiển thị 9 thẻ mỗi trang (3x3 grid)
+        final int LIMIT = 9;
         String pageStr = request.getParameter("page");
         if (pageStr != null && !pageStr.isEmpty()) {
             try {
@@ -151,9 +157,7 @@ public class TechnicalRequestController extends HttpServlet {
                 page = 1;
             }
         }
-
-        // 2. Lấy tổng số item với bộ lọc để tính toán số trang
-        int totalItems = dao.getTotalFilteredRequestCount(query, status, serviceId);
+        int totalItems = technicalRequestDAO.getTotalFilteredRequestCount(query, status, serviceId);
         int totalPages = (int) Math.ceil((double) totalItems / LIMIT);
         if (totalPages == 0) {
             totalPages = 1;
@@ -161,210 +165,126 @@ public class TechnicalRequestController extends HttpServlet {
         if (page > totalPages) {
             page = totalPages;
         }
-
-        // 3. Tính offset
         int offset = (page - 1) * LIMIT;
 
-        // 4. Lấy danh sách giao dịch đã lọc
-        List<TechnicalRequest> transactionList = dao.getFilteredTechnicalRequests(query, status, serviceId, LIMIT, offset);
+        List<TechnicalRequest> transactionList = technicalRequestDAO.getFilteredTechnicalRequests(query, status, serviceId, LIMIT, offset);
+        List<Service> serviceList = technicalRequestDAO.getAllServices();
+        List<String> statusList = technicalRequestDAO.getDistinctStatuses();
 
-        // 5. Lấy danh sách cho các dropdown bộ lọc
-        List<Service> serviceList = dao.getAllServices();
-        List<String> statusList = dao.getDistinctStatuses();
         request.setAttribute("transactions", transactionList);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("currentPage", page);
         request.setAttribute("statusList", statusList);
-        request.setAttribute("totalItems", totalItems); // Gửi thêm tổng số item
-        request.setAttribute("serviceList", serviceList); // Gửi danh sách dịch vụ
+        request.setAttribute("totalItems", totalItems);
+        request.setAttribute("serviceList", serviceList);
         request.setAttribute("activeMenu", "ticket");
-
         request.getRequestDispatcher("/jsp/customerSupport/listTransaction.jsp").forward(request, response);
     }
 
-    private void showCreateForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException, Exception {
-        AddressDAO addressDAO = new AddressDAO();
-        List<Province> provinces = addressDAO.getAllProvinces();
-        StatusDAO statusDAO = new StatusDAO();
-        // 6. Gửi tất cả dữ liệu sang JSP
-        request.setAttribute("customerList", dao.getAllEnterprises());
-        request.setAttribute("employeeList", dao.getAllTechnicians());
-        request.setAttribute("serviceList", dao.getAllServices());
-        request.setAttribute("contractList", dao.getAllActiveContracts()); // <--- THÊM DÒNG NÀY
-        request.setAttribute("provinces", provinces);
-        request.setAttribute("activeMenu", "createTicket");
+    private void showCreateForm(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        request.setAttribute("customerList", technicalRequestDAO.getAllEnterprises());
+        request.setAttribute("employeeList", technicalRequestDAO.getAllTechnicians());
+        request.setAttribute("serviceList", technicalRequestDAO.getAllServices());
+        request.setAttribute("contractList", technicalRequestDAO.getAllActiveContracts());
+        request.setAttribute("provinces", addressDAO.getAllProvinces());
         request.setAttribute("statusList", statusDAO.getAllStatuses());
+        request.setAttribute("activeMenu", "createTicket");
         request.getRequestDispatcher("/jsp/customerSupport/createTicket.jsp").forward(request, response);
     }
 
-    private void viewTicket(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        try {
-            int id = Integer.parseInt(request.getParameter("id"));
+    private void viewTicket(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        int id = Integer.parseInt(request.getParameter("id"));
+        TechnicalRequest ticket = technicalRequestDAO.getTechnicalRequestById(id);
+        if (ticket != null) {
+            MaintenanceSchedule schedule = scheduleDAO.getScheduleByTechnicalRequestId(id);
+            boolean hasFeedback = feedbackDAO.feedbackExistsForTechnicalRequest(id);
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            String scheduledDateFormatted = (schedule != null && schedule.getScheduledDate() != null) ? schedule.getScheduledDate().format(dateFormatter) : "";
+            String endDateFormatted = (schedule != null && schedule.getEndDate() != null) ? schedule.getEndDate().format(dateFormatter) : "";
 
-            // 1. Khởi tạo tất cả các DAO cần thiết
-            TechnicalRequestDAO ticketDAO = new TechnicalRequestDAO();
-            ScheduleDAO scheduleDAO = new ScheduleDAO();
-            AddressDAO addressDAO = new AddressDAO();
-            EnterpriseDAO enterpriseDAO = new EnterpriseDAO();
-            FeedbackDAO feedbackDAO = new FeedbackDAO();
+            request.setAttribute("ticket", ticket);
+            request.setAttribute("schedule", schedule);
+            request.setAttribute("hasFeedback", hasFeedback);
+            request.setAttribute("scheduledDateFormatted", scheduledDateFormatted);
+            request.setAttribute("endDateFormatted", endDateFormatted);
+            request.setAttribute("provinces", addressDAO.getAllProvinces());
 
-            // 2. Lấy đối tượng TechnicalRequest chính
-            TechnicalRequest ticket = ticketDAO.getTechnicalRequestById(id);
-
-            if (ticket != null) {
-                // 3. Lấy dữ liệu liên quan
-                MaintenanceSchedule schedule = scheduleDAO.getScheduleByTechnicalRequestId(id);
-                boolean hasFeedback = feedbackDAO.feedbackExistsForTechnicalRequest(id);
-
-                // 4. ĐỊNH DẠNG NGÀY THÁNG TỪ LOCALDATE SANG STRING
-                // Tạo một formatter để định dạng ngày theo kiểu "dd/MM/yyyy"
-                DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
-                String scheduledDateFormatted = "";
-                String endDateFormatted = "";
-
-                if (schedule != null) {
-                    if (schedule.getScheduledDate() != null) {
-                        scheduledDateFormatted = schedule.getScheduledDate().format(dateFormatter);
-                    }
-                    if (schedule.getEndDate() != null) {
-                        endDateFormatted = schedule.getEndDate().format(dateFormatter);
-                    }
+            if (schedule != null && schedule.getAddress() != null && schedule.getAddress().getProvinceId() > 0) {
+                Address scheduleAddress = schedule.getAddress();
+                request.setAttribute("districts", enterpriseDAO.getDistrictsByProvinceId(scheduleAddress.getProvinceId()));
+                if (scheduleAddress.getDistrictId() > 0) {
+                    request.setAttribute("wards", enterpriseDAO.getWardsByDistrictId(scheduleAddress.getDistrictId()));
                 }
-
-                // 5. Đặt tất cả dữ liệu làm thuộc tính cho request
-                request.setAttribute("ticket", ticket);
-                request.setAttribute("schedule", schedule); // Vẫn gửi schedule gốc để lấy startTime, endTime...
-                request.setAttribute("hasFeedback", hasFeedback);
-
-                // Gửi các chuỗi đã định dạng sang JSP
-                request.setAttribute("scheduledDateFormatted", scheduledDateFormatted);
-                request.setAttribute("endDateFormatted", endDateFormatted);
-
-                // Xử lý logic địa chỉ và các danh sách khác
-                request.setAttribute("provinces", addressDAO.getAllProvinces());
-                if (schedule != null && schedule.getAddress() != null && schedule.getAddress().getProvinceId() > 0) {
-                    Address scheduleAddress = schedule.getAddress();
-                    request.setAttribute("districts", enterpriseDAO.getDistrictsByProvinceId(scheduleAddress.getProvinceId()));
-                    if (scheduleAddress.getDistrictId() > 0) {
-                        request.setAttribute("wards", enterpriseDAO.getWardsByDistrictId(scheduleAddress.getDistrictId()));
-                    }
-                }
-
-                // 6. Chuyển tiếp đến trang view
-                request.getRequestDispatcher("/jsp/customerSupport/viewTransaction.jsp").forward(request, response);
-
-            } else {
-                // Nếu không tìm thấy ticket, chuyển hướng về trang danh sách
-                response.sendRedirect(request.getContextPath() + "/ticket?action=list&error=notFound");
             }
-        } catch (NumberFormatException e) {
-            response.sendRedirect(request.getContextPath() + "/ticket?action=list&error=invalidId");
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new ServletException("Lỗi khi xem chi tiết phiếu.", e);
+            request.getRequestDispatcher("/jsp/customerSupport/viewTransaction.jsp").forward(request, response);
+        } else {
+            response.sendRedirect(request.getContextPath() + "/ticket?action=list&error=notFound");
         }
     }
 
-    private void showEditForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        try {
-            int id = Integer.parseInt(request.getParameter("id"));
-
-            // 1. Khởi tạo tất cả các DAO cần thiết
-            TechnicalRequestDAO ticketDAO = new TechnicalRequestDAO();
-            ScheduleDAO scheduleDAO = new ScheduleDAO();
-            AddressDAO addressDAO = new AddressDAO();
-            EnterpriseDAO enterpriseDAO = new EnterpriseDAO();
-            StatusDAO statusDAO = new StatusDAO();
-            ContractDAO contractDAO = new ContractDAO();
-
-            // 2. Lấy đối tượng TechnicalRequest chính
-            TechnicalRequest existingTicket = ticketDAO.getTechnicalRequestById(id);
-
-            if (existingTicket != null) {
-                // 3. Lấy dữ liệu liên quan cho form
-
-                // Lấy danh sách thiết bị đã có của phiếu
-                List<TechnicalRequestDevice> existingDevices = existingTicket.getDevices();
-                String existingDevicesJson = (existingDevices != null) ? gson.toJson(existingDevices) : "[]";
-
-                // LẤY DANH SÁCH SẢN PHẨM TỪ HỢP ĐỒNG CỦA PHIẾU
-                List<Product> contractProducts = new ArrayList<>();
-                if (existingTicket.getContractId() != null) {
-                    contractProducts = contractDAO.getProductsByContractId(existingTicket.getContractId());
-                }
-                String contractProductsJson = (contractProducts != null) ? gson.toJson(contractProducts) : "[]";
-
-                // 4. Đặt tất cả dữ liệu làm thuộc tính cho request
-                request.setAttribute("ticket", existingTicket);
-                request.setAttribute("contractList", ticketDAO.getAllActiveContracts());
-                request.setAttribute("employeeList", ticketDAO.getAllTechnicians());
-                request.setAttribute("serviceList", ticketDAO.getAllServices());
-                request.setAttribute("statusList", statusDAO.getAllStatuses());
-                request.setAttribute("existingDevicesJson", existingDevicesJson);
-                request.setAttribute("contractProductsJson", contractProductsJson);
-
-                // 5. Lấy dữ liệu lịch trình và địa chỉ
-                MaintenanceSchedule schedule = scheduleDAO.getScheduleByTechnicalRequestId(id);
-                request.setAttribute("schedule", schedule);
-
-                request.setAttribute("provinces", addressDAO.getAllProvinces());
-
-                if (schedule != null && schedule.getAddress() != null && schedule.getAddress().getProvinceId() > 0) {
-                    Address scheduleAddress = schedule.getAddress();
-                    request.setAttribute("districts", enterpriseDAO.getDistrictsByProvinceId(scheduleAddress.getProvinceId()));
-                    if (scheduleAddress.getDistrictId() > 0) {
-                        request.setAttribute("wards", enterpriseDAO.getWardsByDistrictId(scheduleAddress.getDistrictId()));
-                    }
-                }
-
-                // 6. Chuyển tiếp đến trang edit
-                request.getRequestDispatcher("/jsp/customerSupport/editTransaction.jsp").forward(request, response);
-
-            } else {
-                response.sendRedirect(request.getContextPath() + "/ticket?action=list&error=notFound");
+    private void showEditForm(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        int id = Integer.parseInt(request.getParameter("id"));
+        TechnicalRequest existingTicket = technicalRequestDAO.getTechnicalRequestById(id);
+        if (existingTicket != null) {
+            List<TechnicalRequestDevice> existingDevices = existingTicket.getDevices();
+            String existingDevicesJson = (existingDevices != null) ? gson.toJson(existingDevices) : "[]";
+            List<Product> contractProducts = new ArrayList<>();
+            if (existingTicket.getContractId() != null) {
+                contractProducts = contractDAO.getProductsByContractId(existingTicket.getContractId());
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/ticket?action=list&error=editFailed");
+            String contractProductsJson = (contractProducts != null) ? gson.toJson(contractProducts) : "[]";
+
+            request.setAttribute("ticket", existingTicket);
+            request.setAttribute("contractList", technicalRequestDAO.getAllActiveContracts());
+            request.setAttribute("employeeList", technicalRequestDAO.getAllTechnicians());
+            request.setAttribute("serviceList", technicalRequestDAO.getAllServices());
+            request.setAttribute("statusList", statusDAO.getAllStatuses());
+            request.setAttribute("existingDevicesJson", existingDevicesJson);
+            request.setAttribute("contractProductsJson", contractProductsJson);
+
+            MaintenanceSchedule schedule = scheduleDAO.getScheduleByTechnicalRequestId(id);
+            request.setAttribute("schedule", schedule);
+            request.setAttribute("provinces", addressDAO.getAllProvinces());
+
+            if (schedule != null && schedule.getAddress() != null && schedule.getAddress().getProvinceId() > 0) {
+                Address scheduleAddress = schedule.getAddress();
+                request.setAttribute("districts", enterpriseDAO.getDistrictsByProvinceId(scheduleAddress.getProvinceId()));
+                if (scheduleAddress.getDistrictId() > 0) {
+                    request.setAttribute("wards", enterpriseDAO.getWardsByDistrictId(scheduleAddress.getDistrictId()));
+                }
+            }
+            request.getRequestDispatcher("/jsp/customerSupport/editTransaction.jsp").forward(request, response);
+        } else {
+            response.sendRedirect(request.getContextPath() + "/ticket?action=list&error=notFound");
         }
     }
 
     private void updateTicket(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
-            // === BẮT ĐẦU PHẦN CẬP NHẬT: LẤY USER TỪ SESSION ===
             HttpSession session = request.getSession(false);
             if (session == null || session.getAttribute("user") == null) {
                 response.sendRedirect(request.getContextPath() + "/login.jsp");
                 return;
             }
             User currentUser = (User) session.getAttribute("user");
-            // === KẾT THÚC PHẦN CẬP NHẬT ===
 
-            // --- 1. Khởi tạo các DAO cần thiết ---
-            StatusDAO statusDAO = new StatusDAO();
-            AddressDAO addressDAO = new AddressDAO();
-
-            // --- 2. Lấy dữ liệu và tạo các đối tượng ---
             TechnicalRequest updatedRequest = new TechnicalRequest();
             MaintenanceSchedule schedule = new MaintenanceSchedule();
 
-            // Lấy ID của các bản ghi cần cập nhật
             int ticketId = Integer.parseInt(request.getParameter("id"));
             updatedRequest.setId(ticketId);
-            // Giả sử schedule ID được lấy từ một trường ẩn trên form edit
             String scheduleIdStr = request.getParameter("scheduleId");
             if (scheduleIdStr != null && !scheduleIdStr.isEmpty()) {
                 schedule.setId(Integer.parseInt(scheduleIdStr));
             }
 
-            // --- 3. Thu thập dữ liệu từ form cho TechnicalRequest ---
             updatedRequest.setEnterpriseId(Integer.parseInt(request.getParameter("enterpriseId")));
             updatedRequest.setContractId(Integer.parseInt(request.getParameter("contractId")));
             updatedRequest.setServiceId(Integer.parseInt(request.getParameter("serviceId")));
             updatedRequest.setTitle(request.getParameter("title"));
             updatedRequest.setDescription(request.getParameter("description"));
             updatedRequest.setPriority(request.getParameter("priority"));
+            updatedRequest.setReporterId(currentUser.getId());
 
             String employeeIdStr = request.getParameter("employeesId");
             if (employeeIdStr != null && !employeeIdStr.isEmpty()) {
@@ -373,42 +293,32 @@ public class TechnicalRequestController extends HttpServlet {
 
             boolean isBillable = "true".equals(request.getParameter("isBillable"));
             updatedRequest.setIsBillable(isBillable);
-            if (isBillable) {
-                updatedRequest.setEstimatedCost(Double.parseDouble(request.getParameter("amount")));
-            } else {
-                updatedRequest.setEstimatedCost(0);
-            }
+            updatedRequest.setEstimatedCost(isBillable ? Double.parseDouble(request.getParameter("amount")) : 0);
 
-            // --- 4. Thu thập dữ liệu từ form cho MaintenanceSchedule ---
             String statusName = request.getParameter("status");
-            Integer statusId = statusDAO.getIdByName(statusName);
-            schedule.setStatusId(statusId);
-
+            schedule.setStatusId(statusDAO.getIdByName(statusName));
             schedule.setScheduledDate(LocalDate.parse(request.getParameter("scheduled_date")));
             String endDateStr = request.getParameter("end_date");
             if (endDateStr != null && !endDateStr.isEmpty()) {
                 schedule.setEndDate(LocalDate.parse(endDateStr));
             }
-
             String startTimeStr = request.getParameter("start_time");
             if (startTimeStr != null && !startTimeStr.isEmpty()) {
                 schedule.setStartTime(LocalTime.parse(startTimeStr));
             }
-
             String endTimeStr = request.getParameter("end_time");
             if (endTimeStr != null && !endTimeStr.isEmpty()) {
                 schedule.setEndTime(LocalTime.parse(endTimeStr));
             }
-
-            int provinceId = Integer.parseInt(request.getParameter("province"));
-            int districtId = Integer.parseInt(request.getParameter("district"));
-            int wardId = Integer.parseInt(request.getParameter("ward"));
-            String streetAddress = request.getParameter("streetAddress");
-            int addressId = addressDAO.findOrCreateAddress(streetAddress, wardId, districtId, provinceId);
+            int addressId = addressDAO.findOrCreateAddress(
+                    request.getParameter("streetAddress"),
+                    Integer.parseInt(request.getParameter("ward")),
+                    Integer.parseInt(request.getParameter("district")),
+                    Integer.parseInt(request.getParameter("province"))
+            );
             schedule.setAddressId(addressId);
             schedule.setColor(request.getParameter("color"));
 
-            // --- 5. Thu thập dữ liệu thiết bị ---
             List<TechnicalRequestDevice> devices = new ArrayList<>();
             int i = 1;
             String deviceName;
@@ -423,20 +333,15 @@ public class TechnicalRequestController extends HttpServlet {
                 i++;
             }
 
-            // --- 6. Gọi DAO để cập nhật tất cả trong 1 transaction ---
-            boolean success = dao.updateTechnicalRequestAndSchedule(updatedRequest, schedule, devices);
+            boolean success = technicalRequestDAO.updateTechnicalRequestAndSchedule(updatedRequest, schedule, devices);
 
-            // --- 7. TẠO THÔNG BÁO HỆ THỐNG ---
             if (success) {
-                EnterpriseDAO enterpriseDAO = new EnterpriseDAO();
                 Enterprise enterprise = enterpriseDAO.getEnterpriseById(updatedRequest.getEnterpriseId());
                 if (enterprise != null) {
                     NotificationService.notifyUpdateTechnicalRequest(currentUser, updatedRequest, enterprise.getName());
                 }
             }
-            // --- KẾT THÚC TẠO THÔNG BÁO ---
 
-            // --- 8. Chuyển hướng ---
             response.sendRedirect(request.getContextPath() + "/ticket?action=view&id=" + ticketId + "&update=" + (success ? "success" : "failed"));
 
         } catch (Exception e) {
@@ -448,60 +353,33 @@ public class TechnicalRequestController extends HttpServlet {
 
     private void createTicket(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
-            // === BẮT ĐẦU PHẦN CẬP NHẬT: LẤY USER TỪ SESSION ===
             HttpSession session = request.getSession(false);
             if (session == null || session.getAttribute("user") == null) {
                 response.sendRedirect(request.getContextPath() + "/login.jsp");
                 return;
             }
             User currentUser = (User) session.getAttribute("user");
-            // === KẾT THÚC PHẦN CẬP NHẬT ===
 
-            // Khởi tạo các đối tượng cần thiết
-            MaintenanceSchedule schedule = new MaintenanceSchedule();
-            ScheduleDAO scheduleDAO = new ScheduleDAO();
             TechnicalRequest newRequest = new TechnicalRequest();
-            AddressDAO addressDAO = new AddressDAO();
-            StatusDAO statusDAO = new StatusDAO();
 
-            // Lấy thông tin từ form
-            String enterpriseIdStr = request.getParameter("enterpriseId");
-            // String reporterIdStr = request.getParameter("reporterId"); // Dòng này không còn an toàn, sẽ thay bằng user session
-            String serviceIdStr = request.getParameter("serviceId");
+            newRequest.setReporterId(currentUser.getId());
+            newRequest.setEnterpriseId(Integer.parseInt(request.getParameter("enterpriseId")));
+            newRequest.setServiceId(Integer.parseInt(request.getParameter("serviceId")));
             String contractIdStr = request.getParameter("contractId");
-            String title = request.getParameter("title");
-            String description = request.getParameter("description");
-            String priority = request.getParameter("priority");
-            boolean isBillable = Boolean.parseBoolean(request.getParameter("isBillable"));
-            String amountStr = request.getParameter("amount");
-            String statusName = request.getParameter("status");
-            String employeeIdStr = request.getParameter("employeesId");
-
-            // --- Gán dữ liệu cho đối tượng TechnicalRequest ---
-            newRequest.setReporterId(currentUser.getId()); // An toàn hơn khi lấy ID từ user đang đăng nhập
-            if (enterpriseIdStr != null && !enterpriseIdStr.isEmpty()) {
-                newRequest.setEnterpriseId(Integer.parseInt(enterpriseIdStr));
-            }
-            if (serviceIdStr != null && !serviceIdStr.isEmpty()) {
-                newRequest.setServiceId(Integer.parseInt(serviceIdStr));
-            }
             if (contractIdStr != null && !contractIdStr.isEmpty()) {
                 newRequest.setContractId(Integer.valueOf(contractIdStr));
             }
-
+            String employeeIdStr = request.getParameter("employeesId");
             if (employeeIdStr != null && !employeeIdStr.isEmpty()) {
                 newRequest.setAssignedToId(Integer.parseInt(employeeIdStr));
             }
-
-            newRequest.setTitle(title);
-            newRequest.setDescription(description);
-            newRequest.setPriority(priority);
+            newRequest.setTitle(request.getParameter("title"));
+            newRequest.setDescription(request.getParameter("description"));
+            newRequest.setPriority(request.getParameter("priority"));
+            boolean isBillable = Boolean.parseBoolean(request.getParameter("isBillable"));
             newRequest.setIsBillable(isBillable);
-            if (isBillable) {
-                newRequest.setEstimatedCost(amountStr == null || amountStr.isEmpty() ? 0 : Double.parseDouble(amountStr));
-            } else {
-                newRequest.setEstimatedCost(0);
-            }
+            String amountStr = request.getParameter("amount");
+            newRequest.setEstimatedCost(isBillable && amountStr != null && !amountStr.isEmpty() ? Double.parseDouble(amountStr) : 0);
 
             List<TechnicalRequestDevice> devices = new ArrayList<>();
             int i = 1;
@@ -517,13 +395,13 @@ public class TechnicalRequestController extends HttpServlet {
                 i++;
             }
 
-            Integer newRequestId = dao.createTechnicalRequest(newRequest, devices);
+            Integer newRequestId = technicalRequestDAO.createTechnicalRequest(newRequest, devices);
 
             if (newRequestId != null) {
-                // --- Gán dữ liệu cho đối tượng MaintenanceSchedule ---
+                MaintenanceSchedule schedule = new MaintenanceSchedule();
                 schedule.setTechnicalRequestId(newRequestId);
-                Integer statusId = statusDAO.getIdByName(statusName);
-                schedule.setStatusId(statusId != null ? statusId : 2);
+                String statusName = request.getParameter("status");
+                schedule.setStatusId(statusDAO.getIdByName(statusName));
                 schedule.setScheduledDate(LocalDate.parse(request.getParameter("scheduled_date")));
                 String endDateStr = request.getParameter("end_date");
                 if (endDateStr != null && !endDateStr.isEmpty()) {
@@ -537,11 +415,12 @@ public class TechnicalRequestController extends HttpServlet {
                 if (endTimeStr != null && !endTimeStr.isEmpty()) {
                     schedule.setEndTime(LocalTime.parse(endTimeStr));
                 }
-                int provinceId = Integer.parseInt(request.getParameter("province"));
-                int districtId = Integer.parseInt(request.getParameter("district"));
-                int wardId = Integer.parseInt(request.getParameter("ward"));
-                String streetAddress = request.getParameter("streetAddress");
-                int addressId = addressDAO.findOrCreateAddress(streetAddress, wardId, districtId, provinceId);
+                int addressId = addressDAO.findOrCreateAddress(
+                        request.getParameter("streetAddress"),
+                        Integer.parseInt(request.getParameter("ward")),
+                        Integer.parseInt(request.getParameter("district")),
+                        Integer.parseInt(request.getParameter("province"))
+                );
                 schedule.setAddressId(addressId);
                 schedule.setColor(request.getParameter("color"));
 
@@ -549,51 +428,38 @@ public class TechnicalRequestController extends HttpServlet {
                 if (employeeIdStr != null && !employeeIdStr.isEmpty()) {
                     employeeIds.add(Integer.parseInt(employeeIdStr));
                 }
-
                 scheduleDAO.addScheduleWithAssignments(schedule, employeeIds);
 
-                // === TẠO THÔNG BÁO HỆ THỐNG ===
-                EnterpriseDAO enterpriseDAO = new EnterpriseDAO();
                 Enterprise enterprise = enterpriseDAO.getEnterpriseById(newRequest.getEnterpriseId());
                 if (enterprise != null) {
-                    TechnicalRequest createdRequest = dao.getTechnicalRequestById(newRequestId); // Lấy lại để có đủ thông tin
+                    TechnicalRequest createdRequest = technicalRequestDAO.getTechnicalRequestById(newRequestId);
                     if (createdRequest != null) {
                         NotificationService.notifyNewTechnicalRequest(currentUser, createdRequest, enterprise.getName());
                     }
                 }
-                // === KẾT THÚC TẠO THÔNG BÁO ===
-
                 response.sendRedirect("ticket?action=list&create=success");
-
             } else {
                 response.sendRedirect("ticket?action=list&create=failed");
             }
-
         } catch (Exception e) {
             e.printStackTrace();
             response.sendRedirect("ticket?action=create&error=" + e.getClass().getSimpleName());
         }
     }
 
-    private void getProducts(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    // --- CÁC HÀM GET AJAX VÀ HÀM PHỤ ---
+    private void getProducts(HttpServletRequest request, HttpServletResponse response) throws IOException, SQLException {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        try {
-            List<Product> products = dao.getAllProducts();
-            response.getWriter().write(gson.toJson(products));
-        } catch (SQLException e) {
-            e.printStackTrace();
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write("{\"error\":\"Lỗi khi truy vấn danh sách sản phẩm.\"}");
-        }
+        List<Product> products = technicalRequestDAO.getAllProducts();
+        response.getWriter().write(gson.toJson(products));
     }
 
     private void deleteTicket(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             int id = Integer.parseInt(request.getParameter("id"));
-            boolean success = dao.deleteTechnicalRequest(id);
-            ScheduleDAO scheduleDAO = new ScheduleDAO();
-            boolean deleteSuccess = scheduleDAO.deleteMaintenanceSchedule(id);
+            boolean success = technicalRequestDAO.deleteTechnicalRequest(id);
+            scheduleDAO.deleteMaintenanceSchedule(id);
             response.sendRedirect(request.getContextPath() + "/ticket?action=list&delete=" + (success ? "success" : "failed"));
         } catch (Exception e) {
             e.printStackTrace();
@@ -608,7 +474,7 @@ public class TechnicalRequestController extends HttpServlet {
         List<District> districts = Collections.emptyList();
         if (provinceIdStr != null && !provinceIdStr.trim().isEmpty()) {
             try {
-                districts = new EnterpriseDAO().getDistrictsByProvinceId(Integer.parseInt(provinceIdStr));
+                districts = enterpriseDAO.getDistrictsByProvinceId(Integer.parseInt(provinceIdStr));
             } catch (Exception e) {
                 e.printStackTrace();
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -627,7 +493,7 @@ public class TechnicalRequestController extends HttpServlet {
         List<Ward> wards = Collections.emptyList();
         if (districtIdStr != null && !districtIdStr.trim().isEmpty()) {
             try {
-                wards = new EnterpriseDAO().getWardsByDistrictId(Integer.parseInt(districtIdStr));
+                wards = enterpriseDAO.getWardsByDistrictId(Integer.parseInt(districtIdStr));
             } catch (Exception e) {
                 e.printStackTrace();
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -642,42 +508,25 @@ public class TechnicalRequestController extends HttpServlet {
     private void handleSendSurvey(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             int ticketId = Integer.parseInt(request.getParameter("id"));
-            TechnicalRequest ticket = dao.getTechnicalRequestById(ticketId);
-
-            if (ticket != null) {
+            TechnicalRequest ticket = technicalRequestDAO.getTechnicalRequestById(ticketId);
+            if (ticket != null && ticket.getEnterpriseEmail() != null && !ticket.getEnterpriseEmail().trim().isEmpty()) {
                 String recipientEmail = ticket.getEnterpriseEmail();
                 String enterpriseName = ticket.getEnterpriseName();
                 String requestCode = ticket.getRequestCode();
-
-                if (recipientEmail != null && !recipientEmail.trim().isEmpty()) {
-                    emailExecutor.submit(() -> {
-                        try {
-                            String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
-                            String surveyLink = baseUrl + "/feedback?action=create&technicalRequestId=" + ticketId;
-                            String subject = "Mời bạn đánh giá chất lượng dịch vụ cho yêu cầu #" + requestCode;
-                            String body = "<html>"
-                                    + "<body style='font-family: Arial, sans-serif; line-height: 1.6;'>"
-                                    + "<h3>Kính gửi Quý khách hàng " + enterpriseName + ",</h3>"
-                                    + "<p>Yêu cầu hỗ trợ kỹ thuật với mã số <strong>" + requestCode + "</strong> của Quý khách đã được xử lý xong.</p>"
-                                    + "<p>Chúng tôi rất mong nhận được những ý kiến đóng góp quý báu của Quý khách để cải thiện chất lượng dịch vụ. Vui lòng dành chút thời gian để thực hiện khảo sát bằng cách nhấn vào nút bên dưới:</p>"
-                                    + "<div style='text-align: center; margin: 25px 0;'>"
-                                    + "<a href=\"" + surveyLink + "\" style='background-color:#2563eb;color:white;padding:12px 25px;text-align:center;text-decoration:none;display:inline-block;border-radius:8px;font-size:16px;'><strong>Thực hiện khảo sát</strong></a>"
-                                    + "</div>"
-                                    + "<p>Trân trọng cảm ơn,<br><strong>Đội ngũ DPCRM</strong>.</p>"
-                                    + "</body>"
-                                    + "</html>";
-                            EmailServiceFeedback.sendMail(recipientEmail, subject, body);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    });
-                    response.sendRedirect(request.getContextPath() + "/ticket?action=view&id=" + ticketId + "&surveySent=true");
-
-                } else {
-                    response.sendRedirect(request.getContextPath() + "/ticket?action=view&id=" + ticketId + "&surveySent=false");
-                }
+                emailExecutor.submit(() -> {
+                    try {
+                        String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
+                        String surveyLink = baseUrl + "/feedback?action=create&technicalRequestId=" + ticketId;
+                        String subject = "Mời bạn đánh giá chất lượng dịch vụ cho yêu cầu #" + requestCode;
+                        String body = "<html><body><h3>Kính gửi Quý khách hàng " + enterpriseName + ",</h3><p>Yêu cầu hỗ trợ kỹ thuật với mã số <strong>" + requestCode + "</strong> của Quý khách đã được xử lý xong.</p><p>Chúng tôi rất mong nhận được những ý kiến đóng góp quý báu của Quý khách để cải thiện chất lượng dịch vụ. Vui lòng dành chút thời gian để thực hiện khảo sát bằng cách nhấn vào nút bên dưới:</p><div style='text-align: center; margin: 25px 0;'><a href=\"" + surveyLink + "\" style='background-color:#2563eb;color:white;padding:12px 25px;text-align:center;text-decoration:none;display:inline-block;border-radius:8px;font-size:16px;'><strong>Thực hiện khảo sát</strong></a></div><p>Trân trọng cảm ơn,<br><strong>Đội ngũ DPCRM</strong>.</p></body></html>";
+                        EmailServiceFeedback.sendMail(recipientEmail, subject, body);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+                response.sendRedirect(request.getContextPath() + "/ticket?action=view&id=" + ticketId + "&surveySent=true");
             } else {
-                response.sendRedirect(request.getContextPath() + "/ticket?action=list&error=notFound");
+                response.sendRedirect(request.getContextPath() + "/ticket?action=view&id=" + ticketId + "&surveySent=false");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -689,7 +538,6 @@ public class TechnicalRequestController extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         int contractId = Integer.parseInt(request.getParameter("contractId"));
-        ContractDAO contractDAO = new ContractDAO();
         Contract contract = contractDAO.getContractWithCustomerById(contractId);
         response.getWriter().write(gson.toJson(contract));
     }
@@ -698,7 +546,6 @@ public class TechnicalRequestController extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         int contractId = Integer.parseInt(request.getParameter("contractId"));
-        ContractDAO contractDAO = new ContractDAO();
         List<Product> products = contractDAO.getProductsByContractId(contractId);
         response.getWriter().write(gson.toJson(products));
     }
