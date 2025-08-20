@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import vn.edu.fpt.model.Address;
 
-public class TechnicalRequestDAO {
+public class TechnicalRequestDAO extends DBContext{
 
     // Trong file: TechnicalRequestDAO.java
     public List<TechnicalRequest> getFilteredTechnicalRequests(String query, String status, int serviceId, int limit, int offset) throws SQLException {
@@ -700,47 +700,45 @@ public class TechnicalRequestDAO {
         return 0;
     }
 
+   /**
+     * Lấy các yêu cầu kỹ thuật gần đây của một doanh nghiệp, có JOIN để lấy tên trạng thái.
+     * PHIÊN BẢN ĐÃ SỬA LỖI: Khắc phục NullPointerException và dùng đúng câu lệnh SQL.
+     */
     public List<TechnicalRequest> getRecentRequestsByEnterprise(int enterpriseId, int limit) throws Exception {
-        List<TechnicalRequest> list = new ArrayList<>();
+        List<TechnicalRequest> requests = new ArrayList<>();
+        
+        String sql = "SELECT tr.id, tr.request_code, tr.title, tr.created_at, s.status_name " +
+                     "FROM TechnicalRequests tr " +
+                     "LEFT JOIN MaintenanceSchedules ms ON tr.id = ms.technical_request_id " +
+                     "LEFT JOIN Statuses s ON ms.status_id = s.id " +
+                     "WHERE tr.enterprise_id = ? AND tr.is_deleted = 0 " +
+                     "ORDER BY tr.created_at DESC " +
+                     "LIMIT ?";
 
-        String sql = """
-        SELECT tr.id, tr.request_code, tr.enterprise_id, tr.service_id, tr.title, tr.description,
-               tr.priority, tr.status, tr.reporter_id, s.name AS service_name
-        FROM technicalrequests tr
-        JOIN services s ON tr.service_id = s.id
-        WHERE tr.enterprise_id = ?
-        ORDER BY tr.id DESC
-        LIMIT ?
-    """;
+        // Sử dụng try-with-resources để đảm bảo kết nối được khởi tạo và đóng đúng cách
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            // conn ở đây chắc chắn không phải là null
+            ps.setInt(1, enterpriseId);
+            ps.setInt(2, limit);
 
-        try (
-                Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, enterpriseId);
-            stmt.setInt(2, limit);
-
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                TechnicalRequest req = new TechnicalRequest();
-                req.setId(rs.getInt("id"));
-                req.setRequestCode(rs.getString("request_code"));
-                req.setEnterpriseId(rs.getInt("enterprise_id"));
-                req.setServiceId(rs.getInt("service_id"));
-                req.setTitle(rs.getString("title"));
-                req.setDescription(rs.getString("description"));
-                req.setPriority(rs.getString("priority"));
-                req.setStatus(rs.getString("status"));
-                req.setReporterId(rs.getInt("reporter_id"));
-                req.setServiceName(rs.getString("service_name")); // dùng JOIN lấy tên dịch vụ
-
-                list.add(req);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    TechnicalRequest req = new TechnicalRequest();
+                    req.setId(rs.getInt("id"));
+                    req.setRequestCode(rs.getString("request_code"));
+                    req.setTitle(rs.getString("title"));
+                    req.setCreatedAt(rs.getTimestamp("created_at"));
+                    req.setStatus(rs.getString("status_name")); 
+                    requests.add(req);
+                }
             }
-
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
-            throw new Exception("Lỗi truy vấn recent requests: " + e.getMessage());
+            throw new Exception("Lỗi khi truy vấn các yêu cầu gần đây: " + e.getMessage(), e);
         }
-
-        return list;
+        return requests;
     }
 
     public static void main(String[] args) {
