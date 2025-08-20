@@ -370,7 +370,6 @@
             </div>
         </div>
         <script>
-
             const currentView = '${viewMode}';
             const isoDayDate = '${isoDayDate}';
             const weekDates = [<c:forEach items="${weekDates}" var="d" varStatus="status">'${d}'<c:if test="${!status.last}">,</c:if></c:forEach>];
@@ -427,9 +426,16 @@
             }
 // File: listSchedule.js hoặc trong thẻ <script>
 
+            let isUpdating = false;
             function updateEvent(scheduleId, newScheduledDate, newEndDate, newStartTime, newEndTime) {
+            // Prevent duplicate calls
+            if (isUpdating) {
+            console.log('Update already in progress, skipping...');
+            return;
+            }
+
+            isUpdating = true;
             const url = contextPath + '/schedule?action=updateScheduleTime';
-            // Chuẩn hóa lại startTime/endTime trước khi gửi đi:
             const payload = {
             id: parseInt(scheduleId, 10),
                     scheduledDate: newScheduledDate || null,
@@ -447,20 +453,20 @@
                     success: function (response) {
                     console.log('Update successful:', response);
                     showToast('Cập nhật lịch trình thành công!', 'success');
-                    setTimeout(() => { location.reload(); }, 800);
                     },
                     error: function (xhr) {
                     console.error('Update failed:', {status: xhr.status, text: xhr.responseText});
                     let errorMessage = 'Có lỗi khi cập nhật lịch trình!';
-                    // Hiện chi tiết lỗi trả về để debug
                     if (xhr.responseJSON && xhr.responseJSON.message) errorMessage = xhr.responseJSON.message;
                     else if (xhr.statusText) errorMessage += ' ' + xhr.statusText;
                     showToast(errorMessage, 'error');
+                    },
+                    complete: function() {
+                    // Reset flag khi hoàn thành (dù success hay error)
+                    isUpdating = false;
                     }
             });
             }
-
-
 
             let isInteracting = false;
             let scrollSpeed = 0;
@@ -478,8 +484,6 @@
             }, 20);
             }
             }
-
-
 
             // ========== IMPROVED AUTO-SCROLL FUNCTIONS ==========
 
