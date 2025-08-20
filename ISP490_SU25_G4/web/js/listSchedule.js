@@ -148,3 +148,96 @@ async function markScheduleAsComplete(scheduleId) {
   }
 }
 
+ class ToastNotification {
+            constructor() { this.container = null; this.toasts = []; this.init(); }
+
+            init() {
+            var el = document.getElementById('toast-container');
+            if (!el) {
+            el = document.createElement('div');
+            el.id = 'toast-container';
+            // styling tối thiểu, bạn có thể chuyển sang CSS
+            el.style.position = 'fixed';
+            el.style.top = '16px';
+            el.style.right = '16px';
+            el.style.zIndex = 1080;
+            document.body.appendChild(el);
+            }
+            this.container = el;
+            }
+
+            show(message, type, title, duration) {
+            type = (type == null) ? 'info' : type;
+            duration = (typeof duration === 'number') ? duration : 3000;  // Mặc định 3000ms (3 giây)
+            const toast = this.createToast(message, type, title, duration);
+            this.container.appendChild(toast);
+            this.toasts.push(toast);
+            setTimeout(function(){ toast.classList.add('show'); }, 50);
+            if (duration > 0) {
+            const progressBar = toast.querySelector('.toast-progress');
+            if (progressBar) {
+            progressBar.style.width = '100%';
+            progressBar.style.transition = 'width ' + duration + 'ms linear';
+            setTimeout(function(){ progressBar.style.width = '0%'; }, 50);  // <-- Dòng này là thời gian tự tắt/tự đóng!
+            }
+            setTimeout(() => { this.remove(toast); }, duration);
+            }
+
+            this.limitToasts();
+            return toast;
+            }
+
+            createToast(message, type, title, duration) {
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            const icons = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
+            const icon = icons[type] || icons.info;
+            const titleHtml = title ? ('<div class="toast-title">' + this.escapeHtml(title) + '</div>') : '';
+            const progressHtml = (duration > 0) ? '<div class="toast-progress"></div>' : '';
+            toast.innerHTML =
+                    '<div class="toast-icon">' + icon + '</div>' +
+                    '<div class="toast-content">' +
+                    titleHtml +
+                    '<div class="toast-message">' + this.escapeHtml(message) + '</div>' +
+                    '</div>' +
+                    '<button class="toast-close" title="Đóng" ' +
+                    'onclick="if(window.toastSystem){var p=this.parentElement;if(p){window.toastSystem.remove(p);}}">&times;</button>' +
+                    progressHtml;
+            return toast;
+            }
+
+            escapeHtml(str){
+            return String(str).replace(/[&<>"']/g, function(s){
+            return ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[s]);
+            });
+            }
+
+            remove(toast) {
+            if (!toast || !toast.parentElement) return;
+            toast.classList.remove('show');
+            toast.classList.add('hide');
+            setTimeout(() => {
+            if (toast.parentElement) toast.parentElement.removeChild(toast);
+            const i = this.toasts.indexOf(toast);
+            if (i > - 1) this.toasts.splice(i, 1);
+            }, 300);
+            }
+
+            limitToasts() {
+            while (this.toasts.length > 5) {
+            this.remove(this.toasts[0]);
+            }
+            }
+
+            clear() {
+            // sao chép để không bị sửa mảng khi remove
+            this.toasts.slice().forEach(t => this.remove(t));
+            }
+            }
+
+// Chỉ khởi tạo nếu chưa có
+            window.toastSystem = window.toastSystem || new ToastNotification();
+// Hàm tiện dụng global
+            function showToast(message, type, title, duration) {
+            return window.toastSystem.show(message, type, title, duration);
+            }

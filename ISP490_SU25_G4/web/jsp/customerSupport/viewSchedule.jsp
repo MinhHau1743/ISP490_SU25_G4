@@ -12,7 +12,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Chi tiết Lịch bảo trì - DPCRM</title>
+        <title>Xem tiết Lịch bảo trì - DPCRM</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -202,7 +202,7 @@
             <jsp:include page="../../mainMenu.jsp"/>
             <div class="content-wrapper">
                 <jsp:include page="/header.jsp">
-                    <jsp:param name="pageTitle" value="Chỉnh sửa lịch bảo trì"/>
+                    <jsp:param name="pageTitle" value="Xem chi tiết lịch trình"/>
                 </jsp:include>
                 <section class="main-content-body">
                     <div class="page-header">

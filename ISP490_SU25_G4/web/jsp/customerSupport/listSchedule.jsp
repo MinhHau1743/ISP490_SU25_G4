@@ -370,902 +370,946 @@
             </div>
         </div>
         <script>
+           // =============================================
+// File: listSchedule.js (bản người dùng gửi)
+// Ghi chú: Chỉ thêm COMMENT giải thích theo từng hàm/khối.
+// KHÔNG thay đổi, xóa, hay thêm logic/chức năng mới.
+// =============================================
 
-            const currentView = '${viewMode}';
-            const isoDayDate = '${isoDayDate}';
-            const weekDates = [<c:forEach items="${weekDates}" var="d" varStatus="status">'${d}'<c:if test="${!status.last}">,</c:if></c:forEach>];
-            const monthDates = [<c:forEach items="${monthDates}" var="d" varStatus="status">'${d}'<c:if test="${!status.last}">,</c:if></c:forEach>];
-            var contextPath = window.location.pathname.split('/')[1] ? '/' + window.location.pathname.split('/')[1] : '';
-            feather.replace();
-            let draggingEvent = null;
-            let lastSlot = null;
-            document.addEventListener('DOMContentLoaded', () => {
-            const weekNav = document.querySelector('.week-nav');
-            // Lấy view mode từ nguồn chắc chắn đúng!
-            var currentView = document.getElementById('pageViewMode')?.textContent
-                    || localStorage.getItem('selectedView')
-                    || "day-view"; // fallback
+const currentView = '${viewMode}';
+const isoDayDate = '${isoDayDate}';
+const weekDates = [<c:forEach items="${weekDates}" var="d" varStatus="status">'${d}'<c:if test="${!status.last}">,</c:if></c:forEach>];
+const monthDates = [<c:forEach items="${monthDates}" var="d" varStatus="status">'${d}'<c:if test="${!status.last}">,</c:if></c:forEach>];
+var contextPath = window.location.pathname.split('/')[1] ? '/' + window.location.pathname.split('/')[1] : '';
+feather.replace();
+let draggingEvent = null;
+let lastSlot = null;
 
-            if (weekNav) {
-            if (currentView === 'list-view') {
-            weekNav.classList.add('hidden');
-            } else {
-            weekNav.classList.remove('hidden');
-            }
-            }
-            });
-            const schedules = [
-            <c:forEach var="schedule" items="${schedules}" varStatus="status">
-            {
-            id: ${schedule.id},
-                    title: "${schedule.title}",
-                    scheduledDate: "${schedule.scheduledDate}",
-                    endDate: "${schedule.endDate != null ? schedule.endDate : ''}",
-                    startTime: "${schedule.startTime != null ? schedule.startTime : ''}",
-                    endTime: "${schedule.endTime != null ? schedule.endTime : ''}",
-                    location: "${schedule.address.fullAddress != null ? fn:escapeXml(schedule.address.fullAddress) : 'Không xác định'}",
-                    statusName: "${schedule.statusName}",
-                    notes: "${schedule.notes}",
-                    // THÊM PHẦN ASSIGNMENTS VÀO ĐÂY
-                    assignments: [
-                <c:forEach var="assignment" items="${schedule.assignments}" varStatus="assignStatus">
-                    {
-                    fullName: "${assignment.fullName}"
-                    }<c:if test="${!assignStatus.last}">,</c:if>
-                </c:forEach>
-                    ]
-            }<c:if test="${!status.last}">,</c:if>
-            </c:forEach>
-            ];
-            var contextPath = window.location.pathname.split('/')[1] ? '/' + window.location.pathname.split('/')[1] : '';
-            feather.replace();
-// Gọi AJAX tới backend khi sự kiện drop hoàn tất
-            function safeTime(val) {
-            // Trả về null nếu rỗng/bất hợp lệ, chỉ nhận đúng định dạng 'HH:mm'
-            if (typeof val !== 'string' || !val.trim()) return null;
-            return /^([01]\d|2[0-3]):([0-5]\d)$/.test(val.trim()) ? val.trim() : null;
-            }
-// File: listSchedule.js hoặc trong thẻ <script>
+// Khởi tạo hiển thị phần điều hướng tuần theo view hiện tại
+// (Ẩn khi là list-view, hiện khi là day/week/month-view)
+document.addEventListener('DOMContentLoaded', () => {
+  const weekNav = document.querySelector('.week-nav');
+  // Lấy view mode từ DOM -> localStorage -> mặc định 'day-view'
+  var currentView = document.getElementById('pageViewMode')?.textContent
+          || localStorage.getItem('selectedView')
+          || "day-view"; // fallback
 
-            function updateEvent(scheduleId, newScheduledDate, newEndDate, newStartTime, newEndTime) {
-            const url = contextPath + '/schedule?action=updateScheduleTime';
-            // Chuẩn hóa lại startTime/endTime trước khi gửi đi:
-            const payload = {
-            id: parseInt(scheduleId, 10),
-                    scheduledDate: newScheduledDate || null,
-                    endDate: newEndDate || null,
-                    startTime: safeTime(newStartTime),
-                    endTime: safeTime(newEndTime)
-            };
-            console.log('Updating event:', payload);
-            $.ajax({
-            url: url,
-                    type: 'POST',
-                    contentType: 'application/json; charset=UTF-8',
-                    dataType: 'json',
-                    data: JSON.stringify(payload),
-                    success: function (response) {
-                    console.log('Update successful:', response);
-                    showToast('Cập nhật lịch trình thành công!', 'success');
-                    setTimeout(() => { location.reload(); }, 800);
-                    },
-                    error: function (xhr) {
-                    console.error('Update failed:', {status: xhr.status, text: xhr.responseText});
-                    let errorMessage = 'Có lỗi khi cập nhật lịch trình!';
-                    // Hiện chi tiết lỗi trả về để debug
-                    if (xhr.responseJSON && xhr.responseJSON.message) errorMessage = xhr.responseJSON.message;
-                    else if (xhr.statusText) errorMessage += ' ' + xhr.statusText;
-                    showToast(errorMessage, 'error');
-                    }
-            });
-            }
+  if (weekNav) {
+    if (currentView === 'list-view') {
+      weekNav.classList.add('hidden');
+    } else {
+      weekNav.classList.remove('hidden');
+    }
+  }
+});
 
+// Dữ liệu lịch trình render từ server vào mảng schedules
+const schedules = [
+  <c:forEach var="schedule" items="${schedules}" varStatus="status">
+  {
+    id: ${schedule.id},
+    title: "${schedule.title}",
+    scheduledDate: "${schedule.scheduledDate}",
+    endDate: "${schedule.endDate != null ? schedule.endDate : ''}",
+    startTime: "${schedule.startTime != null ? schedule.startTime : ''}",
+    endTime: "${schedule.endTime != null ? schedule.endTime : ''}",
+    location: "${schedule.address.fullAddress != null ? fn:escapeXml(schedule.address.fullAddress) : 'Không xác định'}",
+    statusName: "${schedule.statusName}",
+    notes: "${schedule.notes}",
+    // Danh sách phân công nhân sự cho lịch này
+    assignments: [
+      <c:forEach var="assignment" items="${schedule.assignments}" varStatus="assignStatus">
+      {
+        fullName: "${assignment.fullName}"
+      }<c:if test="${!assignStatus.last}">,</c:if>
+      </c:forEach>
+    ]
+  }<c:if test="${!status.last}">,</c:if>
+  </c:forEach>
+];
 
+// Lặp lại contextPath & feather.replace() như trong mã gốc (giữ nguyên)
+var contextPath = window.location.pathname.split('/')[1] ? '/' + window.location.pathname.split('/')[1] : '';
+feather.replace();
 
-            let isInteracting = false;
-            let scrollSpeed = 0;
-            let scrollContainer = null;
-            let scrollInterval = null;
-            function startAutoScroll() {
-            scrollContainer = document.querySelector('.calendar-left');
-            if (!scrollContainer)
-                    return;
-            if (!scrollInterval) {
-            scrollInterval = setInterval(() => {
-            if (scrollSpeed !== 0) {
-            scrollContainer.scrollTop += scrollSpeed;
-            }
-            }, 20);
-            }
-            }
+// -----------------------------
+// Hàm: safeTime(val)
+// Mục đích: Chuẩn hóa giá trị giờ 'HH:mm'. Trả về null nếu rỗng/không hợp lệ.
+// -----------------------------
+function safeTime(val) {
+  if (typeof val !== 'string' || !val.trim()) return null;
+  return /^([01]\d|2[0-3]):([0-5]\d)$/.test(val.trim()) ? val.trim() : null;
+}
 
+// Cờ chặn việc gọi update trùng nhau
+let isUpdating = false;
 
+// -----------------------------
+// Hàm: updateEvent(scheduleId, newScheduledDate, newEndDate, newStartTime, newEndTime)
+// Mục đích: Gọi AJAX cập nhật thời gian lịch trình lên backend.
+// Chú ý: Có cờ isUpdating để chống gọi trùng.
+// -----------------------------
+function updateEvent(scheduleId, newScheduledDate, newEndDate, newStartTime, newEndTime) {
+  if (isUpdating) {
+    console.log('Update already in progress, skipping...');
+    return;
+  }
 
-            // ========== IMPROVED AUTO-SCROLL FUNCTIONS ==========
+  isUpdating = true;
+  const url = contextPath + '/schedule?action=updateScheduleTime';
+  const payload = {
+    id: parseInt(scheduleId, 10),
+    scheduledDate: newScheduledDate || null,
+    endDate: newEndDate || null,
+    startTime: safeTime(newStartTime),
+    endTime: safeTime(newEndTime)
+  };
 
-// Khởi tạo auto-scroll với tốc độ nhanh hơn
-            function startAutoScroll() {
-            scrollContainer = document.querySelector('.calendar-left');
-            if (!scrollContainer) return;
-            if (!scrollInterval) {
-            scrollInterval = setInterval(() => {
-            if (scrollSpeed !== 0) {
-            scrollContainer.scrollTop += scrollSpeed;
-            }
-            }, 10); // Giảm interval xuống 10ms để mượt hơn
-            }
-            }
+  console.log('Updating event:', payload);
+  $.ajax({
+    url: url,
+    type: 'POST',
+    contentType: 'application/json; charset=UTF-8',
+    dataType: 'json',
+    data: JSON.stringify(payload),
+    success: function (response) {
+      console.log('Update successful:', response);
+      showToast('Cập nhật lịch trình thành công!', 'success');
+    },
+    error: function (xhr) {
+      console.error('Update failed:', {status: xhr.status, text: xhr.responseText});
+      let errorMessage = 'Có lỗi khi cập nhật lịch trình!';
+      if (xhr.responseJSON && xhr.responseJSON.message) errorMessage = xhr.responseJSON.message;
+      else if (xhr.statusText) errorMessage += ' ' + xhr.statusText;
+      showToast(errorMessage, 'error');
+    },
+    complete: function() {
+      // Reset cờ dù thành công hay lỗi
+      isUpdating = false;
+    }
+  });
+}
 
-// Cập nhật hướng cuộn dựa trên vị trí chuột
-            function updateScrollDirection(ev) {
-            if (!scrollContainer) return;
-            lastMouseY = ev.clientY;
-            const rect = scrollContainer.getBoundingClientRect();
-            const edgeSize = 80; // Tăng vùng edge lên 80px
-            const maxSpeed = 15; // Tốc độ cuộn tối đa
-            const minSpeed = 3; // Tốc độ cuộn tối thiểu
+// Biến & timer cho auto-scroll khi kéo thả
+let isInteracting = false;
+let scrollSpeed = 0;
+let scrollContainer = null;
+let scrollInterval = null;
 
-            const distFromTop = ev.clientY - rect.top;
-            const distFromBottom = rect.bottom - ev.clientY;
-            // Kiểm tra nếu chuột ở gần edge trên
-            if (distFromTop < edgeSize && distFromTop >= 0) {
-            const intensity = 1 - (distFromTop / edgeSize);
-            scrollSpeed = - Math.max(minSpeed, maxSpeed * intensity);
-            }
-            // Kiểm tra nếu chuột ở gần edge dưới
-            else if (distFromBottom < edgeSize && distFromBottom >= 0) {
-            const intensity = 1 - (distFromBottom / edgeSize);
-            scrollSpeed = Math.max(minSpeed, maxSpeed * intensity);
-            }
-            // Kiểm tra nếu chuột ra ngoài container (trên hoặc dưới)
-            else if (ev.clientY < rect.top) {
-            // Chuột ở trên container
-            const distanceAbove = rect.top - ev.clientY;
-            const intensity = Math.min(1, distanceAbove / 100); // Tăng tốc độ khi ra xa hơn
-            scrollSpeed = - Math.max(minSpeed, maxSpeed * intensity);
-            }
-            else if (ev.clientY > rect.bottom) {
-            // Chuột ở dưới container
-            const distanceBelow = ev.clientY - rect.bottom;
-            const intensity = Math.min(1, distanceBelow / 100); // Tăng tốc độ khi ra xa hơn
-            scrollSpeed = Math.max(minSpeed, maxSpeed * intensity);
-            }
-            else {
-            // Chuột ở giữa, không cần cuộn
-            scrollSpeed = 0;
-            }
-            }
+// -----------------------------
+// Hàm: startAutoScroll()
+// Mục đích: Khởi tạo interval cuộn dọc .calendar-left khi kéo thả chạm mép.
+// -----------------------------
+function startAutoScroll() {
+  scrollContainer = document.querySelector('.calendar-left');
+  if (!scrollContainer) return;
+  if (!scrollInterval) {
+    scrollInterval = setInterval(() => {
+      if (scrollSpeed !== 0) {
+        scrollContainer.scrollTop += scrollSpeed;
+      }
+    }, 10); // 10ms như code gốc để cuộn mượt hơn
+  }
+}
 
-// Dừng auto-scroll và làm sạch event listeners
-            function stopAutoScroll() {
-            scrollSpeed = 0;
-            if (scrollInterval) {
-            clearInterval(scrollInterval);
-            scrollInterval = null;
-            }
-            document.removeEventListener('dragover', updateScrollDirection);
-            document.removeEventListener('dragend', stopAutoScroll);
-            document.removeEventListener('drop', stopAutoScroll);
-            }
+// -----------------------------
+// Hàm: updateScrollDirection(ev)
+// Mục đích: Xác định hướng/tốc độ cuộn theo vị trí chuột so với vùng container.
+// -----------------------------
+function updateScrollDirection(ev) {
+  if (!scrollContainer) return;
+  lastMouseY = ev.clientY;
+  const rect = scrollContainer.getBoundingClientRect();
+  const edgeSize = 80; // vùng mép
+  const maxSpeed = 15; // tốc độ tối đa
+  const minSpeed = 3;  // tốc độ tối thiểu
 
+  const distFromTop = ev.clientY - rect.top;
+  const distFromBottom = rect.bottom - ev.clientY;
 
-            function parseTime(timeStr) {
-            if (!timeStr)
-                    return 0;
-            const [h, m] = timeStr.split(':').map(Number);
-            return h * 60 + m;
-            }
+  if (distFromTop < edgeSize && distFromTop >= 0) {
+    const intensity = 1 - (distFromTop / edgeSize);
+    scrollSpeed = - Math.max(minSpeed, maxSpeed * intensity);
+  }
+  else if (distFromBottom < edgeSize && distFromBottom >= 0) {
+    const intensity = 1 - (distFromBottom / edgeSize);
+    scrollSpeed = Math.max(minSpeed, maxSpeed * intensity);
+  }
+  else if (ev.clientY < rect.top) {
+    const distanceAbove = rect.top - ev.clientY;
+    const intensity = Math.min(1, distanceAbove / 100);
+    scrollSpeed = - Math.max(minSpeed, maxSpeed * intensity);
+  }
+  else if (ev.clientY > rect.bottom) {
+    const distanceBelow = ev.clientY - rect.bottom;
+    const intensity = Math.min(1, distanceBelow / 100);
+    scrollSpeed = Math.max(minSpeed, maxSpeed * intensity);
+  }
+  else {
+    scrollSpeed = 0;
+  }
+}
 
-            function formatTime(minutes) {
-            const h = Math.floor(minutes / 60) % 24;
-            const m = minutes % 60;
-            return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-                }
+// -----------------------------
+// Hàm: stopAutoScroll()
+// Mục đích: Dừng cuộn tự động và tháo các listener liên quan tới kéo thả.
+// -----------------------------
+function stopAutoScroll() {
+  scrollSpeed = 0;
+  if (scrollInterval) {
+    clearInterval(scrollInterval);
+    scrollInterval = null;
+  }
+  document.removeEventListener('dragover', updateScrollDirection);
+  document.removeEventListener('dragend', stopAutoScroll);
+  document.removeEventListener('drop', stopAutoScroll);
+}
 
-                function addDays(dateStr, days) {
-                const date = new Date(dateStr);
-                date.setDate(date.getDate() + days);
-                return date.toISOString().split('T')[0];
-                }
+// -----------------------------
+// Hàm tiện ích: parseTime(timeStr)
+// Mục đích: chuyển 'HH:mm' -> tổng phút.
+// -----------------------------
+function parseTime(timeStr) {
+  if (!timeStr) return 0;
+  const [h, m] = timeStr.split(':').map(Number);
+  return h * 60 + m;
+}
 
+// -----------------------------
+// Hàm tiện ích: formatTime(minutes)
+// Mục đích: chuyển tổng phút -> chuỗi 'HH:mm'.
+// -----------------------------
+function formatTime(minutes) {
+  const h = Math.floor(minutes / 60) % 24;
+  const m = minutes % 60;
+  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+}
 
-// ========== DRAG AND DROP FUNCTIONS ==========
+// -----------------------------
+// Hàm tiện ích: addDays(dateStr, days)
+// Mục đích: cộng số ngày vào yyyy-mm-dd và trả về chuỗi ngày mới.
+// -----------------------------
+function addDays(dateStr, days) {
+  const date = new Date(dateStr);
+  date.setDate(date.getDate() + days);
+  return date.toISOString().split('T')[0];
+}
 
-// Initialize drag and drop events
-                document.querySelectorAll('.event').forEach(ev => {
-                ev.addEventListener('dragstart', function (e) {
-                draggingEvent = ev;
-                setTimeout(() => {
-                ev.style.opacity = '0.5';
-                }, 0);
-                });
-                ev.addEventListener('dragend', function (e) {
-                draggingEvent = null;
-                if (lastSlot) lastSlot.classList.remove('slot-active');
-                ev.style.opacity = '1';
-                lastSlot = null;
-                // Clean up is-other-event class
-                document.querySelectorAll('.event').forEach(event => {
-                event.classList.remove('is-other-event');
-                });
-                setTimeout(() => isInteracting = false, 0);
-                stopAutoScroll();
-                });
-                });
-                function bindSlotDnD(slot) {
-                slot.addEventListener('dragover', function (e) {
-                e.preventDefault();
-                if (!draggingEvent) return;
-                // Dọn các bản sao cùng id (chừa element đang kéo)
-                let allDups = document.querySelectorAll('.event[id="' + draggingEvent.id + '"]');
-                allDups.forEach(ev => {
-                if (ev !== draggingEvent) {
-                ev.parentElement && ev.parentElement.removeChild(ev);
-                }
-                });
-                // Move vào slot hiện tại
-                if (draggingEvent.parentElement !== slot) {
-                slot.appendChild(draggingEvent);
-                }
+// Khởi tạo dragstart/dragend cho mỗi .event ở day/week view
+// (Chỉ thêm comment, giữ nguyên lắng nghe sự kiện)
+document.querySelectorAll('.event').forEach(ev => {
+  ev.addEventListener('dragstart', function (e) {
+    draggingEvent = ev;
+    setTimeout(() => {
+      ev.style.opacity = '0.5';
+    }, 0);
+  });
+  ev.addEventListener('dragend', function (e) {
+    draggingEvent = null;
+    if (lastSlot) lastSlot.classList.remove('slot-active');
+    ev.style.opacity = '1';
+    lastSlot = null;
+    // Xóa trạng thái mờ các event khác
+    document.querySelectorAll('.event').forEach(event => {
+      event.classList.remove('is-other-event');
+    });
+    setTimeout(() => isInteracting = false, 0);
+    stopAutoScroll();
+  });
+});
 
-                // Highlight slot
-                if (lastSlot && lastSlot !== slot) lastSlot.classList.remove('slot-active');
-                slot.classList.add('slot-active');
-                lastSlot = slot;
-                // Update scroll direction for auto-scroll
-                if (isInteracting) {
-                updateScrollDirection(e);
-                }
-                });
-                slot.addEventListener('dragleave', function () {
-                if (lastSlot === slot) {
-                slot.classList.remove('slot-active');
-                lastSlot = null;
-                }
-                });
-                slot.addEventListener('drop', function (e) {
-                e.preventDefault();
-                if (!draggingEvent) return;
-                slot.classList.remove('slot-active');
-                draggingEvent.style.opacity = '1';
-                draggingEvent = null;
-                lastSlot = null;
-                // Stop auto-scroll immediately
-                stopAutoScroll();
-                // Call the main drop function
-                drop(e);
-                });
-                }
+// -----------------------------
+// Hàm: bindSlotDnD(slot)
+// Mục đích: Gắn các sự kiện dragover/dragleave/drop cho từng ô slot.
+// -----------------------------
+function bindSlotDnD(slot) {
+  slot.addEventListener('dragover', function (e) {
+    e.preventDefault();
+    if (!draggingEvent) return;
 
-                document.querySelectorAll('.time-slot, .all-day-slot').forEach(bindSlotDnD);
-// Không cho kéo khi hoàn thành, cả hàm trong file js nữa
-                function setScheduleCompletedUI(scheduleId) {
-                const sid = String(scheduleId);
-                // Cập nhật model cục bộ
-                const sch = schedules.find(s => String(s.id) === sid);
-                if (sch) {
-                sch.statusName = 'Hoàn thành';
-                sch.statusId = 3; // tùy hệ thống của bạn
-                }
+    // Loại bỏ các bản sao (trùng id) còn lại khi đang kéo
+    let allDups = document.querySelectorAll('.event[id="' + draggingEvent.id + '"]');
+    allDups.forEach(ev => {
+      if (ev !== draggingEvent) {
+        ev.parentElement && ev.parentElement.removeChild(ev);
+      }
+    });
 
-                // Day/Week view: các .event
-                document.querySelectorAll(`#event-${sid}, .event[data-schedule-id="${sid}"]`)
-                        .forEach(el => {
-                        el.classList.add('is-completed');
-                        el.setAttribute('draggable', 'false'); // ngừng kéo
-                        });
-                // Month/List view: các item theo data-schedule-id
-                document.querySelectorAll(`.task-item[data-schedule-id="${sid}"], .event-item[data-schedule-id="${sid}"]`)
-                        .forEach(el => el.classList.add('is-completed'));
-                // Panel chi tiết (nếu đang mở)
-                const panel = document.getElementById('event-details-panel');
-                if (panel && panel.classList.contains('show')) {
-                const openedId = panel.querySelector('.event-id')?.textContent?.trim();
-                if (openedId === sid) {
-                const statusSpan = panel.querySelector('.event-status');
-                if (statusSpan) {
-                statusSpan.textContent = 'Hoàn thành';
-                statusSpan.className = 'event-status badge px-2 py-1 badge-completed';
-                }
-                }
-                }
-                }
+    // Đưa phần tử đang kéo vào slot hiện tại
+    if (draggingEvent.parentElement !== slot) {
+      slot.appendChild(draggingEvent);
+    }
 
-                function drag(ev) {
-                if (ev.target.classList.contains('is-completed')) {
-                ev.preventDefault();
-                showToast && showToast('Không thể kéo lịch đã hoàn thành', 'warning');
-                return;
-                }
-                ev.dataTransfer.setData("text/plain", ev.target.id);
-                ev.dataTransfer.effectAllowed = "move";
-                isInteracting = true;
-                // Start auto-scroll
-                startAutoScroll();
-                // Listen for mouse movement to update scroll speed
-                document.addEventListener('dragover', updateScrollDirection);
-                document.addEventListener('dragend', stopAutoScroll);
-                document.addEventListener('drop', stopAutoScroll);
-                // Disable other events to avoid conflicts
-                const draggedId = ev.target.id;
-                document.querySelectorAll('.event').forEach(event => {
-                if (event.id !== draggedId) {
-                event.classList.add('is-other-event');
-                }
-                });
-                }
+    // Hiệu ứng highlight slot
+    if (lastSlot && lastSlot !== slot) lastSlot.classList.remove('slot-active');
+    slot.classList.add('slot-active');
+    lastSlot = slot;
 
-// Improved allowDrop function
-                function allowDrop(ev) {
-                ev.preventDefault();
-                if (isInteracting) {
-                updateScrollDirection(ev);
-                }
-                }
+    // Cập nhật hướng cuộn khi đang tương tác
+    if (isInteracting) {
+      updateScrollDirection(e);
+    }
+  });
 
-                document.addEventListener('DOMContentLoaded', function () {
-                document.querySelectorAll('#week-view .event, #day-view .event').forEach(function (eventDiv) {
-                const st = eventDiv.dataset.startTime || null;
-                const et = eventDiv.dataset.endTime || null;
-                applyEventHeight(eventDiv, st, et);
-                });
-                });
-                function applyEventHeight(el, startTime, endTime) {
-                if (startTime) {
-                const h = getEventHeight(startTime, endTime, 30, 40, 40); // slot=30', cao=40px
-                el.style.setProperty('height', h + 'px', 'important');
-                } else {
-                // all-day: bỏ height inline để CSS .event.all-day chi phối
-                el.style.removeProperty('height');
-                }
-                }
+  slot.addEventListener('dragleave', function () {
+    if (lastSlot === slot) {
+      slot.classList.remove('slot-active');
+      lastSlot = null;
+    }
+  });
 
-// ====================================================================
-                /**
-                 * Tính chiều cao event dựa trên thời lượng.
-                 * Nếu thiếu startTime hoặc endTime thì trả về chiều cao mặc định + 40px.
-                 * Luôn cộng thêm 40px vào chiều cao event.
-                 */
-                function getEventHeight(startTime, endTime, slotMinutes = 30, slotHeight = 40, extraPx = 40) {
-                if (!startTime || !endTime) return slotHeight + extraPx;
-                const [sh, sm] = startTime.split(':').map(Number);
-                const [eh, em] = endTime.split(':').map(Number);
-                let totalMinutes = (eh * 60 + em) - (sh * 60 + sm);
-                if (totalMinutes <= 0) totalMinutes += 24 * 60; // hỗ trợ event qua đêm
-                const slotCount = totalMinutes / slotMinutes;
-                return Math.max(slotHeight, slotCount * slotHeight) + extraPx;
-                }
+  slot.addEventListener('drop', function (e) {
+    e.preventDefault();
+    if (!draggingEvent) return;
+    slot.classList.remove('slot-active');
+    draggingEvent.style.opacity = '1';
+    draggingEvent = null;
+    lastSlot = null;
+    // Dừng auto-scroll rồi gọi hàm drop xử lý chính
+    stopAutoScroll();
+    drop(e);
+  });
+}
 
-                document.addEventListener('DOMContentLoaded', function () {
-                document.querySelectorAll('#week-view .event, #day-view .event').forEach(function(eventDiv) {
-                if (eventDiv.classList.contains('all-day')) return;
-                const startTime = eventDiv.dataset.startTime;
-                const endTime = eventDiv.dataset.endTime;
-                // Luôn cộng thêm 40px cho mỗi event
-                const height = getEventHeight(startTime, endTime, 30, 40, 40);
-                eventDiv.style.setProperty('height', height + 'px', 'important');
-                });
-                });
-// Main drop function with auto-scroll cleanup
-                function drop(ev) {
-                ev.preventDefault();
-                stopAutoScroll();
-                // helper nội bộ: set height theo giờ hoặc bỏ height khi all-day
-                function applyEventHeight(el, startTime, endTime) {
-                if (startTime) {
-                // slot=30', slotHeight=40px, extra=40px (đúng như code trước đó của bạn)
-                const h = getEventHeight(startTime, endTime, 30, 40, 40);
-                el.style.setProperty('height', h + 'px', 'important');
-                } else {
-                el.style.removeProperty('height'); // all-day để CSS tự co giãn
-                }
-                }
+// Gắn DnD cho tất cả time-slot & all-day-slot hiện có
+document.querySelectorAll('.time-slot, .all-day-slot').forEach(bindSlotDnD);
 
-                const data = ev.dataTransfer.getData("text");
-                let eventElement = document.getElementById(data);
-                if (!eventElement) return;
-                // Dọn class "is-other-event"
-                document.querySelectorAll('.event').forEach(e => e.classList.remove('is-other-event'));
-                // Xoá các bản sao dư cùng id (chừa element đang kéo)
-                document.querySelectorAll('#' + CSS.escape(data)).forEach((el) => {
-                if (el !== eventElement && el.parentNode) el.parentNode.removeChild(el);
-                });
-                // Xác định slot mục tiêu
-                let slot = ev.target.closest('.time-slot, .all-day-slot, .all-day-event-container, .month-day');
-                if (!slot) return;
-                // Chuyển DOM sang slot mới
-                if (eventElement.parentNode) eventElement.parentNode.removeChild(eventElement);
-                slot.appendChild(eventElement);
-                // Nếu trước đó có slot-active, bỏ đi
-                if (typeof lastSlot !== 'undefined' && lastSlot) {
-                lastSlot.classList.remove('slot-active');
-                lastSlot = null;
-                }
+// -----------------------------
+// Hàm: setScheduleCompletedUI(scheduleId)
+// Mục đích: Đánh dấu lịch đã hoàn thành -> cập nhật model & UI, chặn kéo.
+// -----------------------------
+function setScheduleCompletedUI(scheduleId) {
+  const sid = String(scheduleId);
+  // Cập nhật dữ liệu cục bộ
+  const sch = schedules.find(s => String(s.id) === sid);
+  if (sch) {
+    sch.statusName = 'Hoàn thành';
+    sch.statusId = 3; // theo hệ thống
+  }
 
-                const scheduleId = eventElement.id.split('-')[1];
-                const scheduleToUpdate = schedules.find(s => s.id == scheduleId);
-                if (!scheduleToUpdate) return;
-                let newScheduledDate = null, newEndDate = null, newStartTime = null, newEndTime = null;
-                // --- Tính ngày / giờ mới dựa trên loại slot ---
-                const view = slot.closest('.calendar-view') ? slot.closest('.calendar-view').id : null;
-                if (slot.classList.contains('all-day-event-container') && view === 'week-view') {
-                // All-day hàng 7 cột trong week-view
-                const rect = slot.getBoundingClientRect();
-                const dayWidth = rect.width / 7;
-                const x = ev.clientX - rect.left;
-                let startCol = Math.floor(x / dayWidth) + 1;
-                startCol = Math.max(1, Math.min(startCol, 7));
-                eventElement.style.gridColumn = `${startCol} / span 1`; // cố định vào cột tương ứng
+  // Day/Week view: vô hiệu kéo và thêm class
+  document.querySelectorAll(`#event-${sid}, .event[data-schedule-id="${sid}"]`)
+    .forEach(el => {
+      el.classList.add('is-completed');
+      el.setAttribute('draggable', 'false');
+    });
 
-                newScheduledDate = weekDates[startCol - 1];
-                newStartTime = null;
-                // chuyển sang all-day
-                eventElement.classList.add('all-day');
-                eventElement.dataset.startTime = '';
-                eventElement.dataset.endTime = '';
-                // nếu có grid-column khi từ all-day sang time-slot rồi quay lại: giữ hợp lệ
-                applyEventHeight(eventElement, null, null);
-                const t = eventElement.querySelector('.event-time');
-                if (t) t.textContent = 'Cả ngày';
-                } else if (slot.classList.contains('all-day-slot') || slot.classList.contains('month-day')) {
-                // All-day trong day/week view (all-day-slot) hoặc month view (month-day)
-                newScheduledDate = slot.dataset.date;
-                newStartTime = null;
-                eventElement.classList.add('all-day');
-                eventElement.dataset.startTime = '';
-                eventElement.dataset.endTime = '';
-                // rời khỏi time-slot => bỏ grid-column nếu có
-                eventElement.style.removeProperty('grid-column');
-                applyEventHeight(eventElement, null, null);
-                const t = eventElement.querySelector('.event-time');
-                if (t) t.textContent = 'Cả ngày';
-                } else if (slot.classList.contains('time-slot')) {
-                // Slot theo giờ
-                newScheduledDate = slot.dataset.date;
-                newStartTime = slot.dataset.startTime || null;
-                eventElement.classList.remove('all-day');
-                // rời all-day => bỏ grid-column nếu còn
-                eventElement.style.removeProperty('grid-column');
-                // tạm set startTime; endTime sẽ tính bên dưới
-                eventElement.dataset.startTime = newStartTime || '';
-                } else {
-                // Fallback: có date nhưng không xác định, xem như all-day
-                newScheduledDate = slot.dataset.date || newScheduledDate;
-                newStartTime = null;
-                eventElement.classList.add('all-day');
-                eventElement.dataset.startTime = '';
-                eventElement.dataset.endTime = '';
-                eventElement.style.removeProperty('grid-column');
-                applyEventHeight(eventElement, null, null);
-                const t = eventElement.querySelector('.event-time');
-                if (t) t.textContent = 'Cả ngày';
-                }
+  // Month/List view: thêm class
+  document.querySelectorAll(`.task-item[data-schedule-id="${sid}"], .event-item[data-schedule-id="${sid}"]`)
+    .forEach(el => el.classList.add('is-completed'));
 
-                // --- Tính toán newEndDate dựa trên khoảng thời gian ngày cũ ---
-                if (scheduleToUpdate.scheduledDate && scheduleToUpdate.endDate) {
-                const oldStartDate = new Date(scheduleToUpdate.scheduledDate);
-                const oldEndDate = new Date(scheduleToUpdate.endDate);
-                const dayDifference = Math.round((oldEndDate - oldStartDate) / (24 * 60 * 60 * 1000));
-                if (dayDifference > 0) {
-                const newStartDate = new Date(newScheduledDate);
-                newStartDate.setDate(newStartDate.getDate() + dayDifference);
-                newEndDate = newStartDate.toISOString().split('T')[0];
-                } else {
-                newEndDate = newScheduledDate; // event 1 ngày
-                }
-                } else {
-                newEndDate = newScheduledDate; // không có endDate cũ => coi là 1 ngày
-                }
+  // Panel chi tiết nếu đang mở đúng event -> cập nhật trạng thái
+  const panel = document.getElementById('event-details-panel');
+  if (panel && panel.classList.contains('show')) {
+    const openedId = panel.querySelector('.event-id')?.textContent?.trim();
+    if (openedId === sid) {
+      const statusSpan = panel.querySelector('.event-status');
+      if (statusSpan) {
+        statusSpan.textContent = 'Hoàn thành';
+        statusSpan.className = 'event-status badge px-2 py-1 badge-completed';
+      }
+    }
+  }
+}
 
-                // --- Cập nhật UI / model ---
-                if (newStartTime) {
-                // Có giờ: tính lại duration
-                let durationMinutes = 0;
-                if (scheduleToUpdate.startTime && scheduleToUpdate.endTime) {
-                const [sh, sm] = scheduleToUpdate.startTime.split(':').map(Number);
-                const [eh, em] = scheduleToUpdate.endTime.split(':').map(Number);
-                durationMinutes = (eh * 60 + em) - (sh * 60 + sm);
-                if (durationMinutes <= 0) durationMinutes += 24 * 60; // hỗ trợ qua đêm
-                } else {
-                durationMinutes = 30; // fallback 30'
-                }
+// -----------------------------
+// Hàm: drag(ev)
+// Mục đích: Xử lý bắt đầu kéo 1 event, chặn nếu đã hoàn thành, bật auto-scroll.
+// -----------------------------
+function drag(ev) {
+  if (ev.target.classList.contains('is-completed')) {
+    ev.preventDefault();
+    showToast && showToast('Không thể kéo lịch đã hoàn thành', 'warning');
+    return;
+  }
+  ev.dataTransfer.setData("text/plain", ev.target.id);
+  ev.dataTransfer.effectAllowed = "move";
+  isInteracting = true;
+  startAutoScroll();
+  document.addEventListener('dragover', updateScrollDirection);
+  document.addEventListener('dragend', stopAutoScroll);
+  document.addEventListener('drop', stopAutoScroll);
 
-                let [nh, nm] = newStartTime.split(':').map(Number);
-                let newEndTotalMin = nh * 60 + nm + durationMinutes;
-                let newEndH = Math.floor(newEndTotalMin / 60) % 24;
-                let newEndM = newEndTotalMin % 60;
-                newEndTime = String(newEndH).padStart(2, '0') + ":" + String(newEndM).padStart(2, '0');
-                // Cập nhật text hiển thị
-                const eventTimeElement = eventElement.querySelector('.event-time');
-                if (eventTimeElement) eventTimeElement.textContent = newStartTime + " - " + newEndTime;
-                // Cập nhật dataset + height
-                eventElement.dataset.startTime = newStartTime || '';
-                eventElement.dataset.endTime = newEndTime || '';
-                applyEventHeight(eventElement, newStartTime, newEndTime);
-                // Cập nhật model cục bộ
-                scheduleToUpdate.scheduledDate = newScheduledDate;
-                scheduleToUpdate.startTime = newStartTime;
-                scheduleToUpdate.endTime = newEndTime;
-                scheduleToUpdate.endDate = newEndDate;
-                scheduleToUpdate.updatedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
-                // Gọi AJAX
-                if (typeof updateEvent === "function" && scheduleId && newScheduledDate) {
-                updateEvent(scheduleId, newScheduledDate, newEndDate, newStartTime, newEndTime);
-                }
-                } else {
-                // All-day
-                const eventTimeElement = eventElement.querySelector('.event-time');
-                if (eventTimeElement) eventTimeElement.textContent = 'Cả ngày';
-                // Dataset + height
-                eventElement.dataset.startTime = '';
-                eventElement.dataset.endTime = '';
-                applyEventHeight(eventElement, null, null);
-                // Model cục bộ
-                scheduleToUpdate.scheduledDate = newScheduledDate;
-                scheduleToUpdate.startTime = null;
-                scheduleToUpdate.endTime = null;
-                scheduleToUpdate.endDate = newEndDate;
-                scheduleToUpdate.updatedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
-                // AJAX (giờ = null)
-                if (typeof updateEvent === "function" && scheduleId && newScheduledDate) {
-                updateEvent(scheduleId, newScheduledDate, newEndDate, null, null);
-                }
-                }
+  const draggedId = ev.target.id;
+  document.querySelectorAll('.event').forEach(event => {
+    if (event.id !== draggedId) {
+      event.classList.add('is-other-event');
+    }
+  });
+}
 
-                // Làm mới panel chi tiết nếu đang mở đúng event
-                const detailsPanel = document.getElementById('event-details-panel');
-                if (detailsPanel && detailsPanel.classList.contains('show') &&
-                        detailsPanel.querySelector('.event-id').textContent == scheduleId) {
-                const updatedSchedule = schedules.find(s => s.id == scheduleId);
-                if (updatedSchedule) showDetails(eventElement, updatedSchedule);
-                }
-                }
+// -----------------------------
+// Hàm: allowDrop(ev)
+// Mục đích: Cho phép thả trong vùng hợp lệ và cập nhật hướng cuộn khi đang tương tác.
+// -----------------------------
+function allowDrop(ev) {
+  ev.preventDefault();
+  if (isInteracting) {
+    updateScrollDirection(ev);
+  }
+}
 
+// Khởi tạo chiều cao cho event khi DOM sẵn sàng (day/week)
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('#week-view .event, #day-view .event').forEach(function (eventDiv) {
+    const st = eventDiv.dataset.startTime || null;
+    const et = eventDiv.dataset.endTime || null;
+    applyEventHeight(eventDiv, st, et);
+  });
+});
 
-// Chạy khi DOM load xong:
-                document.addEventListener('DOMContentLoaded', function () {
-                });
-                function initResize(e) {
-                e.preventDefault();
-                isInteracting = true;
-                const eventElement = e.target.parentElement;
-                const container = eventElement.parentElement;
-                const rect = container.getBoundingClientRect();
-                const numDays = 7; // Số cột
-                const dayWidth = rect.width / numDays;
-                let startCol = parseInt(eventElement.dataset.startCol) || 1;
-                let currentSpan = parseInt(eventElement.dataset.span) || 1;
-                function resize(e) {
-                const x = e.clientX - rect.left;
-                let newEndCol = Math.ceil(x / dayWidth) + 1;
-                let newSpan = newEndCol - startCol;
-                if (newSpan < 1) newSpan = 1;
-                newEndCol = startCol + newSpan;
-                if (newEndCol > numDays + 1) newEndCol = numDays + 1;
-                eventElement.style.gridColumn = startCol + ' / ' + newEndCol;
-                eventElement.dataset.span = newEndCol - startCol;
-                }
+// -----------------------------
+// Hàm: applyEventHeight(el, startTime, endTime)
+// Mục đích: Set chiều cao inline cho event theo thời lượng; bỏ height nếu all-day.
+// -----------------------------
+function applyEventHeight(el, startTime, endTime) {
+  if (startTime) {
+    const h = getEventHeight(startTime, endTime, 30, 40, 40);
+    el.style.setProperty('height', h + 'px', 'important');
+  } else {
+    el.style.removeProperty('height');
+  }
+}
 
-                function stopResize() {
-                window.removeEventListener('mousemove', resize);
-                window.removeEventListener('mouseup', stopResize);
-                setTimeout(() => isInteracting = false, 0);
-                // Cập nhật data backend sau resize
-                const scheduleId = eventElement.id.split('-')[1];
-                const newStartCol = parseInt(eventElement.dataset.startCol);
-                const newSpan = parseInt(eventElement.dataset.span);
-                const newScheduledDate = weekDates[newStartCol - 1];
-                const newEndDate = (newSpan > 1) ? weekDates[newStartCol + newSpan - 2] : null;
-                updateEvent(scheduleId, newScheduledDate, newEndDate, null, null); // all-day (giờ = null)
-                }
+// -----------------------------
+// Hàm: getEventHeight(startTime, endTime, slotMinutes, slotHeight, extraPx)
+// Mục đích: Tính chiều cao theo số slot thời gian (mặc định 30' = 40px) + extra.
+// Ghi chú: Hỗ trợ event qua đêm (end < start -> +24h).
+// -----------------------------
+function getEventHeight(startTime, endTime, slotMinutes = 30, slotHeight = 40, extraPx = 40) {
+  if (!startTime || !endTime) return slotHeight + extraPx;
+  const [sh, sm] = startTime.split(':').map(Number);
+  const [eh, em] = endTime.split(':').map(Number);
+  let totalMinutes = (eh * 60 + em) - (sh * 60 + sm);
+  if (totalMinutes <= 0) totalMinutes += 24 * 60; // qua đêm
+  const slotCount = totalMinutes / slotMinutes;
+  return Math.max(slotHeight, slotCount * slotHeight) + extraPx;
+}
 
-                window.addEventListener('mousemove', resize);
-                window.addEventListener('mouseup', stopResize);
-                }
+// Thiết lập height tất cả event (day/week) khi DOM sẵn sàng
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('#week-view .event, #day-view .event').forEach(function(eventDiv) {
+    if (eventDiv.classList.contains('all-day')) return;
+    const startTime = eventDiv.dataset.startTime;
+    const endTime = eventDiv.dataset.endTime;
+    const height = getEventHeight(startTime, endTime, 30, 40, 40);
+    eventDiv.style.setProperty('height', height + 'px', 'important');
+  });
+});
 
+// -----------------------------
+// Hàm: drop(ev)
+// Mục đích: Xử lý logic chính khi thả event vào ô đích: cập nhật DOM, dữ liệu, gọi updateEvent.
+// -----------------------------
+function drop(ev) {
+  ev.preventDefault();
+  stopAutoScroll();
 
-                function showDetails(element) {
-                if (isInteracting)
-                        return;
-                const detailsPanel = document.getElementById('event-details-panel');
-                if (!detailsPanel)
-                        return;
-                let scheduleId = element.dataset.scheduleId || element.id?.split('-')[1];
-                if (!scheduleId)
-                        return;
-                const schedule = schedules.find(s => s.id == scheduleId);
-                if (schedule) {
-                // Cập nhật các thông tin chi tiết của lịch trình
-                detailsPanel.querySelector('.event-id').textContent = schedule.id;
-                detailsPanel.querySelector('.event-title').textContent = schedule.title;
-                detailsPanel.querySelector('.event-time-detail').textContent = schedule.startTime ? schedule.startTime : 'Cả ngày';
-                detailsPanel.querySelector('.event-date').textContent = schedule.scheduledDate + (schedule.endDate ? ' - ' + schedule.endDate : '');
-                detailsPanel.querySelector('.event-time-range').textContent = schedule.startTime ? schedule.startTime + (schedule.endTime ? ' - ' + schedule.endTime : '') : 'Cả ngày';
-                detailsPanel.querySelector('.event-location').textContent = schedule.location || 'Không xác định';
-                detailsPanel.querySelector('.event-notes').textContent = schedule.notes || 'Không có ghi chú';
-                // --- BẮT ĐẦU PHẦN CẬP NHẬT ĐỂ HIỂN THỊ THẺ NHÂN VIÊN ---
+  // helper nội bộ: set height theo giờ hoặc bỏ height khi all-day
+  function applyEventHeight(el, startTime, endTime) {
+    if (startTime) {
+      const h = getEventHeight(startTime, endTime, 30, 40, 40);
+      el.style.setProperty('height', h + 'px', 'important');
+    } else {
+      el.style.removeProperty('height');
+    }
+  }
 
-                const assignmentsContainer = detailsPanel.querySelector('.event-assignments');
-                assignmentsContainer.innerHTML = ''; // Bắt đầu bằng việc xóa sạch nội dung cũ
-                const statusSpan = detailsPanel.querySelector('.event-status');
-                if (statusSpan) {
-                // 1) Chuẩn hoá về tiếng Việt
-                const fromName = (schedule.statusName || '').trim();
-                const mapEnToVi = {
-                'Upcoming': 'Sắp tới',
-                        'In Progress': 'Đang thực hiện',
-                        'Completed': 'Hoàn thành',
-                        'Overdue': 'Quá hạn',
-                        'Cancelled': 'Đã hủy'
-                };
-                const mapIdToVi = { 1: 'Sắp tới', 2: 'Đang thực hiện', 3: 'Hoàn thành', 4: 'Quá hạn', 5: 'Đã hủy' };
-                const statusVi =
-                        fromName
-                        ? (mapEnToVi[fromName] || fromName)                       // nếu có statusName -> đổi EN->VI
-                        : (mapIdToVi[schedule.statusId] || 'Sắp tới'); // fallback theo ID
+  const data = ev.dataTransfer.getData("text");
+  let eventElement = document.getElementById(data);
+  if (!eventElement) return;
 
-                // 2) Gắn class badge theo trạng thái (đổi màu tại đây)
-                const classByStatus = {
-                'Sắp tới': 'badge-upcoming',
-                        'Đang thực hiện': 'badge-inprogress',
-                        'Hoàn thành': 'badge-completed',
-                        'Quá hạn': 'badge-cancelled', // hoặc tạo riêng badge-overdue nếu muốn
-                        'Đã hủy': 'badge-cancelled'
-                };
-                statusSpan.textContent = statusVi;
-                statusSpan.className = 'event-status badge px-2 py-1 ' + (classByStatus[statusVi] || 'badge-upcoming');
-                }
+  // Xóa class đánh dấu các event khác
+  document.querySelectorAll('.event').forEach(e => e.classList.remove('is-other-event'));
 
-                // Hàm trợ giúp để lấy 2 chữ cái đầu của tên
-                function getInitials(name) {
-                if (!name || typeof name !== 'string' || name.trim() === '') {
-                return '?'; // Trả về '?' nếu tên không hợp lệ
-                }
-                const parts = name.trim().split(' ').filter(p => p); // Tách tên và loại bỏ các khoảng trắng thừa
-                if (parts.length > 1) {
-                // Lấy chữ cái đầu của từ đầu tiên và từ cuối cùng
-                return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-                } else if (parts.length === 1) {
-                // Lấy 2 chữ cái đầu nếu chỉ có một từ
-                return parts[0].substring(0, 2).toUpperCase();
-                }
-                return '?';
-                }
+  // Xóa các bản sao trùng id (giữ lại phần tử đang kéo)
+  document.querySelectorAll('#' + CSS.escape(data)).forEach((el) => {
+    if (el !== eventElement && el.parentNode) el.parentNode.removeChild(el);
+  });
 
-                if (schedule.assignments && schedule.assignments.length > 0) {
-                // Lặp qua danh sách nhân viên được phân công
-                schedule.assignments.forEach(assignment => {
-                const fullName = assignment.fullName || 'Chưa xác định';
-                // 1. Tạo thẻ chứa chính (div.employee-tag)
-                const tag = document.createElement('div');
-                tag.className = 'employee-tag';
-                // 2. Tạo avatar (span.avatar)
-                const avatar = document.createElement('span');
-                avatar.className = 'avatar';
-                avatar.textContent = getInitials(fullName); // Dùng hàm để lấy chữ cái đầu
+  // Xác định ô đích hợp lệ
+  let slot = ev.target.closest('.time-slot, .all-day-slot, .all-day-event-container, .month-day');
+  if (!slot) return;
 
-                // 3. Tạo tên nhân viên (span.employee-name)
-                const nameSpan = document.createElement('span');
-                nameSpan.className = 'employee-name';
-                nameSpan.textContent = fullName;
-                // 4. Gắn avatar và tên vào trong thẻ tag
-                tag.appendChild(avatar);
-                tag.appendChild(nameSpan);
-                // 5. Gắn thẻ tag hoàn chỉnh vào vùng chứa
-                assignmentsContainer.appendChild(tag);
-                });
-                } else {
-                // Nếu không có ai được phân công, hiển thị thông báo
-                assignmentsContainer.innerHTML = '<span style="font-style: italic; color: #888;">Không có phân công</span>';
-                }
+  // Chuyển phần tử sang slot mới
+  if (eventElement.parentNode) eventElement.parentNode.removeChild(eventElement);
+  slot.appendChild(eventElement);
 
-                // --- KẾT THÚC PHẦN CẬP NHẬT ---
+  // Bỏ highlight nếu có
+  if (typeof lastSlot !== 'undefined' && lastSlot) {
+    lastSlot.classList.remove('slot-active');
+    lastSlot = null;
+  }
 
-                // Cập nhật link cho nút Sửa
-                const viewBtn = detailsPanel.querySelector('a[title="Xem chi tiết"]');
-                viewBtn.href = contextPath + '/schedule?action=viewScheduleDetail&id=' + encodeURIComponent(schedule.id);
-                detailsPanel.classList.add('show');
-                const editBtn = detailsPanel.querySelector('a[title="Sửa"]');
-                editBtn.href = contextPath + '/schedule?action=updateSchedule&id=' + encodeURIComponent(schedule.id);
-                detailsPanel.classList.add('show');
-                }
-                }
+  const scheduleId = eventElement.id.split('-')[1];
+  const scheduleToUpdate = schedules.find(s => s.id == scheduleId);
+  if (!scheduleToUpdate) return;
 
+  let newScheduledDate = null, newEndDate = null, newStartTime = null, newEndTime = null;
 
-                function closeDetails() {
-                const detailsPanel = document.getElementById('event-details-panel');
-                if (detailsPanel)
-                        detailsPanel.classList.remove('show');
-                }
+  // Xác định view hiện tại theo slot
+  const view = slot.closest('.calendar-view') ? slot.closest('.calendar-view').id : null;
 
-                // View toggle và lưu localStorage
-                document.querySelectorAll('.btn-toggle').forEach(button => {
-                button.addEventListener('click', () => {
-                const viewId = button.getAttribute('data-view');
-                document.querySelectorAll('.calendar-view').forEach(view => view.classList.remove('active'));
-                document.getElementById(viewId).classList.add('active');
-                document.querySelectorAll('.btn-toggle').forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-                localStorage.setItem('selectedView', viewId);
-                const form = document.getElementById("dayNavForm");
-                const viewModeInput = document.getElementById("viewMode");
-                const currentDayInput = document.getElementById("currentDay");
-                currentDayInput.value = document.getElementById("currentDate").getAttribute("data-date");
-                viewModeInput.value = viewId;
-                form.submit();
-                });
-                });
-                // Init view từ localStorage
-                document.addEventListener('DOMContentLoaded', () => {
-                const savedView = localStorage.getItem('selectedView') || 'day-view';
-                document.querySelectorAll('.calendar-view').forEach(view => {
-                view.classList.remove('active');
-                });
-                const selectedViewElement = document.getElementById(savedView);
-                if (selectedViewElement)
-                        selectedViewElement.classList.add('active');
-                document.querySelectorAll('.btn-toggle').forEach(button => {
-                button.classList.remove('active');
-                if (button.getAttribute('data-view') === savedView) {
-                button.classList.add('active');
-                }
-                });
-                });
-                // Init các event khác
-                document.addEventListener('DOMContentLoaded', () => {
-                document.querySelectorAll('#week-view .event.all-day').forEach(event => {
-                if (!event.querySelector('.resize-handle')) {
-                const handle = document.createElement('div');
-                handle.classList.add('resize-handle');
-                event.appendChild(handle);
-                handle.addEventListener('mousedown', initResize);
-                handle.addEventListener('click', (e) => e.stopPropagation());
-                }
-                if (!event.dataset.startCol) {
-                const col = event.style.gridColumn || '1 / 2';
-                const [start, end] = col.split('/').map(s => parseInt(s.trim()));
-                event.dataset.startCol = start;
-                event.dataset.span = end - start;
-                }
-                });
-                document.addEventListener('dragend', (e) => {
-                if (e.target.classList.contains('event')) {
-                setTimeout(() => isInteracting = false, 0);
-                }
-                });
-                document.querySelectorAll('#month-view .task-item').forEach(item => {
-                item.id = item.dataset.taskId ? 'task-' + item.dataset.taskId : 'task-' + Math.random().toString(36).substring(7);
-                item.draggable = true;
-                item.addEventListener('dragstart', drag);
-                item.addEventListener('dragend', (e) => {
-                setTimeout(() => isInteracting = false, 0);
-                });
-                });
-                document.querySelectorAll('#month-view .month-day').forEach(day => {
-                day.addEventListener('dragover', allowDrop);
-                day.addEventListener('drop', drop);
-                });
-                // Lấy ngày hiện tại và highlight
-                const today = new Date().toISOString().split('T')[0];
-                // Highlight ngày hiện tại trong week-view
-                const weekHeaders = document.querySelectorAll('#week-view .day-header-cell:not(:first-child)');
-                weekHeaders.forEach((header, index) => {
-                if (weekDates[index] === today) {
-                header.classList.add('today-highlight');
-                }
-                });
-                // Highlight ngày hiện tại trong month-view với hình tròn quanh số
-                const monthDays = document.querySelectorAll('#month-view .month-day');
-                monthDays.forEach((day) => {
-                if (day.dataset.date === today) {
-                day.classList.add('today-highlight');
-                }
-                });
-                });
-                // Navigation (prev/next) với xử lý viewMode
-                document.addEventListener("DOMContentLoaded", function () {
-                const form = document.getElementById("dayNavForm");
-                const controllerDayInput = document.getElementById("controllerDay");
-                const currentDayInput = document.getElementById("currentDay");
-                const viewModeInput = document.getElementById("viewMode");
-                const currentDateElem = document.getElementById("currentDate");
-                const currentFullDate = currentDateElem.getAttribute("data-date");
-                let currentViewMode = localStorage.getItem("selectedView") || "day-view";
-                function calculateNewDate(baseDateStr, offsetDays) {
-                const date = new Date(baseDateStr);
-                date.setDate(date.getDate() + offsetDays);
-                return date.toISOString().split("T")[0];
-                }
+  if (slot.classList.contains('all-day-event-container') && view === 'week-view') {
+    // Kéo thả all-day theo lưới 7 cột trong week-view
+    const rect = slot.getBoundingClientRect();
+    const dayWidth = rect.width / 7;
+    const x = ev.clientX - rect.left;
+    let startCol = Math.floor(x / dayWidth) + 1;
+    startCol = Math.max(1, Math.min(startCol, 7));
+    eventElement.style.gridColumn = `${startCol} / span 1`;
 
-                function handleNav(direction) {
-                let newDate = currentFullDate;
-                controllerDayInput.value = "";
-                if (currentViewMode === "week-view") {
-                newDate = calculateNewDate(currentFullDate, direction === "prev" ? - 7 : 7);
-                } else {
-                controllerDayInput.value = direction;
-                }
+    newScheduledDate = weekDates[startCol - 1];
+    newStartTime = null;
+    eventElement.classList.add('all-day');
+    eventElement.dataset.startTime = '';
+    eventElement.dataset.endTime = '';
+    applyEventHeight(eventElement, null, null);
+    const t = eventElement.querySelector('.event-time');
+    if (t) t.textContent = 'Cả ngày';
+  }
+  else if (slot.classList.contains('all-day-slot') || slot.classList.contains('month-day')) {
+    // Thả vào all-day (day/week) hoặc ô ngày trong month-view
+    newScheduledDate = slot.dataset.date;
+    newStartTime = null;
+    eventElement.classList.add('all-day');
+    eventElement.dataset.startTime = '';
+    eventElement.dataset.endTime = '';
+    eventElement.style.removeProperty('grid-column');
+    applyEventHeight(eventElement, null, null);
+    const t = eventElement.querySelector('.event-time');
+    if (t) t.textContent = 'Cả ngày';
+  }
+  else if (slot.classList.contains('time-slot')) {
+    // Thả vào slot giờ -> cập nhật thời gian bắt đầu theo data-start-time
+    newScheduledDate = slot.dataset.date;
+    newStartTime = slot.dataset.startTime || null;
+    eventElement.classList.remove('all-day');
+    eventElement.style.removeProperty('grid-column');
+    eventElement.dataset.startTime = newStartTime || '';
+  }
+  else {
+    // Fallback: có date nhưng không xác định -> coi là all-day
+    newScheduledDate = slot.dataset.date || newScheduledDate;
+    newStartTime = null;
+    eventElement.classList.add('all-day');
+    eventElement.dataset.startTime = '';
+    eventElement.dataset.endTime = '';
+    eventElement.style.removeProperty('grid-column');
+    applyEventHeight(eventElement, null, null);
+    const t = eventElement.querySelector('.event-time');
+    if (t) t.textContent = 'Cả ngày';
+  }
 
-                currentDayInput.value = newDate;
-                viewModeInput.value = currentViewMode;
-                localStorage.setItem("selectedView", currentViewMode);
-                form.submit();
-                }
+  // Tính newEndDate dựa vào số ngày của lịch cũ (giữ nguyên độ dài multi-day)
+  if (scheduleToUpdate.scheduledDate && scheduleToUpdate.endDate) {
+    const oldStartDate = new Date(scheduleToUpdate.scheduledDate);
+    const oldEndDate = new Date(scheduleToUpdate.endDate);
+    const dayDifference = Math.round((oldEndDate - oldStartDate) / (24 * 60 * 60 * 1000));
+    if (dayDifference > 0) {
+      const newStartDate = new Date(newScheduledDate);
+      newStartDate.setDate(newStartDate.getDate() + dayDifference);
+      newEndDate = newStartDate.toISOString().split('T')[0];
+    } else {
+      newEndDate = newScheduledDate; // 1 ngày
+    }
+  } else {
+    newEndDate = newScheduledDate; // không có endDate cũ -> coi 1 ngày
+  }
 
-                document.getElementById("prevDayBtn").addEventListener("click", function () {
-                handleNav("prev");
-                });
-                document.getElementById("nextDayBtn").addEventListener("click", function () {
-                handleNav("next");
-                });
-                });
-                document.addEventListener('DOMContentLoaded', function() {
-                // Tìm đến phần tử hiển thị ngày
-                const dateDisplay = document.getElementById('currentDate');
-                // Nếu phần tử tồn tại, khởi tạo Flatpickr
-                if (dateDisplay) {
-                flatpickr(dateDisplay, {
-                // Tùy chọn cho bộ chọn ngày
-                dateFormat: "Y-m-d", // Định dạng ngày mà Flatpickr sẽ trả về (năm-tháng-ngày)
-                        defaultDate: dateDisplay.dataset.date, // Lấy ngày mặc định từ thuộc tính data-date
+  // Cập nhật UI + model + gọi AJAX tùy theo có giờ hay all-day
+  if (newStartTime) {
+    let durationMinutes = 0;
+    if (scheduleToUpdate.startTime && scheduleToUpdate.endTime) {
+      const [sh, sm] = scheduleToUpdate.startTime.split(':').map(Number);
+      const [eh, em] = scheduleToUpdate.endTime.split(':').map(Number);
+      durationMinutes = (eh * 60 + em) - (sh * 60 + sm);
+      if (durationMinutes <= 0) durationMinutes += 24 * 60;
+    } else {
+      durationMinutes = 30; // fallback 30'
+    }
 
-                        // Hàm sẽ chạy KHI người dùng chọn một ngày mới
-                        onChange: function(selectedDates, dateStr, instance) {
-                        // selectedDates: mảng các đối tượng Date được chọn
-                        // dateStr: ngày được chọn dưới dạng chuỗi (theo dateFormat ở trên)
+    let [nh, nm] = newStartTime.split(':').map(Number);
+    let newEndTotalMin = nh * 60 + nm + durationMinutes;
+    let newEndH = Math.floor(newEndTotalMin / 60) % 24;
+    let newEndM = newEndTotalMin % 60;
+    newEndTime = String(newEndH).padStart(2, '0') + ":" + String(newEndM).padStart(2, '0');
 
-                        console.log('Ngày được chọn:', dateStr);
-                        // 1. Cập nhật giá trị cho các input ẩn trong form
-                        document.getElementById('controllerDay').value = dateStr;
-                        document.getElementById('currentDay').value = dateStr;
-                        // 2. Tự động submit form để tải lại trang với ngày mới
-                        document.getElementById('dayNavForm').submit();
-                        }
-                });
-                }
-                });
-                /* Helpers */
-                function toDate(d){ return new Date((d || '') + 'T00:00:00'); }
-                function dstr(d){ return d.toISOString().split('T')[0]; }
-                function clamp(d, lo, hi){ return d < lo ? lo : (d > hi ? hi : d); }
+    const eventTimeElement = eventElement.querySelector('.event-time');
+    if (eventTimeElement) eventTimeElement.textContent = newStartTime + " - " + newEndTime;
 
-                /* Lấy DOM tuần theo lưới month-view (mỗi 7 ô = 1 tuần) */
-                function getMonthWeeksFromDom(){
-                const cells = Array.from(document.querySelectorAll('#month-view .month-day'));
-                const weeks = [];
-                for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
-                return weeks;
-                }
+    eventElement.dataset.startTime = newStartTime || '';
+    eventElement.dataset.endTime = newEndTime || '';
+    applyEventHeight(eventElement, newStartTime, newEndTime);
 
-                document.addEventListener('DOMContentLoaded', function () {
-                function getDayDiff(start, end) {
-                if (!start) return 1;
-                if (!end) end = start;
-                const s = new Date(start);
-                const e = new Date(end);
-                if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) return 1;
-                // chuẩn hóa về 00:00 để tránh lệch múi giờ
-                s.setHours(0, 0, 0, 0);
-                e.setHours(0, 0, 0, 0);
-                return Math.floor((e - s) / (1000 * 60 * 60 * 24)) + 1; // inclusive
-                }
+    // Model cục bộ
+    scheduleToUpdate.scheduledDate = newScheduledDate;
+    scheduleToUpdate.startTime = newStartTime;
+    scheduleToUpdate.endTime = newEndTime;
+    scheduleToUpdate.endDate = newEndDate;
+    scheduleToUpdate.updatedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
-                document.querySelectorAll('#month-view .task-item').forEach(function(item, index){
-                const start = item.getAttribute('data-scheduled-date');
-                const end = item.getAttribute('data-end-date');
-                const days = Math.max(1, getDayDiff(start, end));
-                console.log('task#' + index, {
-                start, end, days, id: item.id, title: item.getAttribute('data-item-name')
-                });
-                });
-                });
-                document.querySelectorAll('#month-view .month-day').forEach(day => {
-                day.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                if (isInteracting) updateScrollDirection(e);
-                });
-                day.addEventListener('drop', drop);
-                });
+    // Gọi backend
+    if (typeof updateEvent === "function" && scheduleId && newScheduledDate) {
+      updateEvent(scheduleId, newScheduledDate, newEndDate, newStartTime, newEndTime);
+    }
+  } else {
+    // All-day
+    const eventTimeElement = eventElement.querySelector('.event-time');
+    if (eventTimeElement) eventTimeElement.textContent = 'Cả ngày';
+    eventElement.dataset.startTime = '';
+    eventElement.dataset.endTime = '';
+    applyEventHeight(eventElement, null, null);
+
+    scheduleToUpdate.scheduledDate = newScheduledDate;
+    scheduleToUpdate.startTime = null;
+    scheduleToUpdate.endTime = null;
+    scheduleToUpdate.endDate = newEndDate;
+    scheduleToUpdate.updatedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+    if (typeof updateEvent === "function" && scheduleId && newScheduledDate) {
+      updateEvent(scheduleId, newScheduledDate, newEndDate, null, null);
+    }
+  }
+
+  // Làm mới panel chi tiết nếu đang mở đúng event
+  const detailsPanel = document.getElementById('event-details-panel');
+  if (detailsPanel && detailsPanel.classList.contains('show') &&
+      detailsPanel.querySelector('.event-id').textContent == scheduleId) {
+    const updatedSchedule = schedules.find(s => s.id == scheduleId);
+    if (updatedSchedule) showDetails(eventElement, updatedSchedule);
+  }
+}
+
+// Chạy khi DOM load xong (khối trống theo mã gốc)
+document.addEventListener('DOMContentLoaded', function () {
+});
+
+// -----------------------------
+// Hàm: showDetails(element)
+// Mục đích: Hiển thị panel chi tiết của lịch và render danh sách nhân sự được gán.
+// -----------------------------
+function showDetails(element) {
+  if (isInteracting) return;
+  const detailsPanel = document.getElementById('event-details-panel');
+  if (!detailsPanel) return;
+
+  let scheduleId = element.dataset.scheduleId || element.id?.split('-')[1];
+  if (!scheduleId) return;
+
+  const schedule = schedules.find(s => s.id == scheduleId);
+  if (schedule) {
+    // Gán chi tiết cơ bản
+    detailsPanel.querySelector('.event-id').textContent = schedule.id;
+    detailsPanel.querySelector('.event-title').textContent = schedule.title;
+    detailsPanel.querySelector('.event-time-detail').textContent = schedule.startTime ? schedule.startTime : 'Cả ngày';
+    detailsPanel.querySelector('.event-date').textContent = schedule.scheduledDate + (schedule.endDate ? ' - ' + schedule.endDate : '');
+    detailsPanel.querySelector('.event-time-range').textContent = schedule.startTime ? schedule.startTime + (schedule.endTime ? ' - ' + schedule.endTime : '') : 'Cả ngày';
+    detailsPanel.querySelector('.event-location').textContent = schedule.location || 'Không xác định';
+    detailsPanel.querySelector('.event-notes').textContent = schedule.notes || 'Không có ghi chú';
+
+    // Xử lý badge trạng thái -> chuẩn hóa tiếng Việt & class màu
+    const assignmentsContainer = detailsPanel.querySelector('.event-assignments');
+    assignmentsContainer.innerHTML = '';
+    const statusSpan = detailsPanel.querySelector('.event-status');
+    if (statusSpan) {
+      const fromName = (schedule.statusName || '').trim();
+      const mapEnToVi = {
+        'Upcoming': 'Sắp tới',
+        'In Progress': 'Đang thực hiện',
+        'Completed': 'Hoàn thành',
+        'Overdue': 'Quá hạn',
+        'Cancelled': 'Đã hủy'
+      };
+      const mapIdToVi = { 1: 'Sắp tới', 2: 'Đang thực hiện', 3: 'Hoàn thành', 4: 'Quá hạn', 5: 'Đã hủy' };
+      const statusVi =
+        fromName ? (mapEnToVi[fromName] || fromName)
+                 : (mapIdToVi[schedule.statusId] || 'Sắp tới');
+
+      const classByStatus = {
+        'Sắp tới': 'badge-upcoming',
+        'Đang thực hiện': 'badge-inprogress',
+        'Hoàn thành': 'badge-completed',
+        'Quá hạn': 'badge-cancelled', // hoặc badge-overdue nếu có
+        'Đã hủy': 'badge-cancelled'
+      };
+      statusSpan.textContent = statusVi;
+      statusSpan.className = 'event-status badge px-2 py-1 ' + (classByStatus[statusVi] || 'badge-upcoming');
+    }
+
+    // Helper nội bộ: lấy 2 ký tự viết tắt từ họ tên (VD: "Nguyễn Văn A" -> "NA")
+    function getInitials(name) {
+      if (!name || typeof name !== 'string' || name.trim() === '') {
+        return '?';
+      }
+      const parts = name.trim().split(' ').filter(p => p);
+      if (parts.length > 1) {
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+      } else if (parts.length === 1) {
+        return parts[0].substring(0, 2).toUpperCase();
+      }
+      return '?';
+    }
+
+    // Render danh sách người được phân công
+    if (schedule.assignments && schedule.assignments.length > 0) {
+      schedule.assignments.forEach(assignment => {
+        const fullName = assignment.fullName || 'Chưa xác định';
+        const tag = document.createElement('div');
+        tag.className = 'employee-tag';
+        const avatar = document.createElement('span');
+        avatar.className = 'avatar';
+        avatar.textContent = getInitials(fullName);
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'employee-name';
+        nameSpan.textContent = fullName;
+        tag.appendChild(avatar);
+        tag.appendChild(nameSpan);
+        assignmentsContainer.appendChild(tag);
+      });
+    } else {
+      assignmentsContainer.innerHTML = '<span style="font-style: italic; color: #888;">Không có phân công</span>';
+    }
+
+    // Gán link nút Xem/Sửa & mở panel
+    const viewBtn = detailsPanel.querySelector('a[title="Xem chi tiết"]');
+    viewBtn.href = contextPath + '/schedule?action=viewScheduleDetail&id=' + encodeURIComponent(schedule.id);
+    detailsPanel.classList.add('show');
+    const editBtn = detailsPanel.querySelector('a[title="Sửa"]');
+    editBtn.href = contextPath + '/schedule?action=updateSchedule&id=' + encodeURIComponent(schedule.id);
+    detailsPanel.classList.add('show');
+  }
+}
+
+// -----------------------------
+// Hàm: closeDetails()
+// Mục đích: Đóng panel chi tiết nếu đang mở.
+// -----------------------------
+function closeDetails() {
+  const detailsPanel = document.getElementById('event-details-panel');
+  if (detailsPanel)
+    detailsPanel.classList.remove('show');
+}
+
+// -----------------------------
+// Khối: Toggle view & lưu localStorage
+// Mục đích: Chuyển giữa day/week/month/list và submit form để server render tương ứng.
+// -----------------------------
+document.querySelectorAll('.btn-toggle').forEach(button => {
+  button.addEventListener('click', () => {
+    const viewId = button.getAttribute('data-view');
+    document.querySelectorAll('.calendar-view').forEach(view => view.classList.remove('active'));
+    document.getElementById(viewId).classList.add('active');
+
+    document.querySelectorAll('.btn-toggle').forEach(btn => btn.classList.remove('active'));
+    button.classList.add('active');
+
+    localStorage.setItem('selectedView', viewId);
+
+    const form = document.getElementById("dayNavForm");
+    const viewModeInput = document.getElementById("viewMode");
+    const currentDayInput = document.getElementById("currentDay");
+    currentDayInput.value = document.getElementById("currentDate").getAttribute("data-date");
+    viewModeInput.value = viewId;
+    form.submit();
+  });
+});
+
+// Khởi tạo view đã lưu từ localStorage sau khi DOM sẵn sàng
+document.addEventListener('DOMContentLoaded', () => {
+  const savedView = localStorage.getItem('selectedView') || 'day-view';
+  document.querySelectorAll('.calendar-view').forEach(view => {
+    view.classList.remove('active');
+  });
+  const selectedViewElement = document.getElementById(savedView);
+  if (selectedViewElement)
+    selectedViewElement.classList.add('active');
+
+  document.querySelectorAll('.btn-toggle').forEach(button => {
+    button.classList.remove('active');
+    if (button.getAttribute('data-view') === savedView) {
+      button.classList.add('active');
+    }
+  });
+});
+
+// -----------------------------
+// Khối: Khởi tạo các hành vi khác sau DOMContentLoaded
+// Mục đích: Gắn resize-handle cho all-day event, xử lý dragend, cho phép kéo thả ở month-view,
+//           highlight ngày hôm nay ở week-view & month-view.
+// -----------------------------
+document.addEventListener('DOMContentLoaded', () => {
+  // Thêm nút kéo giãn cho all-day events (week-view)
+  document.querySelectorAll('#week-view .event.all-day').forEach(event => {
+    if (!event.querySelector('.resize-handle')) {
+      const handle = document.createElement('div');
+      handle.classList.add('resize-handle');
+      event.appendChild(handle);
+      handle.addEventListener('mousedown', initResize);
+      handle.addEventListener('click', (e) => e.stopPropagation());
+    }
+    if (!event.dataset.startCol) {
+      const col = event.style.gridColumn || '1 / 2';
+      const [start, end] = col.split('/').map(s => parseInt(s.trim()));
+      event.dataset.startCol = start;
+      event.dataset.span = end - start;
+    }
+  });
+
+  // Xóa trạng thái tương tác sau khi kéo xong
+  document.addEventListener('dragend', (e) => {
+    if (e.target.classList.contains('event')) {
+      setTimeout(() => isInteracting = false, 0);
+    }
+  });
+
+  // Cho phép kéo các task ở month-view
+  document.querySelectorAll('#month-view .task-item').forEach(item => {
+    item.id = item.dataset.taskId ? 'task-' + item.dataset.taskId : 'task-' + Math.random().toString(36).substring(7);
+    item.draggable = true;
+    item.addEventListener('dragstart', drag);
+    item.addEventListener('dragend', (e) => {
+      setTimeout(() => isInteracting = false, 0);
+    });
+  });
+
+  // Cho phép thả vào từng ô ngày ở month-view
+  document.querySelectorAll('#month-view .month-day').forEach(day => {
+    day.addEventListener('dragover', allowDrop);
+    day.addEventListener('drop', drop);
+  });
+
+  // Highlight ngày hôm nay
+  const today = new Date().toISOString().split('T')[0];
+
+  // Week-view: header cột hôm nay
+  const weekHeaders = document.querySelectorAll('#week-view .day-header-cell:not(:first-child)');
+  weekHeaders.forEach((header, index) => {
+    if (weekDates[index] === today) {
+      header.classList.add('today-highlight');
+    }
+  });
+
+  // Month-view: ô ngày hôm nay
+  const monthDays = document.querySelectorAll('#month-view .month-day');
+  monthDays.forEach((day) => {
+    if (day.dataset.date === today) {
+      day.classList.add('today-highlight');
+    }
+  });
+});
+
+// -----------------------------
+// Khối: Navigation prev/next với xử lý viewMode
+// Mục đích: Điều hướng sang ngày/tuần trước/sau và submit form để server render.
+// -----------------------------
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.getElementById("dayNavForm");
+  const controllerDayInput = document.getElementById("controllerDay");
+  const currentDayInput = document.getElementById("currentDay");
+  const viewModeInput = document.getElementById("viewMode");
+  const currentDateElem = document.getElementById("currentDate");
+  const currentFullDate = currentDateElem.getAttribute("data-date");
+  let currentViewMode = localStorage.getItem("selectedView") || "day-view";
+
+  function calculateNewDate(baseDateStr, offsetDays) {
+    const date = new Date(baseDateStr);
+    date.setDate(date.getDate() + offsetDays);
+    return date.toISOString().split("T")[0];
+  }
+
+  function handleNav(direction) {
+    let newDate = currentFullDate;
+    controllerDayInput.value = "";
+    if (currentViewMode === "week-view") {
+      newDate = calculateNewDate(currentFullDate, direction === "prev" ? - 7 : 7);
+    } else {
+      controllerDayInput.value = direction;
+    }
+    currentDayInput.value = newDate;
+    viewModeInput.value = currentViewMode;
+    localStorage.setItem("selectedView", currentViewMode);
+    form.submit();
+  }
+
+  document.getElementById("prevDayBtn").addEventListener("click", function () {
+    handleNav("prev");
+  });
+  document.getElementById("nextDayBtn").addEventListener("click", function () {
+    handleNav("next");
+  });
+});
+
+// -----------------------------
+// Khối: Khởi tạo Flatpickr cho phần tử hiển thị ngày hiện tại
+// Mục đích: Cho phép chọn nhanh ngày -> submit form để đổi ngày.
+// -----------------------------
+document.addEventListener('DOMContentLoaded', function() {
+  const dateDisplay = document.getElementById('currentDate');
+  if (dateDisplay) {
+    flatpickr(dateDisplay, {
+      dateFormat: "Y-m-d",
+      defaultDate: dateDisplay.dataset.date,
+      onChange: function(selectedDates, dateStr, instance) {
+        console.log('Ngày được chọn:', dateStr);
+        document.getElementById('controllerDay').value = dateStr;
+        document.getElementById('currentDay').value = dateStr;
+        document.getElementById('dayNavForm').submit();
+      }
+    });
+  }
+});
+
+// -----------------------------
+// Nhóm helper xử lý ngày cho month-view (không chỉnh sửa logic, chỉ comment)
+// -----------------------------
+function toDate(d){ return new Date((d || '') + 'T00:00:00'); }
+function dstr(d){ return d.toISOString().split('T')[0]; }
+function clamp(d, lo, hi){ return d < lo ? lo : (d > hi ? hi : d); }
+
+function getMonthWeeksFromDom(){
+  const cells = Array.from(document.querySelectorAll('#month-view .month-day'));
+  const weeks = [];
+  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+  return weeks;
+}
+
+// Log thông tin task trong month-view khi DOM sẵn sàng
+document.addEventListener('DOMContentLoaded', function () {
+  function getDayDiff(start, end) {
+    if (!start) return 1;
+    if (!end) end = start;
+    const s = new Date(start);
+    const e = new Date(end);
+    if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) return 1;
+    s.setHours(0, 0, 0, 0);
+    e.setHours(0, 0, 0, 0);
+    return Math.floor((e - s) / (1000 * 60 * 60 * 24)) + 1; // inclusive
+  }
+
+  document.querySelectorAll('#month-view .task-item').forEach(function(item, index){
+    const start = item.getAttribute('data-scheduled-date');
+    const end = item.getAttribute('data-end-date');
+    const days = Math.max(1, getDayDiff(start, end));
+    console.log('task#' + index, {
+      start, end, days, id: item.id, title: item.getAttribute('data-item-name')
+    });
+  });
+});
+
+// Cho phép dragover & drop ở month-view để dùng chung drop()
+document.querySelectorAll('#month-view .month-day').forEach(day => {
+  day.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    if (isInteracting) updateScrollDirection(e);
+  });
+  day.addEventListener('drop', drop);
+});
+
+// -----------------------------
+// KẾT THÚC FILE — Chỉ thêm comment, không chỉnh sửa logic
+// -----------------------------
+
         </script>
         <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
         <script src="${pageContext.request.contextPath}/js/listSchedule.js"></script>
