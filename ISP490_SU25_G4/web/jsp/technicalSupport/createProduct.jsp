@@ -1,7 +1,7 @@
 <%-- 
     Document   : createProduct
     Created on : Jun 14, 2025, 1:36:08 PM
-    Author     : NGUYEN MINH
+    Author     : Hai Huy
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
@@ -29,6 +29,9 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/createProduct.css">
     </head>
     <body>
+        <style>
+          
+        </style>
         <div class="app-container">
             <jsp:include page="/mainMenu.jsp"/>
             <main class="main-content">
@@ -112,17 +115,26 @@
 
                             <div class="form-actions">
                                 <a href="product?action=list" class="btn-form"><i data-feather="x"></i><span>Hủy</span></a>
-                                <button type="submit" class="btn-form primary"><i data-feather="save"></i><span>Lưu sản phẩm</span></button>
+                                <button type="submit" id="btnSave" class="btn-form primary"><i data-feather="save"></i><span>Lưu sản phẩm</span></button>
                             </div>
                         </form>
                     </div>
+
                 </section>
+                <%-- Overlay loading (đặt trước </body>) --%>
+                <div id="savingOverlay" class="loading-overlay" aria-hidden="true">
+                    <div class="loading-card">
+                        <div class="spinner-border" role="status" aria-hidden="true"></div>
+                        <span>Đang lưu thay đổi…</span>
+                    </div>
+                </div>
             </main>
         </div>
 
         <script>
             feather.replace();
         </script>
+        <script>window.appContextPath = '${pageContext.request.contextPath}';</script>
         <script src="${pageContext.request.contextPath}/js/createProduct.js"></script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>
     </body>

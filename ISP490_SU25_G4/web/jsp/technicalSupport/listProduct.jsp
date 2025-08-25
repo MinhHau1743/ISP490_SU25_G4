@@ -1,3 +1,9 @@
+<%-- 
+    Document   : listProduct
+    Created on : Jun 17, 2025
+    Author     : Hai Huy
+    Description: Restructured layout and added HTML5 validation.
+--%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
@@ -110,8 +116,11 @@
                                     <c:forEach var="p" items="${productList}">
                                         <div class="product-card">
                                             <div class="card-image">
-                                                <img class="modal-img" src="${pageContext.request.contextPath}/image/${p.image}" alt="Ảnh sản phẩm"
+                                                <img class="modal-img"
+                                                     src="${pageContext.request.contextPath}/image/${empty p.image ? 'na.jpg' : p.image}?v=${p.updatedAt.time}"
+                                                     alt="Ảnh sản phẩm"
                                                      style="width: 100%; height: auto;"
+                                                     decoding="async" loading="lazy" fetchpriority="low"
                                                      onerror="this.src='${pageContext.request.contextPath}/image/na.jpg'" />
                                             </div>
                                             <div class="card-content">
@@ -132,17 +141,22 @@
                                                         </span>
                                                     </div>
                                                     <div class="action-buttons">
+                                                        <%-- Nút Xem --%>
                                                         <a href="product?action=view&id=${p.id}" title="Xem chi tiết" class="action-view">
-                                                            <i data-feather="eye" style="stroke: #17a2b8;"></i>
+                                                            <i data-feather="eye"></i>
                                                         </a>
+
+                                                        <%-- Nút Sửa (hiển thị cho Admin và Kĩ thuật) --%>
                                                         <c:if test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Kĩ thuật'}">
                                                             <a href="product?action=edit&id=${p.id}" title="Chỉnh sửa" class="action-edit">
-                                                                <i data-feather="edit-2" style="stroke: #ffc107;"></i>
+                                                                <i data-feather="edit-2"></i>
                                                             </a>
                                                         </c:if>
+
+                                                        <%-- Nút Xóa (chỉ hiển thị cho Admin) --%>
                                                         <c:if test="${sessionScope.userRole == 'Admin'}">
                                                             <a href="#" data-id="${p.id}" data-name="${p.name}" title="Xóa" class="action-delete delete-trigger-btn">
-                                                                <i data-feather="trash-2" style="stroke: #dc3545;"></i>
+                                                                <i data-feather="trash-2"></i>
                                                             </a>
                                                         </c:if>
                                                     </div>
@@ -182,14 +196,20 @@
                                                     <td>${p.createdByName}</td>
                                                     <td>${p.updatedByName}</td>
                                                     <td class="text-center">
-                                                        <div class="btn-group" role="group" aria-label="Hành động sản phẩm">
-                                                            <a href="product?action=view&id=${p.id}" title="Xem" class="btn btn-sm btn-info" data-toggle="tooltip"><i data-feather="eye"></i></a>
-                                                                <c:if test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Kĩ thuật'}">
-                                                                <a href="product?action=edit&id=${p.id}" title="Sửa" class="btn btn-sm btn-warning text-white" data-toggle="tooltip"><i data-feather="edit-2"></i></a>
-                                                                </c:if>
-                                                                <c:if test="${sessionScope.userRole == 'Admin'}">
-                                                                <a href="#" data-id="${p.id}" title="Xóa" class="btn btn-sm btn-danger delete-trigger-btn" data-toggle="tooltip"><i data-feather="trash-2"></i></a>
-                                                                </c:if>
+                                                        <div class="action-buttons" role="group" aria-label="Hành động sản phẩm">
+                                                            <a href="product?action=view&id=${p.id}" title="Xem chi tiết" class="action-view">
+                                                                <i data-feather="eye"></i>
+                                                            </a>
+                                                            <c:if test="${sessionScope.userRole == 'Admin' || sessionScope.userRole == 'Kĩ thuật'}">
+                                                                <a href="product?action=edit&id=${p.id}" title="Chỉnh sửa" class="action-edit">
+                                                                    <i data-feather="edit-2"></i>
+                                                                </a>
+                                                            </c:if>
+                                                            <c:if test="${sessionScope.userRole == 'Admin'}">
+                                                                <a href="#" data-id="${p.id}" data-name="${p.name}" title="Xóa" class="action-delete delete-trigger-btn">
+                                                                    <i data-feather="trash-2"></i>
+                                                                </a>
+                                                            </c:if>
                                                         </div>
                                                     </td>
                                                 </tr>

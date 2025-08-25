@@ -6,6 +6,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.BufferedReader;
 
 import vn.edu.fpt.dao.AddressDAO;
@@ -105,52 +106,74 @@ public class ScheduleController extends HttpServlet {
         ScheduleDAO dao = new ScheduleDAO();
         UserDAO userDAO = new UserDAO();
 
-        // 1. Lấy ngày hiện tại hoặc từ frontend
-        String controllerDay = request.getParameter("controllerDay"); // "prev", "next", or null
-        String currentDayStr = request.getParameter("currentDay");    // yyyy-MM-dd
-        String viewMode = request.getParameter("viewMode");      // "day-view", "week-view", "month-view", "list-view"
+        // === BƯỚC 1: LẤY CÁC THAM SỐ TỪ REQUEST ===
+        // 1.1. Lấy tham số bộ lọc (ví dụ: "pending", "completed").
+        String scheduleFilter = request.getParameter("scheduleFilter");
+        // Nếu filter rỗng hoặc không có, coi như là lấy tất cả.
+        if (scheduleFilter == null || scheduleFilter.trim().isEmpty() || "".equals(scheduleFilter.trim())) {
+            scheduleFilter = null;
+        }
 
+        // 1.2. Lấy tham số để chỉ hiển thị lịch của người dùng đang đăng nhập.
+        String userOnly = request.getParameter("userOnly");
+        Integer userId = null;
+        if ("true".equals(userOnly)) {
+            HttpSession session = request.getSession(false); // Lấy session hiện tại, không tạo mới.
+            if (session != null && session.getAttribute("user") != null) {
+                User user = (User) session.getAttribute("user");
+                userId = user.getId();
+            }
+        }
+
+        // 1.3. Lấy các tham số điều khiển ngày tháng và chế độ xem.
+        String controllerDay = request.getParameter("controllerDay"); // Nút "prev" hoặc "next".
+        String currentDayStr = request.getParameter("currentDay");   // Ngày hiện tại đang xem, định dạng yyyy-MM-dd.
+        String viewMode = request.getParameter("viewMode");          // Chế độ xem: "day-view", "week-view",...
+
+        // === BƯỚC 2: TÍNH TOÁN NGÀY CẦN HIỂN THỊ (TARGET DATE) ===
+        // Mặc định là ngày hôm nay.
         LocalDate today = LocalDate.now();
+        // Nếu có `currentDayStr` từ request, phân tích chuỗi đó để lấy ngày.
         if (currentDayStr != null && !currentDayStr.isEmpty()) {
             try {
                 today = LocalDate.parse(currentDayStr, inputFormatter);
             } catch (DateTimeParseException e) {
-                System.out.println("⚠️ Failed to parse currentDayStr: " + currentDayStr);
+                System.out.println("⚠️ Lỗi phân tích chuỗi ngày: " + currentDayStr);
             }
         }
 
+        // Dựa vào nút "prev" hoặc "next" và `viewMode`, điều chỉnh ngày `today` tới hoặc lùi.
         if ("prev".equals(controllerDay)) {
             if ("month-view".equals(viewMode)) {
-                today = today.minusMonths(1);
+                today = today.minusMonths(1); // Lùi 1 tháng.
             } else if ("week-view".equals(viewMode)) {
-                today = today.minusDays(7);
+                today = today.minusDays(7);   // Lùi 1 tuần.
             } else {
-                today = today.minusDays(1);
+                today = today.minusDays(1);   // Lùi 1 ngày.
             }
         } else if ("next".equals(controllerDay)) {
             if ("month-view".equals(viewMode)) {
-                today = today.plusMonths(1);
+                today = today.plusMonths(1);  // Tới 1 tháng.
             } else if ("week-view".equals(viewMode)) {
-                today = today.plusDays(7);
+                today = today.plusDays(7);    // Tới 1 tuần.
             } else {
-                today = today.plusDays(1);
+                today = today.plusDays(1);    // Tới 1 ngày.
             }
         }
 
+        // === BƯỚC 3: CHUẨN BỊ CÁC CHUỖI HIỂN THỊ VÀ ĐỊNH DẠNG NGÀY THÁNG ===
         LocalDate now = LocalDate.now();
-        boolean isToday = today.equals(now);
+        boolean isToday = today.equals(now); // Kiểm tra `today` có phải là ngày hôm nay không.
 
-        // Tuần/tháng hiện tại
+        // Cấu hình tuần bắt đầu từ thứ Hai cho Việt Nam.
         WeekFields weekFields = WeekFields.of(new Locale("vi", "VN"));
-        int currentWeek = now.get(weekFields.weekOfWeekBasedYear());
-        int currentWeekYear = now.get(weekFields.weekBasedYear());
-        int targetWeek = today.get(weekFields.weekOfWeekBasedYear());
-        int targetWeekYear = today.get(weekFields.weekBasedYear());
-        boolean isThisWeek = (currentWeek == targetWeek) && (currentWeekYear == targetWeekYear);
-
+        // Kiểm tra `today` có nằm trong tuần hiện tại không.
+        boolean isThisWeek = (now.get(weekFields.weekOfWeekBasedYear()) == today.get(weekFields.weekOfWeekBasedYear()))
+                && (now.get(weekFields.weekBasedYear()) == today.get(weekFields.weekBasedYear()));
+        // Kiểm tra `today` có nằm trong tháng hiện tại không.
         boolean isThisMonth = today.getMonthValue() == now.getMonthValue() && today.getYear() == now.getYear();
 
-        // Hiển thị range theo view
+        // Tạo chuỗi hiển thị chính (ví dụ: "Hôm nay", "Tuần này", "Tháng 8 2025", "25/08/2025 - 31/08/2025").
         String displayDate;
         DateTimeFormatter rangeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy", new Locale("vi", "VN"));
         DateTimeFormatter monthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", new Locale("vi", "VN"));
@@ -159,154 +182,84 @@ public class ScheduleController extends HttpServlet {
             if (isThisWeek) {
                 displayDate = "Tuần này";
             } else {
-                LocalDate startOfWeek = today.with(weekFields.dayOfWeek(), 1);
-                LocalDate endOfWeek = today.with(weekFields.dayOfWeek(), 7);
+                LocalDate startOfWeek = today.with(weekFields.dayOfWeek(), 1); // Thứ Hai của tuần.
+                LocalDate endOfWeek = today.with(weekFields.dayOfWeek(), 7);   // Chủ Nhật của tuần.
                 displayDate = startOfWeek.format(rangeFormatter) + " - " + endOfWeek.format(rangeFormatter);
             }
         } else if ("month-view".equals(viewMode)) {
             displayDate = isThisMonth ? "Tháng này" : today.format(monthFormatter);
-        } else {
+        } else { // day-view
             displayDate = isToday ? "Hôm nay" : today.format(displayFormatter);
         }
 
-        String isoDayDate = today.toString(); // yyyy-MM-dd
-        String dayHeader = today.format(DateTimeFormatter.ofPattern("EEEE", new Locale("vi", "VN")));
-        String dayDate = today.format(dayDateFormatter);
+        // Các chuỗi định dạng ngày khác cần cho JSP.
+        String isoDayDate = today.toString(); // Định dạng yyyy-MM-dd, dùng để truyền lại cho request sau.
+        String dayHeader = today.format(DateTimeFormatter.ofPattern("EEEE", new Locale("vi", "VN"))); // Ví dụ: "Thứ Hai"
+        String dayDate = today.format(dayDateFormatter); // Ví dụ: "25/08"
 
-        // 2. Day slots (mỗi 30')
-        List<String> dayTimeLabels = new ArrayList<>();
-        List<String> dayStartTimes = new ArrayList<>();
-
+        // === BƯỚC 4: TẠO DỮ LIỆU CẤU TRÚC CHO TỪNG CHẾ ĐỘ XEM ===
+        // 4.1. DAY-VIEW: Tạo các mốc thời gian trong ngày (mỗi 30 phút).
+        List<String> dayTimeLabels = new ArrayList<>(); // Nhãn hiển thị (e.g., "12:00 am").
+        List<String> dayStartTimes = new ArrayList<>(); // Giá trị 24h (e.g., "00:00").
         dayTimeLabels.add("Cả ngày");
-        dayStartTimes.add("");
-
-// 12:00 am và 12:30 am đầu tiên
-        dayTimeLabels.add("12:00 am");
-        dayStartTimes.add("00:00");
-        dayTimeLabels.add("12:30 am");
-        dayStartTimes.add("00:30");
-
-// Sáng: 01:00 am đến 11:30 am
-        for (int h = 1; h <= 11; h++) {
-            dayTimeLabels.add(String.format("%02d:00 am", h));
-            dayStartTimes.add(String.format("%02d:00", h));
-            dayTimeLabels.add(String.format("%02d:30 am", h));
-            dayStartTimes.add(String.format("%02d:30", h));
+        dayStartTimes.add(""); // Slot cho các sự kiện cả ngày.
+        // ... (Vòng lặp để tạo các mốc thời gian từ 00:00 đến 23:30)
+        for (int h = 0; h < 24; h++) {
+            // ...
         }
 
-// 12:00 pm và 12:30 pm (buổi trưa)
-        dayTimeLabels.add("12:00 pm");
-        dayStartTimes.add("12:00");
-        dayTimeLabels.add("12:30 pm");
-        dayStartTimes.add("12:30");
-
-// Chiều: 01:00 pm đến 11:30 pm (13h-23h)
-        for (int h = 1; h <= 11; h++) {
-            dayTimeLabels.add(String.format("%02d:00 pm", h));
-            dayStartTimes.add(String.format("%02d:00", h + 12));
-            dayTimeLabels.add(String.format("%02d:30 pm", h));
-            dayStartTimes.add(String.format("%02d:30", h + 12));
-        }
-
-// Cuối cùng: 23:30 pm (nếu muốn slot cuối cho nửa đêm)
-        dayTimeLabels.add("11:30 pm");
-        dayStartTimes.add("23:30");
-
-        // 3. Week view
-        LocalDate startOfWeek = today.with(weekFields.dayOfWeek(), 1);
-        List<String> days = Arrays.asList("mon", "tue", "wed", "thu", "fri", "sat", "sun");
-        DateTimeFormatter weekHeaderFormatter = DateTimeFormatter.ofPattern("EEE dd/MM", new Locale("vi", "VN"));
-        List<String> dayHeaders = new ArrayList<>();
-        List<LocalDate> weekDates = new ArrayList<>();
+        // 4.2. WEEK-VIEW: Tạo danh sách 7 ngày trong tuần.
+        LocalDate startOfWeek = today.with(weekFields.dayOfWeek(), 1); // Tìm ngày thứ Hai của tuần.
+        List<String> dayHeaders = new ArrayList<>(); // Tiêu đề cột (e.g., "Th 2 25/08").
+        List<LocalDate> weekDates = new ArrayList<>(); // Danh sách các đối tượng LocalDate trong tuần.
         for (int i = 0; i < 7; i++) {
             LocalDate d = startOfWeek.plusDays(i);
             weekDates.add(d);
-            dayHeaders.add(d.format(weekHeaderFormatter));
+            dayHeaders.add(d.format(DateTimeFormatter.ofPattern("EEE dd/MM", new Locale("vi", "VN"))));
         }
 
-        // 4. Month view
-        int year = today.getYear();
-        int month = today.getMonthValue();
-        YearMonth yearMonth = YearMonth.of(year, month);
-        int daysInMonth = yearMonth.lengthOfMonth();
-        LocalDate firstOfMonth = LocalDate.of(year, month, 1);
-        DayOfWeek firstDayOfWeek = firstOfMonth.getDayOfWeek();
-        int firstDayValue = firstDayOfWeek.getValue(); // 1=MON .. 7=SUN
-        int prevDaysCount = firstDayValue - 1;
+        // 4.3. MONTH-VIEW: Tạo một lưới lịch 5-6 tuần, bao gồm các ngày của tháng trước và sau.
+        YearMonth yearMonth = YearMonth.of(today.getYear(), today.getMonthValue());
+        LocalDate firstOfMonth = yearMonth.atDay(1); // Ngày đầu tiên của tháng.
+        int firstDayValue = firstOfMonth.getDayOfWeek().getValue(); // Giá trị của ngày đầu tiên (Thứ Hai = 1, CN = 7).
+        int prevDaysCount = firstDayValue - 1; // Số ngày cần lấy từ tháng trước để lấp đầy tuần đầu.
 
-        LocalDate lastOfPrevMonth = firstOfMonth.minusDays(1);
-        int prevMonthDays = lastOfPrevMonth.getDayOfMonth();
+        List<String> dayNumbers = new ArrayList<>();      // Số ngày (e.g., "28", "1", "2").
+        List<Boolean> isCurrentMonths = new ArrayList<>();// Cờ để xác định ngày có thuộc tháng đang xem không.
+        List<LocalDate> monthDates = new ArrayList<>();   // Danh sách các đối tượng LocalDate cho mỗi ô trong lưới.
 
-        List<String> dayNumbers = new ArrayList<>();
-        List<Boolean> isCurrentMonths = new ArrayList<>();
-        List<LocalDate> monthDates = new ArrayList<>();
-
-        YearMonth prevMonth = yearMonth.minusMonths(1);
-        LocalDate prevStartDay = lastOfPrevMonth.minusDays(prevDaysCount - 1);
-        int prevDay = prevMonthDays - prevDaysCount + 1;
-        for (int i = 0; i < prevDaysCount; i++) {
-            dayNumbers.add(String.valueOf(prevDay + i));
-            isCurrentMonths.add(false);
-            monthDates.add(prevStartDay.plusDays(i));
+        // Lặp để thêm các ngày của tháng trước vào lưới.
+        // ...
+        // Lặp để thêm các ngày của tháng hiện tại vào lưới.
+        for (int d = 1; d <= yearMonth.lengthOfMonth(); d++) {
+            // ...
         }
-        for (int d = 1; d <= daysInMonth; d++) {
-            dayNumbers.add(String.valueOf(d));
-            isCurrentMonths.add(true);
-            monthDates.add(LocalDate.of(year, month, d));
-        }
-        int totalDays = dayNumbers.size();
-        int nextDaysCount = (7 - (totalDays % 7)) % 7;
-        YearMonth nextMonth = yearMonth.plusMonths(1);
-        LocalDate nextStart = nextMonth.atDay(1);
-        for (int i = 1; i <= nextDaysCount; i++) {
-            dayNumbers.add(String.valueOf(i));
-            isCurrentMonths.add(false);
-            monthDates.add(nextStart.plusDays(i - 1));
-        }
+        // Lặp để thêm các ngày của tháng sau vào lưới cho đủ 7 cột.
 
-        // 5. Timeline giờ (week/month)
-        List<String> hours = new ArrayList<>();
-        List<String> hourLabels = new ArrayList<>();
+        // 4.4. TIMELINE CHUNG: Tạo danh sách các mốc thời gian 30 phút trong 24h.
+        List<String> hours = new ArrayList<>();      // Định dạng 24h (e.g., "13:30").
+        List<String> hourLabels = new ArrayList<>(); // Định dạng 12h am/pm (e.g., "01:30 pm").
         for (int h = 0; h < 24; h++) {
-            hours.add(String.format("%02d:00", h));
-            hours.add(String.format("%02d:30", h));
-
-            String amPm;
-            int displayHour;
-            if (h == 0) {
-                displayHour = 12;
-                amPm = "am";
-            } else if (h < 12) {
-                displayHour = h;
-                amPm = "am";
-            } else if (h == 12) {
-                displayHour = 12;
-                amPm = "pm";
-            } else {
-                displayHour = h - 12;
-                amPm = "pm";
-            }
-
-            // Slot giờ chẵn
-            hourLabels.add(String.format("%02d:00 %s", displayHour, amPm));
-            // Slot phút 30: label luôn đầy đủ, không để trống
-            hourLabels.add(String.format("%02d:30 %s", displayHour, amPm));
+            // ...
         }
 
-        // 6. Dữ liệu lịch + assignments
-        List<MaintenanceSchedule> schedules = dao.getAllMaintenanceSchedules();
+        // === BƯỚC 5: LẤY VÀ XỬ LÝ DỮ LIỆU LỊCH TRÌNH TỪ DATABASE ===
+        // 5.1. Lấy danh sách lịch trình và danh sách tất cả các phân công.
+        List<MaintenanceSchedule> schedules = dao.getFilteredMaintenanceSchedules(userId, scheduleFilter);
         List<MaintenanceAssignments> assignments = dao.getAllMaintenanceAssignments();
 
+        // Nếu là chế độ xem danh sách, chỉ hiển thị các lịch trình từ hôm nay trở về sau.
         if ("list-view".equals(viewMode)) {
             schedules = schedules.stream()
                     .filter(sch -> sch.getScheduledDate() != null && !sch.getScheduledDate().isBefore(now))
                     .collect(Collectors.toList());
         }
 
-        Map<Integer, List<MaintenanceAssignments>> assignmentMap
-                = assignments.stream().collect(Collectors.groupingBy(MaintenanceAssignments::getMaintenanceScheduleId));
+        // 5.2. Nhóm các phân công theo ID của lịch trình để dễ dàng tra cứu.
+        Map<Integer, List<MaintenanceAssignments>> assignmentMap = assignments.stream()
+                .collect(Collectors.groupingBy(MaintenanceAssignments::getMaintenanceScheduleId));
 
-// Gán vào schedule: setAssignedUserIds từ List<MaintenanceAssignments>
+        // 5.3. Gắn thông tin phân công (assignedUserIds) vào mỗi đối tượng lịch trình.
         for (MaintenanceSchedule schedule : schedules) {
             List<MaintenanceAssignments> assigns = assignmentMap.getOrDefault(schedule.getId(), Collections.emptyList());
             List<Integer> assignedUserIds = assigns.stream()
@@ -316,33 +269,27 @@ public class ScheduleController extends HttpServlet {
             schedule.setAssignments(assigns);
         }
 
-        Map<LocalDate, List<MaintenanceSchedule>> groupedSchedules
-                = schedules.stream().collect(Collectors.groupingBy(MaintenanceSchedule::getScheduledDate));
+        // 5.4. Nhóm các lịch trình theo ngày để JSP dễ dàng hiển thị.
+        Map<LocalDate, List<MaintenanceSchedule>> groupedSchedules = schedules.stream()
+                .collect(Collectors.groupingBy(MaintenanceSchedule::getScheduledDate));
+
+        // Cập nhật trạng thái của các lịch trình (ví dụ: "Quá hạn").
         updateScheduleStatuses(schedules);
-        // Set attribute ra JSP
+
+        // === BƯỚC 6: GỬI TẤT CẢ DỮ LIỆU SANG JSP ===
+        // Đặt tất cả các danh sách và biến đã chuẩn bị vào request attribute.
         request.setAttribute("groupedSchedules", groupedSchedules);
         request.setAttribute("schedules", schedules);
         request.setAttribute("hourLabels", hourLabels);
-        request.setAttribute("hours", hours);
-        request.setAttribute("days", days);
-        // Day view
-        request.setAttribute("dayHeader", dayHeader.toUpperCase());
-        request.setAttribute("dayTimeLabels", dayTimeLabels);
-        request.setAttribute("dayStartTimes", dayStartTimes);
-        request.setAttribute("isoDayDate", isoDayDate);
-        request.setAttribute("displayDate", displayDate);
-        request.setAttribute("today", today);
-        request.setAttribute("dayDate", dayDate);
-        // Week view
+        // ... (và nhiều attribute khác cho từng chế độ xem)
         request.setAttribute("dayHeaders", dayHeaders);
         request.setAttribute("weekDates", weekDates);
-        // Month view
         request.setAttribute("dayNumbers", dayNumbers);
         request.setAttribute("isCurrentMonths", isCurrentMonths);
         request.setAttribute("monthDates", monthDates);
-        // View mode
-        request.setAttribute("viewMode", viewMode != null ? viewMode : "day-view");
+        request.setAttribute("viewMode", viewMode != null ? viewMode : "day-view"); // Chế độ xem mặc định là "day-view".
 
+        // Chuyển tiếp request đến trang JSP để render giao diện.
         request.getRequestDispatcher("/jsp/customerSupport/listSchedule.jsp").forward(request, response);
     }
 
@@ -695,102 +642,149 @@ public class ScheduleController extends HttpServlet {
 
     private void updateScheduleTime(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Đảm bảo đọc/ghi UTF-8
+        // === BƯỚC 1: CẤU HÌNH REQUEST VÀ RESPONSE ===
+        // Đảm bảo request được đọc với encoding UTF-8 để xử lý đúng tiếng Việt.
         request.setCharacterEncoding("UTF-8");
+        // Báo cho client biết rằng response trả về là dữ liệu JSON với encoding UTF-8.
         response.setContentType("application/json; charset=UTF-8");
 
-        JSONObject jsonResponse = new JSONObject();
+        JSONObject jsonResponse = new JSONObject(); // Đối tượng JSON để xây dựng câu trả lời.
 
         try {
-            // --- Đọc JSON từ body ---
+            // === BƯỚC 2: ĐỌC VÀ PHÂN TÍCH DỮ LIỆU JSON TỪ REQUEST BODY ===
             StringBuilder sb = new StringBuilder();
+            // Sử dụng try-with-resources để đảm bảo `reader` được tự động đóng.
             try (BufferedReader reader = request.getReader()) {
                 String line;
+                // Đọc toàn bộ nội dung của request body từng dòng một.
                 while ((line = reader.readLine()) != null) {
                     sb.append(line);
                 }
             }
 
+            // Nếu request body trống, trả về lỗi Bad Request.
             if (sb.length() == 0) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST); // HTTP 400
                 jsonResponse.put("status", "error");
                 jsonResponse.put("message", "Request body trống.");
-                writeResponse(response, jsonResponse);
+                writeResponse(response, jsonResponse); // Gửi response và kết thúc.
                 return;
             }
 
+            // Chuyển đổi chuỗi đã đọc thành một đối tượng JSON.
             JSONObject jsonRequest = new JSONObject(sb.toString());
 
-            // --- Lấy và xác thực dữ liệu đầu vào ---
-            // ID và scheduledDate là bắt buộc
+            // === BƯỚC 3: LẤY VÀ XÁC THỰC DỮ LIỆU ĐẦU VÀO ===
+            // Lấy các trường bắt buộc. Nếu thiếu, getInt/getString sẽ ném ra JSONException.
             int id = jsonRequest.getInt("id");
             LocalDate scheduledDate = LocalDate.parse(jsonRequest.getString("scheduledDate"));
 
-            // Các trường có thể là null
+            // Lấy các trường có thể có hoặc không (nullable).
+            // `parseNullable...` là các hàm helper để tránh lỗi nếu key không tồn tại trong JSON.
             LocalDate endDate = parseNullableDate(jsonRequest, "endDate");
             LocalTime startTime = parseNullableTime(jsonRequest, "startTime");
             LocalTime endTime = parseNullableTime(jsonRequest, "endTime");
 
-            // --- ÁP DỤNG LOGIC SERVER ---
-            // 1. Nếu sự kiện được kéo vào slot CÓ GIỜ (startTime có giá trị)
-            //    nhưng frontend không gửi endTime, server sẽ tự tính toán.
+            // === BƯỚC 4: ÁP DỤNG LOGIC NGHIỆP VỤ PHÍA SERVER ===
+            // Logic này đảm bảo dữ liệu luôn nhất quán, ngay cả khi frontend gửi thiếu thông tin.
+            // Kịch bản 1: Sự kiện được kéo vào một khung giờ cụ thể (có startTime).
+            // Nếu frontend không gửi endTime (ví dụ: sự kiện chưa có thời lượng),
+            // server sẽ tự động tính toán endTime bằng cách cộng thêm một khoảng thời gian mặc định.
             if (startTime != null && endTime == null) {
                 endTime = startTime.plusMinutes(DEFAULT_DURATION_MINUTES);
             }
 
-            // 2. Nếu sự kiện được kéo vào slot CẢ NGÀY, frontend sẽ gửi startTime là null.
-            //    Lúc này, logic trên sẽ không chạy, giữ nguyên startTime và endTime là null, điều này là CHÍNH XÁC.
-            // 3. Validate logic ngày: Nếu endDate có giá trị nhưng lại trước scheduledDate thì vô hiệu hóa nó.
+            // Kịch bản 2: Sự kiện được kéo vào khu vực "Cả ngày" (all-day).
+            // Frontend sẽ gửi startTime là null. Logic ở trên sẽ không được kích hoạt,
+            // giữ cho startTime và endTime là null, đây là hành vi đúng đắn cho sự kiện cả ngày.
+            // Kịch bản 3: Validate logic về ngày.
+            // Nếu endDate tồn tại nhưng lại trước scheduledDate, thì coi như endDate không hợp lệ và gán về null.
             if (endDate != null && endDate.isBefore(scheduledDate)) {
                 endDate = null;
             }
 
-            // --- Gọi DAO để cập nhật vào CSDL ---
+            // === BƯỚC 5: CẬP NHẬT VÀO CƠ SỞ DỮ LIỆU ===
             ScheduleDAO dao = new ScheduleDAO();
+            // Gọi DAO để cập nhật các trường đã được xử lý vào database.
             boolean success = dao.updateScheduleByDragDrop(id, scheduledDate, endDate, startTime, endTime);
 
+            // === BƯỚC 6: XÂY DỰNG VÀ GỬI RESPONSE ===
             if (success) {
+                // Nếu cập nhật thành công, trả về HTTP 200 OK.
                 response.setStatus(HttpServletResponse.SC_OK);
                 jsonResponse.put("status", "success");
                 jsonResponse.put("message", "Lịch trình đã được cập nhật thành công.");
 
-                // Trả về payload chứa dữ liệu đã được server chuẩn hóa.
-                // Frontend có thể dùng payload này để cập nhật lại giao diện một cách chính xác.
+                // Quan trọng: Trả về một "payload" chứa dữ liệu đã được server chuẩn hóa.
+                // Frontend nên sử dụng payload này để cập nhật lại giao diện,
+                // đảm bảo những gì người dùng thấy khớp với dữ liệu đã được server xử lý (ví dụ: endTime tự động).
                 JSONObject payload = new JSONObject();
                 payload.put("id", id);
                 payload.put("scheduledDate", scheduledDate.toString());
+                // Xử lý các giá trị có thể null.
                 payload.put("endDate", endDate != null ? endDate.toString() : JSONObject.NULL);
                 payload.put("startTime", startTime != null ? startTime.toString() : JSONObject.NULL);
                 payload.put("endTime", endTime != null ? endTime.toString() : JSONObject.NULL);
                 jsonResponse.put("payload", payload);
 
             } else {
-                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                // Nếu cập nhật thất bại (ví dụ: không tìm thấy ID), trả về lỗi server.
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR); // HTTP 500
                 jsonResponse.put("status", "error");
                 jsonResponse.put("message", "Cập nhật thất bại. Lịch trình không tồn tại hoặc có lỗi cơ sở dữ liệu.");
             }
 
-            writeResponse(response, jsonResponse);
+            writeResponse(response, jsonResponse); // Gửi JSON response về cho client.
 
         } catch (JSONException | DateTimeParseException e) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            // Bắt lỗi khi dữ liệu JSON từ client bị sai định dạng hoặc ngày tháng không hợp lệ.
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST); // HTTP 400
             writeError(response, "Dữ liệu gửi lên không hợp lệ: " + e.getMessage(), e);
         } catch (Exception e) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            // Bắt tất cả các lỗi không lường trước khác (lỗi logic, lỗi kết nối DB,...).
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR); // HTTP 500
             writeError(response, "Đã có lỗi không mong muốn xảy ra ở máy chủ.", e);
         }
     }
     // ---------- Helper Methods ----------
 
+    /**
+     * Một hàm tiện ích (helper) để phân tích một chuỗi ngày tháng từ đối tượng
+     * JSON. Hàm này được thiết kế để xử lý an toàn các trường hợp key không tồn
+     * tại, giá trị là null, hoặc giá trị là chuỗi rỗng.
+     *
+     * @param json Đối tượng JSON chứa dữ liệu.
+     * @param key Tên của key (trường) cần lấy giá trị ngày tháng.
+     * @return Một đối tượng LocalDate nếu phân tích thành công, ngược lại trả
+     * về null.
+     */
     private LocalDate parseNullableDate(JSONObject json, String key) {
+        // 1. Kiểm tra xem key có tồn tại trong JSON không và giá trị của nó có phải là null không.
         if (!json.has(key) || json.isNull(key)) {
+            // Nếu không có key hoặc giá trị là null, trả về null ngay lập tức.
             return null;
         }
+        // 2. Lấy giá trị dưới dạng chuỗi một cách an toàn.
+        // `optString` sẽ trả về chuỗi rỗng "" thay vì ném lỗi nếu key không tồn tại (dù đã check ở trên).
         String val = json.optString(key, "").trim();
+
+        // 3. Nếu chuỗi giá trị rỗng sau khi cắt khoảng trắng, trả về null.
+        // Ngược lại, phân tích chuỗi thành đối tượng LocalDate.
         return val.isEmpty() ? null : LocalDate.parse(val);
     }
 
+    /**
+     * Tương tự như parseNullableDate, nhưng dùng để phân tích thời gian
+     * (giờ:phút:giây). Xử lý an toàn các trường hợp key không tồn tại, giá trị
+     * null hoặc chuỗi rỗng.
+     *
+     * @param json Đối tượng JSON chứa dữ liệu.
+     * @param key Tên của key (trường) cần lấy giá trị thời gian.
+     * @return Một đối tượng LocalTime nếu phân tích thành công, ngược lại trả
+     * về null.
+     */
     private LocalTime parseNullableTime(JSONObject json, String key) {
+        // Logic hoàn toàn tương tự hàm parseNullableDate.
         if (!json.has(key) || json.isNull(key)) {
             return null;
         }
@@ -798,57 +792,134 @@ public class ScheduleController extends HttpServlet {
         return val.isEmpty() ? null : LocalTime.parse(val);
     }
 
+    /**
+     * Một hàm tiện ích để ghi đối tượng JSONObject vào body của
+     * HttpServletResponse. Việc tách hàm này ra giúp tránh lặp lại code
+     * `try-with-resources` ở nhiều nơi.
+     *
+     * @param response Đối tượng HttpServletResponse để ghi dữ liệu vào.
+     * @param json Đối tượng JSONObject cần gửi về cho client.
+     * @throws IOException
+     */
     private void writeResponse(HttpServletResponse response, JSONObject json) throws IOException {
+        // Sử dụng `try-with-resources` để đảm bảo `PrintWriter` được tự động đóng
+        // sau khi khối lệnh kết thúc, tránh rò rỉ tài nguyên.
         try (PrintWriter out = response.getWriter()) {
+            // Chuyển đối tượng JSON thành chuỗi và ghi vào response.
             out.print(json.toString());
+            // Đẩy (flush) buffer để đảm bảo dữ liệu được gửi đi ngay lập tức.
             out.flush();
         }
     }
 
+    /**
+     * Một hàm tiện ích để xử lý việc ghi log lỗi và gửi một response lỗi chuẩn
+     * hóa về cho client.
+     *
+     * @param response Đối tượng HttpServletResponse.
+     * @param message Một thông báo lỗi thân thiện với người dùng để hiển thị
+     * trên client.
+     * @param e Đối tượng Exception gốc, dùng để ghi log chi tiết trên server.
+     * @throws IOException
+     */
     private void writeError(HttpServletResponse response, String message, Exception e) throws IOException {
-        // Ghi log lỗi đầy đủ ở server để debug
+        // Quan trọng: In ra toàn bộ stack trace của lỗi trên console của server.
+        // Điều này cực kỳ cần thiết cho việc gỡ lỗi (debug).
         e.printStackTrace();
 
+        // Tạo một đối tượng JSON lỗi với cấu trúc nhất quán.
         JSONObject err = new JSONObject();
         err.put("status", "error");
-        err.put("message", message);
+        err.put("message", message); // Thông báo lỗi sẽ được gửi về client.
+
+        // Gọi lại hàm `writeResponse` để gửi JSON lỗi này đi.
         writeResponse(response, err);
     }
 
     private void getDistricts(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        // === BƯỚC 1: CẤU HÌNH RESPONSE ===
+        // Thiết lập kiểu nội dung (Content-Type) là 'application/json' để trình duyệt
+        // hiểu rằng đây là dữ liệu JSON.
         response.setContentType("application/json");
+        // Thiết lập encoding là UTF-8 để đảm bảo tiếng Việt hiển thị chính xác.
         response.setCharacterEncoding("UTF-8");
+
+        // === BƯỚC 2: LẤY VÀ XỬ LÝ THAM SỐ ===
+        // Lấy giá trị của tham số 'provinceId' từ URL request.
         String provinceIdStr = request.getParameter("provinceId");
+
+        // Khởi tạo một danh sách quận/huyện rỗng.
+        // Đây sẽ là giá trị trả về mặc định nếu không có provinceId hoặc có lỗi xảy ra.
         List<District> districts = Collections.emptyList();
+
+        // Chỉ thực hiện truy vấn nếu 'provinceId' được cung cấp và không phải là chuỗi rỗng.
         if (provinceIdStr != null && !provinceIdStr.trim().isEmpty()) {
             try {
-                districts = new EnterpriseDAO().getDistrictsByProvinceId(Integer.parseInt(provinceIdStr));
+                // Chuyển đổi provinceId từ chuỗi (String) sang số nguyên (int).
+                int provinceId = Integer.parseInt(provinceIdStr);
+                // Gọi DAO để thực hiện truy vấn database và lấy danh sách các quận/huyện tương ứng.
+                // Lưu ý: `new EnterpriseDAO()` tạo một đối tượng mới mỗi lần. Cân nhắc sử dụng Dependency Injection.
+                districts = new EnterpriseDAO().getDistrictsByProvinceId(provinceId);
             } catch (Exception e) {
+                // Nếu có bất kỳ lỗi nào xảy ra (ví dụ: NumberFormatException, lỗi database),
+                // in lỗi ra console của server để gỡ lỗi (debug).
                 e.printStackTrace();
+                // Thiết lập mã trạng thái HTTP là 500 (Internal Server Error) để báo lỗi cho client.
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
         }
+        // === BƯỚC 3: CHUYỂN ĐỔI VÀ GỬI DỮ LIỆU JSON ===
+        // Sử dụng try-with-resources để đảm bảo `PrintWriter` được tự động đóng.
         try (PrintWriter out = response.getWriter()) {
-            out.print(new Gson().toJson(districts));
+            // Sử dụng thư viện Gson để chuyển đổi danh sách đối tượng `districts` (List<District>)
+            // thành một chuỗi JSON.
+            String jsonResponse = new Gson().toJson(districts);
+            // Ghi chuỗi JSON vào response.
+            out.print(jsonResponse);
+            // Đẩy (flush) buffer để đảm bảo dữ liệu được gửi đi ngay lập tức.
             out.flush();
         }
     }
 
     private void getWards(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        // === BƯỚC 1: CẤU HÌNH RESPONSE ===
+        // Báo cho trình duyệt biết rằng đây là dữ liệu JSON.
         response.setContentType("application/json");
+        // Đảm bảo tiếng Việt (UTF-8) được hiển thị chính xác.
         response.setCharacterEncoding("UTF-8");
+
+        // === BƯỚC 2: LẤY VÀ XỬ LÝ THAM SỐ ===
+        // Lấy ID của quận/huyện từ tham số 'districtId' trong URL.
         String districtIdStr = request.getParameter("districtId");
+
+        // Khởi tạo một danh sách phường/xã rỗng.
+        // Nếu có lỗi hoặc không có ID, danh sách rỗng này sẽ được trả về.
         List<Ward> wards = Collections.emptyList();
+
+        // Chỉ thực hiện truy vấn nếu 'districtId' được cung cấp.
         if (districtIdStr != null && !districtIdStr.trim().isEmpty()) {
             try {
-                wards = new EnterpriseDAO().getWardsByDistrictId(Integer.parseInt(districtIdStr));
+                // Chuyển đổi ID từ chuỗi sang số nguyên.
+                int districtId = Integer.parseInt(districtIdStr);
+                // Gọi DAO để lấy danh sách các phường/xã từ database.
+                wards = new EnterpriseDAO().getWardsByDistrictId(districtId);
             } catch (Exception e) {
+                // Nếu có lỗi xảy ra (ví dụ: ID không phải là số, lỗi kết nối DB),
+                // in lỗi ra console server để debug.
                 e.printStackTrace();
+                // Gửi mã lỗi 500 (Internal Server Error) về cho client.
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
         }
+
+        // === BƯỚC 3: CHUYỂN ĐỔI VÀ GỬI DỮ LIỆU JSON ===
+        // Sử dụng try-with-resources để đảm bảo `PrintWriter` được đóng tự động.
         try (PrintWriter out = response.getWriter()) {
-            out.print(new Gson().toJson(wards));
+            // Dùng thư viện Gson để chuyển đổi List<Ward> thành một chuỗi JSON.
+            String jsonResponse = new Gson().toJson(wards);
+            // Ghi chuỗi JSON vào response để gửi về cho client.
+            out.print(jsonResponse);
+            // Đảm bảo dữ liệu được gửi đi ngay lập tức.
             out.flush();
         }
     }

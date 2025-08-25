@@ -795,7 +795,7 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     font-size: 14px;
     height: 38px;
     width: 250px;
-}   
+}
 
 .filter-container {
     margin-top: 12px;
@@ -988,5 +988,24 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     display: inline-block;
     vertical-align: middle;
 }
+/* --- CSS cho các nút hành động (ĐÃ SỬA LỖI) --- */
 
+/* 1. Thiết lập màu xám mặc định cho tất cả icon (đổi i thành svg) */
+.action-buttons a svg {
+    stroke: #888; /* Màu xám mặc định */
+    transition: stroke 0.2s ease-in-out; /* Hiệu ứng chuyển màu mượt mà */
+}
+
+/* 2. Đổi màu khi di chuột qua từng nút cụ thể (đổi i thành svg) */
+.action-buttons a.action-view:hover svg {
+    stroke: #17a2b8; /* Màu xanh dương cho nút View */
+}
+
+.action-buttons a.action-edit:hover svg {
+    stroke: #ffc107; /* Màu vàng cho nút Edit */
+}
+
+.action-buttons a.action-delete:hover svg {
+    stroke: #dc3545; /* Màu đỏ cho nút Delete */
+}
 

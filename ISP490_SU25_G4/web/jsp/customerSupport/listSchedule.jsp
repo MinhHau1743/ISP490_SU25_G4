@@ -1,7 +1,7 @@
 <%--
     Document   : listSchedule.jsp
     Created on : Jun 21, 2025
-    Author     : NGUYEN MINH / Gemini
+    Author     : Hai Huy
 --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>

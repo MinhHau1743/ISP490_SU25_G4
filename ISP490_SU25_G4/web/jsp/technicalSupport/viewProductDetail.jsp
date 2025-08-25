@@ -1,7 +1,7 @@
 <%-- 
     Document   : viewProductDetail
     Created on : Jun 17, 2025, 10:14:47 AM
-    Author     : NGUYEN MINH
+    Author     : Hai Huy
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>

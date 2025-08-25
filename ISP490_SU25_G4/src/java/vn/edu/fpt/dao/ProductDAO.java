@@ -105,25 +105,20 @@ public class ProductDAO extends DBContext {
 
     public int insertProduct(Product p) {
         String sql = "INSERT INTO Products "
-                + "(name, product_code, image, origin, price, description, is_deleted, created_by, updated_by, created_at, updated_at) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        // KHẮC PHỤC: Quản lý connection bằng try-with-resources
+                + "(name, product_code, image, origin, price, description, is_deleted, created_by, created_at, updated_at) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = getConnection(); PreparedStatement st = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             st.setString(1, p.getName());
             st.setString(2, p.getProductCode());
             st.setString(3, p.getImage());
             st.setString(4, p.getOrigin());
-            st.setBigDecimal(5, p.getPrice());    // KHẮC PHỤC: setBigDecimal
+            st.setBigDecimal(5, p.getPrice());
             st.setString(6, p.getDescription());
-            st.setBoolean(7, p.getIsDeleted()); // Sửa thành getIsDeleted()  // KHẮC PHỤC: getter mới
-            st.setInt(8, p.getCreatedBy());       // KHẮC PHỤC: setInt
-            st.setInt(9, p.getUpdatedBy());       // KHẮC PHỤC: setInt (Thường thì updated_by = created_by khi mới tạo)
-
-            // Khi tạo mới, createdAt và updatedAt thường là cùng một thời điểm
+            st.setBoolean(7, p.getIsDeleted());
+            st.setInt(8, p.getCreatedBy());
             Timestamp now = new Timestamp(System.currentTimeMillis());
-            st.setTimestamp(10, now);             // KHẮC PHỤC: setTimestamp
-            st.setTimestamp(11, now);             // KHẮC PHỤC: setTimestamp
-
+            st.setTimestamp(9, now);
+            st.setTimestamp(10, now);
             int rows = st.executeUpdate();
             if (rows == 0) {
                 throw new SQLException("Creating product failed, no rows affected.");
