@@ -24,110 +24,107 @@ import vn.edu.fpt.model.Ward;
 public class ScheduleDAO extends DBContext {
 
     public List<MaintenanceSchedule> getMaintenanceSchedules(
-            Integer userId, boolean technicalOnly, boolean campaignOnly, Integer statusId) {
-        List<MaintenanceSchedule> schedules = new ArrayList<>();
-        StringBuilder sql = new StringBuilder(
-                "SELECT "
-                + "ms.id, "
-                + "ms.technical_request_id, "
-                + "ms.campaign_id, "
-                + "ms.color, "
-                + "ms.scheduled_date, "
-                + "ms.end_date, "
-                + "ms.start_time, "
-                + "ms.end_time, "
-                + "ms.address_id, "
-                + "ms.status_id, "
-                + "s.status_name, "
-                + "a.street_address, "
-                + "p.name AS province_name, "
-                + "d.name AS district_name, "
-                + "w.name AS ward_name, "
-                + "tr.title AS request_title, "
-                + "tr.description AS request_description, "
-                + "c.name AS campaign_title, "
-                + "c.description AS campaign_description "
-                + "FROM MaintenanceSchedules ms "
-                + "LEFT JOIN Addresses a ON ms.address_id = a.id "
-                + "LEFT JOIN Provinces p ON a.province_id = p.id "
-                + "LEFT JOIN Districts d ON a.district_id = d.id "
-                + "LEFT JOIN Wards w ON a.ward_id = w.id "
-                + "LEFT JOIN Statuses s ON ms.status_id = s.id "
-                + "LEFT JOIN TechnicalRequests tr ON ms.technical_request_id = tr.id "
-                + "LEFT JOIN Campaigns c ON ms.campaign_id = c.campaign_id "
-        );
-
-        if (userId != null) {
-            sql.append("INNER JOIN MaintenanceAssignments ma ON ms.id = ma.maintenance_schedule_id ");
-        }
-
-        sql.append("WHERE 1=1 ");
-
-        if (technicalOnly) {
-            sql.append("AND ms.technical_request_id IS NOT NULL AND ms.campaign_id IS NULL ");
-        } else if (campaignOnly) {
-            sql.append("AND ms.campaign_id IS NOT NULL ");
-        }
-
-        if (userId != null) {
-            sql.append("AND ma.user_id = ? ");
-        }
-
-        if (statusId != null) {
-            sql.append("AND ms.status_id = ? ");
-        }
-
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-            int paramIdx = 1;
-            if (userId != null) {
-                ps.setInt(paramIdx++, userId);
-            }
-            if (statusId != null) {
-                ps.setInt(paramIdx++, statusId);
-            }
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    MaintenanceSchedule schedule = new MaintenanceSchedule();
-                    schedule.setId(rs.getInt("id"));
-                    schedule.setTechnicalRequestId(rs.getObject("technical_request_id", Integer.class));
-                    schedule.setCampaignId(rs.getObject("campaign_id") != null ? rs.getInt("campaign_id") : null);
-                    schedule.setColor(rs.getString("color"));
-                    schedule.setScheduledDate(rs.getObject("scheduled_date", LocalDate.class));
-                    schedule.setEndDate(rs.getObject("end_date", LocalDate.class));
-                    schedule.setStartTime(rs.getObject("start_time", LocalTime.class));
-                    schedule.setEndTime(rs.getObject("end_time", LocalTime.class));
-                    schedule.setStatusId(rs.getObject("status_id", Integer.class));
-                    schedule.setStatusName(rs.getString("status_name"));
-                    String requestTitle = rs.getString("request_title");
-                    String requestDescription = rs.getString("request_description");
-                    String campaignTitle = rs.getString("campaign_title");
-                    String campaignDescription = rs.getString("campaign_description");
-                    schedule.setTitle((campaignTitle != null && !campaignTitle.trim().isEmpty()) ? campaignTitle : requestTitle);
-                    schedule.setNotes((campaignDescription != null && !campaignDescription.trim().isEmpty()) ? campaignDescription : requestDescription);
-                    Integer addressId = rs.getObject("address_id", Integer.class);
-                    schedule.setAddressId(addressId);
-                    if (addressId != null) {
-                        Address addr = new Address();
-                        addr.setId(addressId);
-                        addr.setStreetAddress(rs.getString("street_address"));
-                        String fullAddress = String.format("%s, %s, %s, %s",
-                                rs.getString("street_address"),
-                                rs.getString("ward_name"),
-                                rs.getString("district_name"),
-                                rs.getString("province_name")
-                        );
-                        addr.setFullAddress(fullAddress);
-                        schedule.setAddress(addr);
-                    }
-                    schedules.add(schedule);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return schedules;
+        Integer userId, boolean technicalOnly, boolean campaignOnly, Integer statusId) {
+    List<MaintenanceSchedule> schedules = new ArrayList<>();
+    StringBuilder sql = new StringBuilder(
+            "SELECT "
+            + "ms.id, "
+            + "ms.technical_request_id, "
+            + "ms.campaign_id, "
+            + "ms.color, "
+            + "ms.scheduled_date, "
+            + "ms.end_date, "
+            + "ms.start_time, "
+            + "ms.end_time, "
+            + "ms.address_id, "
+            + "ms.status_id, "
+            + "s.status_name, "
+            + "a.street_address, "
+            + "p.name AS province_name, "
+            + "d.name AS district_name, "
+            + "w.name AS ward_name, "
+            + "tr.title AS request_title, "
+            + "tr.description AS request_description, "
+            + "c.name AS campaign_title, "
+            + "c.description AS campaign_description "
+            + "FROM MaintenanceSchedules ms "
+            + "LEFT JOIN Addresses a ON ms.address_id = a.id "
+            + "LEFT JOIN Provinces p ON a.province_id = p.id "
+            + "LEFT JOIN Districts d ON a.district_id = d.id "
+            + "LEFT JOIN Wards w ON a.ward_id = w.id "
+            + "LEFT JOIN Statuses s ON ms.status_id = s.id "
+            + "LEFT JOIN TechnicalRequests tr ON ms.technical_request_id = tr.id "
+            + "LEFT JOIN Campaigns c ON ms.campaign_id = c.campaign_id "
+    );
+    // Khi lọc theo userId
+    if (userId != null) {
+        sql.append("INNER JOIN MaintenanceAssignments ma ON ms.id = ma.maintenance_schedule_id ");
     }
+    sql.append("WHERE 1=1 ");
+    if (technicalOnly) {
+        sql.append("AND ms.technical_request_id IS NOT NULL AND ms.campaign_id IS NULL ");
+    } else if (campaignOnly) {
+        sql.append("AND ms.campaign_id IS NOT NULL ");
+    }
+    if (userId != null) {
+        sql.append("AND ma.user_id = ? ");
+    }
+    if (statusId != null) {
+        sql.append("AND ms.status_id = ? ");
+    }
+    try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        int paramIdx = 1;
+        if (userId != null) {
+            ps.setInt(paramIdx++, userId);
+        }
+        if (statusId != null) {
+            ps.setInt(paramIdx++, statusId);
+        }
+        // ... giữ nguyên phần ResultSet mapping ...
+        try (ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                // ... mapping object như của bạn ...
+                MaintenanceSchedule schedule = new MaintenanceSchedule();
+                schedule.setId(rs.getInt("id"));
+                schedule.setTechnicalRequestId(rs.getObject("technical_request_id", Integer.class));
+                schedule.setCampaignId(rs.getObject("campaign_id") != null ? rs.getInt("campaign_id") : null);
+                schedule.setColor(rs.getString("color"));
+                schedule.setScheduledDate(rs.getObject("scheduled_date", LocalDate.class));
+                schedule.setEndDate(rs.getObject("end_date", LocalDate.class));
+                schedule.setStartTime(rs.getObject("start_time", LocalTime.class));
+                schedule.setEndTime(rs.getObject("end_time", LocalTime.class));
+                schedule.setStatusId(rs.getObject("status_id", Integer.class));
+                schedule.setStatusName(rs.getString("status_name"));
+                String requestTitle = rs.getString("request_title");
+                String requestDescription = rs.getString("request_description");
+                String campaignTitle = rs.getString("campaign_title");
+                String campaignDescription = rs.getString("campaign_description");
+                schedule.setTitle((campaignTitle != null && !campaignTitle.trim().isEmpty()) ? campaignTitle : requestTitle);
+                schedule.setNotes((campaignDescription != null && !campaignDescription.trim().isEmpty()) ? campaignDescription : requestDescription);
+                Integer addressId = rs.getObject("address_id", Integer.class);
+                schedule.setAddressId(addressId);
+                if (addressId != null) {
+                    Address addr = new Address();
+                    addr.setId(addressId);
+                    addr.setStreetAddress(rs.getString("street_address"));
+                    String fullAddress = String.format("%s, %s, %s, %s",
+                            rs.getString("street_address"),
+                            rs.getString("ward_name"),
+                            rs.getString("district_name"),
+                            rs.getString("province_name")
+                    );
+                    addr.setFullAddress(fullAddress);
+                    schedule.setAddress(addr);
+                }
+                schedules.add(schedule);
+            }
+        }
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+    return schedules;
+}
+
 
 // File: ScheduleDAO.java
     // Trong file ScheduleDAO.java
@@ -171,6 +168,22 @@ public class ScheduleDAO extends DBContext {
             e.printStackTrace();
         }
         return null; // Trả về null nếu không tìm thấy
+    }
+
+    public void updateScheduleStatus(int scheduleId, int newStatusId) throws SQLException {
+        // Câu lệnh UPDATE chỉ cập nhật cột status_id cho bản ghi có id tương ứng
+        String sql = "UPDATE MaintenanceSchedules SET status_id = ? WHERE id = ?";
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            // Gán các giá trị vào câu lệnh
+            ps.setInt(1, newStatusId);
+            ps.setInt(2, scheduleId);
+
+            // Thực thi lệnh cập nhật
+            ps.executeUpdate();
+        }
+        // Không cần try-catch ở đây nếu phương thức đã throws SQLException
     }
 
     public boolean updateScheduleByDragDrop(int id, LocalDate scheduledDate, LocalDate endDate, LocalTime startTime, LocalTime endTime) {
@@ -935,7 +948,7 @@ WHERE ms.id = ?
         // Tạo instance DAO
         ScheduleDAO dao = new ScheduleDAO();
         // Lấy danh sách lịch trình
-        List<MaintenanceSchedule> schedules = dao.getMaintenanceSchedules(2, false, false,1);
+        List<MaintenanceSchedule> schedules = dao.getMaintenanceSchedules(2, false, false, 1);
 
         if (schedules.isEmpty()) {
             System.out.println("Không có lịch trình bảo trì nào trong CSDL!");

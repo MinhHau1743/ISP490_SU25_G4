@@ -103,19 +103,25 @@
                                                 </option>
                                             </c:forEach>
                                         </select>
-
                                     </div>
-
-                                    <div class="filter-actions">
-                                        <a href="schedule?action=listSchedule" class="btn-reset-filter">Xóa lọc</a>
-                                        <button type="submit" class="btn-apply-filter">Áp dụng</button>
-                                    </div>    
+                                        
+                                            <div class="filter-group">
+                                                <label>
+                                                    <input type="checkbox" name="mySchedule" value="1"
+                                                           <c:if test="${currentMySchedule == '1'}">checked</c:if>
+                                                           > Chỉ hiện lịch của tôi
+                                                </label>
+                                            </div>
+                                        <div class="filter-actions">
+                                            <a href="schedule?action=listSchedule&openFilter=1" class="btn-reset-filter">Xóa lọc</a>
+                                            <button type="submit" class="btn-apply-filter">Áp dụng</button>
+                                        </div>    
+                                    </div>
                                 </div>
-                            </div>
-                        </form>
-                        <div class="calendar-content">
-                            <div class="calendar-left">
-                                <div id="day-view" class="calendar-view <c:if test="${viewMode == 'day-view'}">active</c:if>">
+                            </form>
+                            <div class="calendar-content">
+                                <div class="calendar-left">
+                                    <div id="day-view" class="calendar-view <c:if test="${viewMode == 'day-view'}">active</c:if>">
                                         <div class="day-nav">
                                             <span class="date">${dayDate}</span>
                                     </div>

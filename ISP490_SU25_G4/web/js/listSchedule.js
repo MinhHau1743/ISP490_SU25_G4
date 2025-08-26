@@ -4,7 +4,6 @@
  */
 document.addEventListener('DOMContentLoaded', function () {
     feather.replace();
-
     // --- 1. LOGIC CHUYỂN ĐỔI VIEW (TUẦN/THÁNG) ---
 
 
@@ -275,10 +274,10 @@ document.addEventListener('DOMContentLoaded', function () {
     // Hàm kiểm tra xem URL có chứa tham số lọc không
     const checkForActiveFilters = () => {
         const params = new URLSearchParams(window.location.search);
-        
+
         // ⭐ QUAN TRỌNG: Thêm tất cả các tên (name) của các trường lọc vào đây
-        const filterKeys = ['type', 'status']; 
-        
+        const filterKeys = ['type', 'status'];
+
         for (const key of filterKeys) {
             // Nếu tìm thấy bất kỳ tham số lọc nào có giá trị (không rỗng), trả về true
             if (params.has(key) && params.get(key) !== '') {
@@ -288,10 +287,24 @@ document.addEventListener('DOMContentLoaded', function () {
         return false;
     };
 
-    // Nếu phát hiện có lọc, tự động mở bộ lọc khi tải trang
-    if (checkForActiveFilters()) {
-        filterContainer.style.display = 'block'; // Hiển thị khu vực lọc
-        filterBtn.classList.add('active'); // Kích hoạt trạng thái 'active' cho nút
+// Hàm kiểm tra xem URL có cần mở filter không
+    const shouldOpenFilter = () => {
+        const params = new URLSearchParams(window.location.search);
+        // Nếu có bất kỳ filter nào hoặc có cờ openFilter=1
+        const filterKeys = ['type', 'status'];
+        if (params.has('openFilter') && params.get('openFilter') === '1')
+            return true;
+        for (const key of filterKeys) {
+            if (params.has(key) && params.get(key) !== '') {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    if (shouldOpenFilter()) {
+        filterContainer.style.display = 'block';
+        filterBtn.classList.add('active');
     }
 
     // --- PHẦN NÂNG CẤP KẾT THÚC ---

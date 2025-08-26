@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.BufferedReader;
-
+import java.sql.SQLException;
 import vn.edu.fpt.dao.AddressDAO;
 import vn.edu.fpt.dao.ScheduleDAO;
 import vn.edu.fpt.dao.TechnicalRequestDAO;
@@ -296,6 +296,8 @@ public class ScheduleController extends HttpServlet {
         HttpSession session = request.getSession();
         // 6. Dữ liệu lịch + assignments
         Integer userId = (Integer) session.getAttribute("userId");
+        String mySchedule = request.getParameter("mySchedule");
+
         String type = request.getParameter("type"); // "all", "request", "campaign"
         boolean technicalOnly = "request".equals(type);
         boolean campaignOnly = "campaign".equals(type);
@@ -309,15 +311,16 @@ public class ScheduleController extends HttpServlet {
                 statusId = null;
             }
         }
-        List<MaintenanceSchedule> schedules = dao.getMaintenanceSchedules(userId, technicalOnly, campaignOnly, statusId);
+        List<MaintenanceSchedule> schedules;
+        if ("1".equals(mySchedule)) {
+            // Lấy lịch do user assign, ví dụ qua userId là người thực hiện
+            schedules = dao.getMaintenanceSchedules(userId, technicalOnly, campaignOnly, statusId);
+        } else {
+            // Lấy toàn bộ (không filter theo userId), hoặc chỉ filter theo các tuỳ chọn còn lại
+            schedules = dao.getMaintenanceSchedules(null, technicalOnly, campaignOnly, statusId);
+        }
         List<MaintenanceAssignments> assignments = dao.getAllMaintenanceAssignments();
         List<Status> statusList = dao.getAllStatuses();
-        if ("list-view".equals(viewMode)) {
-            schedules = schedules.stream()
-                    .filter(sch -> sch.getScheduledDate() != null && !sch.getScheduledDate().isBefore(now))
-                    .collect(Collectors.toList());
-        }
-
         Map<Integer, List<MaintenanceAssignments>> assignmentMap
                 = assignments.stream().collect(Collectors.groupingBy(MaintenanceAssignments::getMaintenanceScheduleId));
 
@@ -333,8 +336,9 @@ public class ScheduleController extends HttpServlet {
 
         Map<LocalDate, List<MaintenanceSchedule>> groupedSchedules
                 = schedules.stream().collect(Collectors.groupingBy(MaintenanceSchedule::getScheduledDate));
-        updateScheduleStatuses(schedules);
+        updateScheduleStatuses(schedules, dao);
         // Set attribute ra JSP
+        request.setAttribute("currentMySchedule", mySchedule);
         request.setAttribute("statusList", statusList);
         request.setAttribute("currentType", type);
         request.setAttribute("currentStatus", statusId);
@@ -871,33 +875,25 @@ public class ScheduleController extends HttpServlet {
         }
     }
 
-    private void updateScheduleStatuses(List<MaintenanceSchedule> schedules) {
-        // Lấy thời gian hiện tại MỘT LẦN DUY NHẤT để đảm bảo tính nhất quán
+    private void updateScheduleStatuses(List<MaintenanceSchedule> schedules, ScheduleDAO scheduleDAO) {
         LocalDateTime now = LocalDateTime.now();
-        LocalDate today = now.toLocalDate();
 
-        // Duyệt qua từng lịch trình để cập nhật
         for (MaintenanceSchedule schedule : schedules) {
+            int originalStatusId = schedule.getStatusId();
 
-            // --- ƯU TIÊN SỐ 1: Nếu đã "Hoàn thành", không thay đổi nữa ---
             if (schedule.getStatusName() != null && schedule.getStatusName().equalsIgnoreCase("Hoàn thành")) {
-                // Đặt lại ID cho chắc chắn
                 schedule.setStatusId(3);
-                continue; // Bỏ qua và chuyển sang lịch trình tiếp theo
+                continue;
             }
 
-            // Lấy thông tin ngày giờ của lịch trình
             LocalDate scheduledDate = schedule.getScheduledDate();
-            LocalDate endDate = schedule.getEndDate() != null ? schedule.getEndDate() : scheduledDate; // Nếu không có ngày kết thúc, coi như là trong ngày
-
+            LocalDate endDate = schedule.getEndDate() != null ? schedule.getEndDate() : scheduledDate;
             LocalTime startTime = schedule.getStartTime();
             LocalTime endTime = schedule.getEndTime();
 
-            // Mặc định cho sự kiện cả ngày (all-day)
-            LocalDateTime scheduleStartDateTime = scheduledDate.atStartOfDay(); // 00:00 của ngày bắt đầu
-            LocalDateTime scheduleEndDateTime = endDate.atTime(LocalTime.MAX);   // 23:59:59 của ngày kết thúc
+            LocalDateTime scheduleStartDateTime = scheduledDate.atStartOfDay();
+            LocalDateTime scheduleEndDateTime = endDate.atTime(LocalTime.MAX);
 
-            // Nếu có giờ cụ thể, dùng giờ đó
             if (startTime != null) {
                 scheduleStartDateTime = scheduledDate.atTime(startTime);
             }
@@ -905,22 +901,34 @@ public class ScheduleController extends HttpServlet {
                 scheduleEndDateTime = endDate.atTime(endTime);
             }
 
-            // --- ÁP DỤNG CÁC QUY TẮC ĐỂ XÁC ĐỊNH TRẠNG THÁI ---
-            // QUY TẮC 1: QUÁ HẠN
-            // Nếu thời gian kết thúc của lịch trình đã qua VÀ nó chưa được "Hoàn thành"
+            // Logic xác định trạng thái mới
+            int newStatusId = originalStatusId;
+            String newStatusName = schedule.getStatusName();
+
             if (scheduleEndDateTime.isBefore(now)) {
-                schedule.setStatusName("Quá hạn");
-                schedule.setStatusId(4); // ID của "Quá hạn"
-            } // QUY TẮC 2: ĐANG THỰC HIỆN
-            // Nếu thời gian hiện tại nằm trong khoảng [bắt đầu, kết thúc]
-            else if (!now.isBefore(scheduleStartDateTime) && !now.isAfter(scheduleEndDateTime)) {
-                schedule.setStatusName("Đang thực hiện");
-                schedule.setStatusId(2); // ID của "Đang thực hiện"
-            } // QUY TẮC 3: SẮP TỚI
-            // Nếu thời gian bắt đầu của lịch trình vẫn chưa tới
-            else if (scheduleStartDateTime.isAfter(now)) {
-                schedule.setStatusName("Sắp tới");
-                schedule.setStatusId(1); // ID của "Sắp tới"
+                newStatusName = "Quá hạn";
+                newStatusId = 4;
+            } else if (!now.isBefore(scheduleStartDateTime) && !now.isAfter(scheduleEndDateTime)) {
+                newStatusName = "Đang thực hiện";
+                newStatusId = 2;
+            } else if (scheduleStartDateTime.isAfter(now)) {
+                newStatusName = "Sắp tới";
+                newStatusId = 1;
+            }
+
+            // ⭐ PHẦN QUAN TRỌNG: Chỉ gọi UPDATE khi trạng thái thực sự thay đổi
+            if (newStatusId != originalStatusId) {
+                try {
+                    // Gọi hàm DAO để lưu thay đổi vào DB
+                    scheduleDAO.updateScheduleStatus(schedule.getId(), newStatusId);
+
+                    // Cập nhật lại đối tượng trong list để hiển thị đúng
+                    schedule.setStatusId(newStatusId);
+                    schedule.setStatusName(newStatusName);
+                } catch (SQLException e) {
+                    System.err.println("Lỗi khi cập nhật DB cho lịch #" + schedule.getId());
+                    e.printStackTrace();
+                }
             }
         }
     }
