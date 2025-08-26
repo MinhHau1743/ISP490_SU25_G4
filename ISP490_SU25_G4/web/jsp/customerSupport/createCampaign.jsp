@@ -21,7 +21,7 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
+        <link rel="icon" href="${pageContext.request.contextPath}/image/logo.png" type="image/png">
         <link rel="stylesheet" href="${BASE_URL}/css/style.css">
         <link rel="stylesheet" href="${BASE_URL}/css/header.css">
         <link rel="stylesheet" href="${BASE_URL}/css/mainMenu.css">

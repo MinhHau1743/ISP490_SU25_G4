@@ -31,6 +31,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/viewProductDetail.css">
+        <link rel="icon" href="${pageContext.request.contextPath}/image/logo.png" type="image/png">
     </head>
     <body>
         <div class="app-container">
@@ -77,7 +78,7 @@
                                             <%-- Sửa: href trỏ đến action=edit của controller hợp nhất --%>
                                             <a href="product?action=edit&id=${product.id}" class="btn btn-primary"><i data-feather="edit"></i> Sửa thông tin</a>
                                         </c:if>
-                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="product-details-tabs">

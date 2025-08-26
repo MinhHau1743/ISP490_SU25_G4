@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import vn.edu.fpt.model.Address;
 
-public class TechnicalRequestDAO extends DBContext{
+public class TechnicalRequestDAO extends DBContext {
 
     // Trong file: TechnicalRequestDAO.java
     public List<TechnicalRequest> getFilteredTechnicalRequests(String query, String status, int serviceId, int limit, int offset) throws SQLException {
@@ -700,25 +700,25 @@ public class TechnicalRequestDAO extends DBContext{
         return 0;
     }
 
-   /**
-     * Lấy các yêu cầu kỹ thuật gần đây của một doanh nghiệp, có JOIN để lấy tên trạng thái.
-     * PHIÊN BẢN ĐÃ SỬA LỖI: Khắc phục NullPointerException và dùng đúng câu lệnh SQL.
+    /**
+     * Lấy các yêu cầu kỹ thuật gần đây của một doanh nghiệp, có JOIN để lấy tên
+     * trạng thái. PHIÊN BẢN ĐÃ SỬA LỖI: Khắc phục NullPointerException và dùng
+     * đúng câu lệnh SQL.
      */
     public List<TechnicalRequest> getRecentRequestsByEnterprise(int enterpriseId, int limit) throws Exception {
         List<TechnicalRequest> requests = new ArrayList<>();
-        
-        String sql = "SELECT tr.id, tr.request_code, tr.title, tr.created_at, s.status_name " +
-                     "FROM TechnicalRequests tr " +
-                     "LEFT JOIN MaintenanceSchedules ms ON tr.id = ms.technical_request_id " +
-                     "LEFT JOIN Statuses s ON ms.status_id = s.id " +
-                     "WHERE tr.enterprise_id = ? AND tr.is_deleted = 0 " +
-                     "ORDER BY tr.created_at DESC " +
-                     "LIMIT ?";
+
+        String sql = "SELECT tr.id, tr.request_code, tr.title, tr.created_at, s.status_name "
+                + "FROM TechnicalRequests tr "
+                + "LEFT JOIN MaintenanceSchedules ms ON tr.id = ms.technical_request_id "
+                + "LEFT JOIN Statuses s ON ms.status_id = s.id "
+                + "WHERE tr.enterprise_id = ? AND tr.is_deleted = 0 "
+                + "ORDER BY tr.created_at DESC "
+                + "LIMIT ?";
 
         // Sử dụng try-with-resources để đảm bảo kết nối được khởi tạo và đóng đúng cách
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
             // conn ở đây chắc chắn không phải là null
             ps.setInt(1, enterpriseId);
             ps.setInt(2, limit);
@@ -730,7 +730,7 @@ public class TechnicalRequestDAO extends DBContext{
                     req.setRequestCode(rs.getString("request_code"));
                     req.setTitle(rs.getString("title"));
                     req.setCreatedAt(rs.getTimestamp("created_at"));
-                    req.setStatus(rs.getString("status_name")); 
+                    req.setStatus(rs.getString("status_name"));
                     requests.add(req);
                 }
             }
@@ -747,6 +747,30 @@ public class TechnicalRequestDAO extends DBContext{
         TechnicalRequestDAO dao = new TechnicalRequestDAO();
         try {
             MaintenanceSchedule ms = dao.getScheduleByTechnicalRequestId(testTechnicalRequestId);
+            try {
+                // 2. Gọi phương thức cần kiểm tra
+                List<User> technicianList = dao.getAllTechnicians();
+
+                // 3. Kiểm tra và in kết quả
+                if (technicianList == null) {
+                    System.out.println("Lỗi: Hàm trả về null.");
+                } else if (technicianList.isEmpty()) {
+                    System.out.println("Kết quả: Không tìm thấy nhân viên Kỹ thuật nào.");
+                    System.out.println("-> Vui lòng kiểm tra lại dữ liệu trong bảng 'Users' và 'Roles'.");
+                } else {
+                    System.out.println("Thành công! Tìm thấy " + technicianList.size() + " nhân viên Kỹ thuật:");
+
+                    // In thông tin chi tiết của từng nhân viên
+                    for (User tech : technicianList) {
+                        // Sử dụng phương thức getFullName() từ lớp User
+                        System.out.printf("- ID: %d, Họ tên: %s\n", tech.getId(), tech.getFullName());
+                    }
+                }
+
+            } catch (SQLException e) {
+                System.err.println("Đã xảy ra lỗi SQL khi thực thi!");
+                e.printStackTrace();
+            }
             if (ms == null) {
                 System.out.println("Không tìm thấy schedule với technicalRequestId = " + testTechnicalRequestId);
             } else {
@@ -873,4 +897,5 @@ public class TechnicalRequestDAO extends DBContext{
     private static String nullToEmpty(String s) {
         return (s == null) ? "" : s;
     }
+
 }

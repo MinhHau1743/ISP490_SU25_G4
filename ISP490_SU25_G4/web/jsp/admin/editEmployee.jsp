@@ -22,7 +22,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <%-- Link tới file CSS đã được nâng cấp, chứa style cho cả trang view và edit --%>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/viewEmployee.css">
-
+        <link rel="icon" href="${pageContext.request.contextPath}/image/logo.png" type="image/png">
         <script src="https://unpkg.com/feather-icons"></script>
     </head>
     <body>

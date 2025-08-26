@@ -1002,10 +1002,10 @@ public class UserDAO {
     public List<User> getAllTechnicalStaffIdAndFullName() {
         List<User> list = new ArrayList<>();
         String sql = "SELECT u.id, "
-                + "TRIM(CONCAT(u.last_name, ' ', IFNULL(u.middle_name, ''), ' ', u.first_name)) AS full_name "
-                + "FROM Users u "
-                + "JOIN Positions p ON u.position_id = p.id "
-                + "WHERE u.is_deleted = 0";
+            + "TRIM(CONCAT(u.last_name, ' ', IFNULL(u.middle_name, ''), ' ', u.first_name)) AS full_name "
+            + "FROM Users u "
+            + "JOIN Roles r ON u.role_id = r.id "
+            + "WHERE u.is_deleted = 0 AND r.name = 'Kỹ thuật'";
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             // Không cần setString cho vị trí nữa
             try (ResultSet rs = ps.executeQuery()) {
@@ -1122,5 +1122,30 @@ public class UserDAO {
         // Trả về false nếu không tìm thấy user, mật khẩu sai, hoặc có lỗi xảy ra
         return false;
     }
+public static void main(String[] args) {
+        // Bước 1: Khởi tạo đối tượng DAO
+        // Thay "UserDAO" bằng tên class chứa hàm của bạn
+        UserDAO userDAO = new UserDAO(); 
 
+        System.out.println("Đang kiểm tra hàm getAllTechnicalStaffIdAndFullName()...");
+
+        // Bước 2: Gọi phương thức cần kiểm tra
+        List<User> staffList = userDAO.getAllTechnicalStaffIdAndFullName();
+
+        // Bước 3: Kiểm tra và in kết quả
+        if (staffList == null || staffList.isEmpty()) {
+            System.out.println("Kết quả: Không tìm thấy nhân viên nào hoặc có lỗi xảy ra.");
+        } else {
+            System.out.println("Kết quả: Tìm thấy " + staffList.size() + " nhân viên.");
+            System.out.println("------------------------------------------");
+            
+            // In thông tin chi tiết của từng nhân viên
+            for (User staff : staffList) {
+                System.out.println("ID: " + staff.getId() + ", Họ tên: " + staff.getFullName1());
+            }
+            
+            System.out.println("------------------------------------------");
+            System.out.println("Kiểm tra thành công!");
+        }
+    }
 }

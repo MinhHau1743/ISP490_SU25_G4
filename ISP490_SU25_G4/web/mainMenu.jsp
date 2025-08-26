@@ -16,7 +16,6 @@
             <i data-feather="unlock"></i>
         </button>
     </div>
-
     <%-- PHẦN MENU ĐIỀU HƯỚNG --%>
     <nav class="sidebar-nav">
         <ul>
@@ -38,37 +37,12 @@
                 </a>
             </li>
             <li>
-                <a href="${pageContext.request.contextPath}/product" class="${currentPage.contains('Product') ? 'active' : ''}">
-                    <i data-feather="box"></i><span>Hàng hóa</span>
-                </a>
-            </li>
-            <li>
-                <a href="${pageContext.request.contextPath}/schedule" class="${currentPage.contains('Schedule') ? 'active' : ''}">
-                    <i data-feather="check-square"></i><span>Lịch bảo trì</span>
-                </a>
-            </li>
-
-            <%-- ===== NHÓM NGHIỆP VỤ ===== --%>
-            <%-- Trong file mainMenu.jsp --%>
-            <li>
                 <%-- SỬA LẠI ĐIỀU KIỆN KIỂM TRA ĐỂ NHẬN DIỆN CẢ CHỮ HOA VÀ THƯỜNG --%>
                 <a href="${pageContext.request.contextPath}/ticket" 
                    class="${currentPage.contains('Transaction') || currentPage.contains('Transaction') ? 'active' : ''}">
                     <i data-feather="tool"></i><span>Hỗ trợ Kỹ thuật</span>
                 </a>
             </li>
-            <li>
-                <a href="${pageContext.request.contextPath}/feedback" class="${currentPage.contains('Feedback') ? 'active' : ''}">
-                    <i data-feather="message-square"></i><span>Phản hồi</span>
-                </a>
-            </li>
-            <li>
-                <a href="${pageContext.request.contextPath}/report" class="${currentPage == 'report' ? 'active' : ''}">
-                    <i data-feather="pie-chart"></i><span>Báo cáo</span>
-                </a>
-            </li>
-
-            <%-- ===== SỬA LỖI Ở ĐÂY ===== --%>
             <li>
                 <%-- 1. Thêm logic kiểm tra currentPage để gán class 'active' --%>
                 <%-- 2. Gợi ý: Đổi icon thành 'send' hoặc 'megaphone' sẽ hợp với "Chiến dịch" hơn --%>
@@ -77,6 +51,31 @@
                     <span>Chiến dịch</span>
                 </a>
             </li>
+            <li>
+                <a href="${pageContext.request.contextPath}/feedback" class="${currentPage.contains('Feedback') ? 'active' : ''}">
+                    <i data-feather="message-square"></i><span>Phản hồi</span>
+                </a>
+            </li>
+            <li>
+                <a href="${pageContext.request.contextPath}/schedule" class="${currentPage.contains('Schedule') ? 'active' : ''}">
+                    <i data-feather="check-square"></i><span>Lịch bảo trì</span>
+                </a>
+            </li>
+            <li>
+                <a href="${pageContext.request.contextPath}/product" class="${currentPage.contains('Product') ? 'active' : ''}">
+                    <i data-feather="box"></i><span>Hàng hóa</span>
+                </a>
+            </li>
+            <%-- ===== NHÓM NGHIỆP VỤ ===== --%>
+            <%-- Trong file mainMenu.jsp --%>
+            <li>
+                <a href="${pageContext.request.contextPath}/report" class="${currentPage == 'report' ? 'active' : ''}">
+                    <i data-feather="pie-chart"></i><span>Báo cáo</span>
+                </a>
+            </li>
+
+            <%-- ===== SỬA LỖI Ở ĐÂY ===== --%>
+
         </ul>
     </nav>
 </aside>

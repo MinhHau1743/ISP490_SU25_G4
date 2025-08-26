@@ -14,6 +14,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/viewTransaction.css?v=<%= System.currentTimeMillis()%>">
         <script src="https://unpkg.com/feather-icons"></script>
+        <link rel="icon" href="${pageContext.request.contextPath}/image/logo.png" type="image/png">
         <style>
             .alert {
                 padding: 1rem;
@@ -151,35 +152,35 @@
 
                                 <c:if test="${not empty schedule}">
                                     <%-- Thêm style để đặt màu nền --%>
-                                  
-                                        <div class="info-item">
-                                            <span style="font-weight: bold;">Lịch hẹn</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <span class="label">Ngày bắt đầu</span>
-                                            <span class="value">${scheduledDateFormatted}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <span class="label">Giờ bắt đầu</span>
-                                            <span class="value">${not empty schedule.startTime ? schedule.startTime : 'N/A'}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <span class="label">Ngày kết thúc</span>
-                                            <span class="value">${endDateFormatted}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <span class="label">Giờ kết thúc</span>
-                                            <span class="value">${not empty schedule.endTime ? schedule.endTime : 'N/A'}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <span class="label">Màu sắc</span>
-                                            <div class="value">
-                                                <div class="color-swatch-display" 
-                                                     style="background-color: ${not empty schedule.color ? schedule.color : '#6c757d'};">
-                                                </div>
+
+                                    <div class="info-item">
+                                        <span style="font-weight: bold;">Lịch hẹn</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="label">Ngày bắt đầu</span>
+                                        <span class="value">${scheduledDateFormatted}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="label">Giờ bắt đầu</span>
+                                        <span class="value">${not empty schedule.startTime ? schedule.startTime : 'N/A'}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="label">Ngày kết thúc</span>
+                                        <span class="value">${endDateFormatted}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="label">Giờ kết thúc</span>
+                                        <span class="value">${not empty schedule.endTime ? schedule.endTime : 'N/A'}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="label">Màu sắc</span>
+                                        <div class="value">
+                                            <div class="color-swatch-display" 
+                                                 style="background-color: ${not empty schedule.color ? schedule.color : '#6c757d'};">
                                             </div>
                                         </div>
-                                   
+                                    </div>
+
                                 </c:if>
 
                                 <div class="info-item">

@@ -18,7 +18,7 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
-
+        <link rel="icon" href="${pageContext.request.contextPath}/image/logo.png" type="image/png">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/createSchedule.css"> <%-- Can reuse create CSS --%>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
@@ -192,7 +192,7 @@
             <c:forEach var="u" items="${assignments}">
             window.SCHEDULE_USERS.push({
                 id: '${u.id}',
-                name: '<c:out value="${u.fullName}"/>'
+                name: '<c:out value="${u.fullName1}"/>'
             });
             </c:forEach>
 

@@ -17,12 +17,11 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <script src="https://unpkg.com/feather-icons"></script>
-
+        <link rel="icon" href="${pageContext.request.contextPath}/image/logo.png" type="image/png">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/viewScheduleDetail.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
-
         <style>
             html, body {
                 height: 100%;
@@ -309,7 +308,7 @@
                                                 <c:if test="${employee.id == assignedId}">
                                                     <li>
                                                         <i data-feather="user" style="width:16px; height:16px;"></i>
-                                                        <span>${employee.fullName}</span>
+                                                        <span>${employee.fullName1}</span>
                                                     </li>
                                                 </c:if>
                                             </c:forEach>

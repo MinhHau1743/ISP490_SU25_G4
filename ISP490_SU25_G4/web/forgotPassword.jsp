@@ -13,6 +13,7 @@
         <title>Quên mật khẩu</title>
         <%-- SỬA 1: Liên kết đến file CSS duy nhất --%>
         <link rel="stylesheet" type="text/css" href="css/auth-style.css" />
+        <link rel="icon" href="${pageContext.request.contextPath}/image/logo.png" type="image/png">
     </head>
 
     <%-- SỬA 2: Thêm class cho body --%>

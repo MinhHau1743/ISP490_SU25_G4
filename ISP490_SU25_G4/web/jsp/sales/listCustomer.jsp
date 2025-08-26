@@ -18,6 +18,7 @@
         <link rel="stylesheet" href="${BASE_URL}/css/listCustomer.css">
         <link rel="stylesheet" href="${BASE_URL}/css/pagination.css">
         <link rel="stylesheet" href="${BASE_URL}/css/header.css">
+        <link rel="icon" href="${pageContext.request.contextPath}/image/logo.png" type="image/png">
         <style>
             .filter-container {
                 display: none;
@@ -107,11 +108,11 @@
             <jsp:include page="/mainMenu.jsp"/>
             <main class="main-content">
                 <jsp:include page="/header.jsp"><jsp:param name="pageTitle" value="Danh sách Khách hàng"/></jsp:include>
-                <div class="page-content">
+                    <div class="page-content">
                     <c:if test="${not empty sessionScope.successMessage}"><div class="success-message">${sessionScope.successMessage}</div><c:remove var="successMessage" scope="session"/></c:if>
                     <c:if test="${not empty sessionScope.errorMessage}"><div class="error-message">${sessionScope.errorMessage}</div><c:remove var="errorMessage" scope="session"/></c:if>
 
-                    <form action="${BASE_URL}/customer/list" method="GET" id="filterForm">
+                        <form action="${BASE_URL}/customer/list" method="GET" id="filterForm">
                         <div class="table-toolbar">
                             <div style="position: relative; flex-grow: 1;">
                                 <div class="search-box"><i data-feather="search"></i><input type="text" id="searchInput" name="search" placeholder="Tìm theo tên, mã, hotline..." value="<c:out value='${searchQuery}'/>" autocomplete="off"></div>
@@ -127,12 +128,12 @@
                         </div>
                         <div class="filter-container" id="filter-container">
                             <div class="filter-group"><label for="province">Tỉnh/Thành phố</label><select id="province" name="provinceId"><option value="">Tất cả</option><c:forEach var="p" items="${allProvinces}"><option value="${p.id}" ${p.id == selectedProvinceId ? 'selected' : ''}>${p.name}</option></c:forEach></select></div>
-                            <div class="filter-group"><label for="district">Quận/Huyện</label><select id="district" name="districtId" disabled><option value="">Tất cả</option></select></div>
-                            <div class="filter-group"><label for="ward">Phường/Xã</label><select id="ward" name="wardId" disabled><option value="">Tất cả</option></select></div>
-                            <div class="filter-group"><label for="customerType">Loại khách hàng</label><select id="customerType" name="customerTypeId"><option value="">Tất cả</option><c:forEach var="type" items="${allCustomerTypes}"><option value="${type.id}" ${type.id == selectedCustomerTypeId ? 'selected' : ''}>${type.name}</option></c:forEach></select></div>
+                                <div class="filter-group"><label for="district">Quận/Huyện</label><select id="district" name="districtId" disabled><option value="">Tất cả</option></select></div>
+                                <div class="filter-group"><label for="ward">Phường/Xã</label><select id="ward" name="wardId" disabled><option value="">Tất cả</option></select></div>
+                                <div class="filter-group"><label for="customerType">Loại khách hàng</label><select id="customerType" name="customerTypeId"><option value="">Tất cả</option><c:forEach var="type" items="${allCustomerTypes}"><option value="${type.id}" ${type.id == selectedCustomerTypeId ? 'selected' : ''}>${type.name}</option></c:forEach></select></div>
                             <div class="filter-group"><label for="employee">Nhân viên</label><select id="employee" name="employeeId"><option value="">Tất cả</option><c:forEach var="emp" items="${allEmployees}"><option value="${emp.id}" ${emp.id == selectedEmployeeId ? 'selected' : ''}>${emp.fullNameCombined}</option></c:forEach></select></div>
-                            <div class="filter-actions">
-                                <a href="${BASE_URL}/customer/list" class="btn btn-secondary" id="clear-filter-btn">Xóa lọc</a>
+                                <div class="filter-actions">
+                                    <a href="${BASE_URL}/customer/list" class="btn btn-secondary" id="clear-filter-btn">Xóa lọc</a>
                             </div>
                         </div>
                     </form>
@@ -147,7 +148,7 @@
                                     <c:forEach var="customer" items="${customerList}">
                                         <tr>
                                             <td><a href="${BASE_URL}/customer/view?id=${customer.id}">${customer.enterpriseCode}</a></td>
-                                            <%-- === BẮT ĐẦU SỬA LỖI === --%>
+                                                <%-- === BẮT ĐẦU SỬA LỖI === --%>
                                             <td>
                                                 <div class="customer-info">
                                                     <%-- Đã xóa thẻ <img> hiển thị avatar tại đây --%>
@@ -162,18 +163,18 @@
                                             <td>
                                                 <div class="table-actions">
                                                     <a href="${BASE_URL}/customer/view?id=${customer.id}" title="Xem"><i data-feather="eye" style="color: #6b7280;"></i></a>
-                                                    <c:if test="${sessionScope.user.roleName == 'Admin' || sessionScope.user.roleName == 'Kinh doanh'}">
+                                                        <c:if test="${sessionScope.user.roleName == 'Admin' || sessionScope.user.roleName == 'Kinh doanh'}">
                                                         <a href="${BASE_URL}/customer/edit?id=${customer.id}" title="Sửa"><i data-feather="edit-2" style="color: #6b7280;"></i></a>
                                                         <span class="delete-trigger-btn" data-id="${customer.id}" data-name="<c:out value='${customer.name}'/>" title="Xóa"><i data-feather="trash-2" style="color: #6b7280;"></i></span>
-                                                    </c:if>
+                                                        </c:if>
                                                 </div>
                                             </td>
                                         </tr>
                                     </c:forEach>
                                     <c:if test="${empty customerList}"><td colspan="7" style="text-align: center; padding: 20px;">Không có khách hàng nào.</td></c:if>
-                                </tbody>
-                            </table>
-                        </div>
+                                    </tbody>
+                                </table>
+                            </div>
                         <jsp:include page="/pagination.jsp" />
                     </div>
                 </div>

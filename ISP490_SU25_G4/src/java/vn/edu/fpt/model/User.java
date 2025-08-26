@@ -69,6 +69,32 @@ public class User {
         return lastName + " " + firstName;
     }
 
+    public String getFullName1() {
+        // Ưu tiên trả về fullName nếu nó đã được gán trực tiếp
+        if (this.fullName != null && !this.fullName.isEmpty()) {
+            return this.fullName;
+        }
+
+        // Nếu không, mới xây dựng lại từ các thành phần
+        StringBuilder sb = new StringBuilder();
+        if (lastName != null && !lastName.isEmpty()) {
+            sb.append(lastName);
+        }
+        if (middleName != null && !middleName.isEmpty()) {
+            if (sb.length() > 0) {
+                sb.append(" ");
+            }
+            sb.append(middleName);
+        }
+        if (firstName != null && !firstName.isEmpty()) {
+            if (sb.length() > 0) {
+                sb.append(" ");
+            }
+            sb.append(firstName);
+        }
+        return sb.toString().trim();
+    }
+
     /**
      * Lấy tên đầy đủ của người dùng bằng cách ghép các thành phần tên. Phương
      * thức này xử lý cả trường hợp các thành phần tên có thể bị null.

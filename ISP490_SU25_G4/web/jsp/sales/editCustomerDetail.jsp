@@ -22,6 +22,7 @@
         <link rel="stylesheet" href="${BASE_URL}/css/createCustomer.css"> 
         <link rel="stylesheet" href="${BASE_URL}/css/viewCustomerDetail.css">
         <script src="https://unpkg.com/feather-icons"></script>
+        <link rel="icon" href="${pageContext.request.contextPath}/image/logo.png" type="image/png">
         <style>
             .avatar-section #avatarPreview {
                 width: 120px;

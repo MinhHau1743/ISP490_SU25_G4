@@ -14,7 +14,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/createTicket.css?v=<%= System.currentTimeMillis()%>">
-
+        <link rel="icon" href="${pageContext.request.contextPath}/image/logo.png" type="image/png">
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://unpkg.com/feather-icons"></script>
 

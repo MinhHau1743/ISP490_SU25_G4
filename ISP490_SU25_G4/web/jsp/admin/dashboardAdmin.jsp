@@ -21,6 +21,7 @@
         <link rel="stylesheet" href="../../css/menu.css">
         <link rel="stylesheet" href="../../css/header.css">
         <link rel="stylesheet" href="../../css/pagination.css">
+        <link rel="icon" href="${pageContext.request.contextPath}/image/logo.png" type="image/png">
     </head>
     <body>
         <div class="app-container">

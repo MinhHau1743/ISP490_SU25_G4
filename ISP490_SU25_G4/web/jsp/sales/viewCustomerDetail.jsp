@@ -23,6 +23,7 @@
         <link rel="stylesheet" href="${BASE_URL}/css/mainMenu.css">
         <link rel="stylesheet" href="${BASE_URL}/css/viewCustomerDetail.css">
         <script src="https://unpkg.com/feather-icons"></script>
+        <link rel="icon" href="${pageContext.request.contextPath}/image/logo.png" type="image/png">
     </head>
     <body>
         <div class="app-container">
@@ -33,7 +34,7 @@
                         <div class="page-content">
                             <div class="detail-header">
                                 <a href="${BASE_URL}/customer/list" class="back-link"><i data-feather="arrow-left"></i><span>Quay lại danh sách</span></a>
-                                    <%-- /jsp/sales/viewCustomerDetail.jsp --%>
+                                        <%-- /jsp/sales/viewCustomerDetail.jsp --%>
 
                                 <div class="header-actions">
                                     <%-- Nút Sửa: Chỉ Admin và Kinh doanh có quyền --%>
