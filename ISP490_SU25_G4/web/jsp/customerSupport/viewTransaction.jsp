@@ -57,16 +57,23 @@
                         </a>
                         <div class="action-buttons">
                             <a href="${pageContext.request.contextPath}/ticket?action=edit&id=${ticket.id}" class="btn btn-primary"><i data-feather="edit-2"></i>Sửa</a>
+
+                            <%-- ================== SỬA LOGIC HIỂN THỊ NÚT TẠI ĐÂY ================== --%>
                             <c:choose>
                                 <c:when test="${hasFeedback}">
-                                    <div class="feedback-sent-notice"><i data-feather="check-circle"></i><span>Đã nhận phản hồi</span></div>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <c:if test="${ticket.status == 'Đã giải quyết' || ticket.status == 'Đã đóng'}">
+                                    <%-- Thêm class="feedback-sent-notice" vào đây --%>
+                                    <div class="feedback-sent-notice">
+                                        <i data-feather="check-circle"></i>
+                                        <span>Đã nhận phản hồi</span>
+                                    </div>
+                                </c:when>
+                                <c:otherwise>
+                                    <c:if test="${ticket.status == 'Hoàn thành' || ticket.status == 'Quá hạn'}">
                                         <a href="${pageContext.request.contextPath}/ticket?action=sendSurvey&id=${ticket.id}" class="btn btn-teal"><i data-feather="mail"></i>Gửi Khảo Sát</a>
                                     </c:if>
                                 </c:otherwise>
                             </c:choose>
+                            <%-- ======================================================================= --%>
                         </div>
                     </div>
 
@@ -121,6 +128,9 @@
                                             <c:when test="${ticket.status == 'Đã giải quyết'}"><span class="status-pill status-resolved">Đã giải quyết</span></c:when>
                                             <c:when test="${ticket.status == 'Đã đóng'}"><span class="status-pill status-closed">Đã đóng</span></c:when>
                                             <c:when test="${ticket.status == 'Đã hủy'}"><span class="status-pill status-rejected">Đã hủy</span></c:when>
+                                            <%-- Thêm các trạng thái mới để hiển thị đúng màu --%>
+                                            <c:when test="${ticket.status == 'Hoàn thành'}"><span class="status-pill status-resolved">Hoàn thành</span></c:when>
+                                            <c:when test="${ticket.status == 'Quá hạn'}"><span class="status-pill status-rejected">Quá hạn</span></c:when>
                                             <c:otherwise><span class="status-pill">${ticket.status}</span></c:otherwise>
                                         </c:choose>
                                     </span>
@@ -151,8 +161,6 @@
                                     </div>
 
                                 <c:if test="${not empty schedule}">
-                                    <%-- Thêm style để đặt màu nền --%>
-
                                     <div class="info-item">
                                         <span style="font-weight: bold;">Lịch hẹn</span>
                                     </div>
@@ -180,7 +188,6 @@
                                             </div>
                                         </div>
                                     </div>
-
                                 </c:if>
 
                                 <div class="info-item">

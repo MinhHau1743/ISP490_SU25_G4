@@ -370,3 +370,16 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     border: 1px solid #ddd; /* Thêm viền nhẹ cho đẹp hơn */
     vertical-align: middle; /* Căn giữa với dòng chữ nếu có */
 }
+
+/* === CSS CHO THÔNG BÁO ĐÃ GỬI PHẢN HỒI === */
+.feedback-sent-notice {
+    display: inline-flex; /* Sử dụng flexbox để căn chỉnh icon và chữ */
+    align-items: center; /* Căn giữa theo chiều dọc */
+    gap: 8px; /* Khoảng cách giữa icon và chữ */
+    padding: 8px 16px; /* Tăng khoảng đệm cho đẹp hơn */
+    border-radius: 8px; /* Bo tròn các góc */
+    background-color: var(--status-completed-bg); /* Màu nền xanh lá cây nhạt */
+    color: var(--status-completed-text); /* Màu chữ xanh lá cây đậm */
+    border: 1px solid #b7eb8f; /* Thêm viền nhẹ */
+    font-weight: 600; /* Làm đậm chữ */
+}

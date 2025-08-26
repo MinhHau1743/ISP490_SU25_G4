@@ -17,15 +17,21 @@ public class FeedbackDAO extends DBContext {
      * technical_request_id và contract_id.
      */
     public boolean addFeedback(Feedback feedback) {
-        String sql = "INSERT INTO Feedbacks (enterprise_id, rating, comment, appointment_id, technical_request_id, contract_id, status) VALUES (?, ?, ?, ?, ?, ?, 'moi')";
+        // Sửa lại câu lệnh SQL: Bỏ cột "appointment_id" và tham số tương ứng
+        String sql = "INSERT INTO Feedbacks (enterprise_id, rating, comment, technical_request_id, contract_id, status) VALUES (?, ?, ?, ?, ?, 'moi')";
+
         try (Connection conn = new DBContext().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setInt(1, feedback.getEnterpriseId());
             ps.setInt(2, feedback.getRating());
             ps.setString(3, feedback.getComment());
-            ps.setObject(4, feedback.getAppointmentId());
-            ps.setObject(5, feedback.getTechnicalRequestId());
-            ps.setObject(6, feedback.getContractId());
+
+            // Cập nhật lại chỉ số tham số cho đúng
+            ps.setObject(4, feedback.getTechnicalRequestId()); // Trước đây là 5
+            ps.setObject(5, feedback.getContractId());      // Trước đây là 6
+
             return ps.executeUpdate() > 0;
+
         } catch (Exception ex) {
             ex.printStackTrace();
             return false;
