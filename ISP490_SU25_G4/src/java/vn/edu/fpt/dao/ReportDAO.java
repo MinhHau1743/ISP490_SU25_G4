@@ -612,4 +612,32 @@ public class ReportDAO extends DBContext {
             System.out.println("Không có hợp đồng nào trong khoảng thời gian này!");
         }
     }
+    // ================== THÊM PHƯƠNG THỨC MỚI ==================
+    /**
+     * Đếm tổng số yêu cầu kỹ thuật đã hoàn thành trong khoảng thời gian.
+     */
+    public int getCompletedTechnicalRequestsCount(String startDate, String endDate) {
+        String query = "SELECT COUNT(DISTINCT tr.id) "
+                + "FROM TechnicalRequests tr "
+                + "JOIN MaintenanceSchedules ms ON tr.id = ms.technical_request_id "
+                + "JOIN Statuses s ON ms.status_id = s.id "
+                + "WHERE s.status_name = 'Hoàn thành' "
+                + "AND tr.created_at BETWEEN ? AND ? AND tr.is_deleted = 0";
+        return getCount(query, startDate, endDate);
+    }
+
+    /**
+     * Đếm tổng số chiến dịch đã hoàn thành trong khoảng thời gian.
+     */
+    public int getCompletedCampaignsCount(String startDate, String endDate) {
+        String query = "SELECT COUNT(DISTINCT c.campaign_id) "
+                + "FROM Campaigns c "
+                + "JOIN MaintenanceSchedules ms ON c.campaign_id = ms.campaign_id "
+                + "JOIN Statuses s ON ms.status_id = s.id "
+                + "WHERE s.status_name = 'Hoàn thành' "
+                + "AND c.created_at BETWEEN ? AND ? AND c.is_deleted = 0";
+        return getCount(query, startDate, endDate);
+    }
+    
+    
 }
