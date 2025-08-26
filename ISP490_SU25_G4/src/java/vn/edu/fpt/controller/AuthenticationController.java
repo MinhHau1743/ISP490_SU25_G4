@@ -142,7 +142,7 @@ public class AuthenticationController extends HttpServlet {
                 session.setAttribute("email", email);
                 response.sendRedirect("resetPassword.jsp");
             } else {
-                response.sendRedirect("dashboard.jsp");
+                response.sendRedirect("dashboard");
             }
         } else {
             request.setAttribute("error", "Email hoặc mật khẩu không đúng!");
@@ -257,7 +257,7 @@ public class AuthenticationController extends HttpServlet {
             if (loggedInUser != null) {
                 this.userDao.setRequireChangePasswordFlag(email, 0);
                 session.removeAttribute("email");
-                response.sendRedirect("dashboard.jsp");
+                response.sendRedirect("dashboard");
             } else {
                 session.invalidate();
                 request.setAttribute("success", "Cập nhật mật khẩu thành công! Vui lòng đăng nhập lại.");

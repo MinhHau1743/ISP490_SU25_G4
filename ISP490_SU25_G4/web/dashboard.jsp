@@ -23,28 +23,72 @@
 
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <style>
-            .quick-filters { display: flex; gap: 8px; align-items: center; margin-bottom: 24px; }
-            .quick-filter-btn { display: inline-block; padding: 8px 16px; border: 1px solid #dee2e6; border-radius: 20px; background-color: #f8f9fa; color: #495057; font-size: 14px; font-weight: 500; text-decoration: none; transition: all 0.2s ease-in-out; }
-            .quick-filter-btn:hover { border-color: var(--primary-color); color: var(--primary-color); background-color: var(--primary-color-light); }
-            .quick-filter-btn.active { background-color: var(--primary-color); color: #ffffff; border-color: var(--primary-color); }
-            .welcome-header { margin-bottom: 24px; }
-            .welcome-header h1 { font-size: 24px; font-weight: 600; color: #212529; margin: 0; }
-            .welcome-header p { font-size: 16px; color: #6c757d; margin-top: 4px; }
-            .dashboard-grid { 
-                display: grid; 
-                gap: 24px; 
+            .quick-filters {
+                display: flex;
+                gap: 8px;
+                align-items: center;
+                margin-bottom: 24px;
+            }
+            .quick-filter-btn {
+                display: inline-block;
+                padding: 8px 16px;
+                border: 1px solid #dee2e6;
+                border-radius: 20px;
+                background-color: #f8f9fa;
+                color: #495057;
+                font-size: 14px;
+                font-weight: 500;
+                text-decoration: none;
+                transition: all 0.2s ease-in-out;
+            }
+            .quick-filter-btn:hover {
+                border-color: var(--primary-color);
+                color: var(--primary-color);
+                background-color: var(--primary-color-light);
+            }
+            .quick-filter-btn.active {
+                background-color: var(--primary-color);
+                color: #ffffff;
+                border-color: var(--primary-color);
+            }
+            .welcome-header {
+                margin-bottom: 24px;
+            }
+            .welcome-header h1 {
+                font-size: 24px;
+                font-weight: 600;
+                color: #212529;
+                margin: 0;
+            }
+            .welcome-header p {
+                font-size: 16px;
+                color: #6c757d;
+                margin-top: 4px;
+            }
+            .dashboard-grid {
+                display: grid;
+                gap: 24px;
                 grid-template-columns: repeat(4, 1fr); /* 4 cột như cũ */
             }
-            .main-chart-card { 
+            .main-chart-card {
                 grid-column: 1 / -1; /* Biểu đồ doanh thu vẫn chiếm hết 4 cột */
-                height: 350px; 
+                height: 350px;
             }
             /* SỬA ĐỔI TẠI ĐÂY: Để 2 biểu đồ nằm cạnh nhau, mỗi cái chiếm 2 cột (1/2 chiều rộng) */
-            .two-column-chart { 
+            .two-column-chart {
                 grid-column: span 2; /* Mỗi biểu đồ chiếm 2 cột trong tổng số 4 cột */
-                height: 350px; 
+                height: 350px;
             }
-            .no-data-message { display: flex; justify-content: center; align-items: center; height: 100%; color: #868e96; font-size: 14px; text-align: center; padding: 20px; }
+            .no-data-message {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100%;
+                color: #868e96;
+                font-size: 14px;
+                text-align: center;
+                padding: 20px;
+            }
         </style>
     </head>
     <body>
@@ -95,7 +139,7 @@
                                 </c:choose>
                             </div>
                         </div>
-                        
+
                         <%-- SỬA ĐỔI TẠI ĐÂY: Sử dụng class 'two-column-chart' --%>
                         <div class="report-card two-column-chart"> 
                             <div class="report-card-header"><h3>Trạng thái Yêu cầu Kỹ thuật</h3></div>
@@ -121,7 +165,7 @@
                 </section>
             </main>
         </div>
-        
+
         <script src="https://unpkg.com/feather-icons"></script>
         <script>
             // Hàm parse JSON an toàn
@@ -139,7 +183,7 @@
             const revenueData = safeParse('${revenueTrendJson}');
             const techRequestStatusData = safeParse('${techRequestStatusJson}');
             const campaignTypesData = safeParse('${campaignTypesJson}');
-            
+
             const chartColors = ['#0d9488', '#14b8a6', '#2dd4bf', '#5eead4', '#99f6e4', '#ccfbf1'];
 
             document.addEventListener('DOMContentLoaded', function () {
@@ -148,19 +192,19 @@
                 // 1. Biểu đồ Doanh thu (Line Chart)
                 if (document.getElementById('revenueTrendChart') && revenueData && revenueData.length > 0) {
                     const ctx = document.getElementById('revenueTrendChart').getContext('2d');
-                    new Chart(ctx, { type: 'line', data: { labels: revenueData.map(d => new Date(d.date).toLocaleDateString('vi-VN')), datasets: [{ label: 'Doanh thu', data: revenueData.map(d => d.revenue), borderColor: 'rgba(13, 148, 136, 1)', backgroundColor: 'rgba(13, 148, 136, 0.1)', tension: 0.3, fill: true, borderWidth: 2}]}, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { callback: value => new Intl.NumberFormat('vi-VN').format(value) }}}, plugins: { legend: { display: false }, tooltip: { callbacks: { label: context => 'Doanh thu: ' + new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(context.parsed.y) }}} }});
+                    new Chart(ctx, {type: 'line', data: {labels: revenueData.map(d => new Date(d.date).toLocaleDateString('vi-VN')), datasets: [{label: 'Doanh thu', data: revenueData.map(d => d.revenue), borderColor: 'rgba(13, 148, 136, 1)', backgroundColor: 'rgba(13, 148, 136, 0.1)', tension: 0.3, fill: true, borderWidth: 2}]}, options: {responsive: true, maintainAspectRatio: false, scales: {y: {beginAtZero: true, ticks: {callback: value => new Intl.NumberFormat('vi-VN').format(value)}}}, plugins: {legend: {display: false}, tooltip: {callbacks: {label: context => 'Doanh thu: ' + new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(context.parsed.y)}}}}});
                 }
 
                 // 2. Biểu đồ Trạng thái Yêu cầu Kỹ thuật (Bar Chart)
                 if (document.getElementById('techRequestStatusChart') && techRequestStatusData && Object.keys(techRequestStatusData).length > 0) {
                     const ctx = document.getElementById('techRequestStatusChart').getContext('2d');
-                    new Chart(ctx, { type: 'bar', data: { labels: Object.keys(techRequestStatusData), datasets: [{ label: 'Số lượng', data: Object.values(techRequestStatusData), backgroundColor: chartColors }]}, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }});
+                    new Chart(ctx, {type: 'bar', data: {labels: Object.keys(techRequestStatusData), datasets: [{label: 'Số lượng', data: Object.values(techRequestStatusData), backgroundColor: chartColors}]}, options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {display: false}}}});
                 }
-                
+
                 // 3. Biểu đồ Phân loại Chiến dịch (Doughnut Chart)
                 if (document.getElementById('campaignTypesChart') && campaignTypesData && Object.keys(campaignTypesData).length > 0) {
                     const ctx = document.getElementById('campaignTypesChart').getContext('2d');
-                    new Chart(ctx, { type: 'doughnut', data: { labels: Object.keys(campaignTypesData), datasets: [{ data: Object.values(campaignTypesData), backgroundColor: chartColors }]}, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }});
+                    new Chart(ctx, {type: 'doughnut', data: {labels: Object.keys(campaignTypesData), datasets: [{data: Object.values(campaignTypesData), backgroundColor: chartColors}]}, options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {position: 'right'}}}});
                 }
             });
         </script>
