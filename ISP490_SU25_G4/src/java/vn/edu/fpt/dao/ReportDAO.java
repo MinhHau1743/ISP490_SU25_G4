@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -612,6 +613,7 @@ public class ReportDAO extends DBContext {
             System.out.println("Không có hợp đồng nào trong khoảng thời gian này!");
         }
     }
+
     // ================== THÊM PHƯƠNG THỨC MỚI ==================
     /**
      * Đếm tổng số yêu cầu kỹ thuật đã hoàn thành trong khoảng thời gian.
@@ -638,6 +640,69 @@ public class ReportDAO extends DBContext {
                 + "AND c.created_at BETWEEN ? AND ? AND c.is_deleted = 0";
         return getCount(query, startDate, endDate);
     }
-    
-    
+
+   
+    /**
+     * Lỗi 2: incompatible with sql_mode=only_full_group_by Nguyên nhân: ORDER
+     * BY ct.id trong khi ct.id không có trong GROUP BY. Cách sửa: Thêm ct.id
+     * vào mệnh đề GROUP BY.
+     */
+    public Map<String, Integer> getCampaignTypeDistribution(String startDate, String endDate) {
+        Map<String, Integer> typeCounts = new LinkedHashMap<>();
+        // SỬA LẠI CÂU QUERY
+        String query = "SELECT ct.type_name, COUNT(c.campaign_id) as count "
+                + "FROM Campaigns c "
+                + "JOIN CampaignTypes ct ON c.type_id = ct.id "
+                + "WHERE c.created_at BETWEEN ? AND ? AND c.is_deleted = 0 "
+                + "GROUP BY ct.id, ct.type_name ORDER BY ct.id"; // Thêm ct.id vào GROUP BY
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setString(1, startDate);
+            ps.setString(2, endDate);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    typeCounts.put(rs.getString("type_name"), rs.getInt("count"));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return typeCounts;
+    }
+
+    /**
+     * Lỗi 1: Unknown column 'status' Nguyên nhân: Bảng TechnicalRequests không
+     * có cột status. Trạng thái thực tế được lấy thông qua bảng
+     * MaintenanceSchedules và Statuses. Cách sửa: JOIN các bảng lại để lấy đúng
+     * tên trạng thái.
+     */
+    public Map<String, Integer> getTechnicalRequestStatusDistribution(String startDate, String endDate) {
+        Map<String, Integer> statusCounts = new LinkedHashMap<>();
+        // SỬA LẠI CÂU QUERY
+        String query = "SELECT s.status_name, COUNT(DISTINCT tr.id) as count "
+                + "FROM TechnicalRequests tr "
+                + "LEFT JOIN MaintenanceSchedules ms ON tr.id = ms.technical_request_id "
+                + "LEFT JOIN Statuses s ON ms.status_id = s.id "
+                + "WHERE tr.created_at BETWEEN ? AND ? AND tr.is_deleted = 0 "
+                + "GROUP BY s.status_name";
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setString(1, startDate);
+            ps.setString(2, endDate);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String statusName = rs.getString("status_name");
+                    // Xử lý trường hợp có yêu cầu nhưng chưa được gán lịch (status is NULL)
+                    if (statusName == null) {
+                        statusName = "Chưa lên lịch";
+                    }
+                    statusCounts.put(statusName, rs.getInt("count"));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return statusCounts;
+    }
+
 }

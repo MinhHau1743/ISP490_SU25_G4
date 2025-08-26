@@ -60,50 +60,46 @@ public class DashboardController extends HttpServlet {
         String dateFromStr = startDate.format(formatter);
         String dateToStr = endDate.format(formatter);
 
-        // --- Lấy dữ liệu từ DAO (đã cập nhật) ---
+        // --- Lấy dữ liệu KPIs ---
         double totalRevenue = reportDAO.getTotalRevenue(dateFromStr, dateToStr);
         int newCustomers = reportDAO.getNewCustomerCount(dateFromStr, dateToStr);
-        // THAY THẾ HAI DÒNG CŨ BẰNG HAI DÒNG MỚI:
         int completedRequests = reportDAO.getCompletedTechnicalRequestsCount(dateFromStr, dateToStr);
         int completedCampaigns = reportDAO.getCompletedCampaignsCount(dateFromStr, dateToStr);
         
-        Map<String, Integer> contractStatusCounts = reportDAO.getContractStatusCounts(dateFromStr, dateToStr);
-        List<Map<String, Object>> topProducts = reportDAO.getTopProducts(dateFromStr, dateToStr, 5);
+        // --- Lấy dữ liệu cho các biểu đồ ---
         List<Map<String, Object>> revenueTrend = reportDAO.getRevenueTrend(dateFromStr, dateToStr);
+        Map<String, Integer> techRequestStatus = reportDAO.getTechnicalRequestStatusDistribution(dateFromStr, dateToStr);
+        Map<String, Integer> campaignTypes = reportDAO.getCampaignTypeDistribution(dateFromStr, dateToStr);
 
-        // Chuyển dữ liệu biểu đồ sang JSON
+        // Chuyển dữ liệu sang JSON
         Gson gson = new Gson();
         String revenueTrendJson = gson.toJson(revenueTrend);
-        String topProductsJson = gson.toJson(topProducts);
-        String contractStatusCountsJson = gson.toJson(contractStatusCounts);
+        String techRequestStatusJson = gson.toJson(techRequestStatus);
+        String campaignTypesJson = gson.toJson(campaignTypes);
 
-        // --- Gửi dữ liệu sang JSP (đã cập nhật) ---
+        // --- Gửi dữ liệu sang JSP ---
         request.setAttribute("totalRevenue", totalRevenue);
         request.setAttribute("newCustomers", newCustomers);
-        // THAY THẾ HAI DÒNG CŨ BẰNG HAI DÒNG MỚI:
         request.setAttribute("completedRequests", completedRequests);
         request.setAttribute("completedCampaigns", completedCampaigns);
-        
-        request.setAttribute("selectedPeriod", period); 
+        request.setAttribute("selectedPeriod", period);
         request.setAttribute("summaryPeriod", summaryPeriod);
 
-        // Gửi dữ liệu JSON sang JSP
+        // Gửi dữ liệu JSON của các biểu đồ sang JSP
         request.setAttribute("revenueTrendJson", revenueTrendJson);
-        request.setAttribute("topProductsJson", topProductsJson);
-        request.setAttribute("contractStatusCountsJson", contractStatusCountsJson); 
+        request.setAttribute("techRequestStatusJson", techRequestStatusJson);
+        request.setAttribute("campaignTypesJson", campaignTypesJson);
 
         request.getRequestDispatcher("dashboard.jsp").forward(request, response);
     }
-
+    
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         processRequest(request, response);
     }
-
+    
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         processRequest(request, response);
     }
 }
