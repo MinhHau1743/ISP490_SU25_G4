@@ -88,7 +88,13 @@ public class ReportDAO extends DBContext {
     }
 
     public int getNewCustomerCount(String startDate, String endDate) {
-        String query = "SELECT COUNT(id) FROM Enterprises WHERE created_at BETWEEN ? AND ? AND is_deleted = 0";
+        // THAY ĐỔI CÂU QUERY Ở ĐÂY
+        String query = "SELECT COUNT(e.id) "
+                + "FROM Enterprises e "
+                + "JOIN CustomerTypes ct ON e.customer_type_id = ct.id "
+                + "WHERE ct.name = 'Khách hàng Mới' " // Chỉ lấy khách hàng có loại là 'Khách hàng Mới'
+                + "AND e.created_at BETWEEN ? AND ? "
+                + "AND e.is_deleted = 0";
         return getCount(query, startDate, endDate);
     }
 
@@ -641,7 +647,6 @@ public class ReportDAO extends DBContext {
         return getCount(query, startDate, endDate);
     }
 
-   
     /**
      * Lỗi 2: incompatible with sql_mode=only_full_group_by Nguyên nhân: ORDER
      * BY ct.id trong khi ct.id không có trong GROUP BY. Cách sửa: Thêm ct.id
