@@ -102,7 +102,6 @@
         <div class="app-container">
             <jsp:include page="/mainMenu.jsp"/>
             <main class="main-content">
-                <%-- ĐÃ XÓA 'novalidate' ĐỂ BẬT VALIDATION CỦA TRÌNH DUYỆT --%>
                 <form id="createTicketForm" class="page-content" action="${pageContext.request.contextPath}/ticket" method="post">
                     <input type="hidden" name="action" value="create">
                     <input type="hidden" id="contractId" name="contractId">
@@ -241,10 +240,7 @@
                                 <div class="sidebar-form-row">
                                     <label for="status">Trạng thái</label>
                                     <select id="status" name="status" class="form-control">
-                                        <%-- Lặp qua danh sách trạng thái từ Controller --%>
                                         <c:forEach var="st" items="${statusList}">
-                                            <%-- Dùng status_name cho cả value và phần hiển thị --%>
-                                            <%-- Chọn "Mới tạo" làm giá trị mặc định --%>
                                             <option value="${st.statusName}" ${st.statusName == 'Mới tạo' ? 'selected' : ''}>
                                                 ${st.statusName}
                                             </option>
@@ -361,15 +357,15 @@
                 </div>
             </div>
         </div>
-        <%-- ================= THÊM MODAL THÔNG BÁO MỚI TẠI ĐÂY ================= --%>
+        
         <div id="alertModal" class="modal">
-            <div class="modal-content" style="width: 350px;"> <%-- Thu nhỏ chiều rộng cho giống hộp thoại --%>
+            <div class="modal-content" style="width: 350px;">
                 <div class="modal-header">
                     <h2 id="alertModalTitle">Thông báo</h2>
                     <span class="close-alert-modal">&times;</span>
                 </div>
                 <div class="modal-body" style="text-align: center;">
-                    <p id="alertModalMessage" style="font-size: 16px;"></p> <%-- Nội dung sẽ được JS điền vào --%>
+                    <p id="alertModalMessage" style="font-size: 16px;"></p>
                     <div style="margin-top: 20px;">
                         <button type="button" class="btn btn-primary close-alert-modal">OK</button>
                     </div>
@@ -377,9 +373,44 @@
             </div>
         </div>
 
+        <%-- ================= SCRIPT SECTION (ĐÃ CẬP NHẬT) ================= --%>
         <script>
+            // Đặt biến contextPath để JS có thể sử dụng
             window.contextPath = '<%= request.getContextPath()%>';
+            
+            // Thêm logic validation ngày và giờ vào sự kiện DOMContentLoaded
+            document.addEventListener('DOMContentLoaded', function() {
+                const scheduledDate = document.getElementById('scheduled_date');
+                const endDate = document.getElementById('end_date');
+                const startTime = document.getElementById('start_time');
+                const endTime = document.getElementById('end_time');
+
+                function updateDateTimeConstraints() {
+                    // 1. Ngày kết thúc không được nhỏ hơn ngày bắt đầu
+                    if (scheduledDate.value) {
+                        endDate.min = scheduledDate.value;
+                    } else {
+                        endDate.removeAttribute('min');
+                    }
+                    
+                    // 2. Nếu là cùng một ngày, giờ kết thúc không được nhỏ hơn giờ bắt đầu
+                    if (startTime.value && scheduledDate.value && endDate.value && scheduledDate.value === endDate.value) {
+                        endTime.min = startTime.value;
+                    } else {
+                        endTime.removeAttribute('min');
+                    }
+                }
+                
+                // Gắn sự kiện để cập nhật các quy tắc khi người dùng thay đổi giá trị
+                if(scheduledDate) scheduledDate.addEventListener('change', updateDateTimeConstraints);
+                if(endDate) endDate.addEventListener('change', updateDateTimeConstraints);
+                if(startTime) startTime.addEventListener('change', updateDateTimeConstraints);
+                
+                // Gọi hàm một lần khi tải trang để áp dụng cho các giá trị đã có sẵn (nếu có)
+                updateDateTimeConstraints();
+            });
         </script>
+
         <script src="${pageContext.request.contextPath}/js/createTicket.js" defer></script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js" defer></script>
     </body>

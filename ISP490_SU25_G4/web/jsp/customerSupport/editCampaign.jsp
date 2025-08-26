@@ -1,6 +1,6 @@
 <%--
-    Document    : editCampaign.jsp
-    Description : Form chỉnh sửa chiến dịch, phiên bản cuối cùng với logic chọn một nhân viên.
+    Document   : editCampaign.jsp
+    Description : Form chỉnh sửa chiến dịch, phiên bản cuối cùng với logic chọn một nhân viên và validation ngày giờ.
 --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
@@ -71,7 +71,6 @@
                                 <c:set var="selectedStatusId" value="${not empty param.statusId ? param.statusId : maintenanceSchedule.statusId}" />
                                 <c:set var="selectedColor" value="${not empty param.color ? param.color : (not empty maintenanceSchedule.color ? maintenanceSchedule.color : '#0d9488')}" />
 
-                                <%-- Logic mới: Lấy ID nhân viên duy nhất một cách an toàn --%>
                                 <c:if test="${not empty maintenanceSchedule.assignedUserIds}">
                                     <c:set var="dbUserId" value="${maintenanceSchedule.assignedUserIds[0]}" />
                                 </c:if>
@@ -87,7 +86,7 @@
                                         <ul style="margin:8px 0 0 18px;">
                                             <c:forEach var="e" items="${fieldErrors}">
                                                 <li>${fn:escapeXml(e.value)}</li>
-                                                </c:forEach>
+                                            </c:forEach>
                                         </ul>
                                     </c:if>
                                 </div>
@@ -250,6 +249,45 @@
                 </div>
             </div>
         </div>
+        
+        <%-- PHẦN CODE ĐƯỢC THÊM VÀO ĐỂ VALIDATE --%>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                feather.replace(); // Dành cho icon
+                
+                // Các hằng số cho các trường input ngày và giờ
+                const scheduledDate = document.getElementById('scheduledDate');
+                const endDate = document.getElementById('endDate');
+                const startTime = document.getElementById('startTime');
+                const endTime = document.getElementById('endTime');
+
+                // Hàm cập nhật các quy tắc validation của trình duyệt
+                function updateDateTimeConstraints() {
+                    // 1. Luôn đảm bảo ngày kết thúc không thể chọn trước ngày bắt đầu
+                    if (scheduledDate.value) {
+                        endDate.min = scheduledDate.value;
+                    } else {
+                        endDate.removeAttribute('min');
+                    }
+                    
+                    // 2. Nếu ngày bắt đầu và ngày kết thúc là MỘT, thì giờ kết thúc không thể trước giờ bắt đầu
+                    if (startTime.value && scheduledDate.value && endDate.value && scheduledDate.value === endDate.value) {
+                        endTime.min = startTime.value;
+                    } else {
+                        // Nếu khác ngày, xóa bỏ ràng buộc về giờ
+                        endTime.removeAttribute('min');
+                    }
+                }
+                
+                // Gắn sự kiện 'change' để gọi hàm cập nhật mỗi khi người dùng thay đổi giá trị
+                if(scheduledDate) scheduledDate.addEventListener('change', updateDateTimeConstraints);
+                if(endDate) endDate.addEventListener('change', updateDateTimeConstraints);
+                if(startTime) startTime.addEventListener('change', updateDateTimeConstraints);
+                
+                // Gọi hàm một lần khi trang được tải xong để thiết lập quy tắc ban đầu
+                updateDateTimeConstraints();
+            });
+        </script>
 
         <script src="${BASE_URL}/js/mainMenu.js"></script>
         <script src="${BASE_URL}/js/editCampaign.js" defer></script>

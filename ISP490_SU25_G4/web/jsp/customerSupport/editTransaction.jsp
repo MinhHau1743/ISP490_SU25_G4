@@ -124,34 +124,34 @@
                                         <label for="serviceId">Loại phiếu (*)</label>
                                         <select id="serviceId" name="serviceId" class="form-control" required>
                                             <c:forEach var="service" items="${serviceList}"><option value="${service.id}" ${service.id == ticket.serviceId ? 'selected' : ''}>${service.name}</option></c:forEach>
-                                            </select>
-                                        </div>
-                                        <div class="form-group full-width">
-                                            <div class="address-section">
-                                                <h3>Địa chỉ thực hiện công việc</h3>
-                                                <div class="address-grid">
-                                                    <div class="form-group">
-                                                        <label for="province">Tỉnh/Thành phố (*)</label>
-                                                        <select id="province" name="province" class="form-control" required>
-                                                        <c:forEach var="p" items="${provinces}"><option value="${p.id}" ${p.id == schedule.address.provinceId ? 'selected' : ''}>${p.name}</option></c:forEach>
-                                                        </select>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label for="district">Quận/Huyện (*)</label>
-                                                        <select id="district" name="district" class="form-control" required>
-                                                        <c:forEach var="d" items="${districts}"><option value="${d.id}" ${d.id == schedule.address.districtId ? 'selected' : ''}>${d.name}</option></c:forEach>
-                                                        </select>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label for="ward">Phường/Xã (*)</label>
-                                                        <select id="ward" name="ward" class="form-control" required>
-                                                        <c:forEach var="w" items="${wards}"><option value="${w.id}" ${w.id == schedule.address.wardId ? 'selected' : ''}>${w.name}</option></c:forEach>
-                                                        </select>
-                                                    </div>
+                                        </select>
+                                    </div>
+                                    <div class="form-group full-width">
+                                        <div class="address-section">
+                                            <h3>Địa chỉ thực hiện công việc</h3>
+                                            <div class="address-grid">
+                                                <div class="form-group">
+                                                    <label for="province">Tỉnh/Thành phố (*)</label>
+                                                    <select id="province" name="province" class="form-control" required>
+                                                    <c:forEach var="p" items="${provinces}"><option value="${p.id}" ${p.id == schedule.address.provinceId ? 'selected' : ''}>${p.name}</option></c:forEach>
+                                                    </select>
                                                 </div>
                                                 <div class="form-group">
-                                                    <label for="streetAddress">Địa chỉ cụ thể (*)</label>
-                                                    <input type="text" id="streetAddress" name="streetAddress" value="${schedule.address.streetAddress}" class="form-control" required>
+                                                    <label for="district">Quận/Huyện (*)</label>
+                                                    <select id="district" name="district" class="form-control" required>
+                                                    <c:forEach var="d" items="${districts}"><option value="${d.id}" ${d.id == schedule.address.districtId ? 'selected' : ''}>${d.name}</option></c:forEach>
+                                                    </select>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="ward">Phường/Xã (*)</label>
+                                                    <select id="ward" name="ward" class="form-control" required>
+                                                    <c:forEach var="w" items="${wards}"><option value="${w.id}" ${w.id == schedule.address.wardId ? 'selected' : ''}>${w.name}</option></c:forEach>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="streetAddress">Địa chỉ cụ thể (*)</label>
+                                                <input type="text" id="streetAddress" name="streetAddress" value="${schedule.address.streetAddress}" class="form-control" required>
                                             </div>
                                         </div>
                                     </div>
@@ -175,12 +175,12 @@
                                     <label for="status">Trạng thái</label>
                                     <select id="status" name="status" class="form-control">
                                         <c:forEach var="st" items="${statusList}"><option value="${st.statusName}" ${st.statusName == ticket.status ? 'selected' : ''}>${st.statusName}</option></c:forEach>
-                                        </select>
-                                    </div>
-                                    <div class="sidebar-form-row">
-                                        <label for="priority">Mức độ ưu tiên</label>
-                                        <select id="priority" name="priority" class="form-control">
-                                            <option value="critical" ${ticket.priority == 'critical' ? 'selected' : ''}>Khẩn cấp</option>
+                                    </select>
+                                </div>
+                                <div class="sidebar-form-row">
+                                    <label for="priority">Mức độ ưu tiên</label>
+                                    <select id="priority" name="priority" class="form-control">
+                                        <option value="critical" ${ticket.priority == 'critical' ? 'selected' : ''}>Khẩn cấp</option>
                                         <option value="high" ${ticket.priority == 'high' ? 'selected' : ''}>Cao</option>
                                         <option value="medium" ${ticket.priority == 'medium' ? 'selected' : ''}>Thông thường</option>
                                         <option value="low" ${ticket.priority == 'low' ? 'selected' : ''}>Thấp</option>
@@ -190,20 +190,23 @@
                                     <label for="employeesId">Nhân viên phụ trách</label>
                                     <select id="employeesId" name="employeesId" class="form-control" required>
                                         <c:forEach var="employee" items="${employeeList}"><option value="${employee.id}" ${employee.id == ticket.assignedToId ? 'selected' : ''}>${employee.lastName} ${employee.middleName} ${employee.firstName}</option></c:forEach>
-                                        </select>
-                                    </div>
-                                    <div class="sidebar-form-row"><label>Ngày tạo</label><input type="text" class="form-control" value="<fmt:formatDate value='${ticket.createdAt}' pattern='dd/MM/yyyy HH:mm' />" readonly></div>
+                                    </select>
+                                </div>
+                                <div class="sidebar-form-row"><label>Ngày tạo</label><input type="text" class="form-control" value="<fmt:formatDate value='${ticket.createdAt}' pattern='dd/MM/yyyy HH:mm' />" readonly></div>
                                 <div class="sidebar-form-row"><label>Người tạo</label><input type="text" value="${ticket.reporterName}" class="form-control" readonly ></div>
+                                
+                                <%-- CÁC TRƯỜNG NGÀY GIỜ CẦN VALIDATE --%>
                                 <div class="sidebar-form-row row-2col">
                                     <label>Khoảng ngày</label>
-                                    <div class="control"><input type="date" name="scheduled_date" value="${schedule.scheduledDate}" class="form-control"><div class="field-hint">Bắt đầu</div></div>
-                                    <div class="control"><input type="date" name="end_date" value="${schedule.endDate}" class="form-control"><div class="field-hint">Kết thúc</div></div>
+                                    <div class="control"><input type="date" id="scheduled_date" name="scheduled_date" value="${schedule.scheduledDate}" class="form-control"><div class="field-hint">Bắt đầu</div></div>
+                                    <div class="control"><input type="date" id="end_date" name="end_date" value="${schedule.endDate}" class="form-control"><div class="field-hint">Kết thúc</div></div>
                                 </div>
                                 <div class="sidebar-form-row row-2col">
                                     <label>Khung giờ</label>
-                                    <div class="control"><input type="time" name="start_time" value="${schedule.startTime}" class="form-control"><div class="field-hint">Từ</div></div>
-                                    <div class="control"><input type="time" name="end_time" value="${schedule.endTime}" class="form-control"><div class="field-hint">Đến</div></div>
+                                    <div class="control"><input type="time" id="start_time" name="start_time" value="${schedule.startTime}" class="form-control"><div class="field-hint">Từ</div></div>
+                                    <div class="control"><input type="time" id="end_time" name="end_time" value="${schedule.endTime}" class="form-control"><div class="field-hint">Đến</div></div>
                                 </div>
+                                
                                 <div class="sidebar-form-row">
                                     <label>Màu sắc</label>
                                     <div class="color-palette">
@@ -235,39 +238,74 @@
                         <thead><tr><th>Mã Hợp đồng</th><th>Tên Khách hàng</th><th></th></tr></thead>
                         <tbody>
                             <c:forEach var="contract" items="${contractList}"><tr data-contract-id="${contract.id}" data-contract-code="${contract.contractCode}"><td>${contract.contractCode}</td><td>${contract.enterprise.name}</td><td><button type="button" class="btn btn-sm btn-primary btn-select-contract">Chọn</button></td></tr></c:forEach>
-                            </tbody>
-                        </table>
-                    </div>
+                        </tbody>
+                    </table>
                 </div>
             </div>
-            <div id="alertModal" class="modal">
-                <div class="modal-content" style="width: 350px;">
-                    <div class="modal-header"><h2 id="alertModalTitle">Thông báo</h2><span class="close-alert-modal">&times;</span></div>
-                    <div class="modal-body" style="text-align: center;"><p id="alertModalMessage" style="font-size: 16px;"></p><div style="margin-top: 20px;"><button type="button" class="btn btn-primary close-alert-modal">OK</button></div></div>
+        </div>
+        <div id="alertModal" class="modal">
+            <div class="modal-content" style="width: 350px;">
+                <div class="modal-header"><h2 id="alertModalTitle">Thông báo</h2><span class="close-alert-modal">&times;</span></div>
+                <div class="modal-body" style="text-align: center;"><p id="alertModalMessage" style="font-size: 16px;"></p><div style="margin-top: 20px;"><button type="button" class="btn btn-primary close-alert-modal">OK</button></div></div>
+            </div>
+        </div>
+        <div id="productSearchModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">Chọn sản phẩm</h3>
+                    <button type="button" class="close-modal" id="closeProductModalBtn"><i data-feather="x"></i></button>
+                </div>
+                <div class="modal-body">
+                    <div class="search-bar-container"><input type="text" id="productSearchInput" class="form-control" placeholder="Tìm kiếm sản phẩm..."></div>
+                    <div id="productList" class="product-list-container"></div>
                 </div>
             </div>
-            <div id="productSearchModal" class="modal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3 class="modal-title">Chọn sản phẩm</h3>
-                        <button type="button" class="close-modal" id="closeProductModalBtn"><i data-feather="x"></i></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="search-bar-container"><input type="text" id="productSearchInput" class="form-control" placeholder="Tìm kiếm sản phẩm..."></div>
-                        <div id="productList" class="product-list-container"></div>
-                    </div>
-                </div>
-            </div>
+        </div>
 
-            <script>
-                window.contextPath = '<%= request.getContextPath()%>';
-                window.EXISTING_DEVICES = JSON.parse('${existingDevicesJson}');
-                window.CONTRACT_PRODUCTS = JSON.parse('${contractProductsJson}');
-                window.PRESELECTED_ADDRESS = {
-                    provinceId: '${schedule.address.provinceId}',
-                    districtId: '${schedule.address.districtId}',
-                    wardId: '${schedule.address.wardId}'
-                };
+        <script>
+            window.contextPath = '<%= request.getContextPath()%>';
+            window.EXISTING_DEVICES = JSON.parse('${existingDevicesJson}');
+            window.CONTRACT_PRODUCTS = JSON.parse('${contractProductsJson}');
+            window.PRESELECTED_ADDRESS = {
+                provinceId: '${schedule.address.provinceId}',
+                districtId: '${schedule.address.districtId}',
+                wardId: '${schedule.address.wardId}'
+            };
+            
+            // ============== SCRIPT VALIDATION NGÀY GIỜ ==============
+            document.addEventListener('DOMContentLoaded', function () {
+                // Lấy các element input theo ID
+                const scheduledDate = document.getElementById('scheduled_date');
+                const endDate = document.getElementById('end_date');
+                const startTime = document.getElementById('start_time');
+                const endTime = document.getElementById('end_time');
+
+                function updateDateTimeConstraints() {
+                    // 1. Ngày kết thúc không được nhỏ hơn ngày bắt đầu
+                    if (scheduledDate.value) {
+                        endDate.min = scheduledDate.value;
+                    } else {
+                        endDate.removeAttribute('min');
+                    }
+                    
+                    // 2. Nếu là cùng một ngày, giờ kết thúc không được nhỏ hơn giờ bắt đầu
+                    if (startTime.value && scheduledDate.value && endDate.value && scheduledDate.value === endDate.value) {
+                        endTime.min = startTime.value;
+                    } else {
+                        // Nếu khác ngày hoặc không có đủ thông tin, xóa bỏ ràng buộc về giờ
+                        endTime.removeAttribute('min');
+                    }
+                }
+                
+                // Gắn sự kiện 'change' để gọi hàm cập nhật mỗi khi người dùng thay đổi giá trị
+                if(scheduledDate) scheduledDate.addEventListener('change', updateDateTimeConstraints);
+                if(endDate) endDate.addEventListener('change', updateDateTimeConstraints);
+                if(startTime) startTime.addEventListener('change', updateDateTimeConstraints);
+                
+                // Gọi hàm một lần khi trang được tải xong để thiết lập quy tắc ban đầu
+                updateDateTimeConstraints();
+            });
+            // =======================================================
         </script>
 
         <script src="${pageContext.request.contextPath}/js/editTransaction.js?v=<%= System.currentTimeMillis()%>"></script>

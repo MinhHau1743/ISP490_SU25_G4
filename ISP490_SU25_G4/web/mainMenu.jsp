@@ -12,9 +12,7 @@
             <img src="${pageContext.request.contextPath}/image/logo.png" alt="logo" class="logo-img">
             <span class="sidebar-title">DPCRM</span>
         </div>
-        <button class="pin-btn" title="Thu gọn menu">
-            <i data-feather="unlock"></i>
-        </button>
+      
     </div>
     <%-- PHẦN MENU ĐIỀU HƯỚNG --%>
     <nav class="sidebar-nav">

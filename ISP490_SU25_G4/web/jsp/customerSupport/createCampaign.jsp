@@ -1,7 +1,7 @@
 <%--
-    Document   : addNewCampaign.jsp
-    Created on : 15/08/2025
-    Author     : DPCRM Assistant (Refactor with server/client validation display)
+    Document   : createCampaign.jsp
+    Created on : 27/08/2025
+    Author     : DPCRM Assistant (Final Version - Detailed)
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
@@ -25,7 +25,7 @@
         <link rel="stylesheet" href="${BASE_URL}/css/style.css">
         <link rel="stylesheet" href="${BASE_URL}/css/header.css">
         <link rel="stylesheet" href="${BASE_URL}/css/mainMenu.css">
-        <link rel="stylesheet" href="${BASE_URL}/css/addNewCampaign.css"><%-- chứa .error-message/.field-error/.invalid --%>
+        <link rel="stylesheet" href="${BASE_URL}/css/addNewCampaign.css">
 
         <script src="https://unpkg.com/feather-icons"></script>
     </head>
@@ -49,7 +49,7 @@
                     <div class="campaign-form-container">
                         <form id="campaignForm" action="${BASE_URL}/create-campaign" method="post">
 
-                            <%-- Khối lỗi tổng: nhận lỗi server-side (errorMessage/fieldErrors) và client-side (JS) --%>
+                            <%-- Khối lỗi tổng hợp từ server và client --%>
                             <div id="formErrorContainer"
                                  class="error-message"
                                  style="${not empty errorMessage || not empty fieldErrors ? '' : 'display:none;'}; margin-bottom:16px;">
@@ -60,7 +60,7 @@
                                     <ul style="margin:8px 0 0 18px;">
                                         <c:forEach var="e" items="${fieldErrors}">
                                             <li>${fn:escapeXml(e.value)}</li>
-                                            </c:forEach>
+                                        </c:forEach>
                                     </ul>
                                 </c:if>
                             </div>
@@ -80,7 +80,6 @@
                                         <div class="field-error">${fieldErrors['name']}</div>
                                     </c:if>
                                 </div>
-
                                 <div class="form-group">
                                     <label for="campaignCode">Mã chiến dịch</label>
                                     <input type="text" id="campaignCode" name="campaignCode" class="form-control" placeholder="Tự động tạo" readonly>
@@ -105,7 +104,6 @@
                                         <div class="field-error">${fieldErrors['typeId']}</div>
                                     </c:if>
                                 </div>
-
                                 <div class="form-group">
                                     <label for="enterpriseId">Khách hàng <span class="required-star">*</span></label>
                                     <select id="enterpriseId"
@@ -144,7 +142,6 @@
                                         <div class="field-error">${fieldErrors['scheduledDate']}</div>
                                     </c:if>
                                 </div>
-
                                 <div class="form-group">
                                     <label for="endDate">Ngày kết thúc</label>
                                     <input type="date"
@@ -160,8 +157,8 @@
 
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="startTime">Giờ bắt đầu</label>
-                                    <input type="time" id="startTime" name="startTime" class="form-control" value="${param.startTime}">
+                                    <label for="startTime">Giờ bắt đầu <span class="required-star">*</span></label>
+                                    <input type="time" id="startTime" name="startTime" class="form-control" value="${param.startTime}" required>
                                 </div>
                                 <div class="form-group">
                                     <label for="endTime">Giờ kết thúc</label>
@@ -185,7 +182,6 @@
                                         <div class="field-error">${fieldErrors['province']}</div>
                                     </c:if>
                                 </div>
-
                                 <div class="form-group">
                                     <label for="district">Quận/Huyện <span class="required-star">*</span></label>
                                     <select id="district"
@@ -198,7 +194,6 @@
                                         <div class="field-error">${fieldErrors['district']}</div>
                                     </c:if>
                                 </div>
-
                                 <div class="form-group">
                                     <label for="ward">Phường/Xã <span class="required-star">*</span></label>
                                     <select id="ward"
@@ -245,7 +240,6 @@
                                         <div class="field-error">${fieldErrors['assignedUserId']}</div>
                                     </c:if>
                                 </div>
-
                                 <div class="form-group">
                                     <label for="statusId">Trạng thái ban đầu <span class="required-star">*</span></label>
                                     <select id="statusId"
@@ -308,8 +302,7 @@
 
                     fetch('${BASE_URL}/create-campaign?action=getDistricts&id=' + provinceId)
                             .then(r => {
-                                if (!r.ok)
-                                    throw new Error('Network');
+                                if (!r.ok) throw new Error('Network error');
                                 return r.json();
                             })
                             .then(data => {
@@ -324,7 +317,6 @@
                                 });
                                 districtSelect.disabled = false;
 
-                                // Auto-load wards nếu đã có district trong param
                                 const paramDistrict = '${param.district}';
                                 if (paramDistrict)
                                     loadWards(paramDistrict, '${param.ward}');
@@ -341,8 +333,7 @@
 
                     fetch('${BASE_URL}/create-campaign?action=getWards&id=' + districtId)
                             .then(r => {
-                                if (!r.ok)
-                                    throw new Error('Network');
+                                if (!r.ok) throw new Error('Network error');
                                 return r.json();
                             })
                             .then(data => {
@@ -366,51 +357,36 @@
                 if (provinceSelect) {
                     provinceSelect.addEventListener('change', function () {
                         const provinceId = this.value;
-                        if (provinceId)
-                            loadDistricts(provinceId, null);
+                        if (provinceId) loadDistricts(provinceId, null);
                     });
                 }
                 if (districtSelect) {
                     districtSelect.addEventListener('change', function () {
                         const districtId = this.value;
-                        if (districtId)
-                            loadWards(districtId, null);
+                        if (districtId) loadWards(districtId, null);
                     });
                 }
 
-                // Rehydrate districts/wards nếu user submit lỗi và quay lại
                 const paramProvince = '${param.province}';
-                if (paramProvince)
+                if (paramProvince) {
                     loadDistricts(paramProvince, '${param.district}');
+                }
 
-                // ======= VALIDATION CLIENT-SIDE (cập nhật rule) =======
+                // ======= VALIDATION CLIENT-SIDE =======
                 const campaignForm = document.getElementById('campaignForm');
                 const errorContainer = document.getElementById('formErrorContainer');
 
-                function parseISODate(d) {
-                    return d ? new Date(d + 'T00:00:00') : null;
-                } // tránh lệch timezone
-                function toMinutes(t) {
-                    if (!t || !t.includes(':'))
-                        return null;
-                    const [h, m] = t.split(':').map(Number);
-                    if (Number.isNaN(h) || Number.isNaN(m))
-                        return null;
-                    return h * 60 + m;
-                }
-
                 if (campaignForm) {
                     campaignForm.addEventListener('submit', function (event) {
-                        event.preventDefault();
                         const errors = [];
 
-                        // Required fields
                         const requiredFields = [
                             {id: 'campaignName', name: 'Tên chiến dịch'},
                             {id: 'campaignType', name: 'Loại chiến dịch'},
                             {id: 'enterpriseId', name: 'Khách hàng'},
                             {id: 'statusId', name: 'Trạng thái ban đầu'},
                             {id: 'scheduledDate', name: 'Ngày bắt đầu'},
+                            {id: 'startTime', name: 'Giờ bắt đầu'},
                             {id: 'assignedUserId', name: 'Nhân viên thực hiện'},
                             {id: 'province', name: 'Tỉnh/Thành phố'},
                             {id: 'district', name: 'Quận/Huyện'},
@@ -424,55 +400,39 @@
                             }
                         });
 
-                        // Tên chiến dịch: 3..255
                         const nameEl = document.getElementById('campaignName');
                         const nval = (nameEl?.value || '').trim();
                         if (nval && (nval.length < 3 || nval.length > 255)) {
                             errors.push('Tên chiến dịch phải từ 3 đến 255 ký tự.');
                         }
 
-                        // Địa chỉ cụ thể tối đa 255
                         const addrEl = document.getElementById('streetAddress');
                         const aval = (addrEl?.value || '').trim();
                         if (aval && aval.length > 255) {
                             errors.push('Địa chỉ cụ thể quá dài (tối đa 255 ký tự).');
                         }
 
-                        // Dates & Times
                         const scheduledDateVal = document.getElementById('scheduledDate').value || '';
                         const endDateVal = document.getElementById('endDate').value || '';
                         const startTimeVal = document.getElementById('startTime').value || '';
                         const endTimeVal = document.getElementById('endTime').value || '';
 
-                        const dStart = parseISODate(scheduledDateVal);
-                        const dEnd = parseISODate(endDateVal);
-                        const tStart = toMinutes(startTimeVal);
-                        const tEnd = toMinutes(endTimeVal);
-
-                        // endDate >= scheduledDate nếu cả hai có
-                        if (dStart && dEnd && dEnd < dStart) {
+                        if (scheduledDateVal && endDateVal && new Date(endDateVal) < new Date(scheduledDateVal)) {
                             errors.push('Lỗi: Ngày kết thúc không được sớm hơn ngày bắt đầu.');
                         }
 
-                        // Có endTime mà không có startTime
-                        if (endTimeVal && !startTimeVal) {
-                            errors.push('Lỗi: Bạn đã nhập giờ kết thúc, vui lòng nhập thêm giờ bắt đầu.');
-                        }
-
-                        // Nếu cùng ngày (không có endDate hoặc endDate == scheduledDate) và có đủ 2 giờ: endTime > startTime
-                        const sameDay = dStart && (!dEnd || (endDateVal === scheduledDateVal));
-                        if (sameDay && tStart != null && tEnd != null && tEnd <= tStart) {
+                        const sameDay = scheduledDateVal && (!endDateVal || (endDateVal === scheduledDateVal));
+                        if (sameDay && startTimeVal && endTimeVal && endTimeVal <= startTimeVal) {
                             errors.push('Lỗi: Giờ kết thúc phải sau giờ bắt đầu trong cùng ngày.');
                         }
 
                         if (errors.length > 0) {
-                            errorContainer.innerHTML =
-                                    '<strong>Vui lòng sửa các lỗi sau:</strong><br>' + errors.join('<br>');
+                            event.preventDefault();
+                            errorContainer.innerHTML = '<strong>Vui lòng sửa các lỗi sau:</strong><br>' + errors.join('<br>');
                             errorContainer.style.display = 'block';
                             errorContainer.scrollIntoView({behavior: 'smooth', block: 'start'});
                         } else {
                             errorContainer.style.display = 'none';
-                            campaignForm.submit();
                         }
                     });
                 }
@@ -503,9 +463,8 @@
 
                     colorPicker.addEventListener('click', function (event) {
                         const clickedDot = event.target.closest('.color-dot');
-                        if (!clickedDot)
-                            return;
-
+                        if (!clickedDot) return;
+                        
                         const allDots = colorPicker.querySelectorAll('.color-dot');
                         allDots.forEach(dot => {
                             dot.classList.remove('selected');
@@ -519,7 +478,6 @@
                 }
             });
         </script>
-
 
         <script src="${BASE_URL}/js/mainMenu.js"></script>
     </body>
