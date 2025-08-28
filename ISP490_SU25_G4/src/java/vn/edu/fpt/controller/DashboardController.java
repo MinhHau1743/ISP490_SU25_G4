@@ -89,7 +89,7 @@ public class DashboardController extends HttpServlet {
         request.setAttribute("revenueTrendJson", revenueTrendJson);
         request.setAttribute("techRequestStatusJson", techRequestStatusJson);
         request.setAttribute("campaignTypesJson", campaignTypesJson);
-
+System.out.println("DEBUG - Campaign JSON Data: " + campaignTypesJson);
         request.getRequestDispatcher("dashboard.jsp").forward(request, response);
     }
     

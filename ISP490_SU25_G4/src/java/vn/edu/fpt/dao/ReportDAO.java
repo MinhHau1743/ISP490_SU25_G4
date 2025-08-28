@@ -654,16 +654,27 @@ public class ReportDAO extends DBContext {
      */
     public Map<String, Integer> getCampaignTypeDistribution(String startDate, String endDate) {
         Map<String, Integer> typeCounts = new LinkedHashMap<>();
-        // SỬA LẠI CÂU QUERY
-        String query = "SELECT ct.type_name, COUNT(c.campaign_id) as count "
+
+        // QUERY ĐÃ CẬP NHẬT: Chỉ đếm các chiến dịch đã hoàn thành
+        String query = "SELECT "
+                + "    ct.type_name, "
+                + "    COUNT(c.campaign_id) AS count "
                 + "FROM Campaigns c "
                 + "JOIN CampaignTypes ct ON c.type_id = ct.id "
-                + "WHERE c.created_at BETWEEN ? AND ? AND c.is_deleted = 0 "
-                + "GROUP BY ct.id, ct.type_name ORDER BY ct.id"; // Thêm ct.id vào GROUP BY
+                + "JOIN MaintenanceSchedules ms ON c.campaign_id = ms.campaign_id " // JOIN để lấy lịch trình
+                + "JOIN Statuses s ON ms.status_id = s.id " // JOIN để lấy trạng thái
+                + "WHERE "
+                + "    s.status_name = 'Hoàn thành' " // <-- Lọc theo trạng thái
+                + "    AND DATE(ms.end_date) BETWEEN ? AND ? " // <-- Lọc theo ngày hoàn thành
+                + "    AND c.is_deleted = 0 "
+                + "GROUP BY ct.id, ct.type_name "
+                + "ORDER BY ct.id";
 
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
+
             ps.setString(1, startDate);
             ps.setString(2, endDate);
+
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     typeCounts.put(rs.getString("type_name"), rs.getInt("count"));
