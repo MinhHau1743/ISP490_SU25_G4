@@ -174,16 +174,16 @@ textarea.form-control {
     text-shadow: 0 0 3px rgba(0,0,0,0.5);
 }
 .address-grid {
-  display: grid;
-  /* Creates 3 columns of equal width */
-  grid-template-columns: repeat(3, 1fr); 
-  /* Adds a 1rem (16px) gap between the columns */
-  gap: 1rem; 
+    display: grid;
+    /* Creates 3 columns of equal width */
+    grid-template-columns: repeat(3, 1fr);
+    /* Adds a 1rem (16px) gap between the columns */
+    gap: 1rem;
 }
 .form-grid .form-group-full-width {
-  /* This tells the grid item to start at the first column line (1) 
-     and end at the very last column line (-1) */
-  grid-column: 1 / -1;
+    /* This tells the grid item to start at the first column line (1) 
+       and end at the very last column line (-1) */
+    grid-column: 1 / -1;
 }
 .selected-tags {
     display: flex;
@@ -224,4 +224,15 @@ textarea.form-control {
 .color-swatch.selected {
     outline: 2px solid #1976d2;
     box-shadow: 0 0 4px 1px #1976d277;
+}
+.error-message {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: block;
+}
+.form-group.has-error input,
+.form-group.has-error select,
+.form-group.has-error textarea {
+    border-color: #dc3545;
 }

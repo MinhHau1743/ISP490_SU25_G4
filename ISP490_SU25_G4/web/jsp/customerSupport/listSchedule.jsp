@@ -42,6 +42,19 @@
                 <jsp:include page="/header.jsp">
                     <jsp:param name="pageTitle" value="Lịch bảo trì"/>
                 </jsp:include>
+                <c:if test="${not empty sessionScope.successMsg}">
+                    <div class="alert alert-success alert-dismissible fade show position-relative" role="alert" id="autoCloseSuccessAlert">
+                        <div>${sessionScope.successMsg}</div>
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Đóng">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        <div class="progress position-absolute" style="height: 3px; left:0; right:0; bottom:0;">
+                            <div id="alertProgressBar" class="progress-bar bg-success" style="width: 100%; transition: width 0.1s linear;"></div>
+                        </div>
+                    </div>
+                    <c:remove var="successMsg" scope="session"/>
+                </c:if>
+
                 <div class="content-wrapper">
                     <section class="main-content-body">
                         <div class="calendar-toolbar">
@@ -104,14 +117,14 @@
                                             </c:forEach>
                                         </select>
                                     </div>
-                                        
-                                            <div class="filter-group">
-                                                <label>
-                                                    <input type="checkbox" name="mySchedule" value="1"
-                                                           <c:if test="${currentMySchedule == '1'}">checked</c:if>
-                                                           > Chỉ hiện lịch của tôi
-                                                </label>
-                                            </div>
+
+                                    <div class="filter-group">
+                                        <label>
+                                            <input type="checkbox" name="mySchedule" value="1"
+                                                   <c:if test="${currentMySchedule == '1'}">checked</c:if>
+                                                       > Chỉ hiện lịch của tôi
+                                            </label>
+                                        </div>
                                         <div class="filter-actions">
                                             <a href="schedule?action=listSchedule&openFilter=1" class="btn-reset-filter">Xóa lọc</a>
                                             <button type="submit" class="btn-apply-filter">Áp dụng</button>

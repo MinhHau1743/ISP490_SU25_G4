@@ -323,3 +323,25 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
+document.addEventListener('DOMContentLoaded', function () {
+    var alertElem = document.getElementById('autoCloseSuccessAlert');
+    var progressBar = document.getElementById('alertProgressBar');
+    if(alertElem && progressBar){
+        var duration = 5000; // ms
+        var step = 50; // ms
+        var elapsed = 0;
+        var interval = setInterval(function () {
+            elapsed += step;
+            var percent = Math.max(0, 100 - elapsed/duration * 100);
+            progressBar.style.width = percent + "%";
+            if (elapsed >= duration) {
+                clearInterval(interval);
+                $(alertElem).alert('close');
+            }
+        }, step);
+        // Nếu user đóng sớm thì dừng bar luôn
+        $(alertElem).on('closed.bs.alert', function () {
+            clearInterval(interval);
+        });
+    }
+});
