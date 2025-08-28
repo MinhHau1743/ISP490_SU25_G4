@@ -34,6 +34,18 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/mainMenu.css">
         <%-- Tái sử dụng CSS trang create để đồng bộ layout --%>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/createProduct.css">
+        
+        <style>
+            .error-message {
+                color: #dc3545;
+                font-size: 0.875rem;
+                margin-top: 0.25rem;
+                display: block;
+            }
+            .form-control.error {
+                border-color: #dc3545;
+            }
+        </style>
     </head>
 
     <body>
@@ -48,23 +60,10 @@
                     </button>
                 </header>
 
-                <c:if test="${not empty editErrors}">
-                    <div class="alert alert-warning alert-dismissible" style="margin: 0 24px 20px;">
-                        <button type="button" class="close" data-dismiss="alert">&times;</button>
-                        <strong>Vui lòng sửa các lỗi sau:</strong>
-                        <ul>
-                            <c:forEach var="error" items="${editErrors}">
-                                <li>${error}</li>
-                                </c:forEach>
-                        </ul>
-                    </div>
-                </c:if>
-
                 <section class="content-body">
                     <div class="form-container">
-                        <form action="product?action=processEdit" method="POST" class="product-form" enctype="multipart/form-data">
+                        <form action="product?action=processEdit" method="POST" class="product-form" enctype="multipart/form-data" novalidate>
                             <input type="hidden" name="id" value="${product.id}">
-
                             <div class="form-main-layout">
                                 <div class="product-image-section">
                                     <label for="productImageUpload" class="image-placeholder" id="imagePreviewContainer">
@@ -81,6 +80,11 @@
                                     </label>
                                     <input type="file" name="image" id="productImageUpload" class="visually-hidden" accept="image/*">
                                     <label for="productImageUpload" class="btn-upload">Đổi ảnh</label>
+                                    
+                                    <%-- Hiển thị lỗi ảnh --%>
+                                    <c:if test="${not empty imageError}">
+                                        <span class="error-message">${imageError}</span>
+                                    </c:if>
                                 </div>
 
                                 <div class="product-details-section">
@@ -89,8 +93,12 @@
                                         <div class="details-grid">
                                             <div class="form-group">
                                                 <label class="form-label" for="productName">Tên sản phẩm (*)</label>
-                                                <input type="text" id="productName" name="name" class="form-control"
+                                                <input type="text" id="productName" name="name" class="form-control ${not empty nameError ? 'error' : ''}"
                                                        value="${product.name}" required title="Vui lòng nhập tên sản phẩm.">
+                                                <%-- Hiển thị lỗi tên sản phẩm --%>
+                                                <c:if test="${not empty nameError}">
+                                                    <span class="error-message">${nameError}</span>
+                                                </c:if>
                                             </div>
 
                                             <div class="form-group">
@@ -101,22 +109,34 @@
 
                                             <div class="form-group">
                                                 <label class="form-label" for="price">Giá bán (VNĐ) (*)</label>
-                                                <input type="text" id="price" name="price" class="form-control"
+                                                <input type="text" id="price" name="price" class="form-control ${not empty priceError ? 'error' : ''}"
                                                        value="<fmt:formatNumber value='${product.price}' type='number' groupingUsed='false' />"
                                                        inputmode="numeric" pattern="[0-9,.]*" min="0" required
                                                        title="Vui lòng chỉ nhập số không âm.">
+                                                <%-- Hiển thị lỗi giá --%>
+                                                <c:if test="${not empty priceError}">
+                                                    <span class="error-message">${priceError}</span>
+                                                </c:if>
                                             </div>
 
                                             <div class="form-group">
                                                 <label class="form-label" for="origin">Xuất xứ (*)</label>
-                                                <input type="text" id="origin" name="origin" class="form-control"
+                                                <input type="text" id="origin" name="origin" class="form-control ${not empty originError ? 'error' : ''}"
                                                        value="${product.origin}" required title="Vui lòng nhập xuất xứ.">
+                                                <%-- Hiển thị lỗi xuất xứ --%>
+                                                <c:if test="${not empty originError}">
+                                                    <span class="error-message">${originError}</span>
+                                                </c:if>
                                             </div>
 
                                             <div class="form-group full-width">
                                                 <label class="form-label" for="description">Mô tả</label>
-                                                <textarea id="description" name="description" class="form-control" rows="4"
+                                                <textarea id="description" name="description" class="form-control ${not empty descriptionError ? 'error' : ''}" rows="4"
                                                           placeholder="Nhập mô tả chi tiết cho sản phẩm...">${product.description}</textarea>
+                                                <%-- Hiển thị lỗi mô tả --%>
+                                                <c:if test="${not empty descriptionError}">
+                                                    <span class="error-message">${descriptionError}</span>
+                                                </c:if>
                                             </div>
                                         </div>
                                     </fieldset>
@@ -125,7 +145,7 @@
 
                             <div class="form-actions">
                                 <a href="product?action=list" class="btn-form"><i data-feather="x"></i><span>Hủy</span></a>
-                                        <%-- thêm id cho nút submit để điều khiển trạng thái --%>
+                                <%-- thêm id cho nút submit để điều khiển trạng thái --%>
                                 <button type="submit" id="btnSaveEdit" class="btn-form primary">
                                     <i data-feather="save"></i><span>Lưu thay đổi</span>
                                 </button>
@@ -148,7 +168,16 @@
             feather.replace();
 
             // ====== Chặn double-submit + overlay ======
-        
+            document.getElementById('btnSaveEdit').addEventListener('click', function() {
+                // Hiển thị overlay loading
+                document.getElementById('savingOverlay').style.display = 'flex';
+                
+                // Vô hiệu hóa nút submit để tránh double submit
+                this.disabled = true;
+                
+                // Tự động submit form
+                this.closest('form').submit();
+            });
         </script>
         <script src="${pageContext.request.contextPath}/js/editProductDetail.js"></script>
         <script src="${pageContext.request.contextPath}/js/mainMenu.js"></script>

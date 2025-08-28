@@ -18,7 +18,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @WebServlet(name = "ProductController", urlPatterns = {"/product"})
 @MultipartConfig
@@ -240,138 +243,198 @@ public class ProductController extends HttpServlet {
     private void processCreateProduct(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            // === BƯỚC 1: XÁC THỰC & PHÂN QUYỀN (AUTHENTICATION & AUTHORIZATION) ===
+            // === BƯỚC 1: XÁC THỰC & PHÂN QUYỀN ===
             HttpSession session = request.getSession();
             Integer userId = (Integer) session.getAttribute("userId");
             String userRole = (String) session.getAttribute("userRole");
 
-            // 1.1. Kiểm tra người dùng đã đăng nhập chưa.
-            // Nếu `userId` không tồn tại trong session, tức là chưa đăng nhập.
             if (userId == null) {
-                // Chuyển hướng về trang đăng nhập.
                 response.sendRedirect(request.getContextPath() + "/login.jsp");
-                return; // Dừng xử lý ngay lập tức.
+                return;
             }
 
-            // 1.2. Kiểm tra người dùng có đủ quyền hạn để thực hiện chức năng này không.
-            // Phương thức isAuthorized() sẽ kiểm tra xem `userRole` có phải là 'Admin' hoặc 'Kỹ thuật' hay không.
             if (!isAuthorized(userRole)) {
-                // Nếu không có quyền, trả về lỗi 403 (Forbidden - Cấm truy cập).
                 response.sendError(HttpServletResponse.SC_FORBIDDEN,
                         "Bạn không có quyền thực hiện hành động này.");
-                return; // Dừng xử lý.
+                return;
             }
 
-            // === BƯỚC 2: LẤY DỮ LIỆU TỪ FORM VÀ KIỂM TRA TÍNH HỢP LỆ (VALIDATION) ===
-            // 2.1. Lấy các tham số dạng text từ request.
-            // `sanitizeInput` là một phương thức giả định để làm sạch đầu vào (ví dụ: cắt bỏ khoảng trắng thừa).
+            // === BƯỚC 2: LẤY DỮ LIỆU TỪ FORM ===
             String name = sanitizeInput(request.getParameter("name"));
             String productCode = sanitizeInput(request.getParameter("productCode"));
             String origin = sanitizeInput(request.getParameter("origin"));
-            String priceRaw = sanitizeInput(request.getParameter("price")); // Lấy giá ở dạng chuỗi thô.
+            String priceRaw = sanitizeInput(request.getParameter("price"));
             String description = sanitizeInput(request.getParameter("description"));
 
-            // 2.2. Gọi phương thức validation để kiểm tra các quy tắc nghiệp vụ.
-            // Ví dụ: không được để trống, mã sản phẩm không trùng, giá phải là số,...
-            // `true` ở cuối để báo hiệu rằng đây là thao tác tạo mới (cần check trùng mã sản phẩm).
-            List<String> errors = validateProductInput(name, productCode, origin, priceRaw, this.productDao, true);
+            // Map để chứa tất cả lỗi validation
+            Map<String, String> errors = new HashMap<>();
 
-            // 2.3. Lấy và kiểm tra file upload.
-            Part filePart = null;
-            try {
-                // `request.getPart("image")` sẽ lấy phần file có name="image" từ form.
-                filePart = request.getPart("image");
-            } catch (IllegalStateException ignore) {
-                // Bỏ qua lỗi này nếu form không phải là multipart/form-data (hiếm khi xảy ra nếu cấu hình đúng).
+            // === VALIDATION CÁC TRƯỜNG CƠ BẢN ===
+            // Validate tên sản phẩm
+            if (name == null || name.trim().isEmpty()) {
+                errors.put("name", "Tên sản phẩm không được để trống.");
+            } else if (name.length() > 255) {
+                errors.put("name", "Tên sản phẩm không được vượt quá 255 ký tự.");
+            } else if (!name.matches("^[\\p{L}\\p{N}\\s\\-\\.\\(\\)]+$")) {
+                errors.put("name", "Tên sản phẩm chỉ được chứa chữ cái, số và các ký tự: - . ( )");
             }
 
-            // Gọi phương thức riêng để kiểm tra file (kích thước, định dạng,...).
-            String fileValidationError = validateUploadedFile(filePart);
-            if (fileValidationError != null) {
-                // Nếu có lỗi file, thêm vào danh sách lỗi chung.
-                errors.add(fileValidationError);
+            // Validate mã sản phẩm
+            if (productCode == null || productCode.trim().isEmpty()) {
+                errors.put("productCode", "Mã sản phẩm không được để trống.");
+            } else if (productCode.length() < 3 || productCode.length() > 50) {
+                errors.put("productCode", "Mã sản phẩm phải từ 3-50 ký tự.");
+            } else if (!productCode.matches("^[A-Z0-9\\-_]+$")) {
+                errors.put("productCode", "Mã sản phẩm chỉ được chứa chữ cái hoa, số, dấu gạch ngang và gạch dưới.");
+            } else {
+                // Kiểm tra trùng mã sản phẩm
+                try {
+                    if (this.productDao.isProductCodeExists(productCode)) {
+                        errors.put("productCode", "Mã sản phẩm '" + productCode + "' đã tồn tại trong hệ thống.");
+                    }
+                } catch (Exception e) {
+                    errors.put("productCode", "Lỗi kiểm tra mã sản phẩm: " + e.getMessage());
+                }
+            }
+
+            // Validate xuất xứ
+            if (origin == null || origin.trim().isEmpty()) {
+                errors.put("origin", "Xuất xứ không được để trống.");
+            } else if (origin.length() > 100) {
+                errors.put("origin", "Xuất xứ không được vượt quá 100 ký tự.");
+            }
+
+            // Validate giá
+            BigDecimal price = null;
+            if (priceRaw == null || priceRaw.trim().isEmpty()) {
+                errors.put("price", "Giá sản phẩm không được để trống.");
+            } else {
+                try {
+                    // Làm sạch chuỗi giá (bỏ dấu phẩy, chấm phân cách nghìn)
+                    String cleanPrice = priceRaw.replace(",", "").replace(".", "");
+                    price = new BigDecimal(cleanPrice);
+
+                    if (price.compareTo(BigDecimal.ZERO) <= 0) {
+                        errors.put("price", "Giá sản phẩm phải lớn hơn 0.");
+                    } else if (price.compareTo(new BigDecimal("999999999")) > 0) {
+                        errors.put("price", "Giá sản phẩm không được vượt quá 999,999,999 VNĐ.");
+                    }
+                } catch (NumberFormatException e) {
+                    errors.put("price", "Giá sản phẩm không hợp lệ. Vui lòng nhập số.");
+                }
+            }
+
+            // Validate mô tả (không bắt buộc)
+            if (description != null && description.length() > 1000) {
+                errors.put("description", "Mô tả không được vượt quá 1000 ký tự.");
+            }
+
+            // === VALIDATION FILE UPLOAD ===
+            Part filePart = null;
+            try {
+                filePart = request.getPart("image");
+            } catch (IllegalStateException | ServletException e) {
+                errors.put("image", "Lỗi khi xử lý file: " + e.getMessage());
+            }
+
+            if (filePart != null && filePart.getSize() > 0) {
+                // Validate kích thước file (max 5MB)
+                long maxFileSize = 5 * 1024 * 1024; // 5MB
+                if (filePart.getSize() > maxFileSize) {
+                    errors.put("image", "Kích thước file không được vượt quá 5MB.");
+                }
+
+                // Validate định dạng file
+                String fileName = filePart.getSubmittedFileName();
+                if (fileName != null) {
+                    String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
+                    List<String> allowedExtensions = Arrays.asList("jpg", "jpeg", "png", "gif", "webp");
+
+                    if (!allowedExtensions.contains(fileExtension)) {
+                        errors.put("image", "Chỉ chấp nhận file ảnh có định dạng: JPG, JPEG, PNG, GIF, WEBP.");
+                    }
+                }
+
+                // Validate Content-Type
+                String contentType = filePart.getContentType();
+                if (contentType != null && !contentType.startsWith("image/")) {
+                    errors.put("image", "File tải lên phải là file ảnh.");
+                }
             }
 
             // === BƯỚC 3: XỬ LÝ NẾU VALIDATION THẤT BẠI ===
-            // Nếu danh sách `errors` không rỗng, tức là có ít nhất một lỗi.
             if (!errors.isEmpty()) {
-                // Gửi lại các giá trị người dùng đã nhập để họ không phải điền lại từ đầu.
-                request.setAttribute("errors", errors); // Danh sách các lỗi để hiển thị.
+                // Đặt tất cả các giá trị đã nhập vào request để hiển thị lại trên form
+                request.setAttribute("name", name != null ? name : "");
+                request.setAttribute("productCode", productCode != null ? productCode : "");
+                request.setAttribute("origin", origin != null ? origin : "");
+                request.setAttribute("price", priceRaw != null ? priceRaw : "");
+                request.setAttribute("description", description != null ? description : "");
+
+                // Đặt các thông báo lỗi cụ thể cho từng trường
+                for (Map.Entry<String, String> entry : errors.entrySet()) {
+                    request.setAttribute(entry.getKey() + "Error", entry.getValue());
+                }
+
+                // Đặt danh sách lỗi tổng (nếu cần cho tương thích)
+                request.setAttribute("errors", new ArrayList<>(errors.values()));
+
+                request.getRequestDispatcher("/jsp/technicalSupport/createProduct.jsp").forward(request, response);
+                return;
+            }
+
+            // === BƯỚC 4: TẠO ĐỐI TƯỢNG VÀ LƯU VÀO DATABASE ===
+            Product product = new Product();
+            product.setName(name);
+            product.setProductCode(productCode);
+            product.setOrigin(origin);
+            product.setPrice(price);
+            product.setDescription(description);
+            product.setDeleted(false);
+            product.setCreatedBy(userId);
+
+            int newId = this.productDao.insertProduct(product);
+
+            if (newId <= 0) {
+                // Nếu có lỗi khi insert, giữ lại giá trị đã nhập
                 request.setAttribute("name", name);
                 request.setAttribute("productCode", productCode);
                 request.setAttribute("origin", origin);
                 request.setAttribute("price", priceRaw);
                 request.setAttribute("description", description);
-
-                // Forward trở lại trang tạo sản phẩm để hiển thị lỗi.
                 request.getRequestDispatcher("/jsp/technicalSupport/createProduct.jsp").forward(request, response);
-                return; // Dừng xử lý.
-            }
-
-            // === BƯỚC 4: TẠO ĐỐI TƯỢNG VÀ LƯU VÀO DATABASE ===
-            // Nếu không có lỗi nào, tiến hành tạo đối tượng Product.
-            Product product = new Product();
-            product.setName(name);
-            product.setProductCode(productCode);
-            product.setOrigin(origin);
-            // Chuyển đổi chuỗi giá đã làm sạch (bỏ dấu '.' và ',') thành kiểu BigDecimal.
-            product.setPrice(new BigDecimal(priceRaw.replace(".", "").replace(",", "")));
-            product.setDescription(description);
-            product.setDeleted(false); // Mặc định sản phẩm mới không bị xóa.
-            product.setCreatedBy(userId); // Ghi nhận người tạo.
-
-            // 4.1. Gọi DAO để thêm sản phẩm vào database.
-            // Phương thức này trả về ID của sản phẩm mới được tạo.
-            int newId = this.productDao.insertProduct(product);
-
-            // Nếu `newId` nhỏ hơn hoặc bằng 0, có nghĩa là việc insert vào DB đã thất bại.
-            if (newId <= 0) {
-                request.setAttribute("error", "Không thể tạo sản phẩm do lỗi từ phía server.");
-                request.getRequestDispatcher("/jsp/technicalSupport/createProduct.jsp").forward(request, response);
-                return; // Dừng xử lý.
+                return;
             }
 
             // === BƯỚC 5: XỬ LÝ UPLOAD FILE ẢNH ===
-            String imageFileName = "na.jpg"; // Tên file mặc định nếu không có ảnh nào được tải lên.
+            String imageFileName = "na.jpg";
 
-            // Chỉ xử lý nếu người dùng có chọn file (`filePart` khác null) và file có nội dung (`getSize() > 0`).
             if (filePart != null && filePart.getSize() > 0) {
-                // Lấy tên file gốc từ client.
                 String originalFileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
-                // Tạo tên file mới, an toàn hơn để tránh trùng lặp và các ký tự đặc biệt.
                 imageFileName = createSafeFileName(originalFileName, newId);
 
-                // Lấy đường dẫn thực tế đến thư mục /image trên server. Cách này giúp code chạy được trên mọi môi trường.
                 String uploadDir = request.getServletContext().getRealPath("/image");
                 File dir = new File(uploadDir);
                 if (!dir.exists()) {
-                    dir.mkdirs(); // Tạo thư mục nếu nó chưa tồn tại.
+                    dir.mkdirs();
                 }
+
                 String filePath = uploadDir + File.separator + imageFileName;
 
-                // Sử dụng Java NIO (Files.copy) để ghi file, hiệu quả và an toàn hơn.
-                // `try-with-resources` đảm bảo `InputStream` sẽ được tự động đóng sau khi hoàn tất.
                 try (InputStream input = filePart.getInputStream()) {
                     Files.copy(input, Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
                 }
             }
 
-            // 5.1. Cập nhật tên file ảnh vào sản phẩm vừa tạo trong database.
             this.productDao.updateProductImage(newId, imageFileName);
 
             // === BƯỚC 6: HOÀN TẤT VÀ CHUYỂN HƯỚNG ===
-            // Đặt một thông báo thành công vào session để hiển thị ở trang danh sách.
             session.setAttribute("successMessage", "Sản phẩm đã được tạo thành công!");
-
-            // Chuyển hướng người dùng về trang danh sách sản phẩm.
-            // Thêm tham số `cache` với giá trị là thời gian hiện tại để trình duyệt không bị cache lại trang cũ.
             response.sendRedirect(request.getContextPath() + "/product?action=list&cache=" + System.currentTimeMillis());
 
         } catch (Exception e) {
-            // Bắt tất cả các lỗi ngoại lệ không lường trước được.
-            e.printStackTrace(); // In lỗi ra console của server để debug.
+            e.printStackTrace();
             request.setAttribute("error", "Có lỗi không mong muốn xảy ra: " + e.getMessage());
-            // Chuyển hướng đến một trang lỗi chung.
             request.getRequestDispatcher("/error.jsp").forward(request, response);
         }
     }
@@ -399,46 +462,38 @@ public class ProductController extends HttpServlet {
     private void processEditProduct(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            // === BƯỚC 1: XÁC THỰC & PHÂN QUYỀN (AUTHENTICATION & AUTHORIZATION) ===
+            // === BƯỚC 1: XÁC THỰC & PHÂN QUYỀN ===
             HttpSession session = request.getSession();
             Integer userId = (Integer) session.getAttribute("userId");
             String userRole = (String) session.getAttribute("userRole");
 
-            // 1.1. Kiểm tra đăng nhập: Nếu không có userId trong session, chuyển về trang login.
             if (userId == null) {
                 response.sendRedirect(request.getContextPath() + "/login.jsp");
-                return; // Dừng xử lý.
+                return;
             }
 
-            // 1.2. Kiểm tra quyền hạn: Người dùng có quyền chỉnh sửa sản phẩm không?
             if (!isAuthorized(userRole)) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN,
                         "Bạn không có quyền thực hiện hành động này.");
-                return; // Dừng xử lý.
+                return;
             }
 
-            // === BƯỚC 2: KIỂM TRA ID SẢN PHẨM VÀ LẤY DỮ LIỆU CŨ TỪ DATABASE ===
+            // === BƯỚC 2: KIỂM TRA ID SẢN PHẨM VÀ LẤY DỮ LIỆU CŨ ===
             String idParam = request.getParameter("id");
-            // 2.1. Kiểm tra xem ID có được gửi lên hay không.
             if (idParam == null || idParam.trim().isEmpty()) {
-                // Nếu không có ID, không biết sửa sản phẩm nào, quay về trang danh sách.
                 response.sendRedirect(request.getContextPath() + "/product?action=list");
                 return;
             }
 
             int id;
             try {
-                // 2.2. Chuyển đổi ID từ chuỗi sang số.
                 id = Integer.parseInt(idParam);
             } catch (NumberFormatException e) {
-                // Nếu ID không phải là số hợp lệ, coi như không tìm thấy sản phẩm.
                 response.sendRedirect(request.getContextPath() + "/404.jsp");
                 return;
             }
 
-            // 2.3. Dùng ID để lấy thông tin sản phẩm hiện tại từ database.
             Product oldProduct = this.productDao.getProductById(id);
-            // Nếu không tìm thấy sản phẩm nào với ID này, chuyển đến trang 404.
             if (oldProduct == null) {
                 response.sendRedirect(request.getContextPath() + "/404.jsp");
                 return;
@@ -448,81 +503,140 @@ public class ProductController extends HttpServlet {
             String name = sanitizeInput(request.getParameter("name"));
             String origin = sanitizeInput(request.getParameter("origin"));
             String priceRaw = sanitizeInput(request.getParameter("price"));
-            if (priceRaw != null) {
-                // Loại bỏ các ký tự phân cách tiền tệ để chuẩn bị cho việc chuyển đổi sang số.
-                priceRaw = priceRaw.replace(",", "").replace(".", "");
-            }
             String description = sanitizeInput(request.getParameter("description"));
-            // `isDeleted` là một checkbox hoặc radio button, giá trị của nó sẽ là "true" nếu được chọn.
             boolean isDeleted = "true".equals(request.getParameter("isDeleted"));
 
-            // === BƯỚC 4: KIỂM TRA TÍNH HỢP LỆ CỦA DỮ LIỆU MỚI ===
-            // Gọi lại hàm validate chung. `false` ở cuối để báo rằng đây là thao tác "sửa",
-            // không cần kiểm tra trùng mã sản phẩm (vì mã sản phẩm không cho phép sửa).
-            List<String> errors = validateProductInput(name, oldProduct.getProductCode(),
-                    origin, priceRaw, this.productDao, false);
+            // Map để chứa tất cả lỗi validation
+            Map<String, String> errors = new HashMap<>();
 
-            // === BƯỚC 5: KIỂM TRA FILE ẢNH MỚI (NẾU CÓ) ===
-            Part filePart = request.getPart("image"); // Lấy file từ request.
-            String fileValidationError = validateUploadedFile(filePart); // Kiểm tra file (kích thước, loại file,...).
-            if (fileValidationError != null) {
-                // Nếu file không hợp lệ, thêm lỗi vào danh sách.
-                errors.add(fileValidationError);
+            // === VALIDATION CÁC TRƯỜNG CƠ BẢN ===
+            // Validate tên sản phẩm
+            if (name == null || name.trim().isEmpty()) {
+                errors.put("name", "Tên sản phẩm không được để trống.");
+            } else if (name.length() > 255) {
+                errors.put("name", "Tên sản phẩm không được vượt quá 255 ký tự.");
+            } else if (!name.matches("^[\\p{L}\\p{N}\\s\\-\\.\\(\\)]+$")) {
+                errors.put("name", "Tên sản phẩm chỉ được chứa chữ cái, số và các ký tự: - . ( )");
             }
 
-            // === BƯỚC 6: NẾU VALIDATION THẤT BẠI, QUAY LẠI FORM VÀ HIỂN THỊ LỖI ===
-            if (!errors.isEmpty()) {
-                request.setAttribute("editErrors", errors); // Gửi danh sách lỗi sang JSP.
+            // Validate xuất xứ
+            if (origin == null || origin.trim().isEmpty()) {
+                errors.put("origin", "Xuất xứ không được để trống.");
+            } else if (origin.length() > 100) {
+                errors.put("origin", "Xuất xứ không được vượt quá 100 ký tự.");
+            }
 
-                // Cập nhật lại đối tượng `oldProduct` với các giá trị người dùng vừa nhập sai
-                // để họ không phải điền lại từ đầu (cơ chế "sticky form").
+            // Validate giá
+            BigDecimal price = null;
+            if (priceRaw == null || priceRaw.trim().isEmpty()) {
+                errors.put("price", "Giá sản phẩm không được để trống.");
+            } else {
+                try {
+                    // Làm sạch chuỗi giá (bỏ dấu phẩy, chấm phân cách nghìn)
+                    String cleanPrice = priceRaw.replace(",", "").replace(".", "");
+                    price = new BigDecimal(cleanPrice);
+
+                    if (price.compareTo(BigDecimal.ZERO) <= 0) {
+                        errors.put("price", "Giá sản phẩm phải lớn hơn 0.");
+                    } else if (price.compareTo(new BigDecimal("999999999")) > 0) {
+                        errors.put("price", "Giá sản phẩm không được vượt quá 999,999,999 VNĐ.");
+                    }
+                } catch (NumberFormatException e) {
+                    errors.put("price", "Giá sản phẩm không hợp lệ. Vui lòng nhập số.");
+                }
+            }
+
+            // Validate mô tả (không bắt buộc)
+            if (description != null && description.length() > 1000) {
+                errors.put("description", "Mô tả không được vượt quá 1000 ký tự.");
+            }
+
+            // === VALIDATION FILE UPLOAD ===
+            Part filePart = null;
+            try {
+                filePart = request.getPart("image");
+            } catch (IllegalStateException | ServletException e) {
+                errors.put("image", "Lỗi khi xử lý file: " + e.getMessage());
+            }
+
+            if (filePart != null && filePart.getSize() > 0) {
+                // Validate kích thước file (max 5MB)
+                long maxFileSize = 5 * 1024 * 1024; // 5MB
+                if (filePart.getSize() > maxFileSize) {
+                    errors.put("image", "Kích thước file không được vượt quá 5MB.");
+                }
+
+                // Validate định dạng file
+                String fileName = filePart.getSubmittedFileName();
+                if (fileName != null) {
+                    String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
+                    List<String> allowedExtensions = Arrays.asList("jpg", "jpeg", "png", "gif", "webp");
+
+                    if (!allowedExtensions.contains(fileExtension)) {
+                        errors.put("image", "Chỉ chấp nhận file ảnh có định dạng: JPG, JPEG, PNG, GIF, WEBP.");
+                    }
+                }
+
+                // Validate Content-Type
+                String contentType = filePart.getContentType();
+                if (contentType != null && !contentType.startsWith("image/")) {
+                    errors.put("image", "File tải lên phải là file ảnh.");
+                }
+            }
+
+            // === BƯỚC 4: XỬ LÝ NẾU VALIDATION THẤT BẠI ===
+            if (!errors.isEmpty()) {
+                // Cập nhật lại đối tượng với các giá trị đã nhập
                 oldProduct.setName(name);
                 oldProduct.setOrigin(origin);
                 oldProduct.setDescription(description);
 
                 try {
-                    if (priceRaw != null && !priceRaw.trim().isEmpty()) {
-                        oldProduct.setPrice(new BigDecimal(priceRaw));
+                    if (price != null) {
+                        oldProduct.setPrice(price);
                     }
-                } catch (NumberFormatException e) {
-                    // Nếu giá nhập sai định dạng, giữ lại giá trị cũ của sản phẩm.
+                } catch (Exception e) {
+                    // Giữ giá trị cũ nếu giá mới không hợp lệ
                 }
 
-                request.setAttribute("product", oldProduct); // Gửi lại đối tượng đã cập nhật sang JSP.
+                // Đặt các thông báo lỗi cụ thể cho từng trường
+                for (Map.Entry<String, String> entry : errors.entrySet()) {
+                    request.setAttribute(entry.getKey() + "Error", entry.getValue());
+                }
+
+                // Đặt danh sách lỗi tổng (nếu cần cho tương thích)
+                request.setAttribute("editErrors", new ArrayList<>(errors.values()));
+                request.setAttribute("product", oldProduct);
+
                 request.getRequestDispatcher("/jsp/technicalSupport/editProductDetail.jsp")
                         .forward(request, response);
-                return; // Dừng xử lý.
+                return;
             }
 
-            // === BƯỚC 7: XỬ LÝ UPLOAD ẢNH MỚI (NẾU CÓ) ===
-            String imageFileName = oldProduct.getImage(); // Mặc định giữ lại ảnh cũ.
+            // === BƯỚC 5: XỬ LÝ UPLOAD ẢNH MỚI (NẾU CÓ) ===
+            String imageFileName = oldProduct.getImage();
 
-            // Chỉ xử lý khi người dùng thực sự chọn một file mới (filePart tồn tại và có kích thước > 0).
             if (filePart != null && filePart.getSize() > 0) {
-                // Xóa ảnh cũ trên server trước khi upload ảnh mới để tránh rác.
+                // Xóa ảnh cũ trên server
                 deleteImageByPattern(id);
 
-                // Tạo tên file mới an toàn và duy nhất để lưu trữ.
+                // Tạo tên file mới an toàn
                 String originalFileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
                 imageFileName = createSafeFileName(originalFileName, id);
 
-                // Lấy đường dẫn thực tế đến thư mục /image trên server.
-                // Cách này giúp ứng dụng chạy đúng trên mọi máy chủ mà không cần hardcode đường dẫn.
                 String uploadDir = request.getServletContext().getRealPath("/image");
                 File dir = new File(uploadDir);
                 if (!dir.exists()) {
-                    dir.mkdirs(); // Tạo thư mục nếu chưa có.
+                    dir.mkdirs();
                 }
 
                 String filePath = uploadDir + File.separator + imageFileName;
 
-                // Dùng Java NIO để ghi file. `try-with-resources` đảm bảo stream được đóng tự động.
                 try (InputStream input = filePart.getInputStream()) {
                     Files.copy(input, Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
                 } catch (IOException e) {
-                    // Nếu quá trình ghi file thất bại, báo lỗi và quay lại form.
-                    errors.add("Không thể upload ảnh: " + e.getMessage());
-                    request.setAttribute("editErrors", errors);
+                    errors.put("image", "Không thể upload ảnh: " + e.getMessage());
+                    request.setAttribute("editErrors", new ArrayList<>(errors.values()));
                     request.setAttribute("product", oldProduct);
                     request.getRequestDispatcher("/jsp/technicalSupport/editProductDetail.jsp")
                             .forward(request, response);
@@ -530,26 +644,23 @@ public class ProductController extends HttpServlet {
                 }
             }
 
-            // === BƯỚC 8: CẬP NHẬT ĐỐI TƯỢNG PRODUCT TRONG BỘ NHỚ ===
-            // Sau khi mọi thứ hợp lệ, cập nhật tất cả các trường của đối tượng `oldProduct`.
+            // === BƯỚC 6: CẬP NHẬT ĐỐI TƯỢNG PRODUCT ===
             oldProduct.setName(name);
             oldProduct.setOrigin(origin);
-            oldProduct.setPrice(new BigDecimal(priceRaw));
+            oldProduct.setPrice(price);
             oldProduct.setDescription(description);
             oldProduct.setDeleted(isDeleted);
-            oldProduct.setImage(imageFileName); // Cập nhật tên ảnh mới (hoặc giữ nguyên tên cũ).
-            oldProduct.setUpdatedBy(userId); // Ghi nhận người cập nhật.
+            oldProduct.setImage(imageFileName);
+            oldProduct.setUpdatedBy(userId);
 
-            // === BƯỚC 9: LƯU THAY ĐỔI VÀO DATABASE ===
+            // === BƯỚC 7: LƯU THAY ĐỔI VÀO DATABASE ===
             boolean success = this.productDao.editProduct(oldProduct);
 
             if (success) {
-                // Nếu cập nhật DB thành công, đặt thông báo và chuyển hướng về trang danh sách.
                 session.setAttribute("successMessage", "Sản phẩm đã được cập nhật thành công!");
                 response.sendRedirect(request.getContextPath()
                         + "/product?action=list&cache=" + System.currentTimeMillis());
             } else {
-                // Nếu cập nhật DB thất bại, quay lại form chỉnh sửa và báo lỗi.
                 request.setAttribute("product", oldProduct);
                 request.setAttribute("editError", "Cập nhật thất bại! Vui lòng thử lại.");
                 request.getRequestDispatcher("/jsp/technicalSupport/editProductDetail.jsp")
@@ -557,7 +668,6 @@ public class ProductController extends HttpServlet {
             }
 
         } catch (Exception e) {
-            // Bắt các lỗi ngoại lệ không lường trước được, in log và chuyển đến trang lỗi chung.
             e.printStackTrace();
             request.setAttribute("error", "Có lỗi không mong muốn xảy ra: " + e.getMessage());
             request.getRequestDispatcher("/error.jsp").forward(request, response);

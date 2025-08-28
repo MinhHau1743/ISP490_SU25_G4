@@ -74,10 +74,13 @@
                                     <i data-feather="search"></i>
                                     <input type="text" name="search" placeholder="Tìm theo tên chiến dịch, khách hàng..." value="${searchTerm}">
                                 </div>
-                                <a href="${BASE_URL}/create-campaign" class="btn-add-campaign">
-                                    <i data-feather="plus"></i>
-                                    Thêm chiến dịch
-                                </a>
+                                
+                               <c:if test="${sessionScope.user.roleName == 'Admin' || sessionScope.user.roleName == 'Chăm sóc khách hàng'}">
+                                    <a href="${BASE_URL}/create-campaign" class="btn-add-campaign">
+                                        <i data-feather="plus"></i>
+                                        Thêm chiến dịch
+                                    </a>  
+                                </c:if>
                             </div>
 
                             <div class="toolbar-bottom">
@@ -167,8 +170,11 @@
 
                                         <td class="actions-cell">
                                             <a href="${BASE_URL}/view-campaign?id=${campaign.campaignId}" class="icon-btn" title="Xem"><i data-feather="eye"></i></a>
-                                            <a href="${BASE_URL}/edit-campaign?id=${campaign.campaignId}" class="icon-btn" title="Sửa"><i data-feather="edit"></i></a>
-                                            <button class="icon-btn" title="Xóa" onclick="confirmDelete(${campaign.campaignId})"><i data-feather="trash-2"></i></button>
+                                                <c:if test="${sessionScope.user.roleName == 'Admin' || sessionScope.user.roleName == 'Chăm sóc khách hàng'}">
+                                                <a href="${BASE_URL}/edit-campaign?id=${campaign.campaignId}" class="icon-btn" title="Sửa"><i data-feather="edit"></i></a>
+                                                <button class="icon-btn" title="Xóa" onclick="confirmDelete(${campaign.campaignId})"><i data-feather="trash-2"></i></button>
+                                                </c:if>
+
                                         </td>
                                     </tr>
                                 </c:forEach>

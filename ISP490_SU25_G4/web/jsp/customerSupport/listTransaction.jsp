@@ -45,9 +45,11 @@
                                     <input type="text" name="query" placeholder="Tìm theo mã phiếu, khách hàng..." value="${param.query}">
                                 </div>
                                 <button type="submit" class="btn btn-primary"><i data-feather="search"></i> Tìm kiếm</button>
-                                <a href="${pageContext.request.contextPath}/ticket?action=create" class="btn btn-primary">
-                                    <i data-feather="calendar"></i> Tạo lịch bảo trì
-                                </a>
+                               <c:if test="${sessionScope.user.roleName == 'Admin' || sessionScope.user.roleName == 'Chăm sóc khách hàng'}">
+                                    <a href="${pageContext.request.contextPath}/ticket?action=create" class="btn btn-primary">
+                                        <i data-feather="calendar"></i> Tạo lịch bảo trì
+                                    </a>
+                                </c:if> 
                             </div>
 
 
@@ -113,11 +115,20 @@
                                             </c:choose>
                                         </div>
                                         <div class="action-buttons">
-                                            <a href="${pageContext.request.contextPath}/ticket?action=view&id=${tx.id}" title="Xem chi tiết"><i data-feather="eye" class="icon-view"></i></a>
-                                            <a href="${pageContext.request.contextPath}/ticket?action=edit&id=${tx.id}" title="Sửa"><i data-feather="edit-2" class="icon-edit"></i></a>
-                                            <a href="javascript:void(0);" class="delete-link" data-id="${tx.id}" data-name="${tx.requestCode}" title="Xóa">
-                                                <i data-feather="trash-2" class="icon-delete"></i>
-                                            </a>                                        
+                                            <%-- Nút XEM luôn hiển thị cho mọi người --%>
+                                            <a href="${pageContext.request.contextPath}/ticket?action=view&id=${tx.id}" title="Xem chi tiết">
+                                                <i data-feather="eye" class="icon-view"></i>
+                                            </a>
+
+                                            <%-- Chỉ Admin và Chăm sóc khách hàng mới thấy nút SỬA và XÓA --%>
+                                            <c:if test="${sessionScope.user.roleName == 'Admin' || sessionScope.user.roleName == 'Chăm sóc khách hàng'}">
+                                                <a href="${pageContext.request.contextPath}/ticket?action=edit&id=${tx.id}" title="Sửa">
+                                                    <i data-feather="edit-2" class="icon-edit"></i>
+                                                </a>
+                                                <a href="javascript:void(0);" class="delete-link" data-id="${tx.id}" data-name="${tx.requestCode}" title="Xóa">
+                                                    <i data-feather="trash-2" class="icon-delete"></i>
+                                                </a>
+                                            </c:if>
                                         </div>
                                     </div>
                                 </div>

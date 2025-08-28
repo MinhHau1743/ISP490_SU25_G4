@@ -29,9 +29,6 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/createProduct.css">
     </head>
     <body>
-        <style>
-          
-        </style>
         <div class="app-container">
             <jsp:include page="/mainMenu.jsp"/>
             <main class="main-content">
@@ -42,18 +39,6 @@
                         <span class="notification-badge"></span>
                     </button>
                 </header>
-
-                <c:if test="${not empty errors}">
-                    <div class="alert alert-warning alert-dismissible" style="margin: 0 24px 20px;">
-                        <button type="button" class="close" data-dismiss="alert">&times;</button>
-                        <strong>Vui lòng sửa các lỗi sau:</strong>
-                        <ul>
-                            <c:forEach var="error" items="${errors}">
-                                <li>${error}</li>
-                                </c:forEach>
-                        </ul>
-                    </div>
-                </c:if>
 
                 <section class="content-body">
                     <div class="form-container">
@@ -73,40 +58,60 @@
                                     <fieldset class="form-fieldset">
                                         <legend>Thông tin sản phẩm</legend>
                                         <div class="details-grid">
-
                                             <div class="form-group">
                                                 <label class="form-label" for="productName">Tên sản phẩm (*)</label>
-                                                <input type="text" id="productName" name="name" class="form-control"
+                                                <input type="text" id="productName" name="name" class="form-control ${not empty nameError ? 'is-invalid' : ''}"
                                                        value="${name}" required title="Vui lòng nhập tên sản phẩm.">
+                                                <c:if test="${not empty nameError}">
+                                                    <div class="invalid-feedback">${nameError}</div>
+                                                </c:if>
                                             </div>
 
                                             <div class="form-group">
                                                 <label class="form-label" for="productCode">Mã sản phẩm (*)</label>
-                                                <input type="text" id="productCode" name="productCode" class="form-control"
+                                                <input type="text" id="productCode" name="productCode" class="form-control ${not empty productCodeError ? 'is-invalid' : ''}"
                                                        value="${productCode}" required title="Vui lòng nhập mã sản phẩm.">
+                                                <c:if test="${not empty productCodeError}">
+                                                    <div class="invalid-feedback">${productCodeError}</div>
+                                                </c:if>
                                             </div>
 
                                             <div class="form-group">
                                                 <label class="form-label" for="price">Giá bán (VNĐ) (*)</label>
-                                                <input type="text" id="price" name="price" class="form-control"
+                                                <input type="text" id="price" name="price" class="form-control ${not empty priceError ? 'is-invalid' : ''}"
                                                        value="${price}"
                                                        inputmode="numeric" 
                                                        pattern="[0-9,.]*"
                                                        min="0"
                                                        required
                                                        title="Vui lòng chỉ nhập số không âm.">
+                                                <c:if test="${not empty priceError}">
+                                                    <div class="invalid-feedback">${priceError}</div>
+                                                </c:if>
                                             </div>
 
                                             <div class="form-group">
                                                 <label class="form-label" for="origin">Xuất xứ (*)</label>
-                                                <input type="text" id="origin" name="origin" class="form-control"
+                                                <input type="text" id="origin" name="origin" class="form-control ${not empty originError ? 'is-invalid' : ''}"
                                                        value="${origin}" required title="Vui lòng nhập xuất xứ.">
+                                                <c:if test="${not empty originError}">
+                                                    <div class="invalid-feedback">${originError}</div>
+                                                </c:if>
                                             </div>
 
                                             <div class="form-group full-width">
                                                 <label class="form-label" for="description">Mô tả</label>
-                                                <textarea id="description" name="description" class="form-control" rows="4"
+                                                <textarea id="description" name="description" class="form-control ${not empty descriptionError ? 'is-invalid' : ''}" rows="4"
                                                           placeholder="Nhập mô tả chi tiết cho sản phẩm..."><c:out value="${description}"/></textarea>
+                                                <c:if test="${not empty descriptionError}">
+                                                    <div class="invalid-feedback">${descriptionError}</div>
+                                                </c:if>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <c:if test="${not empty imageError}">
+                                                    <div class="alert alert-danger">${imageError}</div>
+                                                </c:if>
                                             </div>
                                         </div>
                                     </fieldset>
