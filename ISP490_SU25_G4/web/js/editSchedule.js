@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const endTimeInput = document.getElementById('endTime');
     const startTimeGroup = startTimeInput.closest('.form-group');
     const endTimeGroup = endTimeInput.closest('.form-group');
-    
+
     // Đảm bảo min của endDate cũng được cập nhật theo
     if (!endDateInput.min || endDateInput.min < startDateInput.value) {
         endDateInput.min = startDateInput.value;
@@ -35,30 +35,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
- // Đảm bảo endDate > scheduledDate
-startDateInput.addEventListener('change', () => {
-    // 1. Lấy ngày bắt đầu và tạo đối tượng Date
-    const startDate = new Date(startDateInput.value);
+    // Đảm bảo endDate > scheduledDate
+    startDateInput.addEventListener('change', () => {
+        // 1. Lấy ngày bắt đầu và tạo đối tượng Date
+        const startDate = new Date(startDateInput.value);
 
-    // 2. Tính toán ngày tiếp theo (ngày sớm nhất có thể chọn cho endDate)
-    const nextDay = new Date(startDate);
-    nextDay.setDate(startDate.getDate() + 1);
+        // 2. Tính toán ngày tiếp theo (ngày sớm nhất có thể chọn cho endDate)
+        const nextDay = new Date(startDate);
+        nextDay.setDate(startDate.getDate() + 1);
 
-    // 3. Định dạng lại thành chuỗi 'YYYY-MM-DD'
-    const minEndDateString = nextDay.toISOString().split('T')[0];
+        // 3. Định dạng lại thành chuỗi 'YYYY-MM-DD'
+        const minEndDateString = nextDay.toISOString().split('T')[0];
 
-    // 4. Đặt ngày tối thiểu cho ô endDate
-    endDateInput.min = minEndDateString;
+        // 4. Đặt ngày tối thiểu cho ô endDate
+        endDateInput.min = minEndDateString;
 
-    // 5. (Quan trọng) Nếu ngày kết thúc hiện tại nhỏ hơn ngày tối thiểu mới,
-    //    hãy cập nhật nó thành ngày tối thiểu đó.
-    if (endDateInput.value && endDateInput.value < minEndDateString) {
-        endDateInput.value = minEndDateString;
-    }
+        // 5. (Quan trọng) Nếu ngày kết thúc hiện tại nhỏ hơn ngày tối thiểu mới,
+        //    hãy cập nhật nó thành ngày tối thiểu đó.
+        if (endDateInput.value && endDateInput.value < minEndDateString) {
+            endDateInput.value = minEndDateString;
+        }
 
-    // Gọi hàm khác (giữ nguyên)
-    toggleTimeFields();
-});
+        // Gọi hàm khác (giữ nguyên)
+        toggleTimeFields();
+    });
 
 
     // Xử lý khi endDate thay đổi
@@ -390,7 +390,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const provinceSelect = document.getElementById('province');
     const districtSelect = document.getElementById('district');
     const wardSelect = document.getElementById('ward');
-    if (!provinceSelect || !districtSelect || !wardSelect) return;
+    if (!provinceSelect || !districtSelect || !wardSelect)
+        return;
     const contextPath = window.ADDR_CONTEXT_PATH || '';
     // Lấy các giá trị được chọn sẵn
     const preset = window.PRESELECTED_ADDRESS || {};
@@ -400,30 +401,34 @@ document.addEventListener('DOMContentLoaded', function () {
         selectElement.innerHTML = '<option value="">-- Đang tải... --</option>';
         selectElement.disabled = true;
         fetch(url)
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.json();
-            })
-            .then(data => {
-                let placeholder = '-- Chọn Quận/Huyện --';
-                if (selectElement.id === 'ward') placeholder = '-- Chọn Phường/Xã --';
-                if (selectElement.id === 'province') placeholder = '-- Chọn Tỉnh/Thành --';
-                selectElement.innerHTML = `<option value="">${placeholder}</option>`;
-                data.forEach(item => {
-                    const option = new Option(item.name, item.id);
-                    selectElement.add(option);
+                .then(response => {
+                    if (!response.ok)
+                        throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    let placeholder = '-- Chọn Quận/Huyện --';
+                    if (selectElement.id === 'ward')
+                        placeholder = '-- Chọn Phường/Xã --';
+                    if (selectElement.id === 'province')
+                        placeholder = '-- Chọn Tỉnh/Thành --';
+                    selectElement.innerHTML = `<option value="">${placeholder}</option>`;
+                    data.forEach(item => {
+                        const option = new Option(item.name, item.id);
+                        selectElement.add(option);
+                    });
+                    selectElement.disabled = false;
+                    // Nếu có giá trị set sẵn thì chọn, không thì thôi
+                    if (preselectedId) {
+                        selectElement.value = preselectedId;
+                    }
+                    if (onLoaded)
+                        onLoaded();
+                })
+                .catch(error => {
+                    console.error(`Lỗi khi tải ${selectElement.id}:`, error);
+                    selectElement.innerHTML = `<option value="">-- Lỗi tải dữ liệu --</option>`;
                 });
-                selectElement.disabled = false;
-                // Nếu có giá trị set sẵn thì chọn, không thì thôi
-                if (preselectedId) {
-                    selectElement.value = preselectedId;
-                }
-                if (onLoaded) onLoaded();
-            })
-            .catch(error => {
-                console.error(`Lỗi khi tải ${selectElement.id}:`, error);
-                selectElement.innerHTML = `<option value="">-- Lỗi tải dữ liệu --</option>`;
-            });
     };
 
     // Tải districts khi đã chọn province
@@ -466,6 +471,115 @@ document.addEventListener('DOMContentLoaded', function () {
         loadDistricts(preset.districtId, function () {
             if (districtSelect.value) {
                 loadWards(preset.wardId);
+            }
+        });
+    }
+});
+document.addEventListener('DOMContentLoaded', function () {
+    const startTimeInput = document.getElementById('startTime');
+    const endTimeInput = document.getElementById('endTime');
+    
+    function validateTimeRange() {
+        const startTime = startTimeInput.value;
+        const endTime = endTimeInput.value;
+        
+        // Reset validation state
+        clearAllTimeErrors();
+        
+        if (!startTime) {
+            showTimeError(startTimeInput, 'Vui lòng chọn giờ bắt đầu');
+            return false;
+        }
+        
+        // Chỉ validate endTime nếu nó có giá trị
+        if (endTime) {
+            // So sánh thời gian chỉ khi cả hai đều có giá trị
+            if (endTime <= startTime) {
+                let errorMessage = 'Giờ kết thúc phải sau giờ bắt đầu';
+                
+                if (endTime === startTime) {
+                    errorMessage = 'Giờ kết thúc không thể trùng với giờ bắt đầu';
+                }
+                
+                showTimeError(endTimeInput, errorMessage);
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    function calculateTimeDifference(startTime, endTime) {
+        const start = new Date('2000-01-01 ' + startTime);
+        const end = new Date('2000-01-01 ' + endTime);
+        return (end - start) / (1000 * 60); // Trả về phút
+    }
+    
+    function showTimeError(input, message) {
+        const formGroup = input.closest('.form-group');
+        formGroup.classList.add('has-error');
+        
+        // Tìm element error có sẵn hoặc tạo mới
+        let errorElement = formGroup.querySelector('.error-message');
+        if (!errorElement) {
+            errorElement = document.createElement('span');
+            errorElement.className = 'error-message';
+            input.parentNode.appendChild(errorElement);
+        }
+        
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+        
+        // Thêm style màu đỏ trực tiếp
+        errorElement.style.color = '#d93025';
+        errorElement.style.fontSize = '14px';
+        errorElement.style.fontWeight = '500';
+        errorElement.style.marginTop = '5px';
+        
+        // Style cho input field
+        input.style.borderColor = '#d93025';
+        input.style.boxShadow = '0 0 0 2px rgba(217, 48, 37, 0.15)';
+    }
+    
+    function clearTimeError(input) {
+        const formGroup = input.closest('.form-group');
+        formGroup.classList.remove('has-error');
+        
+        const errorElement = formGroup.querySelector('.error-message');
+        if (errorElement) {
+            errorElement.style.display = 'none';
+        }
+        
+        // Reset style cho input
+        input.style.borderColor = '';
+        input.style.boxShadow = '';
+    }
+    
+    function clearAllTimeErrors() {
+        clearTimeError(startTimeInput);
+        clearTimeError(endTimeInput);
+    }
+    
+    // Gắn sự kiện real-time validation
+    startTimeInput.addEventListener('input', validateTimeRange);
+    startTimeInput.addEventListener('change', validateTimeRange);
+    endTimeInput.addEventListener('input', validateTimeRange);
+    endTimeInput.addEventListener('change', validateTimeRange);
+    
+    // Validation khi submit
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function (e) {
+            if (!validateTimeRange()) {
+                e.preventDefault();
+                
+                // Focus vào field có lỗi đầu tiên
+                const firstError = form.querySelector('.has-error input');
+                if (firstError) {
+                    firstError.focus();
+                }
+                
+                return false;
             }
         });
     }
