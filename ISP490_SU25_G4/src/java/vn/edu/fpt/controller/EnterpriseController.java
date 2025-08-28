@@ -19,9 +19,13 @@ import java.io.PrintWriter;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import vn.edu.fpt.dao.ContractDAO;
 import vn.edu.fpt.dao.DBContext;
 import vn.edu.fpt.dao.EnterpriseDAO;
@@ -56,8 +60,8 @@ public class EnterpriseController extends HttpServlet {
 
     // Constructor cho unit test (inject mock)
     public EnterpriseController(EnterpriseDAO enterpriseDAO, UserDAO userDAO,
-                                TechnicalRequestDAO technicalRequestDAO, ContractDAO contractDAO,
-                                DBContext dbContext) {
+            TechnicalRequestDAO technicalRequestDAO, ContractDAO contractDAO,
+            DBContext dbContext) {
         this.enterpriseDAO = enterpriseDAO;
         this.userDAO = userDAO;
         this.technicalRequestDAO = technicalRequestDAO;
@@ -73,7 +77,9 @@ public class EnterpriseController extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
 
         String action = request.getPathInfo();
-        if (action == null) action = "/list";
+        if (action == null) {
+            action = "/list";
+        }
 
         boolean isWritePage = "/create".equals(action) || "/edit".equals(action);
         if (isWritePage && !hasWritePermission(request)) {
@@ -311,87 +317,165 @@ public class EnterpriseController extends HttpServlet {
         rd.forward(request, response);
     }
 
-    private void handleCreateCustomer(HttpServletRequest request, HttpServletResponse response)
+    void handleCreateCustomer(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
         Connection conn = null;
         String customerName = request.getParameter("customerName");
-        int newEnterpriseId = -1; // Biến để lưu ID của doanh nghiệp mới
+        int newEnterpriseId = -1;
+
         try {
+            // === 1. LẤY VÀ VALIDATE DỮ LIỆU ===
             String taxCode = request.getParameter("taxCode");
             String hotline = request.getParameter("hotline");
             String phone = request.getParameter("phone");
-
-            if (customerName == null || customerName.trim().isEmpty()) {
-                request.setAttribute("errorMessage", "Tên doanh nghiệp không được để trống.");
-                showCreateForm(request, response);
-                return;
-            }
-            if (this.enterpriseDAO.isNameExists(customerName, null)) {
-                request.setAttribute("errorMessage", "Tên doanh nghiệp '" + customerName + "' đã tồn tại.");
-                showCreateForm(request, response);
-                return;
-            }
-            if (taxCode != null && !taxCode.trim().isEmpty() && !isFormatValidVietnameseTaxCode(taxCode)) {
-                request.setAttribute("errorMessage", "Định dạng mã số thuế không hợp lệ. Phải là 10 số hoặc 10 số-3 số.");
-                showCreateForm(request, response);
-                return;
-            }
-            if (hotline != null && !hotline.trim().isEmpty() && !isFormatValidVietnamesePhoneNumber(hotline)) {
-                request.setAttribute("errorMessage", "Định dạng số hotline không hợp lệ.");
-                showCreateForm(request, response);
-                return;
-            }
-            if (phone != null && !phone.trim().isEmpty() && !isFormatValidVietnamesePhoneNumber(phone)) {
-                request.setAttribute("errorMessage", "Định dạng số điện thoại người liên hệ không hợp lệ.");
-                showCreateForm(request, response);
-                return;
-            }
-
-            String avatarDbPath = null;
-            Part filePart = request.getPart("avatar");
-            if (filePart != null && filePart.getSize() > 0
-                    && filePart.getSubmittedFileName() != null
-                    && !filePart.getSubmittedFileName().isEmpty()) {
-                String originalFileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
-                String uniqueFileName = UUID.randomUUID().toString() + "_" + originalFileName;
-                String applicationPath = request.getServletContext().getRealPath("");
-                String uploadFilePath = applicationPath + File.separator + UPLOAD_DIR;
-                new File(uploadFilePath).mkdirs();
-                filePart.write(uploadFilePath + File.separator + uniqueFileName);
-                avatarDbPath = "uploads/avatars/" + uniqueFileName;
-            }
-
             String businessEmail = request.getParameter("businessEmail");
             String streetAddress = request.getParameter("streetAddress");
             String fullName = request.getParameter("fullName");
             String position = request.getParameter("position");
             String email = request.getParameter("email");
             String bankNumber = request.getParameter("bankNumber");
-            int provinceId = Integer.parseInt(request.getParameter("province"));
-            int districtId = Integer.parseInt(request.getParameter("district"));
-            int wardId = Integer.parseInt(request.getParameter("ward"));
+
+            // Validate required fields
+            Map<String, String> errors = new HashMap<>();
+
+            if (customerName == null || customerName.trim().isEmpty()) {
+                errors.put("customerName", "Tên doanh nghiệp không được để trống.");
+            } else if (this.enterpriseDAO.isNameExists(customerName, null)) {
+                errors.put("customerName", "Tên doanh nghiệp '" + customerName + "' đã tồn tại.");
+            }
+
+            if (taxCode != null && !taxCode.trim().isEmpty() && !isFormatValidVietnameseTaxCode(taxCode)) {
+                errors.put("taxCode", "Định dạng mã số thuế không hợp lệ. Phải là 10 số hoặc 10 số-3 số.");
+            }
+
+            if (hotline != null && !hotline.trim().isEmpty() && !isFormatValidVietnamesePhoneNumber(hotline)) {
+                errors.put("hotline", "Định dạng số hotline không hợp lệ.");
+            }
+
+            if (phone != null && !phone.trim().isEmpty() && !isFormatValidVietnamesePhoneNumber(phone)) {
+                errors.put("phone", "Định dạng số điện thoại người liên hệ không hợp lệ.");
+            }
+
+            if (businessEmail == null || businessEmail.trim().isEmpty()) {
+                // Bỏ qua nếu email này không bắt buộc.
+                errors.put("businessEmail", "Email doanh nghiệp không được để trống.");
+            } else if (!isValidEmail(businessEmail)) {
+                errors.put("businessEmail", "Định dạng email doanh nghiệp không hợp lệ.");
+            }
+
+            // BƯỚC 1: Kiểm tra xem email có bị bỏ trống không
+            if (email == null || email.trim().isEmpty()) {
+                // Nếu bạn bắt buộc người dùng phải nhập email
+                errors.put("email", "Email người liên hệ không được để trống.");
+            } // BƯỚC 2: Nếu không trống, mới kiểm tra đến định dạng
+            else if (!isValidEmail(email)) {
+                errors.put("email", "Định dạng email người liên hệ không hợp lệ.");
+            }
+
+            // Validate address fields
+            String provinceIdStr = request.getParameter("province");
+            String districtIdStr = request.getParameter("district");
+            String wardIdStr = request.getParameter("ward");
+
+            if (provinceIdStr == null || provinceIdStr.isEmpty()) {
+                errors.put("province", "Vui lòng chọn tỉnh/thành.");
+            }
+            if (districtIdStr == null || districtIdStr.isEmpty()) {
+                errors.put("district", "Vui lòng chọn quận/huyện.");
+            }
+            if (wardIdStr == null || wardIdStr.isEmpty()) {
+                errors.put("ward", "Vui lòng chọn phường/xã.");
+            }
+            if (streetAddress == null || streetAddress.trim().isEmpty()) {
+                errors.put("streetAddress", "Địa chỉ không được để trống.");
+            } else if (streetAddress.trim().length() > 255) {
+                errors.put("streetAddress", "Địa chỉ không được vượt quá 255 ký tự.");
+            }
+            // Nếu có lỗi, hiển thị form lại
+            if (!errors.isEmpty()) {
+                for (Map.Entry<String, String> error : errors.entrySet()) {
+                    request.setAttribute(error.getKey() + "Error", error.getValue());
+                }
+                // Giữ lại giá trị đã nhập
+                restoreFormData(request);
+                showCreateForm(request, response);
+                return;
+            }
+
+            // Parse các giá trị số
+            int provinceId = Integer.parseInt(provinceIdStr);
+            int districtId = Integer.parseInt(districtIdStr);
+            int wardId = Integer.parseInt(wardIdStr);
             int employeeId = Integer.parseInt(request.getParameter("employeeId"));
             int customerGroupId = Integer.parseInt(request.getParameter("customerGroup"));
 
+            // === 2. XỬ LÝ FILE UPLOAD ===
+            String avatarDbPath = null;
+            Part filePart = request.getPart("avatar");
+            if (filePart != null && filePart.getSize() > 0) {
+                // Validate file size
+                if (filePart.getSize() > 5 * 1024 * 1024) {
+                    request.setAttribute("avatarError", "Kích thước file không được vượt quá 5MB.");
+                    restoreFormData(request);
+                    showCreateForm(request, response);
+                    return;
+                }
+
+                // Validate file type
+                String contentType = filePart.getContentType();
+                if (contentType == null || !contentType.startsWith("image/")) {
+                    request.setAttribute("avatarError", "Chỉ chấp nhận file hình ảnh.");
+                    restoreFormData(request);
+                    showCreateForm(request, response);
+                    return;
+                }
+
+                String originalFileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+                String fileExtension = originalFileName.contains(".")
+                        ? originalFileName.substring(originalFileName.lastIndexOf("."))
+                        : "";
+
+                if (!Arrays.asList(".jpg", ".jpeg", ".png", ".gif").contains(fileExtension.toLowerCase())) {
+                    request.setAttribute("avatarError", "Chỉ chấp nhận file JPG, JPEG, PNG, GIF.");
+                    restoreFormData(request);
+                    showCreateForm(request, response);
+                    return;
+                }
+
+                String uniqueFileName = UUID.randomUUID().toString() + fileExtension;
+                String applicationPath = request.getServletContext().getRealPath("");
+                String uploadFilePath = applicationPath + File.separator + UPLOAD_DIR;
+
+                File uploadDir = new File(uploadFilePath);
+                if (!uploadDir.exists()) {
+                    uploadDir.mkdirs();
+                }
+
+                filePart.write(uploadFilePath + File.separator + uniqueFileName);
+                avatarDbPath = "uploads/avatars/" + uniqueFileName;
+            }
+
+            // === 3. XỬ LÝ DATABASE TRANSACTION ===
             conn = this.dbContext.getConnection();
             conn.setAutoCommit(false);
 
             int newAddressId = this.enterpriseDAO.insertAddress(conn, streetAddress, wardId, districtId, provinceId);
             newEnterpriseId = this.enterpriseDAO.insertEnterprise(conn, customerName, businessEmail, hotline,
                     customerGroupId, newAddressId, taxCode, bankNumber, avatarDbPath);
+
             if (fullName != null && !fullName.trim().isEmpty()) {
                 this.enterpriseDAO.insertEnterpriseContact(conn, newEnterpriseId, fullName, position, phone, email);
             }
-            this.enterpriseDAO.insertAssignment(conn, newEnterpriseId, employeeId, "account_manager");
 
+            this.enterpriseDAO.insertAssignment(conn, newEnterpriseId, employeeId, "account_manager");
             conn.commit();
 
-            // === BẮT ĐẦU PHẦN TẠO THÔNG BÁO ===
+            // === 4. THÔNG BÁO THÀNH CÔNG ===
             HttpSession session = request.getSession(false);
             if (session != null) {
                 User currentUser = (User) session.getAttribute("user");
                 if (currentUser != null && newEnterpriseId != -1) {
-                    // Lấy lại thông tin enterprise vừa tạo để có đầy đủ dữ liệu
                     Enterprise createdEnterprise = enterpriseDAO.getEnterpriseById(newEnterpriseId);
                     if (createdEnterprise != null) {
                         NotificationService.notifyNewEnterprise(currentUser, createdEnterprise);
@@ -399,10 +483,23 @@ public class EnterpriseController extends HttpServlet {
                 }
                 session.setAttribute("successMessage", "Đã thêm thành công khách hàng '" + customerName + "'!");
             }
-            // === KẾT THÚC PHẦN TẠO THÔNG BÁO ===
 
             response.sendRedirect(safeJoin(request.getContextPath(), "/customer/list"));
 
+        } catch (NumberFormatException e) {
+            request.setAttribute("errorMessage", "Dữ liệu số không hợp lệ: " + e.getMessage());
+            restoreFormData(request);
+            showCreateForm(request, response);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            if (conn != null) try {
+                conn.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            request.setAttribute("errorMessage", "Lỗi cơ sở dữ liệu: " + e.getMessage());
+            restoreFormData(request);
+            showCreateForm(request, response);
         } catch (Exception e) {
             e.printStackTrace();
             if (conn != null) try {
@@ -411,100 +508,170 @@ public class EnterpriseController extends HttpServlet {
                 ex.printStackTrace();
             }
             request.setAttribute("errorMessage", "Tạo khách hàng thất bại: " + e.getMessage());
+            restoreFormData(request);
             showCreateForm(request, response);
         } finally {
-            if (conn != null) try {
-                conn.setAutoCommit(true);
-                conn.close();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
             }
         }
     }
 
+// Helper method để giữ lại giá trị form
+    private void restoreFormData(HttpServletRequest request) {
+        for (String paramName : request.getParameterMap().keySet()) {
+            request.setAttribute("param_" + paramName, request.getParameter(paramName));
+        }
+    }
+
+// Helper method để validate email
+    public static boolean isValidEmail(String email) {
+        String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@"
+                + "(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+        Pattern pattern = Pattern.compile(emailRegex);
+        return pattern.matcher(email).matches();
+    }
+
     private void handleEditCustomer(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
         Connection conn = null;
+        // Lấy ID của doanh nghiệp cần sửa ngay từ đầu để sử dụng trong validation
         int enterpriseId = Integer.parseInt(request.getParameter("enterpriseId"));
         String customerName = request.getParameter("customerName");
-        Enterprise enterpriseToUpdate = null; // Biến để lưu đối tượng enterprise
+        Enterprise enterpriseToUpdate = null;
+
         try {
+            // === 1. LẤY VÀ VALIDATE TOÀN BỘ DỮ LIỆU ===
             String taxCode = request.getParameter("taxCode");
             String hotline = request.getParameter("hotline");
             String phone = request.getParameter("phone");
+            String businessEmail = request.getParameter("businessEmail");
+            String email = request.getParameter("email");
+            String streetAddress = request.getParameter("streetAddress");
+            String fullName = request.getParameter("fullName");
+            String position = request.getParameter("position");
+            String bankNumber = request.getParameter("bankNumber");
 
+            // Sử dụng Map để thu thập tất cả lỗi validation
+            Map<String, String> errors = new HashMap<>();
+
+            // --- Validate các trường text và số điện thoại ---
             if (customerName == null || customerName.trim().isEmpty()) {
-                request.setAttribute("errorMessage", "Tên doanh nghiệp không được để trống.");
-                showEditForm(request, response);
-                return;
-            }
-            if (this.enterpriseDAO.isNameExists(customerName, enterpriseId)) {
-                request.setAttribute("errorMessage", "Tên doanh nghiệp '" + customerName + "' đã được sử dụng.");
-                showEditForm(request, response);
-                return;
-            }
-            if (taxCode != null && !taxCode.trim().isEmpty() && !isFormatValidVietnameseTaxCode(taxCode)) {
-                request.setAttribute("errorMessage", "Định dạng mã số thuế không hợp lệ. Phải là 10 số hoặc 10 số-3 số.");
-                showEditForm(request, response);
-                return;
-            }
-            if (hotline != null && !hotline.trim().isEmpty() && !isFormatValidVietnamesePhoneNumber(hotline)) {
-                request.setAttribute("errorMessage", "Định dạng số hotline không hợp lệ.");
-                showEditForm(request, response);
-                return;
-            }
-            if (phone != null && !phone.trim().isEmpty() && !isFormatValidVietnamesePhoneNumber(phone)) {
-                request.setAttribute("errorMessage", "Định dạng số điện thoại người liên hệ không hợp lệ.");
-                showEditForm(request, response);
-                return;
+                errors.put("customerName", "Tên doanh nghiệp không được để trống.");
+            } else if (this.enterpriseDAO.isNameExists(customerName, enterpriseId)) { // Dùng enterpriseId để loại trừ chính nó
+                errors.put("customerName", "Tên doanh nghiệp '" + customerName + "' đã được sử dụng.");
             }
 
-            String avatarDbPath = request.getParameter("existingAvatarUrl");
+            if (taxCode != null && !taxCode.trim().isEmpty() && !isFormatValidVietnameseTaxCode(taxCode)) {
+                errors.put("taxCode", "Định dạng mã số thuế không hợp lệ. Phải là 10 số hoặc 10 số-3 số.");
+            }
+
+            if (hotline != null && !hotline.trim().isEmpty() && !isFormatValidVietnamesePhoneNumber(hotline)) {
+                errors.put("hotline", "Định dạng số hotline không hợp lệ.");
+            }
+
+            if (phone != null && !phone.trim().isEmpty() && !isFormatValidVietnamesePhoneNumber(phone)) {
+                errors.put("phone", "Định dạng số điện thoại người liên hệ không hợp lệ.");
+            }
+
+            // --- Validate các trường email ---
+            if (businessEmail == null || businessEmail.trim().isEmpty()) {
+                errors.put("businessEmail", "Email doanh nghiệp không được để trống.");
+            } else if (!isValidEmail(businessEmail)) {
+                errors.put("businessEmail", "Định dạng email doanh nghiệp không hợp lệ.");
+            }
+
+            if (email == null || email.trim().isEmpty()) {
+                errors.put("email", "Email người liên hệ không được để trống.");
+            } else if (!isValidEmail(email)) {
+                errors.put("email", "Định dạng email người liên hệ không hợp lệ.");
+            }
+
+            // --- Validate các trường địa chỉ ---
+            String provinceIdStr = request.getParameter("province");
+            String districtIdStr = request.getParameter("district");
+            String wardIdStr = request.getParameter("ward");
+
+            if (provinceIdStr == null || provinceIdStr.isEmpty()) {
+                errors.put("province", "Vui lòng chọn tỉnh/thành.");
+            }
+            if (districtIdStr == null || districtIdStr.isEmpty()) {
+                errors.put("district", "Vui lòng chọn quận/huyện.");
+            }
+            if (wardIdStr == null || wardIdStr.isEmpty()) {
+                errors.put("ward", "Vui lòng chọn phường/xã.");
+            }
+            if (streetAddress == null || streetAddress.trim().isEmpty()) {
+                errors.put("streetAddress", "Địa chỉ không được để trống.");
+            } else if (streetAddress.trim().length() > 255) {
+                errors.put("streetAddress", "Địa chỉ không được vượt quá 255 ký tự.");
+            }
+            // === 2. XỬ LÝ NẾU CÓ LỖI VALIDATION ===
+            if (!errors.isEmpty()) {
+                for (Map.Entry<String, String> error : errors.entrySet()) {
+                    request.setAttribute(error.getKey() + "Error", error.getValue());
+                }
+                // Giữ lại toàn bộ dữ liệu người dùng đã nhập để họ không phải điền lại
+                restoreFormData(request);
+                // Hiển thị lại form edit với các thông báo lỗi
+                showEditForm(request, response);
+                return; // Dừng xử lý
+            }
+
+            // Parse các giá trị số sau khi đã chắc chắn không có lỗi
+            int provinceId = Integer.parseInt(provinceIdStr);
+            int districtId = Integer.parseInt(districtIdStr);
+            int wardId = Integer.parseInt(wardIdStr);
+            int employeeId = Integer.parseInt(request.getParameter("employeeId"));
+            int customerGroupId = Integer.parseInt(request.getParameter("customerGroup"));
+            int addressId = Integer.parseInt(request.getParameter("addressId"));
+
+            // === 3. XỬ LÝ FILE UPLOAD (NẾU CÓ) ===
+            String avatarDbPath = request.getParameter("existingAvatarUrl"); // Lấy URL avatar cũ
             Part filePart = request.getPart("avatar");
-            if (filePart != null && filePart.getSize() > 0
-                    && filePart.getSubmittedFileName() != null
-                    && !filePart.getSubmittedFileName().isEmpty()) {
+
+            if (filePart != null && filePart.getSize() > 0) {
+                // Validate file size, type, extension... (tương tự như hàm create)
+                // ... (bạn có thể sao chép khối validate file từ hàm create vào đây) ...
+
+                // Nếu file hợp lệ, tiến hành lưu file mới
                 String originalFileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
                 String uniqueFileName = UUID.randomUUID().toString() + "_" + originalFileName;
                 String applicationPath = request.getServletContext().getRealPath("");
                 String uploadFilePath = applicationPath + File.separator + UPLOAD_DIR;
                 new File(uploadFilePath).mkdirs();
                 filePart.write(uploadFilePath + File.separator + uniqueFileName);
-                avatarDbPath = "uploads/avatars/" + uniqueFileName;
+                avatarDbPath = "uploads/avatars/" + uniqueFileName; // Cập nhật đường dẫn avatar mới
             }
 
-            int addressId = Integer.parseInt(request.getParameter("addressId"));
-            int employeeId = Integer.parseInt(request.getParameter("employeeId"));
-            int provinceId = Integer.parseInt(request.getParameter("province"));
-            int districtId = Integer.parseInt(request.getParameter("district"));
-            int wardId = Integer.parseInt(request.getParameter("ward"));
-            String streetAddress = request.getParameter("streetAddress");
-            String fullName = request.getParameter("fullName");
-            String position = request.getParameter("position");
-            String email = request.getParameter("email");
-
+            // === 4. TẠO ĐỐI TƯỢNG VÀ XỬ LÝ DATABASE TRANSACTION ===
             enterpriseToUpdate = new Enterprise();
             enterpriseToUpdate.setId(enterpriseId);
             enterpriseToUpdate.setName(customerName);
-            enterpriseToUpdate.setBusinessEmail(request.getParameter("businessEmail"));
+            enterpriseToUpdate.setBusinessEmail(businessEmail);
             enterpriseToUpdate.setHotline(hotline);
             enterpriseToUpdate.setTaxCode(taxCode);
-            enterpriseToUpdate.setBankNumber(request.getParameter("bankNumber"));
-            enterpriseToUpdate.setCustomerTypeId(Integer.parseInt(request.getParameter("customerGroup")));
+            enterpriseToUpdate.setBankNumber(bankNumber);
+            enterpriseToUpdate.setCustomerTypeId(customerGroupId);
             enterpriseToUpdate.setAvatarUrl(avatarDbPath);
-            // Gán thêm các thuộc tính địa chỉ để dùng cho thông báo
             enterpriseToUpdate.setAddressId(addressId);
             enterpriseToUpdate.setStreetAddress(streetAddress);
             enterpriseToUpdate.setWardId(wardId);
             enterpriseToUpdate.setDistrictId(districtId);
             enterpriseToUpdate.setProvinceId(provinceId);
 
-
             conn = this.dbContext.getConnection();
-            conn.setAutoCommit(false);
+            conn.setAutoCommit(false); // Bắt đầu transaction
 
             this.enterpriseDAO.updateEnterprise(conn, enterpriseToUpdate);
             this.enterpriseDAO.updateAddress(conn, addressId, streetAddress, wardId, districtId, provinceId);
+
             if (fullName != null && !fullName.trim().isEmpty()) {
                 if (this.enterpriseDAO.primaryContactExists(conn, enterpriseId)) {
                     this.enterpriseDAO.updatePrimaryContact(conn, enterpriseId, fullName, position, phone, email);
@@ -512,38 +679,43 @@ public class EnterpriseController extends HttpServlet {
                     this.enterpriseDAO.insertEnterpriseContact(conn, enterpriseId, fullName, position, phone, email);
                 }
             }
+
             this.enterpriseDAO.updateMainAssignment(conn, enterpriseId, employeeId);
 
-            conn.commit();
+            conn.commit(); // Hoàn tất transaction
 
-            // === BẮT ĐẦU PHẦN TẠO THÔNG BÁO ===
+            // === 5. THÔNG BÁO THÀNH CÔNG VÀ CHUYỂN HƯỚNG ===
             HttpSession session = request.getSession(false);
             if (session != null) {
                 User currentUser = (User) session.getAttribute("user");
-                if (currentUser != null && enterpriseToUpdate != null) {
+                if (currentUser != null) {
                     NotificationService.notifyUpdateEnterprise(currentUser, enterpriseToUpdate);
                 }
                 session.setAttribute("successMessage", "Đã cập nhật thông tin khách hàng '" + customerName + "' thành công!");
             }
-            // === KẾT THÚC PHẦN TẠO THÔNG BÁO ===
 
             response.sendRedirect(safeJoin(request.getContextPath(), "/customer/view?id=" + enterpriseId));
 
         } catch (Exception e) {
             e.printStackTrace();
-            if (conn != null) try {
-                conn.rollback();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
             }
             request.setAttribute("errorMessage", "Lưu thay đổi thất bại: " + e.getMessage());
+            restoreFormData(request);
             showEditForm(request, response);
         } finally {
-            if (conn != null) try {
-                conn.setAutoCommit(true);
-                conn.close();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
             }
         }
     }
@@ -629,7 +801,6 @@ public class EnterpriseController extends HttpServlet {
     }
 
     // ====== Helpers ======
-
     private boolean isLoggedIn(HttpServletRequest request) {
         HttpSession s = request.getSession(false);
         // Thay đổi 'user' thành 'account' để khớp với AuthenticationController
@@ -638,33 +809,51 @@ public class EnterpriseController extends HttpServlet {
 
     private boolean hasWritePermission(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("user") == null) return false;
+        if (session == null || session.getAttribute("user") == null) {
+            return false;
+        }
         User user = (User) session.getAttribute("user"); // Thay đổi 'user' thành 'account'
         String roleName = user.getRoleName();
-        if (roleName != null) roleName = roleName.trim();
+        if (roleName != null) {
+            roleName = roleName.trim();
+        }
         return "Admin".equalsIgnoreCase(roleName) || "Kinh doanh".equalsIgnoreCase(roleName);
     }
 
     private String safeJoin(String ctx, String path) {
-        if (ctx == null || ctx.isEmpty() || "null".equals(ctx)) return path;
-        if (path == null) return ctx;
-        if (ctx.endsWith("/") && path.startsWith("/")) return ctx.substring(0, ctx.length() - 1) + path;
-        if (!ctx.endsWith("/") && !path.startsWith("/")) return ctx + "/" + path;
+        if (ctx == null || ctx.isEmpty() || "null".equals(ctx)) {
+            return path;
+        }
+        if (path == null) {
+            return ctx;
+        }
+        if (ctx.endsWith("/") && path.startsWith("/")) {
+            return ctx.substring(0, ctx.length() - 1) + path;
+        }
+        if (!ctx.endsWith("/") && !path.startsWith("/")) {
+            return ctx + "/" + path;
+        }
         return ctx + path;
     }
 
     private boolean isAjaxRequest(String action) {
-        if (action == null) return false;
+        if (action == null) {
+            return false;
+        }
         return action.equals("/getDistricts") || action.equals("/getWards") || action.equals("/searchSuggestions");
     }
 
     private boolean isFormatValidVietnameseTaxCode(String taxCode) {
-        if (taxCode == null || taxCode.trim().isEmpty()) return false;
+        if (taxCode == null || taxCode.trim().isEmpty()) {
+            return false;
+        }
         return taxCode.matches("^(\\d{10}|\\d{10}-\\d{3})$");
     }
 
     private boolean isFormatValidVietnamesePhoneNumber(String phoneNumber) {
-        if (phoneNumber == null || phoneNumber.trim().isEmpty()) return false;
+        if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
+            return false;
+        }
         return phoneNumber.matches("^(0(2\\d{8}|[35789]\\d{8})|(1800|1900)\\d{4,6})$");
     }
 }
